@@ -67,8 +67,20 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Registration error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      env: {
+        hasJWT: !!process.env.JWT_SECRET,
+        hasDB: !!process.env.DATABASE_URL,
+        nodeEnv: process.env.NODE_ENV
+      }
+    });
     return NextResponse.json(
-      { error: 'Registration failed. Please try again.' },
+      {
+        error: 'Registration failed. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      },
       { status: 500 }
     );
   }

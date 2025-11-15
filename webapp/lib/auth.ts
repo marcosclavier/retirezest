@@ -55,12 +55,17 @@ export async function getSession(): Promise<TokenPayload | null> {
 
 export async function setSession(token: string): Promise<void> {
   const cookieStore = await cookies();
+
+  // Get domain from environment or use current domain
+  const isProduction = process.env.NODE_ENV === 'production';
+
   cookieStore.set('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
+    // Don't set domain - let browser handle it automatically
   });
 }
 

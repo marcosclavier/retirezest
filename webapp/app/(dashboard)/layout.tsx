@@ -19,15 +19,15 @@ export default async function DashboardLayout({
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-[74px]">
             <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center">
+              <Link href="/dashboard" className="flex items-center pb-[9px]">
                 <Image
                   src="/retire-zest-logo.png"
                   alt="Retire Zest"
-                  width={260}
-                  height={78}
-                  className="h-[52px] w-auto"
+                  width={329}
+                  height={99}
+                  className="h-[66px] w-auto"
                   priority
                 />
               </Link>

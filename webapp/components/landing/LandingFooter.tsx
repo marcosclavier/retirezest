@@ -19,9 +19,9 @@ export default function LandingFooter() {
               <Image
                 src="/retire-zest-logo.png"
                 alt="Retire Zest"
-                width={208}
-                height={62}
-                className="h-[42px] w-auto brightness-0 invert opacity-90"
+                width={263}
+                height={78}
+                className="h-[53px] w-auto brightness-0 invert opacity-90"
               />
             </div>
             <p className="text-sm text-gray-400 mb-4">
