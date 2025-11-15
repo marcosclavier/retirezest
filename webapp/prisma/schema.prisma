@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String
+  firstName         String?
+  lastName          String?
+  dateOfBirth       DateTime?
+  province          String?
+  maritalStatus     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  incomeSources     Income[]
+  assets            Asset[]
+  expenses          Expense[]
+  debts             Debt[]
+  scenarios         Scenario[]
+  projections       Projection[]
+}
+
+model Income {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String    // employment, pension, investment, rental
+  description String?
+  amount      Float
+  frequency   String    // monthly, annual
+  isTaxable   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Asset {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String    // rrsp, tfsa, non_registered, real_estate
+  description     String?
+  currentValue    Float
+  contributionRoom Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Expense {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String    // housing, food, transportation, healthcare, etc.
+  description String?
+  amount      Float
+  frequency   String    // monthly, annual
+  isEssential Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Debt {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String    // mortgage, loan, credit_card
+  description     String?
+  currentBalance  Float
+  interestRate    Float
+  monthlyPayment  Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Scenario {
+  id                      String    @id @default(uuid())
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                    String
+  description             String?
+
+  // Personal info
+  currentAge              Int
+  retirementAge           Int
+  lifeExpectancy          Int       @default(95)
+  province                String    @default("ON")
+
+  // Current assets
+  rrspBalance             Float     @default(0)
+  tfsaBalance             Float     @default(0)
+  nonRegBalance           Float     @default(0)
+  realEstateValue         Float     @default(0)
+
+  // Income
+  employmentIncome        Float     @default(0)
+  pensionIncome           Float     @default(0)
+  rentalIncome            Float     @default(0)
+  otherIncome             Float     @default(0)
+
+  // CPP/OAS
+  cppStartAge             Int       @default(65)
+  oasStartAge             Int       @default(65)
+  averageCareerIncome     Float     @default(0)
+  yearsOfCPPContributions Int       @default(40)
+  yearsInCanada           Int       @default(40)
+
+  // Expenses
+  annualExpenses          Float
+  expenseInflationRate    Float     @default(2.0)
+
+  // Investment assumptions
+  investmentReturnRate    Float     @default(5.0)
+  inflationRate           Float     @default(2.0)
+
+  // RRIF rules
+  rrspToRrifAge           Int       @default(71)
+
+  // Projection results (JSON)
+  projectionResults       String?   // Cached projection results
+
+  isBaseline              Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  projections             Projection[]
+}
+
+model Projection {
+  id                    String    @id @default(uuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenarioId            String
+  scenario              Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  retirementAge         Int
+  calculationDate       DateTime  @default(now())
+  results               String    // JSON string of yearly projections
+  successProbability    Float?
+  totalLifetimeIncome   Float?
+  estateValue           Float?
+  createdAt             DateTime  @default(now())
+}

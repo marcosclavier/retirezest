@@ -1,0 +1,39 @@
+services:
+  # Next.js Application
+  retirement-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: retirement-app
+    ports:
+      - "3100:3000"
+    environment:
+      # Database
+      - DATABASE_URL=file:./prisma/dev.db
+
+      # JWT Secret (CHANGE THIS IN PRODUCTION!)
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production-$(openssl rand -hex 32)
+
+      # App URL
+      - NEXT_PUBLIC_APP_URL=http://localhost:3100
+
+      # Node Environment
+      - NODE_ENV=production
+
+    volumes:
+      # Persist SQLite database
+      - retirement-data:/app/prisma
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  # Named volume for SQLite database persistence
+  retirement-data:
+    driver: local
