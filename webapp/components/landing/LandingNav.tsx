@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
 export default function LandingNav() {
@@ -21,11 +22,15 @@ export default function LandingNav() {
         <div className="flex justify-between items-center h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-blue-600">Retire</span>
-              <span className="text-2xl font-bold text-green-600">Zest</span>
-            </div>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/retire-zest-logo.png"
+              alt="Retire Zest"
+              width={234}
+              height={70}
+              className="h-[47px] w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}

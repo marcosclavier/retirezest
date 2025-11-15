@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default async function DashboardLayout({
   children,
@@ -21,10 +22,14 @@ export default async function DashboardLayout({
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center">
-                <h1 className="text-2xl font-bold">
-                  <span className="text-blue-600">Retire</span>
-                  <span className="text-green-600">Zest</span>
-                </h1>
+                <Image
+                  src="/retire-zest-logo.png"
+                  alt="Retire Zest"
+                  width={260}
+                  height={78}
+                  className="h-[52px] w-auto"
+                  priority
+                />
               </Link>
             </div>
             <div className="flex items-center space-x-4">

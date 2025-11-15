@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function LandingFooter() {
   const currentYear = new Date().getFullYear();
@@ -14,9 +15,14 @@ export default function LandingFooter() {
 
           {/* Column 1: Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center mb-4">
-              <span className="text-2xl font-bold text-blue-400">Retire</span>
-              <span className="text-2xl font-bold text-green-400">Zest</span>
+            <div className="mb-4">
+              <Image
+                src="/retire-zest-logo.png"
+                alt="Retire Zest"
+                width={208}
+                height={62}
+                className="h-[42px] w-auto brightness-0 invert opacity-90"
+              />
             </div>
             <p className="text-sm text-gray-400 mb-4">
               Canadian Retirement Planning Made Simple

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -26,11 +26,51 @@ import { generatePDF } from '@/lib/reports/generatePDF';
 import { HelpTooltip } from '@/components/ui/HelpTooltip';
 import { getShortHelp } from '@/lib/help/helpContent';
 
+interface SavedProjection {
+  id: string;
+  retirementAge: number;
+  createdAt: string;
+  scenario: {
+    id: string;
+    name: string;
+    description: string | null;
+    currentAge: number;
+    retirementAge: number;
+    lifeExpectancy: number;
+    province: string;
+    rrspBalance: number;
+    tfsaBalance: number;
+    nonRegBalance: number;
+    realEstateValue: number;
+    employmentIncome: number;
+    pensionIncome: number;
+    rentalIncome: number;
+    otherIncome: number;
+    cppStartAge: number;
+    oasStartAge: number;
+    averageCareerIncome: number;
+    yearsOfCPPContributions: number;
+    yearsInCanada: number;
+    annualExpenses: number;
+    expenseInflationRate: number;
+    investmentReturnRate: number;
+    inflationRate: number;
+    rrspToRrifAge: number;
+    projectionResults: string;
+  };
+}
+
 export default function ProjectionPage() {
   const [showInputForm, setShowInputForm] = useState(false);
   const [projection, setProjection] = useState<ProjectionSummary | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [savedProjections, setSavedProjections] = useState<SavedProjection[]>([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [projectionName, setProjectionName] = useState('');
+  const [projectionDescription, setProjectionDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [currentProjectionId, setCurrentProjectionId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<ProjectionInput>({
@@ -89,6 +129,135 @@ export default function ProjectionPage() {
     }
   };
 
+  // Load saved projections on mount
+  useEffect(() => {
+    fetchSavedProjections();
+  }, []);
+
+  const fetchSavedProjections = async () => {
+    try {
+      const response = await fetch('/api/projections');
+      if (response.ok) {
+        const data = await response.json();
+        setSavedProjections(data);
+      }
+    } catch (error) {
+      console.error('Error fetching saved projections:', error);
+    }
+  };
+
+  const handleSaveProjection = async () => {
+    if (!projection || !projectionName.trim()) {
+      alert('Please enter a name for this projection');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/projections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: projectionName,
+          description: projectionDescription,
+          inputs: formData,
+          results: projection,
+        }),
+      });
+
+      if (response.ok) {
+        const savedProjection = await response.json();
+        setCurrentProjectionId(savedProjection.id);
+        setShowSaveDialog(false);
+        setProjectionName('');
+        setProjectionDescription('');
+        await fetchSavedProjections();
+        alert('Projection saved successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Failed to save projection: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error saving projection:', error);
+      alert('Failed to save projection. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLoadProjection = async (projectionId: string) => {
+    try {
+      const savedProj = savedProjections.find(p => p.id === projectionId);
+      if (!savedProj) return;
+
+      const scenario = savedProj.scenario;
+
+      // Load the inputs from the scenario
+      const inputs: ProjectionInput = {
+        currentAge: scenario.currentAge,
+        retirementAge: scenario.retirementAge,
+        lifeExpectancy: scenario.lifeExpectancy,
+        province: scenario.province,
+        rrspBalance: scenario.rrspBalance,
+        tfsaBalance: scenario.tfsaBalance,
+        nonRegBalance: scenario.nonRegBalance,
+        realEstateValue: scenario.realEstateValue,
+        employmentIncome: scenario.employmentIncome,
+        pensionIncome: scenario.pensionIncome,
+        rentalIncome: scenario.rentalIncome,
+        otherIncome: scenario.otherIncome,
+        cppStartAge: scenario.cppStartAge,
+        oasStartAge: scenario.oasStartAge,
+        averageCareerIncome: scenario.averageCareerIncome,
+        yearsOfCPPContributions: scenario.yearsOfCPPContributions,
+        yearsInCanada: scenario.yearsInCanada,
+        annualExpenses: scenario.annualExpenses,
+        expenseInflationRate: scenario.expenseInflationRate,
+        investmentReturnRate: scenario.investmentReturnRate,
+        inflationRate: scenario.inflationRate,
+        rrspToRrifAge: scenario.rrspToRrifAge,
+      };
+
+      setFormData(inputs);
+
+      // Parse and set the projection results
+      const results = JSON.parse(scenario.projectionResults);
+      setProjection(results);
+      setCurrentProjectionId(projectionId);
+    } catch (error) {
+      console.error('Error loading projection:', error);
+      alert('Failed to load projection. Please try again.');
+    }
+  };
+
+  const handleDeleteProjection = async (projectionId: string) => {
+    if (!confirm('Are you sure you want to delete this saved projection?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/projections/${projectionId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        if (currentProjectionId === projectionId) {
+          setCurrentProjectionId(null);
+        }
+        await fetchSavedProjections();
+        alert('Projection deleted successfully');
+      } else {
+        const error = await response.json();
+        alert(`Failed to delete projection: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting projection:', error);
+      alert('Failed to delete projection. Please try again.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -100,26 +269,47 @@ export default function ProjectionPage() {
         </div>
         <div className="flex space-x-3">
           {projection && (
-            <button
-              onClick={handleDownloadPDF}
-              disabled={generatingPDF}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <>
+              <button
+                onClick={() => setShowSaveDialog(true)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 font-medium flex items-center space-x-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <span>{generatingPDF ? 'Generating...' : 'Download PDF'}</span>
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                  />
+                </svg>
+                <span>Save Projection</span>
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={generatingPDF}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span>{generatingPDF ? 'Generating...' : 'Download PDF'}</span>
+              </button>
+            </>
           )}
           <button
             onClick={() => setShowInputForm(!showInputForm)}
@@ -129,6 +319,105 @@ export default function ProjectionPage() {
           </button>
         </div>
       </div>
+
+      {/* Save Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Save Projection</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Projection Name *
+                </label>
+                <input
+                  type="text"
+                  value={projectionName}
+                  onChange={(e) => setProjectionName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Conservative Retirement Plan"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={projectionDescription}
+                  onChange={(e) => setProjectionDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Add notes about this projection..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowSaveDialog(false);
+                    setProjectionName('');
+                    setProjectionDescription('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProjection}
+                  disabled={saving || !projectionName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saved Projections List */}
+      {savedProjections.length > 0 && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Saved Projections</h2>
+          <div className="space-y-3">
+            {savedProjections.map((saved) => (
+              <div
+                key={saved.id}
+                className={`flex items-center justify-between p-4 border rounded-lg ${
+                  currentProjectionId === saved.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900">{saved.scenario.name}</h3>
+                  {saved.scenario.description && (
+                    <p className="text-sm text-gray-600 mt-1">{saved.scenario.description}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Created: {new Date(saved.createdAt).toLocaleDateString()} • Age {saved.scenario.currentAge} → {saved.scenario.retirementAge}
+                  </p>
+                </div>
+                <div className="flex space-x-2 ml-4">
+                  <button
+                    onClick={() => handleLoadProjection(saved.id)}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Load
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProjection(saved.id)}
+                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Input Form */}
       {showInputForm && (
