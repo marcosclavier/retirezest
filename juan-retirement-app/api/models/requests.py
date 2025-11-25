@@ -15,14 +15,14 @@ class PersonInput(BaseModel):
     """
 
     # Identity
-    name: str = Field(..., min_length=1, max_length=50, description="Person's name")
-    start_age: int = Field(..., ge=50, le=90, description="Starting age for simulation")
+    name: str = Field(default="", max_length=50, description="Person's name (empty for single-person households)")
+    start_age: int = Field(default=65, ge=50, le=90, description="Starting age for simulation")
 
     # Government benefits
-    cpp_start_age: int = Field(..., ge=60, le=70, description="Age to start CPP")
-    cpp_annual_at_start: float = Field(..., ge=0, le=20000, description="Annual CPP at start age")
-    oas_start_age: int = Field(..., ge=65, le=70, description="Age to start OAS")
-    oas_annual_at_start: float = Field(..., ge=0, le=15000, description="Annual OAS at start age")
+    cpp_start_age: int = Field(default=65, ge=60, le=70, description="Age to start CPP")
+    cpp_annual_at_start: float = Field(default=0, ge=0, le=20000, description="Annual CPP at start age")
+    oas_start_age: int = Field(default=65, ge=65, le=70, description="Age to start OAS")
+    oas_annual_at_start: float = Field(default=0, ge=0, le=15000, description="Annual OAS at start age")
 
     # Account balances
     tfsa_balance: float = Field(default=0, ge=0, description="TFSA balance")
@@ -147,8 +147,8 @@ class HouseholdInput(BaseModel):
         default="AB",
         description="Province (affects tax rates)"
     )
-    start_year: int = Field(..., ge=2024, le=2040, description="Year to start simulation")
-    end_age: int = Field(..., ge=85, le=100, description="Age to end simulation")
+    start_year: int = Field(default=2025, ge=2024, le=2040, description="Year to start simulation")
+    end_age: int = Field(default=95, ge=85, le=100, description="Age to end simulation")
 
     # Withdrawal strategy
     strategy: Literal[
@@ -162,11 +162,11 @@ class HouseholdInput(BaseModel):
     ] = Field(default="corporate-optimized", description="Withdrawal strategy")
 
     # Spending phases (annual amounts in CAD)
-    spending_go_go: float = Field(..., ge=0, le=500000, description="Annual spending in go-go years")
+    spending_go_go: float = Field(default=120000, ge=0, le=500000, description="Annual spending in go-go years")
     go_go_end_age: int = Field(default=75, ge=65, le=90, description="Age when go-go phase ends")
-    spending_slow_go: float = Field(..., ge=0, le=500000, description="Annual spending in slow-go years")
+    spending_slow_go: float = Field(default=90000, ge=0, le=500000, description="Annual spending in slow-go years")
     slow_go_end_age: int = Field(default=85, ge=70, le=95, description="Age when slow-go phase ends")
-    spending_no_go: float = Field(..., ge=0, le=500000, description="Annual spending in no-go years")
+    spending_no_go: float = Field(default=70000, ge=0, le=500000, description="Annual spending in no-go years")
 
     # Inflation rates (as percentages)
     spending_inflation: float = Field(default=2.0, ge=0, le=10, description="Spending inflation rate %")
