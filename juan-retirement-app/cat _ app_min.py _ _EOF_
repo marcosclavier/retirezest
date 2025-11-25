@@ -1,0 +1,7 @@
+cat > app_min.py << 'EOF'
+import streamlit as st
+st.set_page_config(page_title="Streamlit Smoke Test", layout="centered")
+st.title("✅ Streamlit is working")
+st.write("If you can see this, the server & browser pipeline is good.")
+st.button("Click me")
+EOF
