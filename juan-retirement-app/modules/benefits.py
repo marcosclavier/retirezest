@@ -262,6 +262,167 @@ def combined_benefits(
     }
 
 
+def gis_benefit(
+    current_age: int,
+    net_income_excluding_oas: float,
+    is_single: bool = False,
+    inflation_rate: float = 0.02,
+    years_since_start: int = 0,
+    gis_max_single: float = 12785.64,
+    gis_max_couple: float = 7696.20,
+    gis_threshold_single: float = 21624.0,
+    gis_threshold_couple: float = 28560.0,
+) -> float:
+    """
+    Calculate GIS (Guaranteed Income Supplement) benefit.
+
+    GIS is an income-tested benefit for low-income seniors in Canada.
+    It's available to OAS recipients who have little or no other income.
+
+    Args:
+        current_age (int): Current age of the person
+        net_income_excluding_oas (float): Net income excluding OAS payments
+        is_single (bool): True if single, False if couple (both receiving OAS)
+        inflation_rate (float): Annual inflation rate (default 2%)
+        years_since_start (int): Years since start of simulation (for inflation)
+        gis_max_single (float): Maximum annual GIS for single person (~$12,785 in 2025)
+        gis_max_couple (float): Maximum annual GIS per person for couple (~$7,696 in 2025)
+        gis_threshold_single (float): Income threshold for full GIS clawback (single)
+        gis_threshold_couple (float): Combined income threshold for full clawback (couple)
+
+    Returns:
+        float: Annual GIS benefit amount (after income clawback)
+
+    Examples:
+        >>> gis_benefit(65, 0, is_single=True)  # No income, full GIS
+        12785.64
+
+        >>> gis_benefit(65, 30000, is_single=True)  # High income, no GIS
+        0.0
+
+        >>> gis_benefit(64, 0, is_single=True)  # Under 65, no GIS
+        0.0
+
+    Notes:
+        - GIS starts at age 65 (same as OAS)
+        - Income excludes OAS but includes CPP, RRIF withdrawals, etc.
+        - Clawback is approximately 50% of income (simplified)
+        - Amounts are indexed to inflation quarterly (simplified to annual here)
+    """
+    # GIS starts at 65 (same as OAS)
+    if current_age < 65:
+        return 0.0
+
+    # Apply inflation adjustment to thresholds and maximums
+    inflation_factor = (1.0 + inflation_rate) ** years_since_start
+
+    if is_single:
+        gis_max = gis_max_single * inflation_factor
+        threshold = gis_threshold_single * inflation_factor
+        # Clawback rate for singles is approximately 50% of income
+        clawback_rate = 0.50
+    else:
+        gis_max = gis_max_couple * inflation_factor
+        threshold = gis_threshold_couple * inflation_factor
+        # Clawback rate for couples is different
+        clawback_rate = 0.50
+
+    # Calculate GIS after income clawback
+    if net_income_excluding_oas <= 0:
+        return gis_max
+
+    if net_income_excluding_oas >= threshold:
+        return 0.0
+
+    # Linear clawback based on income
+    clawback_amount = net_income_excluding_oas * clawback_rate
+    gis_amount = max(0.0, gis_max - clawback_amount)
+
+    return gis_amount
+
+
+def combined_benefits_with_gis(
+    cpp_annual_at_start: float,
+    cpp_start_age: int,
+    oas_annual_at_start: float,
+    oas_start_age: int,
+    current_age: int,
+    net_taxable_income: float,
+    is_single: bool = False,
+    inflation_rate: float = 0.02,
+    years_since_start: int = 0,
+    oas_clawback_threshold: float = 90997.0,
+    oas_clawback_rate: float = 0.15,
+) -> Dict[str, float]:
+    """
+    Calculate combined CPP, OAS, and GIS benefits for a year.
+
+    This function calculates all government benefits including GIS,
+    applies OAS clawback, and returns a comprehensive breakdown.
+
+    Args:
+        cpp_annual_at_start (float): Initial annual CPP amount
+        cpp_start_age (int): Age when CPP starts
+        oas_annual_at_start (float): Initial annual OAS amount
+        oas_start_age (int): Age when OAS starts
+        current_age (int): Current age
+        net_taxable_income (float): Net taxable income (for OAS clawback)
+        is_single (bool): True if single, False if couple
+        inflation_rate (float): Annual inflation rate
+        years_since_start (int): Years since simulation start
+        oas_clawback_threshold (float): OAS clawback threshold
+        oas_clawback_rate (float): OAS clawback rate
+
+    Returns:
+        Dict[str, float]: Dictionary with keys:
+            - "cpp": CPP benefit amount
+            - "oas_gross": OAS before clawback
+            - "oas_clawback": OAS clawback amount
+            - "oas_net": OAS after clawback
+            - "gis": GIS benefit amount
+            - "total": Combined CPP + OAS (after clawback) + GIS
+
+    Examples:
+        >>> result = combined_benefits_with_gis(15000, 65, 7000, 65, 65, 20000, is_single=True)
+        >>> result["gis"] > 0  # Low income qualifies for GIS
+        True
+
+        >>> result = combined_benefits_with_gis(15000, 65, 7000, 65, 65, 100000, is_single=False)
+        >>> result["gis"]  # High income, no GIS
+        0.0
+    """
+    # Get base benefits
+    cpp = cpp_benefit(cpp_annual_at_start, cpp_start_age, current_age, inflation_rate)
+    oas_gross = oas_benefit(oas_annual_at_start, oas_start_age, current_age, inflation_rate)
+
+    # Apply OAS clawback threshold with inflation
+    threshold_inflated = oas_clawback_threshold * ((1.0 + inflation_rate) ** years_since_start)
+    oas_clawback_amt = oas_clawback(
+        oas_gross, net_taxable_income, threshold_inflated, oas_clawback_rate
+    )
+    oas_net = max(0.0, oas_gross - oas_clawback_amt)
+
+    # Calculate GIS based on income excluding OAS
+    # GIS income test excludes OAS but includes CPP, RRIF, etc.
+    income_for_gis = net_taxable_income - oas_gross  # Remove OAS from income test
+    gis = gis_benefit(
+        current_age=current_age,
+        net_income_excluding_oas=income_for_gis,
+        is_single=is_single,
+        inflation_rate=inflation_rate,
+        years_since_start=years_since_start,
+    )
+
+    return {
+        "cpp": cpp,
+        "oas_gross": oas_gross,
+        "oas_clawback": oas_clawback_amt,
+        "oas_net": oas_net,
+        "gis": gis,
+        "total": cpp + oas_net + gis,
+    }
+
+
 def get_benefit_start_age_defaults() -> Dict[str, int]:
     """
     Get default start ages for CPP and OAS.

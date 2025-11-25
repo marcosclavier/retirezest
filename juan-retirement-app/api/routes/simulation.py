@@ -13,7 +13,9 @@ from api.models.responses import SimulationResponse, CompositionResponse
 from api.utils.converters import (
     api_household_to_internal,
     dataframe_to_year_results,
-    calculate_simulation_summary
+    calculate_simulation_summary,
+    calculate_estate_summary,
+    extract_five_year_plan,
 )
 from modules.simulation import simulate
 from utils.asset_analyzer import AssetAnalyzer
@@ -159,10 +161,16 @@ async def run_simulation(
                 f"Reason: {composition.strategy_rationale}"
             )
 
+        # Calculate estate summary and 5-year plan
+        logger.debug("Calculating estate summary and 5-year plan")
+        estate_summary = calculate_estate_summary(df, household)
+        five_year_plan = extract_five_year_plan(df)
+
         logger.info(
             f"📈 Results: success_rate={summary.success_rate:.1%}, "
             f"final_estate=${summary.final_estate_gross:,.0f}, "
-            f"total_tax=${summary.total_tax_paid:,.0f}"
+            f"total_tax=${summary.total_tax_paid:,.0f}, "
+            f"health_score={summary.health_score}/100 ({summary.health_rating})"
         )
 
         return SimulationResponse(
@@ -172,6 +180,8 @@ async def run_simulation(
             composition_analysis=composition_data,
             year_by_year=year_by_year,
             summary=summary,
+            estate_summary=estate_summary,
+            five_year_plan=five_year_plan,
             warnings=warnings
         )
 

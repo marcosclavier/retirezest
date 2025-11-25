@@ -202,8 +202,8 @@ class HouseholdInput(BaseModel):
         description="Hybrid strategy: RRIF top-up amount per person"
     )
     stop_on_fail: bool = Field(
-        default=True,
-        description="Stop simulation when plan fails"
+        default=False,
+        description="Stop simulation when plan fails (default False to support single-person mode)"
     )
 
     model_config = {

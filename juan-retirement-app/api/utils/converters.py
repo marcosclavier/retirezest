@@ -5,8 +5,14 @@ This module bridges the REST API layer with the existing simulation engine.
 """
 
 from api.models.requests import PersonInput, HouseholdInput
-from api.models.responses import YearResult, SimulationSummary
+from api.models.responses import (
+    YearResult,
+    SimulationSummary,
+    EstateSummary,
+    FiveYearPlanYear,
+)
 from modules.models import Person, Household
+from modules.benefits import gis_benefit
 import pandas as pd
 import logging
 
@@ -151,11 +157,15 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 age_p1=int(row.get('age_p1', 0)),
                 age_p2=int(row.get('age_p2', 0)),
 
-                # Inflows
+                # Government benefits - Inflows
                 cpp_p1=float(row.get('cpp_p1', 0)),
                 cpp_p2=float(row.get('cpp_p2', 0)),
                 oas_p1=float(row.get('oas_p1', 0)),
                 oas_p2=float(row.get('oas_p2', 0)),
+                gis_p1=float(row.get('gis_p1', 0)),
+                gis_p2=float(row.get('gis_p2', 0)),
+                oas_clawback_p1=float(row.get('oas_clawback_p1', 0)),
+                oas_clawback_p2=float(row.get('oas_clawback_p2', 0)),
 
                 # Withdrawals (handle various column naming conventions)
                 tfsa_withdrawal_p1=float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))),
@@ -236,30 +246,77 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
     years_funded = len(df[df['net_worth_end'] > 0]) if 'net_worth_end' in df.columns else years_simulated
     success_rate = years_funded / years_simulated if years_simulated > 0 else 0.0
 
-    # Inflows and outflows
-    total_inflows = (
-        df[['cpp_p1', 'cpp_p2', 'oas_p1', 'oas_p2']].sum().sum()
-        if all(col in df.columns for col in ['cpp_p1', 'cpp_p2', 'oas_p1', 'oas_p2'])
-        else 0
-    )
+    # === Government Benefits Totals ===
+    total_cpp = 0.0
+    total_oas = 0.0
+    total_gis = 0.0
+    total_oas_clawback = 0.0
 
-    # Use internal column names for withdrawals
-    withdrawal_cols = []
-    for account in ['tfsa', 'rrif', 'nonreg', 'corp']:
-        for person in ['p1', 'p2']:
-            col = f'withdraw_{account}_{person}'
-            if col in df.columns:
-                withdrawal_cols.append(col)
+    if 'cpp_p1' in df.columns:
+        total_cpp += df['cpp_p1'].sum()
+    if 'cpp_p2' in df.columns:
+        total_cpp += df['cpp_p2'].sum()
+    if 'oas_p1' in df.columns:
+        total_oas += df['oas_p1'].sum()
+    if 'oas_p2' in df.columns:
+        total_oas += df['oas_p2'].sum()
+    if 'gis_p1' in df.columns:
+        total_gis += df['gis_p1'].sum()
+    if 'gis_p2' in df.columns:
+        total_gis += df['gis_p2'].sum()
+    if 'oas_clawback_p1' in df.columns:
+        total_oas_clawback += df['oas_clawback_p1'].sum()
+    if 'oas_clawback_p2' in df.columns:
+        total_oas_clawback += df['oas_clawback_p2'].sum()
 
-    total_withdrawals = df[withdrawal_cols].sum().sum() if withdrawal_cols else 0
+    total_inflows = total_cpp + total_oas + total_gis
+    total_government_benefits = total_cpp + total_oas + total_gis
+    avg_annual_benefits = total_government_benefits / years_simulated if years_simulated > 0 else 0.0
 
-    # Use total_tax_after_split for household total tax
+    # === Withdrawals by Source ===
+    total_rrif_withdrawn = 0.0
+    total_nonreg_withdrawn = 0.0
+    total_tfsa_withdrawn = 0.0
+    total_corporate_withdrawn = 0.0
+
+    for person in ['p1', 'p2']:
+        rrif_col = f'withdraw_rrif_{person}'
+        nonreg_col = f'withdraw_nonreg_{person}'
+        tfsa_col = f'withdraw_tfsa_{person}'
+        corp_col = f'withdraw_corp_{person}'
+
+        if rrif_col in df.columns:
+            total_rrif_withdrawn += df[rrif_col].sum()
+        if nonreg_col in df.columns:
+            total_nonreg_withdrawn += df[nonreg_col].sum()
+        if tfsa_col in df.columns:
+            total_tfsa_withdrawn += df[tfsa_col].sum()
+        if corp_col in df.columns:
+            total_corporate_withdrawn += df[corp_col].sum()
+
+    total_withdrawals = total_rrif_withdrawn + total_nonreg_withdrawn + total_tfsa_withdrawn + total_corporate_withdrawn
+
+    # Calculate percentages
+    rrif_pct = (total_rrif_withdrawn / total_withdrawals * 100) if total_withdrawals > 0 else 0.0
+    nonreg_pct = (total_nonreg_withdrawn / total_withdrawals * 100) if total_withdrawals > 0 else 0.0
+    tfsa_pct = (total_tfsa_withdrawn / total_withdrawals * 100) if total_withdrawals > 0 else 0.0
+    corporate_pct = (total_corporate_withdrawn / total_withdrawals * 100) if total_withdrawals > 0 else 0.0
+
+    # === Tax Analysis ===
     total_tax_paid = (
         df['total_tax_after_split'].sum()
         if 'total_tax_after_split' in df.columns
         else df['total_tax'].sum() if 'total_tax' in df.columns
         else 0
     )
+
+    tax_col = 'total_tax_after_split' if 'total_tax_after_split' in df.columns else 'total_tax'
+    if tax_col in df.columns:
+        highest_annual_tax = df[tax_col].max()
+        lowest_annual_tax = df[tax_col].min()
+    else:
+        highest_annual_tax = 0.0
+        lowest_annual_tax = 0.0
 
     # Use spend_target_after_tax for spending
     total_spending = (
@@ -268,12 +325,31 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         else 0
     )
 
-    # Final estate
+    # Tax efficiency: lower is better (tax as % of total income + withdrawals)
+    total_income_and_withdrawals = total_inflows + total_withdrawals
+    tax_efficiency_rate = (total_tax_paid / total_income_and_withdrawals * 100) if total_income_and_withdrawals > 0 else 0.0
+
+    # === Net Worth Analysis ===
+    first_row = df.iloc[0]
     final_row = df.iloc[-1]
-    final_estate_gross = final_row.get('net_worth_end', final_row.get('gross_legacy', 0))
+
+    initial_net_worth = float(first_row.get('net_worth_start', first_row.get('net_worth_end', 0)))
+    final_net_worth = float(final_row.get('net_worth_end', 0))
+    final_estate_gross = final_net_worth
+
+    net_worth_change_pct = 0.0
+    if initial_net_worth > 0:
+        net_worth_change_pct = ((final_net_worth - initial_net_worth) / initial_net_worth) * 100
+
+    if net_worth_change_pct > 5:
+        net_worth_trend = "Growing"
+    elif net_worth_change_pct < -5:
+        net_worth_trend = "Declining"
+    else:
+        net_worth_trend = "Stable"
 
     # Use after_tax_legacy if available, otherwise estimate at 75%
-    final_estate_after_tax = final_row.get('after_tax_legacy', final_estate_gross * 0.75)
+    final_estate_after_tax = float(final_row.get('after_tax_legacy', final_estate_gross * 0.75))
 
     # Tax rates
     total_income_cols = ['taxable_inc_p1', 'taxable_inc_p2']
@@ -310,8 +386,24 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         total_underfunded_years = len(df[df['spending_gap'] > 0])
         total_underfunding = df['spending_gap'].sum()
     else:
-        total_underfunded_years = 0
-        total_underfunding = 0
+        # Try underfunded_after_tax column
+        if 'underfunded_after_tax' in df.columns:
+            total_underfunded_years = len(df[df['underfunded_after_tax'] > 0])
+            total_underfunding = df['underfunded_after_tax'].sum()
+        else:
+            total_underfunded_years = 0
+            total_underfunding = 0
+
+    # === Health Score Calculation ===
+    health_score, health_rating, health_criteria = calculate_health_score(
+        success_rate=success_rate,
+        years_funded=years_funded,
+        years_simulated=years_simulated,
+        avg_effective_tax_rate=avg_effective_tax_rate,
+        total_government_benefits=total_government_benefits,
+        initial_net_worth=initial_net_worth,
+        final_net_worth=final_net_worth,
+    )
 
     return SimulationSummary(
         years_simulated=years_simulated,
@@ -328,4 +420,235 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         first_failure_year=first_failure_year,
         total_underfunded_years=total_underfunded_years,
         total_underfunding=total_underfunding,
+        # New fields
+        initial_net_worth=initial_net_worth,
+        final_net_worth=final_net_worth,
+        net_worth_change_pct=net_worth_change_pct,
+        net_worth_trend=net_worth_trend,
+        total_cpp=total_cpp,
+        total_oas=total_oas,
+        total_gis=total_gis,
+        total_oas_clawback=total_oas_clawback,
+        total_government_benefits=total_government_benefits,
+        avg_annual_benefits=avg_annual_benefits,
+        total_rrif_withdrawn=total_rrif_withdrawn,
+        total_nonreg_withdrawn=total_nonreg_withdrawn,
+        total_tfsa_withdrawn=total_tfsa_withdrawn,
+        total_corporate_withdrawn=total_corporate_withdrawn,
+        rrif_pct_of_total=rrif_pct,
+        nonreg_pct_of_total=nonreg_pct,
+        tfsa_pct_of_total=tfsa_pct,
+        corporate_pct_of_total=corporate_pct,
+        highest_annual_tax=highest_annual_tax,
+        lowest_annual_tax=lowest_annual_tax,
+        tax_efficiency_rate=tax_efficiency_rate,
+        health_score=health_score,
+        health_rating=health_rating,
+        health_criteria=health_criteria,
     )
+
+
+def calculate_health_score(
+    success_rate: float,
+    years_funded: int,
+    years_simulated: int,
+    avg_effective_tax_rate: float,
+    total_government_benefits: float,
+    initial_net_worth: float,
+    final_net_worth: float,
+) -> tuple[int, str, dict]:
+    """
+    Calculate plan health score based on 5 criteria (20 points each, total 100).
+
+    Criteria:
+    1. Full period funded (100%)? - 20 points
+    2. Adequate funding reserve (80%+ of period)? - 20 points
+    3. Good tax efficiency (<25% rate)? - 20 points
+    4. Government benefits available? - 20 points
+    5. Growing net worth? - 20 points
+
+    Returns:
+        tuple: (score 0-100, rating string, criteria dict)
+    """
+    criteria = {}
+    score = 0
+
+    # Criterion 1: Full period funded
+    # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
+    full_period_funded = bool(success_rate >= 1.0)
+    criteria['full_period_funded'] = {
+        'met': full_period_funded,
+        'points': 20 if full_period_funded else 0,
+        'description': 'Plan funds all years'
+    }
+    if full_period_funded:
+        score += 20
+
+    # Criterion 2: Adequate funding reserve (80%+ of period)
+    adequate_reserve = bool(success_rate >= 0.80)
+    criteria['adequate_reserve'] = {
+        'met': adequate_reserve,
+        'points': 20 if adequate_reserve else 0,
+        'description': 'Plan funds 80%+ of years'
+    }
+    if adequate_reserve:
+        score += 20
+
+    # Criterion 3: Good tax efficiency (<25% effective rate)
+    good_tax_efficiency = bool(avg_effective_tax_rate < 0.25)
+    criteria['good_tax_efficiency'] = {
+        'met': good_tax_efficiency,
+        'points': 20 if good_tax_efficiency else 0,
+        'description': 'Effective tax rate under 25%'
+    }
+    if good_tax_efficiency:
+        score += 20
+
+    # Criterion 4: Government benefits available
+    has_benefits = bool(total_government_benefits > 0)
+    criteria['government_benefits'] = {
+        'met': has_benefits,
+        'points': 20 if has_benefits else 0,
+        'description': 'Receiving government benefits (CPP/OAS/GIS)'
+    }
+    if has_benefits:
+        score += 20
+
+    # Criterion 5: Growing or stable net worth
+    growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+    criteria['growing_net_worth'] = {
+        'met': growing_net_worth,
+        'points': 20 if growing_net_worth else 0,
+        'description': 'Net worth maintained or growing'
+    }
+    if growing_net_worth:
+        score += 20
+
+    # Determine rating based on score
+    if score >= 80:
+        rating = "Excellent"
+    elif score >= 60:
+        rating = "Good"
+    elif score >= 40:
+        rating = "Fair"
+    else:
+        rating = "At Risk"
+
+    return score, rating, criteria
+
+
+def calculate_estate_summary(df: pd.DataFrame, household) -> EstateSummary:
+    """
+    Calculate estate summary from final simulation year.
+
+    Args:
+        df: Simulation DataFrame
+        household: Household object with account info
+
+    Returns:
+        EstateSummary with death tax projections
+    """
+    if df.empty:
+        return EstateSummary(
+            gross_estate_value=0,
+            taxes_at_death=0,
+            after_tax_legacy=0,
+            effective_tax_rate_at_death=0,
+        )
+
+    final_row = df.iloc[-1]
+
+    # Get final balances
+    rrif_balance = float(final_row.get('end_rrif_p1', 0)) + float(final_row.get('end_rrif_p2', 0))
+    tfsa_balance = float(final_row.get('end_tfsa_p1', 0)) + float(final_row.get('end_tfsa_p2', 0))
+    nonreg_balance = float(final_row.get('end_nonreg_p1', 0)) + float(final_row.get('end_nonreg_p2', 0))
+    corporate_balance = float(final_row.get('corp_p1', final_row.get('end_corp_p1', 0))) + \
+                        float(final_row.get('corp_p2', final_row.get('end_corp_p2', 0)))
+
+    gross_estate_value = rrif_balance + tfsa_balance + nonreg_balance + corporate_balance
+
+    # Estimate taxes at death (simplified)
+    # RRIF: 100% taxed at ~35% marginal rate
+    # NonReg: 50% of gains taxed (assume 50% gains)
+    # Corporate: ~50% taxed after CDA
+    # TFSA: 0% tax
+    marginal_rate = 0.35  # Conservative estimate
+
+    rrif_tax = rrif_balance * marginal_rate
+    nonreg_gains_estimate = nonreg_balance * 0.5  # Assume 50% is gains
+    nonreg_tax = nonreg_gains_estimate * 0.5 * marginal_rate  # 50% inclusion
+    corporate_tax = corporate_balance * 0.5 * marginal_rate  # After CDA
+    tfsa_tax = 0.0
+
+    taxes_at_death = rrif_tax + nonreg_tax + corporate_tax + tfsa_tax
+    after_tax_legacy = gross_estate_value - taxes_at_death
+    effective_tax_rate = (taxes_at_death / gross_estate_value * 100) if gross_estate_value > 0 else 0
+
+    return EstateSummary(
+        gross_estate_value=gross_estate_value,
+        taxes_at_death=taxes_at_death,
+        after_tax_legacy=after_tax_legacy,
+        effective_tax_rate_at_death=effective_tax_rate,
+        rrif_balance_at_death=rrif_balance,
+        tfsa_balance_at_death=tfsa_balance,
+        nonreg_balance_at_death=nonreg_balance,
+        corporate_balance_at_death=corporate_balance,
+    )
+
+
+def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
+    """
+    Extract first 5 years of simulation as detailed withdrawal plan.
+
+    Args:
+        df: Simulation DataFrame
+
+    Returns:
+        List of FiveYearPlanYear for first 5 years
+    """
+    if df.empty:
+        return []
+
+    plan = []
+    years_to_extract = min(5, len(df))
+
+    for i in range(years_to_extract):
+        row = df.iloc[i]
+
+        # Get withdrawals by source
+        rrif_p1 = float(row.get('withdraw_rrif_p1', 0))
+        rrif_p2 = float(row.get('withdraw_rrif_p2', 0))
+        nonreg_p1 = float(row.get('withdraw_nonreg_p1', 0))
+        nonreg_p2 = float(row.get('withdraw_nonreg_p2', 0))
+        tfsa_p1 = float(row.get('withdraw_tfsa_p1', 0))
+        tfsa_p2 = float(row.get('withdraw_tfsa_p2', 0))
+        corp_p1 = float(row.get('withdraw_corp_p1', 0))
+        corp_p2 = float(row.get('withdraw_corp_p2', 0))
+
+        total_p1 = rrif_p1 + nonreg_p1 + tfsa_p1 + corp_p1
+        total_p2 = rrif_p2 + nonreg_p2 + tfsa_p2 + corp_p2
+
+        spending_target = float(row.get('spend_target_after_tax', 0))
+
+        plan.append(FiveYearPlanYear(
+            year=int(row.get('year', 0)),
+            age_p1=int(row.get('age_p1', 0)),
+            age_p2=int(row.get('age_p2', 0)),
+            spending_target=spending_target,
+            spending_target_p1=spending_target / 2,  # Split evenly for now
+            spending_target_p2=spending_target / 2,
+            rrif_withdrawal_p1=rrif_p1,
+            rrif_withdrawal_p2=rrif_p2,
+            nonreg_withdrawal_p1=nonreg_p1,
+            nonreg_withdrawal_p2=nonreg_p2,
+            tfsa_withdrawal_p1=tfsa_p1,
+            tfsa_withdrawal_p2=tfsa_p2,
+            corp_withdrawal_p1=corp_p1,
+            corp_withdrawal_p2=corp_p2,
+            total_withdrawn_p1=total_p1,
+            total_withdrawn_p2=total_p2,
+            total_withdrawn=total_p1 + total_p2,
+            net_worth_end=float(row.get('net_worth_end', 0)),
+        ))
+
+    return plan
