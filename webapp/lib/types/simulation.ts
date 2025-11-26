@@ -283,7 +283,7 @@ export const defaultHouseholdInput: HouseholdInput = {
   reinvest_nonreg_dist: true,
   income_split_rrif_fraction: 0.0,
   hybrid_rrif_topup_per_person: 0,
-  stop_on_fail: true,
+  stop_on_fail: false,
 };
 
 // Strategy options for dropdown
