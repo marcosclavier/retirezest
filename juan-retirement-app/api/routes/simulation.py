@@ -16,6 +16,9 @@ from api.utils.converters import (
     calculate_simulation_summary,
     calculate_estate_summary,
     extract_five_year_plan,
+    calculate_spending_analysis,
+    extract_key_assumptions,
+    extract_chart_data,
 )
 from modules.simulation import simulate
 from utils.asset_analyzer import AssetAnalyzer
@@ -166,6 +169,12 @@ async def run_simulation(
         estate_summary = calculate_estate_summary(df, household)
         five_year_plan = extract_five_year_plan(df)
 
+        # Calculate new PDF report data
+        logger.debug("Calculating spending analysis, key assumptions, and chart data")
+        spending_analysis = calculate_spending_analysis(df, summary)
+        key_assumptions = extract_key_assumptions(household_input, df)
+        chart_data = extract_chart_data(df)
+
         logger.info(
             f"📈 Results: success_rate={summary.success_rate:.1%}, "
             f"final_estate=${summary.final_estate_gross:,.0f}, "
@@ -182,6 +191,9 @@ async def run_simulation(
             summary=summary,
             estate_summary=estate_summary,
             five_year_plan=five_year_plan,
+            spending_analysis=spending_analysis,
+            key_assumptions=key_assumptions,
+            chart_data=chart_data,
             warnings=warnings
         )
 

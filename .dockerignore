@@ -62,6 +62,3 @@ docker-compose.yml
 .cache/
 temp/
 tmp/
-
-# Security software files
-! Cynet Ransom Protection(DON'T DELETE)/

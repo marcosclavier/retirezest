@@ -61,15 +61,12 @@ app = FastAPI(
 
 # CORS configuration
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",                    # Local Next.js dev
-    "http://localhost:3002",                    # Alternative local port
-    "http://localhost:3100",                    # Docker container port
     "https://www.retirezest.com",               # Production domain
     "https://retirezest.com",                   # Production domain (no www)
 ]
 
-# Regex pattern to allow all Vercel preview deployments
-ALLOW_ORIGIN_REGEX = r"https://.*\.vercel\.app"
+# Regex pattern to allow localhost on any port and Vercel preview deployments
+ALLOW_ORIGIN_REGEX = r"(http://localhost:\d+|http://127\.0\.0\.1:\d+|https://.*\.vercel\.app)"
 
 app.add_middleware(
     CORSMiddleware,

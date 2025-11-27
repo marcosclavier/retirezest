@@ -19,6 +19,11 @@ import { ResultsDashboard } from '@/components/simulation/ResultsDashboard';
 import { PortfolioChart } from '@/components/simulation/PortfolioChart';
 import { TaxChart } from '@/components/simulation/TaxChart';
 import { SpendingChart } from '@/components/simulation/SpendingChart';
+import { HealthScoreCard } from '@/components/simulation/HealthScoreCard';
+import { GovernmentBenefitsChart } from '@/components/simulation/GovernmentBenefitsChart';
+import { IncomeCompositionChart } from '@/components/simulation/IncomeCompositionChart';
+import { WithdrawalsBySourceChart } from '@/components/simulation/WithdrawalsBySourceChart';
+import { YearByYearTable } from '@/components/simulation/YearByYearTable';
 
 export default function SimulationPage() {
   const [household, setHousehold] = useState<HouseholdInput>({
@@ -209,20 +214,54 @@ export default function SimulationPage() {
         <TabsContent value="results" className="space-y-6">
           {result ? (
             <>
-              {/* Results Dashboard */}
-              <ResultsDashboard result={result} />
+              {/* Health Score Card - Prominent Position */}
+              {result.success && result.summary && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-1">
+                    <HealthScoreCard summary={result.summary} />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <ResultsDashboard result={result} />
+                  </div>
+                </div>
+              )}
 
-              {/* Charts */}
+              {/* Fallback if no summary */}
+              {result.success && !result.summary && (
+                <ResultsDashboard result={result} />
+              )}
+
+              {/* Error state */}
+              {!result.success && (
+                <ResultsDashboard result={result} />
+              )}
+
+              {/* Charts Section */}
               {result.success && result.year_by_year && result.year_by_year.length > 0 && (
                 <div className="space-y-6">
                   <h2 className="text-2xl font-bold">Visualizations</h2>
 
+                  {/* Portfolio and Spending Charts */}
                   <PortfolioChart yearByYear={result.year_by_year} />
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <TaxChart yearByYear={result.year_by_year} />
                     <SpendingChart yearByYear={result.year_by_year} />
                   </div>
+
+                  {/* Additional Charts from chart_data */}
+                  {result.chart_data?.data_points && result.chart_data.data_points.length > 0 && (
+                    <>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <GovernmentBenefitsChart chartData={result.chart_data.data_points} />
+                        <WithdrawalsBySourceChart chartData={result.chart_data.data_points} />
+                      </div>
+                      <IncomeCompositionChart chartData={result.chart_data.data_points} />
+                    </>
+                  )}
+
+                  {/* Year-by-Year Table */}
+                  <YearByYearTable yearByYear={result.year_by_year} />
                 </div>
               )}
             </>

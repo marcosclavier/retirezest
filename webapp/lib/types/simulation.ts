@@ -177,6 +177,55 @@ export interface SimulationSummary {
   first_failure_year?: number;
   total_underfunded_years: number;
   total_underfunding: number;
+
+  // Net Worth Analysis
+  initial_net_worth: number;
+  final_net_worth: number;
+  net_worth_change_pct: number;
+  net_worth_trend: string;
+
+  // Government Benefits Totals
+  total_cpp: number;
+  total_oas: number;
+  total_gis: number;
+  total_oas_clawback: number;
+  total_government_benefits: number;
+  avg_annual_benefits: number;
+
+  // Withdrawals by Source
+  total_rrif_withdrawn: number;
+  total_nonreg_withdrawn: number;
+  total_tfsa_withdrawn: number;
+  total_corporate_withdrawn: number;
+  rrif_pct_of_total: number;
+  nonreg_pct_of_total: number;
+  tfsa_pct_of_total: number;
+  corporate_pct_of_total: number;
+
+  // Tax Analysis
+  highest_annual_tax: number;
+  lowest_annual_tax: number;
+  tax_efficiency_rate: number;
+
+  // Health Score
+  health_score: number;
+  health_rating: string;
+  health_criteria: HealthCriteria;
+}
+
+export interface HealthCriterion {
+  score: number;
+  max_score: number;
+  status: string;
+  description: string;
+}
+
+export interface HealthCriteria {
+  funding_coverage: HealthCriterion;
+  tax_efficiency: HealthCriterion;
+  estate_preservation: HealthCriterion;
+  benefit_optimization: HealthCriterion;
+  risk_management: HealthCriterion;
 }
 
 export interface CompositionAnalysis {
@@ -189,6 +238,101 @@ export interface CompositionAnalysis {
   strategy_rationale: string;
 }
 
+// New types for enhanced API response
+
+export interface SpendingAnalysis {
+  portfolio_withdrawals: number;
+  government_benefits_total: number;
+  total_spending_available: number;
+  spending_target_total: number;
+  spending_coverage_pct: number;
+  avg_annual_spending: number;
+  plan_status_text: string;
+}
+
+export interface KeyAssumptions {
+  general_inflation_rate: number;
+  spending_inflation_rate: number;
+  cpp_indexing_rate: number;
+  oas_indexing_rate: number;
+  projection_period_years: number;
+  tax_year_basis: number;
+  province: string;
+  withdrawal_strategy: string;
+}
+
+export interface TaxableComponent {
+  account_type: string;
+  balance_at_death: number;
+  taxable_inclusion_rate: number;
+  estimated_tax: number;
+  description: string;
+}
+
+export interface EstateSummary {
+  gross_estate_value: number;
+  taxes_at_death: number;
+  after_tax_legacy: number;
+  effective_tax_rate_at_death: number;
+  rrif_balance_at_death: number;
+  tfsa_balance_at_death: number;
+  nonreg_balance_at_death: number;
+  corporate_balance_at_death: number;
+  taxable_components: TaxableComponent[];
+  estate_planning_tips: string[];
+}
+
+export interface FiveYearPlanYear {
+  year: number;
+  age_p1: number;
+  age_p2: number;
+  spending_target: number;
+  spending_target_p1: number;
+  spending_target_p2: number;
+  rrif_withdrawal_p1: number;
+  rrif_withdrawal_p2: number;
+  nonreg_withdrawal_p1: number;
+  nonreg_withdrawal_p2: number;
+  tfsa_withdrawal_p1: number;
+  tfsa_withdrawal_p2: number;
+  corp_withdrawal_p1: number;
+  corp_withdrawal_p2: number;
+  total_withdrawn_p1: number;
+  total_withdrawn_p2: number;
+  total_withdrawn: number;
+  net_worth_end: number;
+}
+
+export interface ChartDataPoint {
+  year: number;
+  age_p1: number;
+  age_p2: number;
+  spending_target: number;
+  spending_met: number;
+  spending_coverage_pct: number;
+  rrif_balance: number;
+  tfsa_balance: number;
+  nonreg_balance: number;
+  corporate_balance: number;
+  net_worth: number;
+  cpp_total: number;
+  oas_total: number;
+  gis_total: number;
+  government_benefits_total: number;
+  total_tax: number;
+  effective_tax_rate: number;
+  taxable_income: number;
+  tax_free_income: number;
+  rrif_withdrawal: number;
+  nonreg_withdrawal: number;
+  tfsa_withdrawal: number;
+  corporate_withdrawal: number;
+}
+
+export interface ChartData {
+  data_points: ChartDataPoint[];
+}
+
 export interface SimulationResponse {
   success: boolean;
   message: string;
@@ -198,6 +342,13 @@ export interface SimulationResponse {
 
   year_by_year?: YearResult[];
   summary?: SimulationSummary;
+
+  // Enhanced response fields
+  estate_summary?: EstateSummary;
+  five_year_plan?: FiveYearPlanYear[];
+  spending_analysis?: SpendingAnalysis;
+  key_assumptions?: KeyAssumptions;
+  chart_data?: ChartData;
 
   warnings: string[];
   error?: string;

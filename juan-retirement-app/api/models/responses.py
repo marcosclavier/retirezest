@@ -121,6 +121,16 @@ class SimulationSummary(BaseModel):
     health_criteria: dict[str, Any] = Field(default_factory=dict, description="Health score breakdown")
 
 
+class TaxableComponent(BaseModel):
+    """Taxable component of estate at death."""
+
+    account_type: str = Field(description="Account type (RRIF, TFSA, Non-Registered, Corporate)")
+    balance_at_death: float = Field(description="Account balance at death")
+    taxable_inclusion_rate: float = Field(description="Taxable inclusion rate (100%, 50%, 0%)")
+    estimated_tax: float = Field(description="Estimated tax on this component")
+    description: str = Field(description="Explanation of tax treatment")
+
+
 class EstateSummary(BaseModel):
     """Estate projection at end of simulation."""
 
@@ -134,6 +144,10 @@ class EstateSummary(BaseModel):
     tfsa_balance_at_death: float = Field(default=0.0)
     nonreg_balance_at_death: float = Field(default=0.0)
     corporate_balance_at_death: float = Field(default=0.0)
+
+    # Enhanced estate details
+    taxable_components: list[TaxableComponent] = Field(default_factory=list, description="Breakdown of taxable components")
+    estate_planning_tips: list[str] = Field(default_factory=list, description="Estate planning recommendations")
 
 
 class FiveYearPlanYear(BaseModel):
@@ -167,6 +181,77 @@ class FiveYearPlanYear(BaseModel):
     net_worth_end: float = Field(default=0.0)
 
 
+class SpendingAnalysis(BaseModel):
+    """Spending coverage and analysis metrics."""
+
+    portfolio_withdrawals: float = Field(description="Total withdrawals from all accounts")
+    government_benefits_total: float = Field(description="Total government benefits (CPP+OAS+GIS)")
+    total_spending_available: float = Field(description="Total funds available (withdrawals + benefits)")
+    spending_target_total: float = Field(description="Total spending target across all years")
+    spending_coverage_pct: float = Field(description="Spending coverage percentage (available/target * 100)")
+    avg_annual_spending: float = Field(description="Average annual spending")
+    plan_status_text: str = Field(description="Plan status description (e.g., 'Fully funded through age 95')")
+
+
+class KeyAssumptions(BaseModel):
+    """Key assumptions used in the simulation."""
+
+    general_inflation_rate: float = Field(description="General inflation rate as percentage")
+    spending_inflation_rate: float = Field(description="Spending inflation rate as percentage")
+    cpp_indexing_rate: float = Field(description="CPP indexing rate as percentage")
+    oas_indexing_rate: float = Field(description="OAS indexing rate as percentage")
+    projection_period_years: int = Field(description="Number of years in projection")
+    tax_year_basis: int = Field(description="Base tax year for calculations")
+    province: str = Field(description="Province for tax calculations")
+    withdrawal_strategy: str = Field(description="Withdrawal strategy name")
+
+
+class ChartDataPoint(BaseModel):
+    """Pre-computed data point for charts."""
+
+    year: int
+    age_p1: int
+    age_p2: int
+
+    # Spending coverage
+    spending_target: float = Field(default=0.0)
+    spending_met: float = Field(default=0.0)
+    spending_coverage_pct: float = Field(default=0.0)
+
+    # Account balances (combined P1+P2)
+    rrif_balance: float = Field(default=0.0)
+    tfsa_balance: float = Field(default=0.0)
+    nonreg_balance: float = Field(default=0.0)
+    corporate_balance: float = Field(default=0.0)
+    net_worth: float = Field(default=0.0)
+
+    # Government benefits
+    cpp_total: float = Field(default=0.0)
+    oas_total: float = Field(default=0.0)
+    gis_total: float = Field(default=0.0)
+    government_benefits_total: float = Field(default=0.0)
+
+    # Tax data
+    total_tax: float = Field(default=0.0)
+    effective_tax_rate: float = Field(default=0.0)
+
+    # Income composition
+    taxable_income: float = Field(default=0.0)
+    tax_free_income: float = Field(default=0.0)
+
+    # Withdrawals by source (for stacked charts)
+    rrif_withdrawal: float = Field(default=0.0)
+    nonreg_withdrawal: float = Field(default=0.0)
+    tfsa_withdrawal: float = Field(default=0.0)
+    corporate_withdrawal: float = Field(default=0.0)
+
+
+class ChartData(BaseModel):
+    """Pre-computed chart data for frontend visualization."""
+
+    data_points: list[ChartDataPoint] = Field(default_factory=list, description="Year-by-year chart data")
+
+
 class SimulationResponse(BaseModel):
     """Response from simulation endpoint."""
 
@@ -179,9 +264,14 @@ class SimulationResponse(BaseModel):
     year_by_year: list[YearResult] | None = None
     summary: SimulationSummary | None = None
 
-    # New enhanced response fields
+    # Enhanced response fields
     estate_summary: EstateSummary | None = Field(default=None, description="Estate projection at death")
     five_year_plan: list[FiveYearPlanYear] | None = Field(default=None, description="First 5 years withdrawal plan")
+
+    # New fields to match PDF report
+    spending_analysis: SpendingAnalysis | None = Field(default=None, description="Spending coverage analysis")
+    key_assumptions: KeyAssumptions | None = Field(default=None, description="Key simulation assumptions")
+    chart_data: ChartData | None = Field(default=None, description="Pre-computed chart data")
 
     warnings: list[str] = Field(default_factory=list)
     error: str | None = None

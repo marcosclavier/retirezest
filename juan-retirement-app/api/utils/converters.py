@@ -10,6 +10,11 @@ from api.models.responses import (
     SimulationSummary,
     EstateSummary,
     FiveYearPlanYear,
+    SpendingAnalysis,
+    KeyAssumptions,
+    ChartData,
+    ChartDataPoint,
+    TaxableComponent,
 )
 from modules.models import Person, Household
 from modules.benefits import gis_benefit
@@ -546,7 +551,7 @@ def calculate_estate_summary(df: pd.DataFrame, household) -> EstateSummary:
         household: Household object with account info
 
     Returns:
-        EstateSummary with death tax projections
+        EstateSummary with death tax projections, taxable components, and tips
     """
     if df.empty:
         return EstateSummary(
@@ -567,22 +572,88 @@ def calculate_estate_summary(df: pd.DataFrame, household) -> EstateSummary:
 
     gross_estate_value = rrif_balance + tfsa_balance + nonreg_balance + corporate_balance
 
-    # Estimate taxes at death (simplified)
-    # RRIF: 100% taxed at ~35% marginal rate
-    # NonReg: 50% of gains taxed (assume 50% gains)
-    # Corporate: ~50% taxed after CDA
-    # TFSA: 0% tax
-    marginal_rate = 0.35  # Conservative estimate
+    # Estimate taxes at death with detailed breakdown
+    marginal_rate = 0.35  # Conservative estimate for high-income final year
 
+    # Build taxable components list
+    taxable_components = []
+
+    # RRIF: 100% taxed at marginal rate
     rrif_tax = rrif_balance * marginal_rate
+    if rrif_balance > 0:
+        taxable_components.append(TaxableComponent(
+            account_type="RRIF/RRSP",
+            balance_at_death=rrif_balance,
+            taxable_inclusion_rate=100.0,
+            estimated_tax=rrif_tax,
+            description="Full balance included in final tax return at marginal rate"
+        ))
+
+    # TFSA: 0% tax
+    tfsa_tax = 0.0
+    if tfsa_balance > 0:
+        taxable_components.append(TaxableComponent(
+            account_type="TFSA",
+            balance_at_death=tfsa_balance,
+            taxable_inclusion_rate=0.0,
+            estimated_tax=tfsa_tax,
+            description="Tax-free transfer to beneficiaries"
+        ))
+
+    # NonReg: 50% inclusion on capital gains
     nonreg_gains_estimate = nonreg_balance * 0.5  # Assume 50% is gains
     nonreg_tax = nonreg_gains_estimate * 0.5 * marginal_rate  # 50% inclusion
-    corporate_tax = corporate_balance * 0.5 * marginal_rate  # After CDA
-    tfsa_tax = 0.0
+    if nonreg_balance > 0:
+        taxable_components.append(TaxableComponent(
+            account_type="Non-Registered",
+            balance_at_death=nonreg_balance,
+            taxable_inclusion_rate=50.0,
+            estimated_tax=nonreg_tax,
+            description="Capital gains taxed at 50% inclusion rate (assumes ~50% of balance is gains)"
+        ))
+
+    # Corporate: taxed as dividend or wound up
+    corporate_tax = corporate_balance * 0.5 * marginal_rate  # After CDA, ~50% taxable
+    if corporate_balance > 0:
+        taxable_components.append(TaxableComponent(
+            account_type="Corporate",
+            balance_at_death=corporate_balance,
+            taxable_inclusion_rate=50.0,
+            estimated_tax=corporate_tax,
+            description="Taxed as capital dividend (CDA) or eligible dividend upon wind-up"
+        ))
 
     taxes_at_death = rrif_tax + nonreg_tax + corporate_tax + tfsa_tax
     after_tax_legacy = gross_estate_value - taxes_at_death
     effective_tax_rate = (taxes_at_death / gross_estate_value * 100) if gross_estate_value > 0 else 0
+
+    # Generate estate planning tips based on composition
+    estate_planning_tips = []
+
+    if rrif_balance > gross_estate_value * 0.3:
+        estate_planning_tips.append(
+            "Consider drawing down RRIF faster to reduce estate tax burden"
+        )
+    if tfsa_balance < gross_estate_value * 0.1 and tfsa_balance > 0:
+        estate_planning_tips.append(
+            "Maximize TFSA contributions - transfers to beneficiaries are tax-free"
+        )
+    if corporate_balance > gross_estate_value * 0.4:
+        estate_planning_tips.append(
+            "Consider corporate dividend payments to reduce taxable estate"
+        )
+    if nonreg_balance > gross_estate_value * 0.2:
+        estate_planning_tips.append(
+            "Review non-registered holdings for tax-loss harvesting opportunities"
+        )
+    if gross_estate_value > 1000000:
+        estate_planning_tips.append(
+            "Consider charitable giving strategies for additional tax benefits"
+        )
+    if not estate_planning_tips:
+        estate_planning_tips.append(
+            "Your estate is well-balanced across account types"
+        )
 
     return EstateSummary(
         gross_estate_value=gross_estate_value,
@@ -593,6 +664,8 @@ def calculate_estate_summary(df: pd.DataFrame, household) -> EstateSummary:
         tfsa_balance_at_death=tfsa_balance,
         nonreg_balance_at_death=nonreg_balance,
         corporate_balance_at_death=corporate_balance,
+        taxable_components=taxable_components,
+        estate_planning_tips=estate_planning_tips,
     )
 
 
@@ -652,3 +725,193 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         ))
 
     return plan
+
+
+def calculate_spending_analysis(df: pd.DataFrame, summary: SimulationSummary) -> SpendingAnalysis:
+    """
+    Calculate spending coverage and analysis metrics.
+
+    Args:
+        df: Simulation DataFrame
+        summary: SimulationSummary with pre-calculated totals
+
+    Returns:
+        SpendingAnalysis with spending coverage metrics
+    """
+    if df.empty:
+        return SpendingAnalysis(
+            portfolio_withdrawals=0,
+            government_benefits_total=0,
+            total_spending_available=0,
+            spending_target_total=0,
+            spending_coverage_pct=0,
+            avg_annual_spending=0,
+            plan_status_text="No simulation data",
+        )
+
+    # Get totals from summary
+    portfolio_withdrawals = summary.total_withdrawals
+    government_benefits_total = summary.total_government_benefits
+
+    # Total spending available = withdrawals + government benefits
+    total_spending_available = portfolio_withdrawals + government_benefits_total
+
+    # Spending target total
+    spending_target_total = summary.total_spending
+
+    # Coverage percentage
+    spending_coverage_pct = (
+        (total_spending_available / spending_target_total * 100)
+        if spending_target_total > 0 else 100.0
+    )
+
+    # Average annual spending
+    years_simulated = len(df)
+    avg_annual_spending = spending_target_total / years_simulated if years_simulated > 0 else 0
+
+    # Generate plan status text
+    if summary.success_rate >= 1.0:
+        final_age = int(df.iloc[-1].get('age_p1', 95))
+        plan_status_text = f"Your plan is fully funded through age {final_age}"
+    elif summary.first_failure_year:
+        plan_status_text = f"Plan underfunded starting year {summary.first_failure_year}"
+    else:
+        pct = summary.success_rate * 100
+        plan_status_text = f"Plan is {pct:.0f}% funded"
+
+    return SpendingAnalysis(
+        portfolio_withdrawals=portfolio_withdrawals,
+        government_benefits_total=government_benefits_total,
+        total_spending_available=total_spending_available,
+        spending_target_total=spending_target_total,
+        spending_coverage_pct=spending_coverage_pct,
+        avg_annual_spending=avg_annual_spending,
+        plan_status_text=plan_status_text,
+    )
+
+
+def extract_key_assumptions(
+    household_input: HouseholdInput,
+    df: pd.DataFrame
+) -> KeyAssumptions:
+    """
+    Extract key assumptions used in the simulation.
+
+    Args:
+        household_input: Original API input with rates and settings
+        df: Simulation DataFrame to determine projection period
+
+    Returns:
+        KeyAssumptions with all input parameters
+    """
+    # Projection period
+    projection_period_years = len(df) if not df.empty else 0
+
+    # Strategy name mapping for display
+    strategy_names = {
+        'corporate-optimized': 'Corporate Optimized',
+        'minimize-income': 'Minimize Income',
+        'rrif-splitting': 'RRIF Splitting',
+        'capital-gains-optimized': 'Capital Gains Optimized',
+        'tfsa-first': 'TFSA First',
+        'balanced': 'Balanced',
+        'manual': 'Manual',
+    }
+
+    province_names = {
+        'AB': 'Alberta',
+        'BC': 'British Columbia',
+        'ON': 'Ontario',
+        'QC': 'Quebec',
+    }
+
+    return KeyAssumptions(
+        general_inflation_rate=household_input.general_inflation,
+        spending_inflation_rate=household_input.spending_inflation,
+        cpp_indexing_rate=household_input.general_inflation,  # CPP indexes at general inflation
+        oas_indexing_rate=household_input.general_inflation,  # OAS indexes at general inflation
+        projection_period_years=projection_period_years,
+        tax_year_basis=household_input.start_year,
+        province=province_names.get(household_input.province, household_input.province),
+        withdrawal_strategy=strategy_names.get(household_input.strategy, household_input.strategy),
+    )
+
+
+def extract_chart_data(df: pd.DataFrame) -> ChartData:
+    """
+    Extract pre-computed chart data for frontend visualization.
+
+    Args:
+        df: Simulation DataFrame
+
+    Returns:
+        ChartData with year-by-year data points
+    """
+    if df.empty:
+        return ChartData(data_points=[])
+
+    data_points = []
+
+    for _, row in df.iterrows():
+        # Aggregate government benefits
+        cpp_total = float(row.get('cpp_p1', 0)) + float(row.get('cpp_p2', 0))
+        oas_total = float(row.get('oas_p1', 0)) + float(row.get('oas_p2', 0))
+        gis_total = float(row.get('gis_p1', 0)) + float(row.get('gis_p2', 0))
+        government_benefits_total = cpp_total + oas_total + gis_total
+
+        # Aggregate balances (combined P1+P2)
+        rrif_balance = float(row.get('end_rrif_p1', 0)) + float(row.get('end_rrif_p2', 0))
+        tfsa_balance = float(row.get('end_tfsa_p1', 0)) + float(row.get('end_tfsa_p2', 0))
+        nonreg_balance = float(row.get('end_nonreg_p1', 0)) + float(row.get('end_nonreg_p2', 0))
+        corporate_balance = (
+            float(row.get('corp_p1', row.get('end_corp_p1', 0))) +
+            float(row.get('corp_p2', row.get('end_corp_p2', 0)))
+        )
+        net_worth = float(row.get('net_worth_end', 0))
+
+        # Aggregate withdrawals
+        rrif_withdrawal = float(row.get('withdraw_rrif_p1', 0)) + float(row.get('withdraw_rrif_p2', 0))
+        nonreg_withdrawal = float(row.get('withdraw_nonreg_p1', 0)) + float(row.get('withdraw_nonreg_p2', 0))
+        tfsa_withdrawal = float(row.get('withdraw_tfsa_p1', 0)) + float(row.get('withdraw_tfsa_p2', 0))
+        corporate_withdrawal = float(row.get('withdraw_corp_p1', 0)) + float(row.get('withdraw_corp_p2', 0))
+
+        # Tax data
+        total_tax = float(row.get('total_tax_after_split', row.get('total_tax', 0)))
+        taxable_income = float(row.get('taxable_inc_p1', 0)) + float(row.get('taxable_inc_p2', 0))
+        effective_tax_rate = (total_tax / taxable_income * 100) if taxable_income > 0 else 0
+
+        # TFSA withdrawals are tax-free income
+        tax_free_income = tfsa_withdrawal + gis_total
+
+        # Spending data
+        spending_target = float(row.get('spend_target_after_tax', 0))
+        spending_met = float(row.get('spend_target_after_tax', 0)) - float(row.get('underfunded_after_tax', 0))
+        spending_coverage_pct = (spending_met / spending_target * 100) if spending_target > 0 else 100
+
+        data_points.append(ChartDataPoint(
+            year=int(row.get('year', 0)),
+            age_p1=int(row.get('age_p1', 0)),
+            age_p2=int(row.get('age_p2', 0)),
+            spending_target=spending_target,
+            spending_met=spending_met,
+            spending_coverage_pct=spending_coverage_pct,
+            rrif_balance=rrif_balance,
+            tfsa_balance=tfsa_balance,
+            nonreg_balance=nonreg_balance,
+            corporate_balance=corporate_balance,
+            net_worth=net_worth,
+            cpp_total=cpp_total,
+            oas_total=oas_total,
+            gis_total=gis_total,
+            government_benefits_total=government_benefits_total,
+            total_tax=total_tax,
+            effective_tax_rate=effective_tax_rate,
+            taxable_income=taxable_income,
+            tax_free_income=tax_free_income,
+            rrif_withdrawal=rrif_withdrawal,
+            nonreg_withdrawal=nonreg_withdrawal,
+            tfsa_withdrawal=tfsa_withdrawal,
+            corporate_withdrawal=corporate_withdrawal,
+        ))
+
+    return ChartData(data_points=data_points)
