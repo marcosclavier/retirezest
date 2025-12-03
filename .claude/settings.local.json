@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
+  },
   "permissions": {
     "allow": [
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --import-alias \"@/*\")",
@@ -10,7 +13,33 @@
       "Bash(dir /s /b webappnode_modules 2)",
       "Bash(nul)",
       "Bash(npx shadcn@latest add accordion)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(dir /B \"C:\\Projects\\retirement-app\\juan-retirement-app\\pages\" 2)",
+      "Bash(ping:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(npm run dev:*)",
+      "Bash(docker buildx prune:*)",
+      "Bash(docker builder prune:*)",
+      "Bash(npx next build)",
+      "Bash(docker build:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker run:*)",
+      "Bash(DATABASE_URL=\"postgresql://retirement:retirementpass@localhost:5433/retirement_app\" npx tsx:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(ss:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /F /PID 18888\")",
+      "Bash(git add:*)",
+      "Bash(find:*)",
+      "Bash(node -e:*)",
+      "Bash(DATABASE_URL=\"postgresql://retirement:retirementpass@127.0.0.1:5433/retirement_app\" npx prisma db push:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []
