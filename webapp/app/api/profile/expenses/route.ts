@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, NotFoundError, ValidationError } from '@/lib/errors';
 
 // GET - Fetch all expenses for the user
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const expenses = await prisma.expense.findMany({
@@ -17,11 +19,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(expenses);
   } catch (error) {
-    console.error('Error fetching expenses:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch expenses' },
-      { status: 500 }
-    );
+    logger.error('Error fetching expenses', error, {
+      endpoint: '/api/profile/expenses',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const body = await request.json();
@@ -38,17 +42,11 @@ export async function POST(request: NextRequest) {
 
     // Validation
     if (!category || !amount || !frequency) {
-      return NextResponse.json(
-        { error: 'Category, amount, and frequency are required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Category, amount, and frequency are required');
     }
 
     if (amount <= 0) {
-      return NextResponse.json(
-        { error: 'Amount must be greater than 0' },
-        { status: 400 }
-      );
+      throw new ValidationError('Amount must be greater than 0', 'amount');
     }
 
     const expense = await prisma.expense.create({
@@ -64,11 +62,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(expense, { status: 201 });
   } catch (error) {
-    console.error('Error creating expense:', error);
-    return NextResponse.json(
-      { error: 'Failed to create expense' },
-      { status: 500 }
-    );
+    logger.error('Error creating expense', error, {
+      endpoint: '/api/profile/expenses',
+      method: 'POST'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -77,17 +77,14 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const body = await request.json();
     const { id, category, description, amount, frequency, isEssential } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Expense ID is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Expense ID is required', 'id');
     }
 
     // Verify ownership
@@ -96,10 +93,7 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!existingExpense) {
-      return NextResponse.json(
-        { error: 'Expense not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Expense');
     }
 
     const updatedExpense = await prisma.expense.update({
@@ -115,11 +109,13 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedExpense);
   } catch (error) {
-    console.error('Error updating expense:', error);
-    return NextResponse.json(
-      { error: 'Failed to update expense' },
-      { status: 500 }
-    );
+    logger.error('Error updating expense', error, {
+      endpoint: '/api/profile/expenses',
+      method: 'PUT'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -128,17 +124,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Expense ID is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Expense ID is required', 'id');
     }
 
     // Verify ownership
@@ -147,10 +140,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!existingExpense) {
-      return NextResponse.json(
-        { error: 'Expense not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Expense');
     }
 
     await prisma.expense.delete({
@@ -159,10 +149,12 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Expense deleted successfully' });
   } catch (error) {
-    console.error('Error deleting expense:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete expense' },
-      { status: 500 }
-    );
+    logger.error('Error deleting expense', error, {
+      endpoint: '/api/profile/expenses',
+      method: 'DELETE'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

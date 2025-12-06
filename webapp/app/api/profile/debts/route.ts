@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, NotFoundError, ValidationError } from '@/lib/errors';
 
 // GET - Fetch all debts for the user
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const debts = await prisma.debt.findMany({
@@ -17,11 +19,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(debts);
   } catch (error) {
-    console.error('Error fetching debts:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch debts' },
-      { status: 500 }
-    );
+    logger.error('Error fetching debts', error, {
+      endpoint: '/api/profile/debts',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const body = await request.json();
@@ -38,17 +42,11 @@ export async function POST(request: NextRequest) {
 
     // Validation
     if (!type || currentBalance === undefined) {
-      return NextResponse.json(
-        { error: 'Type and current balance are required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Type and current balance are required');
     }
 
     if (currentBalance < 0) {
-      return NextResponse.json(
-        { error: 'Current balance cannot be negative' },
-        { status: 400 }
-      );
+      throw new ValidationError('Current balance cannot be negative', 'currentBalance');
     }
 
     const debt = await prisma.debt.create({
@@ -64,11 +62,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(debt, { status: 201 });
   } catch (error) {
-    console.error('Error creating debt:', error);
-    return NextResponse.json(
-      { error: 'Failed to create debt' },
-      { status: 500 }
-    );
+    logger.error('Error creating debt', error, {
+      endpoint: '/api/profile/debts',
+      method: 'POST'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -77,17 +77,14 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const body = await request.json();
     const { id, type, description, currentBalance, interestRate, monthlyPayment } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Debt ID is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Debt ID is required', 'id');
     }
 
     // Verify ownership
@@ -96,10 +93,7 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!existingDebt) {
-      return NextResponse.json(
-        { error: 'Debt not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Debt');
     }
 
     const updatedDebt = await prisma.debt.update({
@@ -115,11 +109,13 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedDebt);
   } catch (error) {
-    console.error('Error updating debt:', error);
-    return NextResponse.json(
-      { error: 'Failed to update debt' },
-      { status: 500 }
-    );
+    logger.error('Error updating debt', error, {
+      endpoint: '/api/profile/debts',
+      method: 'PUT'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -128,17 +124,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Debt ID is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Debt ID is required', 'id');
     }
 
     // Verify ownership
@@ -147,10 +140,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!existingDebt) {
-      return NextResponse.json(
-        { error: 'Debt not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Debt');
     }
 
     await prisma.debt.delete({
@@ -159,10 +149,12 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Debt deleted successfully' });
   } catch (error) {
-    console.error('Error deleting debt:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete debt' },
-      { status: 500 }
-    );
+    logger.error('Error deleting debt', error, {
+      endpoint: '/api/profile/debts',
+      method: 'DELETE'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

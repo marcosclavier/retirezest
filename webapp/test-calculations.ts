@@ -30,8 +30,12 @@ import {
 import {
   FEDERAL_TAX_BRACKETS_2025,
   ONTARIO_TAX_BRACKETS_2025,
+  ALBERTA_TAX_BRACKETS_2025,
+  QUEBEC_TAX_BRACKETS_2025,
   calculateFederalTax,
   calculateOntarioTax,
+  calculateAlbertaTax,
+  calculateQuebecTax,
   calculateTotalTax,
 } from './lib/calculations/tax';
 
@@ -320,7 +324,7 @@ assertApproxEqual(
 const fed100k = calculateFederalTax(100000, 65, false);
 assertApproxEqual(
   fed100k.grossTax,
-  17503,
+  17344.38, // NEW: Updated for 2025 indexed brackets
   'Federal gross tax on $100k',
   0.05
 );
@@ -347,8 +351,50 @@ assertApproxEqual(
 );
 console.log();
 
-// Test 4.3: Combined Tax
-console.log('Test Group 4.3: Combined Federal + Provincial Tax');
+// Test 4.3: Alberta Tax Calculations
+console.log('Test Group 4.3: Alberta Tax Calculations');
+console.log('-'.repeat(80));
+
+const ab50k = calculateAlbertaTax(50000, 65, false);
+assertApproxEqual(
+  ab50k.grossTax,
+  4000, // NEW: 8% on first $60k (2025 tax cut)
+  'Alberta gross tax on $50k',
+  0.05
+);
+
+const ab100k = calculateAlbertaTax(100000, 65, false);
+assertApproxEqual(
+  ab100k.grossTax,
+  8800, // NEW: 8% on first $60k + 10% on next $40k (2025 tax cut)
+  'Alberta gross tax on $100k',
+  0.05
+);
+console.log();
+
+// Test 4.4: Quebec Tax Calculations
+console.log('Test Group 4.4: Quebec Tax Calculations');
+console.log('-'.repeat(80));
+
+const qc50k = calculateQuebecTax(50000, 65, false);
+assertApproxEqual(
+  qc50k.grossTax,
+  7000,
+  'Quebec gross tax on $50k',
+  0.10
+);
+
+const qc100k = calculateQuebecTax(100000, 65, false);
+assertApproxEqual(
+  qc100k.grossTax,
+  16632,
+  'Quebec gross tax on $100k',
+  0.10
+);
+console.log();
+
+// Test 4.5: Combined Tax (Multi-Province)
+console.log('Test Group 4.5: Combined Federal + Provincial Tax (Multi-Province)');
 console.log('-'.repeat(80));
 
 const combined50k = calculateTotalTax(50000, 'ON', 65, false);
@@ -356,6 +402,38 @@ assertApproxEqual(
   combined50k.totalTax,
   5457.35,
   'Total tax on $50k (ON, age 65)',
+  0.05
+);
+
+const combinedAB50k = calculateTotalTax(50000, 'AB', 65, false);
+assertApproxEqual(
+  combinedAB50k.totalTax,
+  5065.15, // NEW: Lower due to 8% AB bracket
+  'Total tax on $50k (AB, age 65)',
+  0.05
+);
+
+const combinedQC50k = calculateTotalTax(50000, 'QC', 65, false);
+assertApproxEqual(
+  combinedQC50k.totalTax,
+  7842.77,
+  'Total tax on $50k (QC, age 65)',
+  0.05
+);
+
+const combinedAB100k = calculateTotalTax(100000, 'AB', 65, false);
+assertApproxEqual(
+  combinedAB100k.totalTax,
+  19709.53, // NEW: Lower due to 8% AB bracket
+  'Total tax on $100k (AB, age 65)',
+  0.05
+);
+
+const combinedQC100k = calculateTotalTax(100000, 'QC', 65, false);
+assertApproxEqual(
+  combinedQC100k.totalTax,
+  27181.08,
+  'Total tax on $100k (QC, age 65)',
   0.05
 );
 console.log();

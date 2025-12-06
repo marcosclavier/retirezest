@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError } from '@/lib/errors';
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8000';
 
@@ -18,17 +20,17 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
 
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized', message: 'You must be logged in to run simulations' },
-        { status: 401 }
-      );
+      throw new AuthenticationError('You must be logged in to run simulations');
     }
 
     // Parse request body
     const body = await request.json();
 
     // Log request (remove sensitive data for production)
-    console.log(`[Simulation API] User: ${session.email}, Request started`);
+    logger.info('Simulation request started', {
+      user: session.email,
+      endpoint: '/api/simulation/run'
+    });
 
     // Forward request to Python API
     const pythonResponse = await fetch(`${PYTHON_API_URL}/api/run-simulation`, {
@@ -43,11 +45,18 @@ export async function POST(request: NextRequest) {
 
     // Calculate processing time
     const duration = Date.now() - startTime;
-    console.log(`[Simulation API] User: ${session.email}, Status: ${pythonResponse.status}, Duration: ${duration}ms`);
+    logger.info('Simulation response received', {
+      user: session.email,
+      status: pythonResponse.status,
+      duration: `${duration}ms`
+    });
 
     // Check for Python API errors
     if (!pythonResponse.ok) {
-      console.error(`[Simulation API] Python API error: ${pythonResponse.status}`, responseData);
+      logger.error('Python API error', undefined, {
+        status: pythonResponse.status,
+        response: responseData
+      });
 
       return NextResponse.json(
         {
@@ -67,11 +76,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    console.error('[Simulation API] Error:', error);
-    console.error(`[Simulation API] Failed after ${duration}ms`);
-
     // Check if it's a network error
     if (error instanceof TypeError && error.message.includes('fetch')) {
+      logger.error('Python API connection failed', error, {
+        endpoint: '/api/simulation/run',
+        duration: `${duration}ms`
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -85,15 +96,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Generic error response
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Simulation failed',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        error_details: 'Internal server error',
-        warnings: [],
-      },
-      { status: 500 }
-    );
+    logger.error('Simulation failed', error, {
+      endpoint: '/api/simulation/run',
+      method: 'POST',
+      duration: `${duration}ms`
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json({
+      success: false,
+      message: 'Simulation failed',
+      error: body.error,
+      error_details: 'Internal server error',
+      warnings: [],
+    }, { status });
   }
 }

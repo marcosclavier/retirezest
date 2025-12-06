@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { projectRetirement, ProjectionInput } from '@/lib/calculations/projection';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, ValidationError } from '@/lib/errors';
 
 /**
  * GET /api/scenarios
@@ -11,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
 
@@ -22,8 +24,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(scenarios);
   } catch (error) {
-    console.error('Error fetching scenarios:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error fetching scenarios', error, {
+      endpoint: '/api/scenarios',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -35,7 +42,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
 
@@ -43,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!body.name || !body.currentAge || !body.retirementAge || body.annualExpenses === undefined) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      throw new ValidationError('Missing required fields');
     }
 
     // Create projection input from scenario data
@@ -110,7 +117,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(scenario, { status: 201 });
   } catch (error) {
-    console.error('Error creating scenario:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error creating scenario', error, {
+      endpoint: '/api/scenarios',
+      method: 'POST'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

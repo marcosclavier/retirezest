@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { clearSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/errors';
 
 export async function POST() {
   try {
@@ -10,11 +12,13 @@ export async function POST() {
       message: 'Logged out successfully',
     });
   } catch (error) {
-    console.error('Logout error:', error);
-    return NextResponse.json(
-      { error: 'Logout failed' },
-      { status: 500 }
-    );
+    logger.error('Logout failed', error, {
+      endpoint: '/api/auth/logout',
+      method: 'POST'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 

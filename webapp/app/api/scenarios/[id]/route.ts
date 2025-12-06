@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { projectRetirement, ProjectionInput } from '@/lib/calculations/projection';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, NotFoundError } from '@/lib/errors';
 
 /**
  * GET /api/scenarios/:id
@@ -14,7 +16,7 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
     const { id } = await params;
@@ -27,13 +29,18 @@ export async function GET(
     });
 
     if (!scenario) {
-      return NextResponse.json({ error: 'Scenario not found' }, { status: 404 });
+      throw new NotFoundError('Scenario');
     }
 
     return NextResponse.json(scenario);
   } catch (error) {
-    console.error('Error fetching scenario:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error fetching scenario', error, {
+      endpoint: '/api/scenarios/[id]',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -48,7 +55,7 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
     const { id } = await params;
@@ -64,7 +71,7 @@ export async function PUT(
     });
 
     if (!existingScenario) {
-      return NextResponse.json({ error: 'Scenario not found' }, { status: 404 });
+      throw new NotFoundError('Scenario');
     }
 
     // Create projection input from scenario data
@@ -131,8 +138,13 @@ export async function PUT(
 
     return NextResponse.json(updatedScenario);
   } catch (error) {
-    console.error('Error updating scenario:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error updating scenario', error, {
+      endpoint: '/api/scenarios/[id]',
+      method: 'PUT'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -147,7 +159,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
     const { id } = await params;
@@ -161,7 +173,7 @@ export async function DELETE(
     });
 
     if (!scenario) {
-      return NextResponse.json({ error: 'Scenario not found' }, { status: 404 });
+      throw new NotFoundError('Scenario');
     }
 
     // Delete scenario
@@ -171,7 +183,12 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Scenario deleted successfully' });
   } catch (error) {
-    console.error('Error deleting scenario:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error deleting scenario', error, {
+      endpoint: '/api/scenarios/[id]',
+      method: 'DELETE'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

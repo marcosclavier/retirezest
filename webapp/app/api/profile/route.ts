@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, NotFoundError, ValidationError } from '@/lib/errors';
 
 /**
  * GET /api/profile
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
 
@@ -30,13 +32,18 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      throw new NotFoundError('User');
     }
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error('Error fetching profile:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error fetching profile', error, {
+      endpoint: '/api/profile',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -48,7 +55,7 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
 
@@ -59,14 +66,14 @@ export async function PUT(request: NextRequest) {
 
     if (body.firstName !== undefined) {
       if (typeof body.firstName !== 'string' || body.firstName.trim().length === 0) {
-        return NextResponse.json({ error: 'First name must be a non-empty string' }, { status: 400 });
+        throw new ValidationError('First name must be a non-empty string', 'firstName');
       }
       updates.firstName = body.firstName.trim();
     }
 
     if (body.lastName !== undefined) {
       if (typeof body.lastName !== 'string' || body.lastName.trim().length === 0) {
-        return NextResponse.json({ error: 'Last name must be a non-empty string' }, { status: 400 });
+        throw new ValidationError('Last name must be a non-empty string', 'lastName');
       }
       updates.lastName = body.lastName.trim();
     }
@@ -74,13 +81,13 @@ export async function PUT(request: NextRequest) {
     if (body.dateOfBirth !== undefined) {
       const dob = new Date(body.dateOfBirth);
       if (isNaN(dob.getTime())) {
-        return NextResponse.json({ error: 'Invalid date of birth' }, { status: 400 });
+        throw new ValidationError('Invalid date of birth', 'dateOfBirth');
       }
       // Check if date is reasonable (between 1900 and today)
       const minDate = new Date('1900-01-01');
       const maxDate = new Date();
       if (dob < minDate || dob > maxDate) {
-        return NextResponse.json({ error: 'Date of birth must be between 1900 and today' }, { status: 400 });
+        throw new ValidationError('Date of birth must be between 1900 and today', 'dateOfBirth');
       }
       updates.dateOfBirth = dob;
     }
@@ -88,7 +95,7 @@ export async function PUT(request: NextRequest) {
     if (body.province !== undefined) {
       const validProvinces = ['ON', 'BC', 'AB', 'SK', 'MB', 'QC', 'NB', 'NS', 'PE', 'NL', 'YT', 'NT', 'NU'];
       if (!validProvinces.includes(body.province)) {
-        return NextResponse.json({ error: 'Invalid province code' }, { status: 400 });
+        throw new ValidationError('Invalid province code', 'province');
       }
       updates.province = body.province;
     }
@@ -96,14 +103,14 @@ export async function PUT(request: NextRequest) {
     if (body.maritalStatus !== undefined) {
       const validStatuses = ['single', 'married', 'divorced', 'widowed', 'common_law'];
       if (!validStatuses.includes(body.maritalStatus)) {
-        return NextResponse.json({ error: 'Invalid marital status' }, { status: 400 });
+        throw new ValidationError('Invalid marital status', 'maritalStatus');
       }
       updates.maritalStatus = body.maritalStatus;
     }
 
     // Check if there are any updates to apply
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+      throw new ValidationError('No valid fields to update');
     }
 
     // Update user
@@ -125,7 +132,12 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error('Error updating profile:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error updating profile', error, {
+      endpoint: '/api/profile',
+      method: 'PUT'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, ValidationError } from '@/lib/errors';
 
 /**
  * GET /api/projections
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
 
@@ -28,8 +30,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(projections);
   } catch (error) {
-    console.error('Error fetching projections:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error fetching projections', error, {
+      endpoint: '/api/projections',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
     const userId = session.userId;
 
@@ -49,10 +56,7 @@ export async function POST(request: NextRequest) {
     const { name, description, inputs, results } = body;
 
     if (!name || !inputs || !results) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, inputs, results' },
-        { status: 400 }
-      );
+      throw new ValidationError('Missing required fields: name, inputs, results');
     }
 
     // Create a scenario first (to store the inputs)
@@ -105,7 +109,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(projection, { status: 201 });
   } catch (error) {
-    console.error('Error creating projection:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error creating projection', error, {
+      endpoint: '/api/projections',
+      method: 'POST'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

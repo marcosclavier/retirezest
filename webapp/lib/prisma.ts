@@ -1,14 +1,48 @@
+/**
+ * Prisma Client Configuration
+ * Optimized for performance and connection pooling
+ */
+
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// Connection pool configuration
+// For serverless environments (Vercel, etc.), use connection pooling URL
+const DATABASE_URL = process.env.DATABASE_URL;
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ['query', 'error', 'warn'],
+    datasources: {
+      db: {
+        url: DATABASE_URL,
+      },
+    },
+    log: process.env.NODE_ENV === 'development'
+      ? [
+          { emit: 'event', level: 'query' },
+          { emit: 'stdout', level: 'error' },
+          { emit: 'stdout', level: 'warn' },
+        ]
+      : [{ emit: 'stdout', level: 'error' }],
   });
+
+// Log slow queries in development
+if (process.env.NODE_ENV === 'development') {
+  prisma.$on('query' as never, (e: any) => {
+    if (e.duration > 1000) {
+      console.warn(`Slow query (${e.duration}ms): ${e.query}`);
+    }
+  });
+}
+
+// Graceful shutdown
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 

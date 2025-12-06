@@ -1,18 +1,46 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword, createToken, setSession } from '@/lib/auth';
+import { loginRateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { handleApiError, ValidationError, AuthenticationError } from '@/lib/errors';
 
 export async function POST(request: Request) {
+  // Apply rate limiting FIRST - protect against brute force attacks
+  const rateLimitResult = await loginRateLimit(request as any);
+
+  if (!rateLimitResult.success) {
+    const resetDate = new Date(rateLimitResult.resetTime || 0);
+    const retryAfterSeconds = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 1000);
+
+    return NextResponse.json(
+      {
+        error: 'Too many login attempts. Please try again later.',
+        resetAt: resetDate.toISOString(),
+        retryAfter: retryAfterSeconds
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': retryAfterSeconds.toString(),
+          'X-RateLimit-Limit': '5',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': resetDate.toISOString()
+        }
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const { email, password } = body;
 
     // Validate input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+    if (!email || typeof email !== 'string') {
+      throw new ValidationError('Email is required', 'email');
+    }
+    if (!password || typeof password !== 'string') {
+      throw new ValidationError('Password is required', 'password');
     }
 
     // Find user
@@ -21,20 +49,14 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      throw new AuthenticationError('Invalid email or password');
     }
 
     // Verify password
     const isValid = await verifyPassword(password, user.passwordHash);
 
     if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      throw new AuthenticationError('Invalid email or password');
     }
 
     // Update last login
@@ -62,22 +84,12 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      env: {
-        hasJWT: !!process.env.JWT_SECRET,
-        hasDB: !!process.env.DATABASE_URL,
-        nodeEnv: process.env.NODE_ENV
-      }
+    logger.error('Login failed', error, {
+      endpoint: '/api/auth/login',
+      method: 'POST'
     });
-    return NextResponse.json(
-      {
-        error: 'Login failed. Please try again.',
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
-      },
-      { status: 500 }
-    );
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

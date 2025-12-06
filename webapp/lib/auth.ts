@@ -2,14 +2,24 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key'
-);
+// Validate JWT_SECRET is set and secure
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    'FATAL: JWT_SECRET environment variable is required. ' +
+    'Generate one with: openssl rand -base64 32'
+  );
+}
+
+if (process.env.JWT_SECRET.length < 32) {
+  throw new Error('FATAL: JWT_SECRET must be at least 32 characters long for security');
+}
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export interface TokenPayload {
   userId: string;
   email: string;
-  [key: string]: any;
+  [key: string]: unknown; // Index signature for JWT compatibility
 }
 
 export async function hashPassword(password: string): Promise<string> {

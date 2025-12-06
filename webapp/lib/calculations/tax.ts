@@ -3,13 +3,13 @@
  * Calculates federal and provincial taxes for retirement income
  */
 
-// Federal tax brackets for 2025
+// Federal tax brackets for 2025 (CRA indexed values)
 export const FEDERAL_TAX_BRACKETS_2025 = [
-  { limit: 55867, rate: 0.15 },
-  { limit: 111733, rate: 0.205 },
-  { limit: 173205, rate: 0.26 },
-  { limit: 246752, rate: 0.29 },
-  { limit: Infinity, rate: 0.33 },
+  { limit: 57375, rate: 0.15 },    // 15% on first $57,375
+  { limit: 114750, rate: 0.205 },  // 20.5% on $57,375 to $114,750
+  { limit: 177882, rate: 0.26 },   // 26% on $114,750 to $177,882
+  { limit: 253414, rate: 0.29 },   // 29% on $177,882 to $253,414
+  { limit: Infinity, rate: 0.33 }, // 33% on over $253,414
 ];
 
 // Federal tax credits for 2025
@@ -37,6 +37,40 @@ export const ONTARIO_TAX_CREDITS_2025 = {
   ageAmount: 5826, // Age 65+
   pensionIncomeAmount: 1605,
   spouseAmount: 10011,
+};
+
+// Alberta tax brackets for 2025 (includes new 8% bracket!)
+export const ALBERTA_TAX_BRACKETS_2025 = [
+  { limit: 60000, rate: 0.08 },    // 8% on first $60,000 (NEW in 2025!)
+  { limit: 151234, rate: 0.10 },   // 10% on $60,000 to $151,234
+  { limit: 181481, rate: 0.12 },   // 12% on $151,234 to $181,481
+  { limit: 241974, rate: 0.13 },   // 13% on $181,481 to $241,974
+  { limit: 355845, rate: 0.14 },   // 14% on $241,974 to $355,845
+  { limit: Infinity, rate: 0.15 }, // 15% on over $355,845
+];
+
+// Alberta tax credits for 2025
+export const ALBERTA_TAX_CREDITS_2025 = {
+  basicPersonalAmount: 21885,
+  ageAmount: 5721, // Age 65+
+  pensionIncomeAmount: 1581,
+  spouseAmount: 21885,
+};
+
+// Quebec tax brackets for 2025
+export const QUEBEC_TAX_BRACKETS_2025 = [
+  { limit: 51780, rate: 0.14 },
+  { limit: 103545, rate: 0.19 },
+  { limit: 126000, rate: 0.24 },
+  { limit: Infinity, rate: 0.2575 },
+];
+
+// Quebec tax credits for 2025
+export const QUEBEC_TAX_CREDITS_2025 = {
+  basicPersonalAmount: 18056,
+  ageAmount: 3251, // Age 65+
+  pensionIncomeAmount: 3251,
+  spouseAmount: 18056,
 };
 
 /**
@@ -178,6 +212,144 @@ export function calculateOntarioTax(
 }
 
 /**
+ * Calculate Alberta provincial tax
+ */
+export function calculateAlbertaTax(
+  taxableIncome: number,
+  age: number = 65,
+  hasPensionIncome: boolean = false
+): {
+  grossTax: number;
+  credits: number;
+  netTax: number;
+  marginalRate: number;
+  averageRate: number;
+} {
+  if (taxableIncome <= 0) {
+    return {
+      grossTax: 0,
+      credits: 0,
+      netTax: 0,
+      marginalRate: 0,
+      averageRate: 0,
+    };
+  }
+
+  // Calculate gross tax
+  let grossTax = 0;
+  let previousLimit = 0;
+  let marginalRate = 0;
+
+  for (const bracket of ALBERTA_TAX_BRACKETS_2025) {
+    if (taxableIncome > previousLimit) {
+      const taxableInBracket = Math.min(
+        taxableIncome - previousLimit,
+        bracket.limit - previousLimit
+      );
+      grossTax += taxableInBracket * bracket.rate;
+      marginalRate = bracket.rate;
+      previousLimit = bracket.limit;
+    }
+  }
+
+  // Calculate tax credits
+  let creditableAmount = ALBERTA_TAX_CREDITS_2025.basicPersonalAmount;
+
+  if (age >= 65) {
+    creditableAmount += ALBERTA_TAX_CREDITS_2025.ageAmount;
+  }
+
+  if (hasPensionIncome) {
+    creditableAmount += ALBERTA_TAX_CREDITS_2025.pensionIncomeAmount;
+  }
+
+  const credits = creditableAmount * 0.10; // Alberta credit rate (lowest bracket)
+
+  // Net tax
+  const netTax = Math.max(0, grossTax - credits);
+
+  // Average tax rate
+  const averageRate = taxableIncome > 0 ? netTax / taxableIncome : 0;
+
+  return {
+    grossTax: Math.round(grossTax * 100) / 100,
+    credits: Math.round(credits * 100) / 100,
+    netTax: Math.round(netTax * 100) / 100,
+    marginalRate: Math.round(marginalRate * 10000) / 100, // As percentage
+    averageRate: Math.round(averageRate * 10000) / 100, // As percentage
+  };
+}
+
+/**
+ * Calculate Quebec provincial tax
+ */
+export function calculateQuebecTax(
+  taxableIncome: number,
+  age: number = 65,
+  hasPensionIncome: boolean = false
+): {
+  grossTax: number;
+  credits: number;
+  netTax: number;
+  marginalRate: number;
+  averageRate: number;
+} {
+  if (taxableIncome <= 0) {
+    return {
+      grossTax: 0,
+      credits: 0,
+      netTax: 0,
+      marginalRate: 0,
+      averageRate: 0,
+    };
+  }
+
+  // Calculate gross tax
+  let grossTax = 0;
+  let previousLimit = 0;
+  let marginalRate = 0;
+
+  for (const bracket of QUEBEC_TAX_BRACKETS_2025) {
+    if (taxableIncome > previousLimit) {
+      const taxableInBracket = Math.min(
+        taxableIncome - previousLimit,
+        bracket.limit - previousLimit
+      );
+      grossTax += taxableInBracket * bracket.rate;
+      marginalRate = bracket.rate;
+      previousLimit = bracket.limit;
+    }
+  }
+
+  // Calculate tax credits (Quebec uses a different system with reduction instead of credit rate)
+  let creditableAmount = QUEBEC_TAX_CREDITS_2025.basicPersonalAmount;
+
+  if (age >= 65) {
+    creditableAmount += QUEBEC_TAX_CREDITS_2025.ageAmount;
+  }
+
+  if (hasPensionIncome) {
+    creditableAmount += QUEBEC_TAX_CREDITS_2025.pensionIncomeAmount;
+  }
+
+  const credits = creditableAmount * 0.14; // Quebec credit rate (lowest bracket)
+
+  // Net tax
+  const netTax = Math.max(0, grossTax - credits);
+
+  // Average tax rate
+  const averageRate = taxableIncome > 0 ? netTax / taxableIncome : 0;
+
+  return {
+    grossTax: Math.round(grossTax * 100) / 100,
+    credits: Math.round(credits * 100) / 100,
+    netTax: Math.round(netTax * 100) / 100,
+    marginalRate: Math.round(marginalRate * 10000) / 100, // As percentage
+    averageRate: Math.round(averageRate * 10000) / 100, // As percentage
+  };
+}
+
+/**
  * Calculate total tax (federal + provincial)
  */
 export function calculateTotalTax(
@@ -193,16 +365,27 @@ export function calculateTotalTax(
   averageRate: number;
   breakdown: {
     federal: ReturnType<typeof calculateFederalTax>;
-    provincial: ReturnType<typeof calculateOntarioTax>;
+    provincial: ReturnType<typeof calculateOntarioTax> | ReturnType<typeof calculateAlbertaTax> | ReturnType<typeof calculateQuebecTax>;
   };
 } {
   const federal = calculateFederalTax(taxableIncome, age, hasPensionIncome);
 
-  // Currently only Ontario implemented, can add other provinces later
-  const provincial =
-    province === 'ON'
-      ? calculateOntarioTax(taxableIncome, age, hasPensionIncome)
-      : { grossTax: 0, credits: 0, netTax: 0, marginalRate: 0, averageRate: 0 };
+  // Calculate provincial tax based on province
+  let provincial;
+  switch (province.toUpperCase()) {
+    case 'ON':
+      provincial = calculateOntarioTax(taxableIncome, age, hasPensionIncome);
+      break;
+    case 'AB':
+      provincial = calculateAlbertaTax(taxableIncome, age, hasPensionIncome);
+      break;
+    case 'QC':
+      provincial = calculateQuebecTax(taxableIncome, age, hasPensionIncome);
+      break;
+    default:
+      // Default to Ontario if province not recognized
+      provincial = calculateOntarioTax(taxableIncome, age, hasPensionIncome);
+  }
 
   const totalTax = federal.netTax + provincial.netTax;
   const combinedMarginalRate = federal.marginalRate + provincial.marginalRate;

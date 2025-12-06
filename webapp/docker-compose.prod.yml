@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:14-alpine
+    container_name: retirezest-db-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-retirement}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-retirement_app}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-retirement}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - retirezest-network
+
+  # Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: retirezest-web-prod
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-retirement}:${DB_PASSWORD}@db:5432/${DB_NAME:-retirement_app}
+      JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      SENTRY_DSN: ${SENTRY_DSN}
+      SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
+      SENTRY_ORG: ${SENTRY_ORG}
+      SENTRY_PROJECT: ${SENTRY_PROJECT}
+      PYTHON_API_URL: ${PYTHON_API_URL:-http://python-api:8000}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - retirezest-network
+
+  # Python API (optional - if you have a Python calculation service)
+  # python-api:
+  #   build:
+  #     context: ../python-api
+  #     dockerfile: Dockerfile
+  #   container_name: retirezest-python-api
+  #   restart: unless-stopped
+  #   environment:
+  #     ENVIRONMENT: production
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - retirezest-network
+
+networks:
+  retirezest-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

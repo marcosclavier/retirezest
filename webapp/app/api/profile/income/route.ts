@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError, NotFoundError, ValidationError } from '@/lib/errors';
 
 // GET - Fetch all income sources for the user
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const incomeSources = await prisma.income.findMany({
@@ -17,11 +19,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(incomeSources);
   } catch (error) {
-    console.error('Error fetching income sources:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch income sources' },
-      { status: 500 }
-    );
+    logger.error('Error fetching income sources', error, {
+      endpoint: '/api/profile/income',
+      method: 'GET'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const body = await request.json();
@@ -38,17 +42,11 @@ export async function POST(request: NextRequest) {
 
     // Validation
     if (!type || !amount || !frequency) {
-      return NextResponse.json(
-        { error: 'Type, amount, and frequency are required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Type, amount, and frequency are required');
     }
 
     if (amount <= 0) {
-      return NextResponse.json(
-        { error: 'Amount must be greater than 0' },
-        { status: 400 }
-      );
+      throw new ValidationError('Amount must be greater than 0', 'amount');
     }
 
     const income = await prisma.income.create({
@@ -64,11 +62,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(income, { status: 201 });
   } catch (error) {
-    console.error('Error creating income source:', error);
-    return NextResponse.json(
-      { error: 'Failed to create income source' },
-      { status: 500 }
-    );
+    logger.error('Error creating income source', error, {
+      endpoint: '/api/profile/income',
+      method: 'POST'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -77,17 +77,14 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const body = await request.json();
     const { id, type, description, amount, frequency, isTaxable } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Income ID is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Income ID is required', 'id');
     }
 
     // Verify ownership
@@ -96,10 +93,7 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!existingIncome) {
-      return NextResponse.json(
-        { error: 'Income source not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Income source');
     }
 
     const updatedIncome = await prisma.income.update({
@@ -115,11 +109,13 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedIncome);
   } catch (error) {
-    console.error('Error updating income source:', error);
-    return NextResponse.json(
-      { error: 'Failed to update income source' },
-      { status: 500 }
-    );
+    logger.error('Error updating income source', error, {
+      endpoint: '/api/profile/income',
+      method: 'PUT'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
 
@@ -128,17 +124,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new AuthenticationError();
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Income ID is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Income ID is required', 'id');
     }
 
     // Verify ownership
@@ -147,10 +140,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!existingIncome) {
-      return NextResponse.json(
-        { error: 'Income source not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Income source');
     }
 
     await prisma.income.delete({
@@ -159,10 +149,12 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Income source deleted successfully' });
   } catch (error) {
-    console.error('Error deleting income source:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete income source' },
-      { status: 500 }
-    );
+    logger.error('Error deleting income source', error, {
+      endpoint: '/api/profile/income',
+      method: 'DELETE'
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }

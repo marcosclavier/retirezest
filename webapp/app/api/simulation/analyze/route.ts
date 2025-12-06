@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { handleApiError, AuthenticationError } from '@/lib/errors';
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8000';
 
@@ -18,17 +20,17 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
 
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized', message: 'You must be logged in' },
-        { status: 401 }
-      );
+      throw new AuthenticationError('You must be logged in');
     }
 
     // Parse request body
     const body = await request.json();
 
     // Log request
-    console.log(`[Composition Analysis] User: ${session.email}, Request started`);
+    logger.info('Composition analysis request started', {
+      user: session.email,
+      endpoint: '/api/simulation/analyze'
+    });
 
     // Forward request to Python API
     const pythonResponse = await fetch(`${PYTHON_API_URL}/api/analyze-composition`, {
@@ -43,11 +45,18 @@ export async function POST(request: NextRequest) {
 
     // Calculate processing time
     const duration = Date.now() - startTime;
-    console.log(`[Composition Analysis] User: ${session.email}, Status: ${pythonResponse.status}, Duration: ${duration}ms`);
+    logger.info('Composition analysis response received', {
+      user: session.email,
+      status: pythonResponse.status,
+      duration: `${duration}ms`
+    });
 
     // Check for Python API errors
     if (!pythonResponse.ok) {
-      console.error(`[Composition Analysis] Python API error: ${pythonResponse.status}`, responseData);
+      logger.error('Python API error in composition analysis', undefined, {
+        status: pythonResponse.status,
+        response: responseData
+      });
 
       return NextResponse.json(
         {
@@ -65,11 +74,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    console.error('[Composition Analysis] Error:', error);
-    console.error(`[Composition Analysis] Failed after ${duration}ms`);
-
     // Check if it's a network error
     if (error instanceof TypeError && error.message.includes('fetch')) {
+      logger.error('Python API connection failed', error, {
+        endpoint: '/api/simulation/analyze',
+        duration: `${duration}ms`
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -81,13 +92,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Generic error response
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        message: 'Composition analysis failed',
-      },
-      { status: 500 }
-    );
+    logger.error('Composition analysis failed', error, {
+      endpoint: '/api/simulation/analyze',
+      method: 'POST',
+      duration: `${duration}ms`
+    });
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json({
+      success: false,
+      error: body.error,
+      message: 'Composition analysis failed',
+    }, { status });
   }
 }

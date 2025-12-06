@@ -1,25 +1,50 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, createToken, setSession } from '@/lib/auth';
+import { registerRateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { handleApiError, ValidationError } from '@/lib/errors';
 
 export async function POST(request: Request) {
+  // Apply rate limiting - prevent abuse of registration endpoint
+  const rateLimitResult = await registerRateLimit(request as any);
+
+  if (!rateLimitResult.success) {
+    const resetDate = new Date(rateLimitResult.resetTime || 0);
+    const retryAfterSeconds = Math.ceil((rateLimitResult.resetTime! - Date.now()) / 1000);
+
+    return NextResponse.json(
+      {
+        error: 'Too many registration attempts. Please try again later.',
+        resetAt: resetDate.toISOString(),
+        retryAfter: retryAfterSeconds
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': retryAfterSeconds.toString(),
+          'X-RateLimit-Limit': '3',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': resetDate.toISOString()
+        }
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const { email, password, firstName, lastName } = body;
 
     // Validate input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+    if (!email || typeof email !== 'string') {
+      throw new ValidationError('Email is required', 'email');
+    }
+    if (!password || typeof password !== 'string') {
+      throw new ValidationError('Password is required', 'password');
     }
 
     if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+      throw new ValidationError('Password must be at least 8 characters', 'password');
     }
 
     // Check if user already exists
@@ -28,10 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists' },
-        { status: 400 }
-      );
+      throw new ValidationError('An account with this email already exists', 'email');
     }
 
     // Hash password
@@ -66,22 +88,12 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      env: {
-        hasJWT: !!process.env.JWT_SECRET,
-        hasDB: !!process.env.DATABASE_URL,
-        nodeEnv: process.env.NODE_ENV
-      }
+    logger.error('Registration failed', error, {
+      endpoint: '/api/auth/register',
+      method: 'POST'
     });
-    return NextResponse.json(
-      {
-        error: 'Registration failed. Please try again.',
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
-      },
-      { status: 500 }
-    );
+
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
