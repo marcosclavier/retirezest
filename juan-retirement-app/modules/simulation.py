@@ -11,6 +11,7 @@ Core Functions:
 
 from typing import Dict, List, Tuple, Optional
 import pandas as pd
+import logging
 from modules.models import Person, Household, TaxParams, YearResult
 from modules.config import get_tax_params, index_tax_params
 from modules.tax_engine import progressive_tax
@@ -18,6 +19,9 @@ from modules.withdrawal_strategies import get_strategy, is_hybrid_strategy
 from modules.tax_optimizer import TaxOptimizer
 from modules.estate_tax_calculator import EstateCalculator
 from utils.helpers import clamp
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 def rrif_min_factor(age: int) -> float:
@@ -231,13 +235,12 @@ def corp_passive_income(person: Person) -> Dict[str, float]:
 
         # DEBUG: Log first time we see huge numbers
         if corp_total > 1e12:
-            import sys
-            print(f"DEBUG: HUGE corp balance detected: {corp_total:.0f}", file=sys.stderr)
-            print(f"  Buckets: cash={cash:.0f}, gic={gic:.0f}, invest={invest:.0f}", file=sys.stderr)
-            print(f"  Percentages: cash={cash_pct:.4f}, gic={gic_pct:.4f}, invest={invest_pct:.4f}", file=sys.stderr)
-            print(f"  Amounts: cash={cash_amount:.0f}, gic={gic_amount:.0f}, invest={invest_amount:.0f}", file=sys.stderr)
-            print(f"  Yields: int={yield_int:.4f}, elig={yield_elig:.4f}, nonelig={yield_nonelig:.4f}, capg={yield_capg:.4f}", file=sys.stderr)
-            print(f"  Generated: int={interest_gen:.0f}, elig={elig_div_gen:.0f}, nonelig={nonelig_div_gen:.0f}, capg={capg_gen:.0f}", file=sys.stderr)
+            logger.debug(f"DEBUG: HUGE corp balance detected: {corp_total:.0f}")
+            logger.debug(f"  Buckets: cash={cash:.0f}, gic={gic:.0f}, invest={invest:.0f}")
+            logger.debug(f"  Percentages: cash={cash_pct:.4f}, gic={gic_pct:.4f}, invest={invest_pct:.4f}")
+            logger.debug(f"  Amounts: cash={cash_amount:.0f}, gic={gic_amount:.0f}, invest={invest_amount:.0f}")
+            logger.debug(f"  Yields: int={yield_int:.4f}, elig={yield_elig:.4f}, nonelig={yield_nonelig:.4f}, capg={yield_capg:.4f}")
+            logger.debug(f"  Generated: int={interest_gen:.0f}, elig={elig_div_gen:.0f}, nonelig={nonelig_div_gen:.0f}, capg={capg_gen:.0f}")
 
     # RDTOH tracking: 15% of non-eligible dividends become RDTOH
     rdtoh_add = nonelig_div_gen * 0.15
@@ -976,7 +979,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log if CPP is unexpectedly 0 (only if person should be eligible)
     if person.cpp_annual_at_start > 0 and cpp == 0 and age >= person.cpp_start_age:
-        print(f"DEBUG simulate_year(): {person.name} CPP unexpectedly 0! "
+        logger.debug(f"DEBUG simulate_year(): {person.name} CPP unexpectedly 0! "
               f"cpp_annual_at_start={person.cpp_annual_at_start}, cpp_start_age={person.cpp_start_age}, age={age}")
 
     oas = 0.0
@@ -1161,15 +1164,13 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         if optimizer_order and len(optimizer_order) > 0:
             order = optimizer_order
             if shortfall > 1e-6:
-                import sys
-                print(f"  TaxOptimizer selected order: {order}", file=sys.stderr)
+                logger.debug(f"  TaxOptimizer selected order: {order}")
         else:
             # Fallback to strategy-based order if optimizer returned empty
             order = _get_strategy_order(strategy_name)
     except Exception as e:
         # Fallback to strategy-based order on any optimizer error
-        import sys
-        print(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order", file=sys.stderr)
+        logger.debug(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order")
         order = _get_strategy_order(strategy_name)
 
     if "GIS-Optimized" in strategy_name:
@@ -1181,14 +1182,13 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log initial shortfall and available balances
     if shortfall > 1e-6:
-        import sys
-        print(f"\nDEBUG WITHDRAWAL [{person.name}] Age {age} Year {year if year else '?'}:", file=sys.stderr)
-        print(f"  Strategy: {strategy_name}", file=sys.stderr)
-        print(f"  After-tax target: ${after_tax_target:,.0f}", file=sys.stderr)
-        print(f"  Base after-tax: ${base_after_tax:,.0f}", file=sys.stderr)
-        print(f"  Initial shortfall: ${shortfall:,.0f}", file=sys.stderr)
-        print(f"  Order: {order}", file=sys.stderr)
-        print(f"  Starting balances: RRIF=${person.rrif_balance:,.0f} CORP=${corporate_balance_start:,.0f} NONREG=${person.nonreg_balance:,.0f} TFSA=${person.tfsa_balance:,.0f}", file=sys.stderr)
+        logger.debug(f"\nDEBUG WITHDRAWAL [{person.name}] Age {age} Year {year if year else '?'}:")
+        logger.debug(f"  Strategy: {strategy_name}")
+        logger.debug(f"  After-tax target: ${after_tax_target:,.0f}")
+        logger.debug(f"  Base after-tax: ${base_after_tax:,.0f}")
+        logger.debug(f"  Initial shortfall: ${shortfall:,.0f}")
+        logger.debug(f"  Order: {order}")
+        logger.debug(f"  Starting balances: RRIF=${person.rrif_balance:,.0f} CORP=${corporate_balance_start:,.0f} NONREG=${person.nonreg_balance:,.0f} TFSA=${person.tfsa_balance:,.0f}")
 
     extra = {"nonreg": 0.0, "rrif": 0.0, "corp": 0.0, "tfsa": 0.0}
 
@@ -1231,8 +1231,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
             # For Balanced strategy, provide DEBUG info about ACB timing
             if available > 1e-6 and ("Balanced" in strategy_name or "tax efficiency" in strategy_name.lower()):
-                import sys
-                print(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}", file=sys.stderr)
+                logger.debug(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}")
         elif k == "tfsa":
             # TFSA-last guard: only allow TFSA if all other sources are tapped
             # FIX: Use the ORIGINAL starting balance, not current balance minus what we already withdrew
@@ -1243,16 +1242,14 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
             # DEBUG: Log TFSA guard check
             if shortfall > 1e-6:
-                import sys
-                print(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}", file=sys.stderr)
+                logger.debug(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}")
 
             # CRITICAL FIX: TFSA should ONLY be used if ALL other sources in the withdrawal order
             # that come BEFORE TFSA have been fully depleted
             if (nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9):
                 # Skip TFSA for now; other sources still have funds
                 if shortfall > 1e-6:
-                    import sys
-                    print(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})", file=sys.stderr)
+                    logger.debug(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})")
                 continue
             available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
         else:
@@ -1260,14 +1257,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         if available <= 0.0:
             if shortfall > 1e-6 and k != "tfsa":
-                import sys
-                print(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)", file=sys.stderr)
+                logger.debug(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)")
             continue
 
         # DEBUG: Log withdrawal source being processed
         if shortfall > 1e-6:
-            import sys
-            print(f"  {k.upper()}: available=${available:,.0f}, shortfall=${shortfall:,.0f}", file=sys.stderr)
+            logger.debug(f"  {k.upper()}: available=${available:,.0f}, shortfall=${shortfall:,.0f}")
 
         # TFSA is tax-free: just take what you need and continue
         if k == "tfsa":
@@ -1276,8 +1271,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             shortfall -= take
             # DEBUG: Log TFSA withdrawal
             if take > 1e-6:
-                import sys
-                print(f"  -> TFSA withdrawal: ${take:,.0f}", file=sys.stderr)
+                logger.debug(f"  -> TFSA withdrawal: ${take:,.0f}")
             continue
 
         # --- For taxable sources (nonreg / rrif / corp), compute tax-aware sizing ---
@@ -1339,8 +1333,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             extra[k] += take
             # DEBUG: Log withdrawal amount
             if shortfall > 1e-6:
-                import sys
-                print(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)", file=sys.stderr)
+                logger.debug(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)")
             # Recompute base_tax and total after-tax cash with the new withdrawal
             # CRITICAL FIX: Pass the TOTAL withdrawal amounts (base + extra), not just extra
             # This ensures tax calculation correctly computes marginal tax rates on total income
@@ -1423,8 +1416,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # DEBUG: Log CDA withdrawal
         if corp_cda_withdrawn > 1e-6:
-            import sys
-            print(f"DEBUG CDA [{person.name}]: Withdrew ${corp_cda_withdrawn:,.0f} from CDA (zero-tax), ${corp_other_withdrawn:,.0f} from paid-up capital", file=sys.stderr)
+            logger.debug(f"DEBUG CDA [{person.name}]: Withdrew ${corp_cda_withdrawn:,.0f} from CDA (zero-tax), ${corp_other_withdrawn:,.0f} from paid-up capital")
     else:
         # Non-Balanced strategy: just deduct from paid-up capital
         person.corp_paid_up_capital = max(getattr(person, "corp_paid_up_capital", 0.0) - withdrawals["corp"], 0.0)
@@ -1448,12 +1440,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log GIS calculation when values are non-zero
     if gis_benefit > 0 or gis_net_income > 15000:
-        import sys
-        print(f"DEBUG GIS [{person.name}] Age {age}:", file=sys.stderr)
-        print(f"  nr_interest={nr_interest:.0f}, nr_elig_div={nr_elig_div:.0f}, nr_capg_dist={nr_capg_dist:.0f}", file=sys.stderr)
-        print(f"  rrif_wd={withdrawals['rrif']:.0f}, corp_wd={withdrawals['corp']:.0f}", file=sys.stderr)
-        print(f"  cpp={cpp:.0f}, oas={oas:.0f}", file=sys.stderr)
-        print(f"  GIS_NET_INCOME={gis_net_income:.0f}, GIS_BENEFIT={gis_benefit:.0f}", file=sys.stderr)
+        logger.debug(f"DEBUG GIS [{person.name}] Age {age}:")
+        logger.debug(f"  nr_interest={nr_interest:.0f}, nr_elig_div={nr_elig_div:.0f}, nr_capg_dist={nr_capg_dist:.0f}")
+        logger.debug(f"  rrif_wd={withdrawals['rrif']:.0f}, corp_wd={withdrawals['corp']:.0f}")
+        logger.debug(f"  cpp={cpp:.0f}, oas={oas:.0f}")
+        logger.debug(f"  GIS_NET_INCOME={gis_net_income:.0f}, GIS_BENEFIT={gis_benefit:.0f}")
 
     # -----  REINVEST SURPLUS: Handle excess withdrawals beyond spending need -----
     # STRATEGY: Protect TFSA as emergency fund
@@ -1491,10 +1482,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # DEBUG: Log tax calculation values
     dist_sum = nr_interest + nr_elig_div + nr_nonelig_div
     if abs(base_tax - dist_sum) < 0.01 and dist_sum > 1:
-        print(f"⚠️  WARNING in simulate_year(): base_tax ({base_tax:.2f}) equals distribution sum ({dist_sum:.2f})")
-        print(f"    This indicates the tax calculation may be using distributions instead of proper tax_for()")
-        print(f"    nr_interest={nr_interest:.2f}, nr_elig_div={nr_elig_div:.2f}, nr_nonelig_div={nr_nonelig_div:.2f}")
-        print(f"    withdrawals: rrif={withdrawals['rrif']:.2f}, nonreg={withdrawals['nonreg']:.2f}, corp={withdrawals['corp']:.2f}")
+        logger.debug(f"⚠️  WARNING in simulate_year(): base_tax ({base_tax:.2f}) equals distribution sum ({dist_sum:.2f})")
+        logger.debug(f"    This indicates the tax calculation may be using distributions instead of proper tax_for()")
+        logger.debug(f"    nr_interest={nr_interest:.2f}, nr_elig_div={nr_elig_div:.2f}, nr_nonelig_div={nr_nonelig_div:.2f}")
+        logger.debug(f"    withdrawals: rrif={withdrawals['rrif']:.2f}, nonreg={withdrawals['nonreg']:.2f}, corp={withdrawals['corp']:.2f}")
 
     tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "gis": gis_benefit,
                   "oas_clawback": base_oas_clawback,  # NEW: OAS clawback amount
@@ -1781,8 +1772,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                import sys
-                print(f"DEBUG HH GIS CASE1 (Both OAS) [{year}]: P1_income=${gis_income_p1:,.0f} P2_income=${gis_income_p2:,.0f} Combined=${combined_gis_income:,.0f} threshold=${couple_threshold:,.0f}", file=sys.stderr)
+                logger.debug(f"DEBUG HH GIS CASE1 (Both OAS) [{year}]: P1_income=${gis_income_p1:,.0f} P2_income=${gis_income_p2:,.0f} Combined=${combined_gis_income:,.0f} threshold=${couple_threshold:,.0f}")
 
             # Apply couple clawback logic
             if combined_gis_income >= couple_threshold:
@@ -1790,11 +1780,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 clawback_per_person = total_clawback / 2.0
                 gis_benefit = max(0.0, max_benefit_per_person - clawback_per_person)
                 if year >= 2025:
-                    print(f"DEBUG HH GIS CASE1 CLAWBACK [{year}]: excess=${combined_gis_income - couple_threshold:,.0f} gis_benefit=${gis_benefit:,.2f}", file=sys.stderr)
+                    logger.debug(f"DEBUG HH GIS CASE1 CLAWBACK [{year}]: excess=${combined_gis_income - couple_threshold:,.0f} gis_benefit=${gis_benefit:,.2f}")
             else:
                 gis_benefit = max_benefit_per_person
                 if year >= 2025:
-                    print(f"DEBUG HH GIS CASE1 BELOW_THRESHOLD [{year}]: gis_benefit=${gis_benefit:,.2f}", file=sys.stderr)
+                    logger.debug(f"DEBUG HH GIS CASE1 BELOW_THRESHOLD [{year}]: gis_benefit=${gis_benefit:,.2f}")
 
             t1["gis"] = gis_benefit
             t2["gis"] = gis_benefit
@@ -1813,8 +1803,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                import sys
-                print(f"DEBUG HH GIS CASE2 (One OAS) [{year}]: P1_income=${gis_income_p1:,.0f} (OAS=${oas_p1_current:,.0f}) P2_income=${gis_income_p2:,.0f} (OAS=${oas_p2_current:,.0f}) Combined=${combined_gis_income:,.0f} threshold=${one_oas_threshold:,.0f}", file=sys.stderr)
+                logger.debug(f"DEBUG HH GIS CASE2 (One OAS) [{year}]: P1_income=${gis_income_p1:,.0f} (OAS=${oas_p1_current:,.0f}) P2_income=${gis_income_p2:,.0f} (OAS=${oas_p2_current:,.0f}) Combined=${combined_gis_income:,.0f} threshold=${one_oas_threshold:,.0f}")
 
             # Person 1 (check if receiving OAS this year)
             if oas_p1_current > 0:
@@ -1822,11 +1811,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     total_clawback = (combined_gis_income - one_oas_threshold) * clawback_rate
                     gis_p1 = max(0.0, max_benefit_couple - total_clawback)
                     if year >= 2025:
-                        print(f"DEBUG HH GIS CASE2 P1 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p1=${gis_p1:,.2f}", file=sys.stderr)
+                        logger.debug(f"DEBUG HH GIS CASE2 P1 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p1=${gis_p1:,.2f}")
                 else:
                     gis_p1 = max_benefit_couple
                     if year >= 2025:
-                        print(f"DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [{year}]: gis_p1=${gis_p1:,.2f}", file=sys.stderr)
+                        logger.debug(f"DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [{year}]: gis_p1=${gis_p1:,.2f}")
                 t1["gis"] = gis_p1
             else:
                 t1["gis"] = 0.0
@@ -1838,18 +1827,17 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     total_clawback = (combined_gis_income - one_oas_threshold) * clawback_rate
                     gis_p2 = max(0.0, max_benefit_couple - total_clawback)
                     if year >= 2025:
-                        print(f"DEBUG HH GIS CASE2 P2 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p2=${gis_p2:,.2f}", file=sys.stderr)
+                        logger.debug(f"DEBUG HH GIS CASE2 P2 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p2=${gis_p2:,.2f}")
                 else:
                     gis_p2 = max_benefit_couple
                     if year >= 2025:
-                        print(f"DEBUG HH GIS CASE2 P2 BELOW_THRESHOLD [{year}]: gis_p2=${gis_p2:,.2f}", file=sys.stderr)
+                        logger.debug(f"DEBUG HH GIS CASE2 P2 BELOW_THRESHOLD [{year}]: gis_p2=${gis_p2:,.2f}")
                 t2["gis"] = gis_p2
             else:
                 t2["gis"] = 0.0
 
         if year >= 2025:
-            import sys
-            print(f"DEBUG HH GIS FINAL [{year}]: t1[gis]=${t1.get('gis', 0):,.2f} t2[gis]=${t2.get('gis', 0):,.2f}", file=sys.stderr)
+            logger.debug(f"DEBUG HH GIS FINAL [{year}]: t1[gis]=${t1.get('gis', 0):,.2f} t2[gis]=${t2.get('gis', 0):,.2f}")
 
         # Household-level funding gap in this year
         hh_gap = float(info1.get("unmet_after_tax", 0.0) + info2.get("unmet_after_tax", 0.0))
