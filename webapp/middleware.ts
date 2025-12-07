@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { validateCsrfToken } from '@/lib/csrf';
+import { validateCsrfTokenEdge } from '@/lib/csrf-edge';
 
 /**
  * Security headers for all responses
@@ -98,7 +98,7 @@ export async function middleware(request: NextRequest) {
 
   // Apply CSRF validation for protected mutations
   if (isProtectedRoute && isMutation && !isExemptRoute) {
-    const isValid = await validateCsrfToken(request);
+    const isValid = await validateCsrfTokenEdge(request);
 
     if (!isValid) {
       const response = NextResponse.json(

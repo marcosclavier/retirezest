@@ -37,10 +37,12 @@ model Income {
   id          String    @id @default(uuid())
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String    // employment, pension, investment, rental
+  type        String    // employment, cpp, oas, pension, rental, business, investment, other
   description String?
   amount      Float
-  frequency   String    // monthly, annual
+  frequency   String    // monthly, annual, biweekly, weekly
+  startAge    Int?      // Age when income starts (for CPP, OAS, pension)
+  notes       String?
   isTaxable   Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -54,10 +56,14 @@ model Asset {
   id              String    @id @default(uuid())
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type            String    // rrsp, tfsa, non_registered, real_estate
+  type            String    // rrsp, rrif, tfsa, nonreg, corporate, savings, gic, property, other
+  name            String    // Account name
   description     String?
-  currentValue    Float
-  contributionRoom Float?
+  balance         Float     // Current balance/value
+  currentValue    Float?    // Legacy field, use balance instead
+  contributionRoom Float?   // For RRSP/TFSA
+  returnRate      Float?    // Expected annual return rate percentage
+  notes           String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -70,31 +76,38 @@ model Expense {
   id          String    @id @default(uuid())
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category    String    // housing, food, transportation, healthcare, etc.
+  category    String    // housing, utilities, food, transportation, healthcare, insurance, entertainment, travel, shopping, subscriptions, gifts, other
   description String?
   amount      Float
-  frequency   String    // monthly, annual
-  isEssential Boolean   @default(true)
+  frequency   String    // monthly, annual, quarterly, weekly
+  essential   Boolean   @default(true)  // Cannot be reduced
+  isEssential Boolean?  // Legacy field, use essential instead
+  notes       String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([userId])
   @@index([userId, category])
-  @@index([userId, isEssential])
+  @@index([userId, essential])
   @@index([createdAt])
 }
 
 model Debt {
-  id              String    @id @default(uuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type            String    // mortgage, loan, credit_card
-  description     String?
-  currentBalance  Float
-  interestRate    Float
-  monthlyPayment  Float?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String    // mortgage, car_loan, student_loan, credit_card, line_of_credit, personal_loan, other
+  creditor          String    // Lender name
+  description       String?
+  balance           Float     // Outstanding balance
+  currentBalance    Float?    // Legacy field, use balance instead
+  interestRate      Float     // Annual interest rate percentage
+  minimumPayment    Float     // Minimum payment amount
+  monthlyPayment    Float?    // Legacy field, use minimumPayment instead
+  paymentFrequency  String    @default("monthly")  // monthly, biweekly, weekly
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([userId])
   @@index([userId, type])

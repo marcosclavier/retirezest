@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(debts);
+    return NextResponse.json({ debts });
   } catch (error) {
     logger.error('Error fetching debts', error, {
       endpoint: '/api/profile/debts',
@@ -38,25 +38,40 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, description, currentBalance, interestRate, monthlyPayment } = body;
+    const { type, creditor, description, balance, currentBalance, interestRate, minimumPayment, monthlyPayment, paymentFrequency, notes } = body;
 
     // Validation
-    if (!type || currentBalance === undefined) {
-      throw new ValidationError('Type and current balance are required');
+    if (!type || !creditor) {
+      throw new ValidationError('Type and creditor are required');
     }
 
-    if (currentBalance < 0) {
-      throw new ValidationError('Current balance cannot be negative', 'currentBalance');
+    const balanceValue = balance !== undefined ? balance : currentBalance;
+    if (balanceValue === undefined) {
+      throw new ValidationError('Balance is required');
+    }
+
+    if (balanceValue < 0) {
+      throw new ValidationError('Balance cannot be negative', 'balance');
+    }
+
+    const paymentValue = minimumPayment !== undefined ? minimumPayment : monthlyPayment;
+    if (!paymentValue) {
+      throw new ValidationError('Minimum payment is required');
     }
 
     const debt = await prisma.debt.create({
       data: {
         userId: session.userId,
         type,
+        creditor,
         description: description || null,
-        currentBalance: parseFloat(currentBalance),
+        balance: parseFloat(balanceValue),
+        currentBalance: parseFloat(balanceValue), // Keep for backwards compatibility
         interestRate: parseFloat(interestRate),
-        monthlyPayment: monthlyPayment ? parseFloat(monthlyPayment) : null,
+        minimumPayment: parseFloat(paymentValue),
+        monthlyPayment: parseFloat(paymentValue), // Keep for backwards compatibility
+        paymentFrequency: paymentFrequency || 'monthly',
+        notes: notes || null,
       },
     });
 

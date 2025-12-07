@@ -5,9 +5,13 @@ import { useState, useEffect } from 'react';
 interface Asset {
   id: string;
   type: string;
+  name: string;
   description: string | null;
+  balance: number;
   currentValue: number;
   contributionRoom: number | null;
+  returnRate: number | null;
+  notes: string | null;
 }
 
 export default function AssetsPage() {
@@ -15,23 +19,40 @@ export default function AssetsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string>('');
   const [formData, setFormData] = useState({
     type: 'rrsp',
+    name: '',
     description: '',
-    currentValue: '',
+    balance: '',
     contributionRoom: '',
+    returnRate: '',
+    notes: '',
   });
 
   useEffect(() => {
     fetchAssets();
+    fetchCsrfToken();
   }, []);
+
+  const fetchCsrfToken = async () => {
+    try {
+      const res = await fetch('/api/csrf');
+      if (res.ok) {
+        const data = await res.json();
+        setCsrfToken(data.token);
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+  };
 
   const fetchAssets = async () => {
     try {
       const res = await fetch('/api/profile/assets');
       if (res.ok) {
         const data = await res.json();
-        setAssets(data);
+        setAssets(data.assets || []);
       }
     } catch (error) {
       console.error('Error fetching assets:', error);
@@ -43,6 +64,12 @@ export default function AssetsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Ensure we have a CSRF token before submitting
+    if (!csrfToken) {
+      alert('Security token not loaded. Please refresh the page and try again.');
+      return;
+    }
+
     const method = editingId ? 'PUT' : 'POST';
     const body = editingId
       ? { id: editingId, ...formData }
@@ -51,7 +78,10 @@ export default function AssetsPage() {
     try {
       const res = await fetch('/api/profile/assets', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         body: JSON.stringify(body),
       });
 
@@ -61,9 +91,12 @@ export default function AssetsPage() {
         setEditingId(null);
         setFormData({
           type: 'rrsp',
+          name: '',
           description: '',
-          currentValue: '',
+          balance: '',
           contributionRoom: '',
+          returnRate: '',
+          notes: '',
         });
       } else {
         const error = await res.json();
@@ -78,9 +111,12 @@ export default function AssetsPage() {
   const handleEdit = (asset: Asset) => {
     setFormData({
       type: asset.type,
+      name: asset.name || '',
       description: asset.description || '',
-      currentValue: asset.currentValue.toString(),
+      balance: asset.balance.toString(),
       contributionRoom: asset.contributionRoom?.toString() || '',
+      returnRate: asset.returnRate?.toString() || '',
+      notes: asset.notes || '',
     });
     setEditingId(asset.id);
     setShowForm(true);
@@ -94,6 +130,9 @@ export default function AssetsPage() {
     try {
       const res = await fetch(`/api/profile/assets?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
       });
 
       if (res.ok) {
@@ -108,13 +147,13 @@ export default function AssetsPage() {
   };
 
   const calculateTotalAssets = () => {
-    return assets.reduce((total, asset) => total + asset.currentValue, 0);
+    return assets.reduce((total, asset) => total + asset.balance, 0);
   };
 
   const getAssetsByType = () => {
     const byType: Record<string, number> = {};
     assets.forEach(asset => {
-      byType[asset.type] = (byType[asset.type] || 0) + asset.currentValue;
+      byType[asset.type] = (byType[asset.type] || 0) + asset.balance;
     });
     return byType;
   };
@@ -140,9 +179,12 @@ export default function AssetsPage() {
             setEditingId(null);
             setFormData({
               type: 'rrsp',
+              name: '',
               description: '',
-              currentValue: '',
+              balance: '',
               contributionRoom: '',
+              returnRate: '',
+              notes: '',
             });
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -191,50 +233,70 @@ export default function AssetsPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Account Type</label>
+                <label className="block text-sm font-medium text-gray-700">Account Type *</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 >
                   <option value="rrsp">RRSP</option>
+                  <option value="rrif">RRIF</option>
                   <option value="tfsa">TFSA</option>
-                  <option value="non_registered">Non-Registered</option>
-                  <option value="real_estate">Real Estate</option>
+                  <option value="nonreg">Non-Registered</option>
+                  <option value="corporate">Corporate Account</option>
+                  <option value="savings">Savings Account</option>
+                  <option value="gic">GIC</option>
+                  <option value="property">Property</option>
                   <option value="other">Other</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Current Value ($)</label>
+                <label className="block text-sm font-medium text-gray-700">Account Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="e.g., TD RRSP Account"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Current Balance ($) *</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.currentValue}
-                  onChange={(e) => setFormData({ ...formData, currentValue: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={formData.balance}
+                  onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="e.g., 150000"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Description (optional)
+                  Expected Return Rate (% per year)
                 </label>
                 <input
-                  type="text"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="e.g., TD RRSP Account"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={formData.returnRate}
+                  onChange={(e) => setFormData({ ...formData, returnRate: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="e.g., 5.0"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Contribution Room (optional) ($)
+                  Contribution Room ($)
                 </label>
                 <input
                   type="number"
@@ -242,8 +304,34 @@ export default function AssetsPage() {
                   min="0"
                   value={formData.contributionRoom}
                   onChange={(e) => setFormData({ ...formData, contributionRoom: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Remaining contribution room"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="For RRSP/TFSA"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="Additional details"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Notes
+                </label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="Any additional notes..."
+                  rows={3}
                 />
               </div>
             </div>
@@ -310,10 +398,18 @@ export default function AssetsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-medium text-gray-900 uppercase">
-                        {asset.type.replace('_', ' ')}
+                      <h3 className="text-lg font-medium text-gray-900">
+                        {asset.name}
                       </h3>
+                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded uppercase">
+                        {asset.type.replace('_', ' ')}
+                      </span>
                       {asset.type === 'rrsp' && (
+                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                          Tax-Deferred
+                        </span>
+                      )}
+                      {asset.type === 'rrif' && (
                         <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
                           Tax-Deferred
                         </span>
@@ -327,18 +423,29 @@ export default function AssetsPage() {
                     {asset.description && (
                       <p className="text-sm text-gray-600 mt-1">{asset.description}</p>
                     )}
+                    {asset.notes && (
+                      <p className="text-sm text-gray-500 mt-1 italic">{asset.notes}</p>
+                    )}
                     <div className="mt-2 flex items-center space-x-4">
                       <div>
-                        <span className="text-sm text-gray-500">Current Value: </span>
+                        <span className="text-sm text-gray-500">Balance: </span>
                         <span className="font-medium text-lg text-gray-900">
-                          ${asset.currentValue.toLocaleString()}
+                          ${asset.balance.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
+                      {asset.returnRate !== null && (
+                        <div>
+                          <span className="text-sm text-gray-500">Return Rate: </span>
+                          <span className="font-medium text-gray-900">
+                            {asset.returnRate}%
+                          </span>
+                        </div>
+                      )}
                       {asset.contributionRoom !== null && (
                         <div>
                           <span className="text-sm text-gray-500">Contribution Room: </span>
                           <span className="font-medium text-gray-900">
-                            ${asset.contributionRoom.toLocaleString()}
+                            ${asset.contributionRoom.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       )}

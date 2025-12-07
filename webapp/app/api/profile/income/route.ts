@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(incomeSources);
+    return NextResponse.json({ income: incomeSources });
   } catch (error) {
     logger.error('Error fetching income sources', error, {
       endpoint: '/api/profile/income',
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, description, amount, frequency, isTaxable } = body;
+    const { type, description, amount, frequency, startAge, notes, isTaxable } = body;
 
     // Validation
     if (!type || !amount || !frequency) {
@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
         description: description || null,
         amount: parseFloat(amount),
         frequency,
+        startAge: startAge ? parseInt(startAge) : null,
+        notes: notes || null,
         isTaxable: isTaxable !== undefined ? isTaxable : true,
       },
     });
@@ -81,7 +83,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, type, description, amount, frequency, isTaxable } = body;
+    const { id, type, description, amount, frequency, startAge, notes, isTaxable } = body;
 
     if (!id) {
       throw new ValidationError('Income ID is required', 'id');
@@ -103,6 +105,8 @@ export async function PUT(request: NextRequest) {
         description: description || null,
         amount: parseFloat(amount),
         frequency,
+        startAge: startAge ? parseInt(startAge) : null,
+        notes: notes || null,
         isTaxable: isTaxable !== undefined ? isTaxable : true,
       },
     });

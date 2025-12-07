@@ -6,7 +6,9 @@
 import { cookies } from 'next/headers';
 import { randomBytes, createHmac } from 'crypto';
 
-const COOKIE_NAME = '__Host-csrf-token';
+// Use __Host- prefix only in production (requires HTTPS)
+// In development, use regular cookie name
+const COOKIE_NAME = process.env.NODE_ENV === 'production' ? '__Host-csrf-token' : 'csrf-token';
 const HEADER_NAME = 'x-csrf-token';
 const TOKEN_LENGTH = 32;
 
@@ -33,7 +35,7 @@ export async function generateCsrfToken(): Promise<string> {
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax', // Changed from 'strict' to 'lax' for better compatibility
     path: '/',
     maxAge: 60 * 60 * 24, // 24 hours
   });
@@ -48,25 +50,36 @@ export async function validateCsrfToken(request: Request): Promise<boolean> {
   try {
     // Get token from header
     const headerToken = request.headers.get(HEADER_NAME);
+    console.log('[CSRF] Header token:', headerToken ? `${headerToken.substring(0, 20)}...` : 'MISSING');
+
     if (!headerToken) {
+      console.log('[CSRF] Validation failed: No header token');
       return false;
     }
 
     // Get token from cookie
     const cookieStore = await cookies();
     const cookieToken = cookieStore.get(COOKIE_NAME)?.value;
+    console.log('[CSRF] Cookie token:', cookieToken ? `${cookieToken.substring(0, 20)}...` : 'MISSING');
+    console.log('[CSRF] Cookie name:', COOKIE_NAME);
+
     if (!cookieToken) {
+      console.log('[CSRF] Validation failed: No cookie token');
       return false;
     }
 
     // Tokens must match
     if (headerToken !== cookieToken) {
+      console.log('[CSRF] Validation failed: Token mismatch');
+      console.log('[CSRF] Header:', headerToken);
+      console.log('[CSRF] Cookie:', cookieToken);
       return false;
     }
 
     // Validate token structure
     const parts = headerToken.split('.');
     if (parts.length !== 2) {
+      console.log('[CSRF] Validation failed: Invalid token structure');
       return false;
     }
 
@@ -78,8 +91,11 @@ export async function validateCsrfToken(request: Request): Promise<boolean> {
     const expectedSignature = hmac.digest('hex');
 
     // Use timing-safe comparison
-    return timingSafeEqual(signature, expectedSignature);
+    const isValid = timingSafeEqual(signature, expectedSignature);
+    console.log('[CSRF] Signature validation:', isValid ? 'PASSED' : 'FAILED');
+    return isValid;
   } catch (error) {
+    console.log('[CSRF] Validation error:', error);
     return false;
   }
 }

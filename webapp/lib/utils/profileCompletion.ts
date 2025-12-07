@@ -78,7 +78,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Complete your profile with name, date of birth, province, and marital status',
       weight: 20,
       action: 'Complete Profile',
-      link: '/dashboard/profile',
+      link: '/profile',
     });
   }
 
@@ -93,7 +93,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Add at least one income source to understand your cash flow',
       weight: 15,
       action: 'Add Income',
-      link: '/dashboard/profile/income',
+      link: '/profile/income',
     });
   }
 
@@ -108,7 +108,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Record your RRSP, TFSA, and other retirement assets',
       weight: 20,
       action: 'Add Assets',
-      link: '/dashboard/profile/assets',
+      link: '/profile/assets',
     });
   }
 
@@ -123,7 +123,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Track your expenses to estimate retirement spending needs',
       weight: 15,
       action: 'Add Expenses',
-      link: '/dashboard/profile/expenses',
+      link: '/profile/expenses',
     });
   }
 
@@ -139,7 +139,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Set your target retirement age and life expectancy',
       weight: 15,
       action: 'Plan Retirement',
-      link: '/dashboard/projection',
+      link: '/projection',
     });
   }
 
@@ -154,7 +154,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Estimate your CPP and OAS benefits to understand government income',
       weight: 15,
       action: 'Calculate Benefits',
-      link: '/dashboard/benefits',
+      link: '/benefits',
     });
   }
 

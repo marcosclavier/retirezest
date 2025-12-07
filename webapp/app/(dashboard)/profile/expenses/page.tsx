@@ -8,7 +8,9 @@ interface Expense {
   description: string | null;
   amount: number;
   frequency: string;
-  isEssential: boolean;
+  essential: boolean;
+  isEssential: boolean; // Legacy field for backwards compatibility
+  notes: string | null;
 }
 
 export default function ExpensesPage() {
@@ -16,24 +18,39 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string>('');
   const [formData, setFormData] = useState({
     category: 'housing',
     description: '',
     amount: '',
     frequency: 'monthly',
     isEssential: true,
+    notes: '',
   });
 
   useEffect(() => {
     fetchExpenses();
+    fetchCsrfToken();
   }, []);
+
+  const fetchCsrfToken = async () => {
+    try {
+      const res = await fetch('/api/csrf');
+      if (res.ok) {
+        const data = await res.json();
+        setCsrfToken(data.token);
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+  };
 
   const fetchExpenses = async () => {
     try {
       const res = await fetch('/api/profile/expenses');
       if (res.ok) {
         const data = await res.json();
-        setExpenses(data);
+        setExpenses(data.expenses || []);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -45,6 +62,14 @@ export default function ExpensesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Ensure we have a CSRF token before submitting
+    if (!csrfToken) {
+      alert('Security token not loaded. Please refresh the page and try again.');
+      return;
+    }
+
+    setLoading(true);
+
     const method = editingId ? 'PUT' : 'POST';
     const body = editingId
       ? { id: editingId, ...formData }
@@ -53,12 +78,15 @@ export default function ExpensesPage() {
     try {
       const res = await fetch('/api/profile/expenses', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         body: JSON.stringify(body),
       });
 
       if (res.ok) {
-        fetchExpenses();
+        await fetchExpenses();
         setShowForm(false);
         setEditingId(null);
         setFormData({
@@ -67,6 +95,7 @@ export default function ExpensesPage() {
           amount: '',
           frequency: 'monthly',
           isEssential: true,
+          notes: '',
         });
       } else {
         const error = await res.json();
@@ -75,6 +104,8 @@ export default function ExpensesPage() {
     } catch (error) {
       console.error('Error saving expense:', error);
       alert('Failed to save expense');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,7 +115,8 @@ export default function ExpensesPage() {
       description: expense.description || '',
       amount: expense.amount.toString(),
       frequency: expense.frequency,
-      isEssential: expense.isEssential,
+      isEssential: expense.essential || expense.isEssential,
+      notes: expense.notes || '',
     });
     setEditingId(expense.id);
     setShowForm(true);
@@ -98,6 +130,9 @@ export default function ExpensesPage() {
     try {
       const res = await fetch(`/api/profile/expenses?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
       });
 
       if (res.ok) {
@@ -123,7 +158,8 @@ export default function ExpensesPage() {
     let discretionary = 0;
     expenses.forEach(expense => {
       const amount = expense.frequency === 'annual' ? expense.amount / 12 : expense.amount;
-      if (expense.isEssential) {
+      const isEssential = expense.essential !== undefined ? expense.essential : expense.isEssential;
+      if (isEssential) {
         essential += amount;
       } else {
         discretionary += amount;
@@ -157,6 +193,7 @@ export default function ExpensesPage() {
               amount: '',
               frequency: 'monthly',
               isEssential: true,
+              notes: '',
             });
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -215,7 +252,7 @@ export default function ExpensesPage() {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 >
                   <option value="housing">Housing</option>
@@ -236,7 +273,7 @@ export default function ExpensesPage() {
                 <select
                   value={formData.frequency}
                   onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 >
                   <option value="monthly">Monthly</option>
@@ -252,7 +289,7 @@ export default function ExpensesPage() {
                   min="0"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -265,13 +302,13 @@ export default function ExpensesPage() {
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., Mortgage payment"
                 />
               </div>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center mb-4">
               <input
                 type="checkbox"
                 id="isEssential"
@@ -282,6 +319,19 @@ export default function ExpensesPage() {
               <label htmlFor="isEssential" className="ml-2 block text-sm text-gray-900">
                 This is an essential expense
               </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Notes (optional)
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                placeholder="Any additional notes..."
+                rows={3}
+              />
             </div>
 
             <div className="flex justify-end space-x-3">
@@ -350,15 +400,18 @@ export default function ExpensesPage() {
                         {expense.category}
                       </h3>
                       <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        expense.isEssential
+                        (expense.essential !== undefined ? expense.essential : expense.isEssential)
                           ? 'bg-red-100 text-red-800'
                           : 'bg-green-100 text-green-800'
                       }`}>
-                        {expense.isEssential ? 'Essential' : 'Discretionary'}
+                        {(expense.essential !== undefined ? expense.essential : expense.isEssential) ? 'Essential' : 'Discretionary'}
                       </span>
                     </div>
                     {expense.description && (
                       <p className="text-sm text-gray-600 mt-1">{expense.description}</p>
+                    )}
+                    {expense.notes && (
+                      <p className="text-sm text-gray-500 mt-1 italic">{expense.notes}</p>
                     )}
                     <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
                       <span className="font-medium text-lg text-gray-900">

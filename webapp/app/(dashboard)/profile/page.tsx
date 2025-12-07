@@ -224,7 +224,7 @@ export default function ProfilePage() {
                   type="text"
                   value={formData.firstName}
                   onChange={(e) => handleChange('firstName', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
                   placeholder="Enter first name"
                 />
               ) : (
@@ -240,7 +240,7 @@ export default function ProfilePage() {
                   type="text"
                   value={formData.lastName}
                   onChange={(e) => handleChange('lastName', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
                   placeholder="Enter last name"
                 />
               ) : (
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
                   max={new Date().toISOString().split('T')[0]}
                 />
               ) : (
@@ -287,7 +287,7 @@ export default function ProfilePage() {
                 <select
                   value={formData.province}
                   onChange={(e) => handleChange('province', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
                 >
                   <option value="">Select province</option>
                   <option value="ON">Ontario</option>
@@ -316,7 +316,7 @@ export default function ProfilePage() {
                 <select
                   value={formData.maritalStatus}
                   onChange={(e) => handleChange('maritalStatus', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
                 >
                   <option value="">Select status</option>
                   <option value="single">Single</option>

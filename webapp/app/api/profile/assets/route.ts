@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(assets);
+    return NextResponse.json({ assets });
   } catch (error) {
     logger.error('Error fetching assets', error, {
       endpoint: '/api/profile/assets',
@@ -38,24 +38,33 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, description, currentValue, contributionRoom } = body;
+    const { type, name, description, balance, currentValue, contributionRoom, returnRate, notes } = body;
 
     // Validation
-    if (!type || currentValue === undefined) {
-      throw new ValidationError('Type and current value are required');
+    if (!type || !name) {
+      throw new ValidationError('Type and name are required');
     }
 
-    if (currentValue < 0) {
-      throw new ValidationError('Current value cannot be negative', 'currentValue');
+    const balanceValue = balance !== undefined ? balance : currentValue;
+    if (balanceValue === undefined) {
+      throw new ValidationError('Balance is required');
+    }
+
+    if (balanceValue < 0) {
+      throw new ValidationError('Balance cannot be negative', 'balance');
     }
 
     const asset = await prisma.asset.create({
       data: {
         userId: session.userId,
         type,
+        name,
         description: description || null,
-        currentValue: parseFloat(currentValue),
+        balance: parseFloat(balanceValue),
+        currentValue: parseFloat(balanceValue), // Keep for backwards compatibility
         contributionRoom: contributionRoom ? parseFloat(contributionRoom) : null,
+        returnRate: returnRate ? parseFloat(returnRate) : null,
+        notes: notes || null,
       },
     });
 
@@ -80,7 +89,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, type, description, currentValue, contributionRoom } = body;
+    const { id, type, name, description, balance, currentValue, contributionRoom, returnRate, notes } = body;
 
     if (!id) {
       throw new ValidationError('Asset ID is required', 'id');
@@ -95,13 +104,19 @@ export async function PUT(request: NextRequest) {
       throw new NotFoundError('Asset');
     }
 
+    const balanceValue = balance !== undefined ? balance : currentValue;
+
     const updatedAsset = await prisma.asset.update({
       where: { id },
       data: {
         type,
+        name,
         description: description || null,
-        currentValue: parseFloat(currentValue),
+        balance: balanceValue !== undefined ? parseFloat(balanceValue) : undefined,
+        currentValue: balanceValue !== undefined ? parseFloat(balanceValue) : undefined,
         contributionRoom: contributionRoom ? parseFloat(contributionRoom) : null,
+        returnRate: returnRate ? parseFloat(returnRate) : null,
+        notes: notes || null,
       },
     });
 

@@ -268,7 +268,7 @@ export default function ScenariosPage() {
                 type="text"
                 value={newScenario.name}
                 onChange={(e) => setNewScenario({ ...newScenario, name: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., Retire at 60, Delay CPP to 70, Conservative Spending"
               />
             </div>
@@ -280,7 +280,7 @@ export default function ScenariosPage() {
                   type="number"
                   value={newScenario.inputs?.retirementAge}
                   onChange={(e) => updateScenarioInput('retirementAge', parseInt(e.target.value))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -289,7 +289,7 @@ export default function ScenariosPage() {
                   type="number"
                   value={newScenario.inputs?.cppStartAge}
                   onChange={(e) => updateScenarioInput('cppStartAge', parseInt(e.target.value))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   min="60"
                   max="70"
                 />
@@ -300,7 +300,7 @@ export default function ScenariosPage() {
                   type="number"
                   value={newScenario.inputs?.annualExpenses}
                   onChange={(e) => updateScenarioInput('annualExpenses', parseFloat(e.target.value))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   step="1000"
                 />
               </div>

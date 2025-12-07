@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(expenses);
+    return NextResponse.json({ expenses });
   } catch (error) {
     logger.error('Error fetching expenses', error, {
       endpoint: '/api/profile/expenses',
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, description, amount, frequency, isEssential } = body;
+    const { category, description, amount, frequency, essential, isEssential, notes } = body;
 
     // Validation
     if (!category || !amount || !frequency) {
@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Amount must be greater than 0', 'amount');
     }
 
+    const essentialValue = essential !== undefined ? essential : (isEssential !== undefined ? isEssential : true);
+
     const expense = await prisma.expense.create({
       data: {
         userId: session.userId,
@@ -56,7 +58,9 @@ export async function POST(request: NextRequest) {
         description: description || null,
         amount: parseFloat(amount),
         frequency,
-        isEssential: isEssential !== undefined ? isEssential : true,
+        essential: essentialValue,
+        isEssential: essentialValue, // Keep for backwards compatibility
+        notes: notes || null,
       },
     });
 

@@ -16,6 +16,7 @@ export default function DebtsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string>('');
   const [formData, setFormData] = useState({
     type: 'mortgage',
     description: '',
@@ -26,14 +27,27 @@ export default function DebtsPage() {
 
   useEffect(() => {
     fetchDebts();
+    fetchCsrfToken();
   }, []);
+
+  const fetchCsrfToken = async () => {
+    try {
+      const res = await fetch('/api/csrf');
+      if (res.ok) {
+        const data = await res.json();
+        setCsrfToken(data.token);
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+  };
 
   const fetchDebts = async () => {
     try {
       const res = await fetch('/api/profile/debts');
       if (res.ok) {
         const data = await res.json();
-        setDebts(data);
+        setDebts(data.debts || []);
       }
     } catch (error) {
       console.error('Error fetching debts:', error);
@@ -45,6 +59,12 @@ export default function DebtsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Ensure we have a CSRF token before submitting
+    if (!csrfToken) {
+      alert('Security token not loaded. Please refresh the page and try again.');
+      return;
+    }
+
     const method = editingId ? 'PUT' : 'POST';
     const body = editingId
       ? { id: editingId, ...formData }
@@ -53,7 +73,10 @@ export default function DebtsPage() {
     try {
       const res = await fetch('/api/profile/debts', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         body: JSON.stringify(body),
       });
 
@@ -98,6 +121,9 @@ export default function DebtsPage() {
     try {
       const res = await fetch(`/api/profile/debts?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'x-csrf-token': csrfToken,
+        },
       });
 
       if (res.ok) {
@@ -199,7 +225,7 @@ export default function DebtsPage() {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 >
                   <option value="mortgage">Mortgage</option>
@@ -218,7 +244,7 @@ export default function DebtsPage() {
                   min="0"
                   value={formData.currentBalance}
                   onChange={(e) => setFormData({ ...formData, currentBalance: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -232,7 +258,7 @@ export default function DebtsPage() {
                   max="100"
                   value={formData.interestRate}
                   onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 />
               </div>
@@ -247,7 +273,7 @@ export default function DebtsPage() {
                   min="0"
                   value={formData.monthlyPayment}
                   onChange={(e) => setFormData({ ...formData, monthlyPayment: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   placeholder="Minimum payment amount"
                 />
               </div>
@@ -260,7 +286,7 @@ export default function DebtsPage() {
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   placeholder="e.g., Home mortgage with TD Bank"
                 />
               </div>
