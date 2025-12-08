@@ -56,8 +56,8 @@ export function PortfolioChart({ yearByYear }: PortfolioChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Portfolio Balance Over Time</CardTitle>
-        <CardDescription>Account balances by type throughout retirement</CardDescription>
+        <CardTitle style={{ color: '#111827' }}>Portfolio Balance Over Time</CardTitle>
+        <CardDescription style={{ color: '#111827' }}>Account balances by type throughout retirement</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
@@ -73,12 +73,14 @@ export function PortfolioChart({ yearByYear }: PortfolioChartProps) {
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="year"
-              label={{ value: 'Year', position: 'insideBottom', offset: -5 }}
+              label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { fill: '#374151' } }}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <YAxis
-              label={{ value: 'Balance ($)', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'Balance ($)', angle: -90, position: 'insideLeft', style: { fill: '#374151' } }}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <Tooltip content={<CustomTooltip />} />

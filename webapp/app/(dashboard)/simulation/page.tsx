@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
 import { Loader2, AlertCircle, Play, UserPlus, UserMinus } from 'lucide-react';
 import { runSimulation, healthCheck } from '@/lib/api/simulation-client';
 import {
@@ -15,6 +16,7 @@ import {
 } from '@/lib/types/simulation';
 import { PersonForm } from '@/components/simulation/PersonForm';
 import { HouseholdForm } from '@/components/simulation/HouseholdForm';
+import { Collapsible } from '@/components/ui/collapsible';
 import { ResultsDashboard } from '@/components/simulation/ResultsDashboard';
 import { PortfolioChart } from '@/components/simulation/PortfolioChart';
 import { TaxChart } from '@/components/simulation/TaxChart';
@@ -35,11 +37,74 @@ export default function SimulationPage() {
   const [result, setResult] = useState<SimulationResponse | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('input');
+  const [prefillLoading, setPrefillLoading] = useState(true);
+  const [prefillAvailable, setPrefillAvailable] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
-  // Check API health on mount
+  // Check API health, fetch CSRF token, and load prefill data on mount
   useEffect(() => {
     healthCheck().then(setApiHealthy);
+
+    // Fetch CSRF token to ensure it's available for simulation requests
+    fetch('/api/csrf')
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          setCsrfToken(data.token);
+        }
+      })
+      .catch(err => console.error('Failed to fetch CSRF token:', err));
+
+    // Fetch prefill data from user profile and assets
+    loadPrefillData();
   }, []);
+
+  const loadPrefillData = async () => {
+    try {
+      setPrefillLoading(true);
+      const response = await fetch('/api/simulation/prefill');
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.hasAssets || data.person1Input.start_age !== 65) {
+          // Determine partner data first
+          let partnerData = { ...defaultPersonInput, name: '' };
+          let shouldIncludePartner = false;
+
+          if (data.includePartner && data.person2Input) {
+            shouldIncludePartner = true;
+            partnerData = {
+              ...defaultPersonInput,
+              ...data.person2Input,
+            };
+          } else if (data.includePartner) {
+            // Married but no partner assets yet
+            shouldIncludePartner = true;
+            partnerData = { ...defaultPersonInput, name: 'Partner' };
+          }
+
+          // Update household with all prefilled data in a single setState call
+          setHousehold(prev => ({
+            ...prev,
+            province: data.province || prev.province,
+            p1: {
+              ...prev.p1,
+              ...data.person1Input,
+            },
+            p2: partnerData,
+          }));
+
+          setIncludePartner(shouldIncludePartner);
+          setPrefillAvailable(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load prefill data:', error);
+    } finally {
+      setPrefillLoading(false);
+    }
+  };
 
   const updatePerson = (person: 'p1' | 'p2', field: keyof PersonInput, value: any) => {
     setHousehold((prev) => ({
@@ -90,7 +155,7 @@ export default function SimulationPage() {
         };
 
     try {
-      const response = await runSimulation(simulationData);
+      const response = await runSimulation(simulationData, csrfToken);
       setResult(response);
 
       // Switch to results tab if simulation succeeded
@@ -113,15 +178,46 @@ export default function SimulationPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Retirement Simulation</h1>
-          <p className="text-muted-foreground">
-            Run comprehensive retirement projections with tax optimization
-          </p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-blue-600">Retirement Simulation</h1>
+            <p className="text-gray-700">
+              Run comprehensive retirement projections with tax optimization
+            </p>
+          </div>
         </div>
+
+        {/* Prefill Success Message */}
+        {prefillAvailable && !prefillLoading && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertDescription className="text-blue-900">
+              ✓ Your financial profile and assets have been automatically loaded. Review and adjust the values below before running your simulation.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Warning about assumed values */}
+        {prefillAvailable && !prefillLoading && (
+          <Alert className="border-orange-200 bg-orange-50">
+            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-900">
+              <strong>Important:</strong> Some values have been estimated and may affect accuracy:
+              <ul className="list-disc list-inside mt-2 text-sm space-y-1">
+                <li>Asset allocation (cash/GIC/investments) based on typical distributions</li>
+                <li>Adjusted Cost Base (ACB) estimated at 80% of non-registered balance</li>
+                <li>CPP and OAS amounts use default values</li>
+              </ul>
+              <p className="mt-2 text-sm font-medium">
+                Please review and adjust these values in the expandable sections below for more accurate results.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* API Health Warning */}
         {apiHealthy === false && (
-          <Alert variant="destructive" className="max-w-md">
+          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Python API is not responding. Make sure the backend is running on port 8000.
@@ -129,6 +225,89 @@ export default function SimulationPage() {
           </Alert>
         )}
       </div>
+
+      {/* Review Auto-Populated Values */}
+      {prefillAvailable && !prefillLoading && (
+        <Collapsible
+          title="Review Auto-Populated Values"
+          description="Verify the data loaded from your profile before running the simulation"
+          defaultOpen={false}
+        >
+          <div className="space-y-4">
+            {/* Profile Information */}
+            <div>
+              <Label className="text-sm font-semibold">Profile Information</Label>
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Name:</span>
+                  <span>{household.p1.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Start Age:</span>
+                  <span>{household.p1.start_age}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Province:</span>
+                  <span>{household.province}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t my-4" />
+
+            {/* Account Balances */}
+            <div>
+              <Label className="text-sm font-semibold">Account Balances</Label>
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">TFSA:</span>
+                  <span>${(household.p1.tfsa_balance || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">RRSP:</span>
+                  <span>${(household.p1.rrsp_balance || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">RRIF:</span>
+                  <span>${(household.p1.rrif_balance || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Non-Registered:</span>
+                  <span>${((household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0)).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Corporate:</span>
+                  <span>${((household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t my-4" />
+
+            {/* Estimated Values Warning */}
+            <div className="bg-orange-50 border border-orange-200 rounded-md p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-orange-900">
+                  <p className="font-semibold">Estimated Values</p>
+                  <p className="mt-1 text-xs">
+                    The following values have been estimated and should be reviewed in the detailed forms below:
+                  </p>
+                  <ul className="list-disc list-inside mt-2 text-xs space-y-1">
+                    <li>Asset allocation between cash, GICs, and investments</li>
+                    <li>Adjusted Cost Base (ACB) for non-registered accounts</li>
+                    <li>CPP and OAS benefit amounts and start ages</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Expand the sections below to review and adjust all values before running your simulation.
+            </p>
+          </div>
+        </Collapsible>
+      )}
 
       {/* Run Simulation Button */}
       <div className="flex justify-center">
@@ -239,7 +418,7 @@ export default function SimulationPage() {
               {/* Charts Section */}
               {result.success && result.year_by_year && result.year_by_year.length > 0 && (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-bold">Visualizations</h2>
+                  <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>Visualizations</h2>
 
                   {/* Portfolio and Spending Charts */}
                   <PortfolioChart yearByYear={result.year_by_year} />
@@ -266,7 +445,7 @@ export default function SimulationPage() {
               )}
             </>
           ) : (
-            <div className="text-center text-muted-foreground py-12">
+            <div className="text-center text-gray-600 py-12">
               <p>Run a simulation to see results</p>
             </div>
           )}

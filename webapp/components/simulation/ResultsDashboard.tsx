@@ -72,14 +72,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Years Funded</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold" style={{ color: '#111827' }}>Years Funded</CardTitle>
+              <Calendar className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold" style={{ color: '#111827' }}>
                 {result.summary.years_funded}/{result.summary.years_simulated}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs font-medium" style={{ color: '#111827' }}>
                 {formatPercent(result.summary.success_rate)} success rate
               </p>
               {result.summary.first_failure_year && (
@@ -92,14 +92,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Final Estate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold" style={{ color: '#111827' }}>Final Estate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold" style={{ color: '#111827' }}>
                 {formatCurrency(result.summary.final_estate_after_tax)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs font-medium" style={{ color: '#111827' }}>
                 Gross: {formatCurrency(result.summary.final_estate_gross)}
               </p>
             </CardContent>
@@ -107,14 +107,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tax Paid</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold" style={{ color: '#111827' }}>Total Tax Paid</CardTitle>
+              <DollarSign className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold" style={{ color: '#111827' }}>
                 {formatCurrency(result.summary.total_tax_paid)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs font-medium" style={{ color: '#111827' }}>
                 Avg effective rate: {formatPercent(result.summary.avg_effective_tax_rate)}
               </p>
             </CardContent>
@@ -122,14 +122,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Withdrawals</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold" style={{ color: '#111827' }}>Total Withdrawals</CardTitle>
+              <DollarSign className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold" style={{ color: '#111827' }}>
                 {formatCurrency(result.summary.total_withdrawals)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs font-medium" style={{ color: '#111827' }}>
                 Total spending: {formatCurrency(result.summary.total_spending)}
               </p>
             </CardContent>
@@ -142,41 +142,41 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Portfolio Composition</CardTitle>
-              <CardDescription>Asset allocation and recommended strategy</CardDescription>
+              <CardTitle style={{ color: '#111827' }}>Portfolio Composition</CardTitle>
+              <CardDescription style={{ color: '#111827' }}>Asset allocation and recommended strategy</CardDescription>
             </div>
-            <PieChart className="h-5 w-5 text-muted-foreground" />
+            <PieChart className="h-5 w-5 text-gray-500" />
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">TFSA</p>
-                <p className="text-2xl font-bold">{formatPercent(result.composition_analysis.tfsa_pct)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>TFSA</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.tfsa_pct)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">RRIF</p>
-                <p className="text-2xl font-bold">{formatPercent(result.composition_analysis.rrif_pct)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>RRIF</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.rrif_pct)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Non-Registered</p>
-                <p className="text-2xl font-bold">{formatPercent(result.composition_analysis.nonreg_pct)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Non-Registered</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.nonreg_pct)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Corporate</p>
-                <p className="text-2xl font-bold">{formatPercent(result.composition_analysis.corporate_pct)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Corporate</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.corporate_pct)}</p>
               </div>
             </div>
 
             <div className="space-y-2 pt-2 border-t">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Dominant Account:</span>
+                <span className="text-sm font-semibold" style={{ color: '#111827' }}>Dominant Account:</span>
                 <Badge variant="secondary">{result.composition_analysis.dominant_account}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Recommended Strategy:</span>
+                <span className="text-sm font-semibold" style={{ color: '#111827' }}>Recommended Strategy:</span>
                 <Badge>{result.composition_analysis.recommended_strategy}</Badge>
               </div>
-              <p className="text-sm text-muted-foreground pt-2">
+              <p className="text-sm font-medium pt-2" style={{ color: '#111827' }}>
                 {result.composition_analysis.strategy_rationale}
               </p>
             </div>
@@ -189,15 +189,15 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Spending Analysis</CardTitle>
-              <CardDescription>Coverage and funding status</CardDescription>
+              <CardTitle style={{ color: '#111827' }}>Spending Analysis</CardTitle>
+              <CardDescription style={{ color: '#111827' }}>Coverage and funding status</CardDescription>
             </div>
             <CheckCircle2 className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Plan Status */}
             <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4 border border-green-200 dark:border-green-800">
-              <p className="text-lg font-semibold text-green-700 dark:text-green-300">
+              <p className="text-base font-semibold text-green-700 dark:text-green-300">
                 {result.spending_analysis.plan_status_text}
               </p>
             </div>
@@ -205,32 +205,32 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             {/* Spending Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Spending Coverage</p>
-                <p className="text-2xl font-bold">{result.spending_analysis.spending_coverage_pct.toFixed(1)}%</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Spending Coverage</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{result.spending_analysis.spending_coverage_pct.toFixed(1)}%</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Available</p>
-                <p className="text-xl font-bold">{formatCurrency(result.spending_analysis.total_spending_available)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Total Available</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatCurrency(result.spending_analysis.total_spending_available)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Target Spending</p>
-                <p className="text-xl font-bold">{formatCurrency(result.spending_analysis.spending_target_total)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Target Spending</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatCurrency(result.spending_analysis.spending_target_total)}</p>
               </div>
             </div>
 
             {/* Breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Portfolio Withdrawals</p>
-                <p className="text-lg font-medium">{formatCurrency(result.spending_analysis.portfolio_withdrawals)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Portfolio Withdrawals</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{formatCurrency(result.spending_analysis.portfolio_withdrawals)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Government Benefits</p>
-                <p className="text-lg font-medium">{formatCurrency(result.spending_analysis.government_benefits_total)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Government Benefits</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{formatCurrency(result.spending_analysis.government_benefits_total)}</p>
               </div>
             </div>
 
-            <div className="text-sm text-muted-foreground pt-2">
+            <div className="text-sm font-medium pt-2" style={{ color: '#111827' }}>
               Average annual spending: {formatCurrency(result.spending_analysis.avg_annual_spending)}
             </div>
           </CardContent>
@@ -242,46 +242,46 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Key Assumptions</CardTitle>
-              <CardDescription>Simulation parameters</CardDescription>
+              <CardTitle style={{ color: '#111827' }}>Key Assumptions</CardTitle>
+              <CardDescription style={{ color: '#111827' }}>Simulation parameters</CardDescription>
             </div>
             <Settings className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">General Inflation</p>
-                <p className="text-lg font-medium">{result.key_assumptions.general_inflation_rate}%</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>General Inflation</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.general_inflation_rate}%</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Spending Inflation</p>
-                <p className="text-lg font-medium">{result.key_assumptions.spending_inflation_rate}%</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Spending Inflation</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.spending_inflation_rate}%</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">CPP Indexing</p>
-                <p className="text-lg font-medium">{result.key_assumptions.cpp_indexing_rate}%</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>CPP Indexing</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.cpp_indexing_rate}%</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">OAS Indexing</p>
-                <p className="text-lg font-medium">{result.key_assumptions.oas_indexing_rate}%</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>OAS Indexing</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.oas_indexing_rate}%</p>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Projection Period</p>
-                <p className="text-lg font-medium">{result.key_assumptions.projection_period_years} years</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Projection Period</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.projection_period_years} years</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Tax Year Basis</p>
-                <p className="text-lg font-medium">{result.key_assumptions.tax_year_basis}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Tax Year Basis</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.tax_year_basis}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Province</p>
-                <p className="text-lg font-medium">{result.key_assumptions.province}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Province</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.province}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Strategy</p>
-                <p className="text-lg font-medium">{result.key_assumptions.withdrawal_strategy}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Strategy</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{result.key_assumptions.withdrawal_strategy}</p>
               </div>
             </div>
           </CardContent>
@@ -293,8 +293,8 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Estate Summary</CardTitle>
-              <CardDescription>Projected estate at end of simulation</CardDescription>
+              <CardTitle style={{ color: '#111827' }}>Estate Summary</CardTitle>
+              <CardDescription style={{ color: '#111827' }}>Projected estate at end of simulation</CardDescription>
             </div>
             <Landmark className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
@@ -302,51 +302,51 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             {/* Estate Values */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Gross Estate</p>
-                <p className="text-2xl font-bold">{formatCurrency(result.estate_summary.gross_estate_value)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Gross Estate</p>
+                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatCurrency(result.estate_summary.gross_estate_value)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Taxes at Death</p>
-                <p className="text-xl font-bold text-destructive">{formatCurrency(result.estate_summary.taxes_at_death)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Taxes at Death</p>
+                <p className="text-xl font-bold" style={{ color: '#DC2626' }}>{formatCurrency(result.estate_summary.taxes_at_death)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">After-Tax Legacy</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(result.estate_summary.after_tax_legacy)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>After-Tax Legacy</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(result.estate_summary.after_tax_legacy)}</p>
               </div>
             </div>
 
             {/* Account Balances at Death */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">RRIF</p>
-                <p className="text-lg font-medium">{formatCurrency(result.estate_summary.rrif_balance_at_death)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>RRIF</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{formatCurrency(result.estate_summary.rrif_balance_at_death)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">TFSA</p>
-                <p className="text-lg font-medium">{formatCurrency(result.estate_summary.tfsa_balance_at_death)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>TFSA</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{formatCurrency(result.estate_summary.tfsa_balance_at_death)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Non-Registered</p>
-                <p className="text-lg font-medium">{formatCurrency(result.estate_summary.nonreg_balance_at_death)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Non-Registered</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{formatCurrency(result.estate_summary.nonreg_balance_at_death)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Corporate</p>
-                <p className="text-lg font-medium">{formatCurrency(result.estate_summary.corporate_balance_at_death)}</p>
+                <p className="text-sm font-medium" style={{ color: '#111827' }}>Corporate</p>
+                <p className="text-base font-medium" style={{ color: '#111827' }}>{formatCurrency(result.estate_summary.corporate_balance_at_death)}</p>
               </div>
             </div>
 
             {/* Taxable Components */}
             {result.estate_summary.taxable_components && result.estate_summary.taxable_components.length > 0 && (
               <div className="pt-4 border-t">
-                <h4 className="font-medium mb-2">Tax Breakdown by Account</h4>
+                <h4 className="font-medium mb-2" style={{ color: '#111827' }}>Tax Breakdown by Account</h4>
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Account Type</TableHead>
-                        <TableHead className="text-right">Balance</TableHead>
-                        <TableHead className="text-right">Inclusion Rate</TableHead>
-                        <TableHead className="text-right">Est. Tax</TableHead>
+                        <TableHead style={{ color: '#111827' }}>Account Type</TableHead>
+                        <TableHead className="text-right" style={{ color: '#111827' }}>Balance</TableHead>
+                        <TableHead className="text-right" style={{ color: '#111827' }}>Inclusion Rate</TableHead>
+                        <TableHead className="text-right" style={{ color: '#111827' }}>Est. Tax</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -354,13 +354,13 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                         <TableRow key={idx}>
                           <TableCell>
                             <div>
-                              <p className="font-medium">{component.account_type}</p>
-                              <p className="text-xs text-muted-foreground">{component.description}</p>
+                              <p className="font-medium" style={{ color: '#111827' }}>{component.account_type}</p>
+                              <p className="text-xs" style={{ color: '#6B7280' }}>{component.description}</p>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">{formatCurrency(component.balance_at_death)}</TableCell>
-                          <TableCell className="text-right">{component.taxable_inclusion_rate}%</TableCell>
-                          <TableCell className="text-right">{formatCurrency(component.estimated_tax)}</TableCell>
+                          <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(component.balance_at_death)}</TableCell>
+                          <TableCell className="text-right" style={{ color: '#111827' }}>{component.taxable_inclusion_rate}%</TableCell>
+                          <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(component.estimated_tax)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -374,13 +374,13 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <div className="pt-4 border-t">
                 <div className="flex items-center gap-2 mb-2">
                   <Lightbulb className="h-4 w-4 text-yellow-500" />
-                  <h4 className="font-medium">Estate Planning Tips</h4>
+                  <h4 className="font-medium" style={{ color: '#111827' }}>Estate Planning Tips</h4>
                 </div>
                 <ul className="space-y-2">
                   {result.estate_summary.estate_planning_tips.map((tip, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-sm">{tip}</span>
+                      <span style={{ color: '#6B7280' }}>•</span>
+                      <span className="text-sm" style={{ color: '#111827' }}>{tip}</span>
                     </li>
                   ))}
                 </ul>
@@ -394,43 +394,43 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {result.five_year_plan && result.five_year_plan.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>5-Year Withdrawal Plan</CardTitle>
-            <CardDescription>Recommended withdrawals for the first 5 years</CardDescription>
+            <CardTitle style={{ color: '#111827' }}>5-Year Withdrawal Plan</CardTitle>
+            <CardDescription style={{ color: '#111827' }}>Recommended withdrawals for the first 5 years</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Year</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead className="text-right">Spending Target</TableHead>
-                    <TableHead className="text-right">RRIF</TableHead>
-                    <TableHead className="text-right">Non-Reg</TableHead>
-                    <TableHead className="text-right">TFSA</TableHead>
-                    <TableHead className="text-right">Corporate</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead style={{ color: '#111827' }}>Year</TableHead>
+                    <TableHead style={{ color: '#111827' }}>Age</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Spending Target</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>RRIF</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Non-Reg</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>TFSA</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Corporate</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {result.five_year_plan.map((year) => (
                     <TableRow key={year.year}>
-                      <TableCell className="font-medium">{year.year}</TableCell>
-                      <TableCell>{year.age_p1}/{year.age_p2}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(year.spending_target)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="font-medium" style={{ color: '#111827' }}>{year.year}</TableCell>
+                      <TableCell style={{ color: '#111827' }}>{year.age_p1}/{year.age_p2}</TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_target)}</TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>
                         {formatCurrency(year.rrif_withdrawal_p1 + year.rrif_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" style={{ color: '#111827' }}>
                         {formatCurrency(year.nonreg_withdrawal_p1 + year.nonreg_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" style={{ color: '#111827' }}>
                         {formatCurrency(year.tfsa_withdrawal_p1 + year.tfsa_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" style={{ color: '#111827' }}>
                         {formatCurrency(year.corp_withdrawal_p1 + year.corp_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-medium" style={{ color: '#111827' }}>
                         {formatCurrency(year.total_withdrawn)}
                       </TableCell>
                     </TableRow>
@@ -465,8 +465,8 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {result.year_by_year && result.year_by_year.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Year-by-Year Results</CardTitle>
-            <CardDescription>
+            <CardTitle style={{ color: '#111827' }}>Year-by-Year Results</CardTitle>
+            <CardDescription style={{ color: '#111827' }}>
               Detailed simulation results ({result.year_by_year.length} years)
             </CardDescription>
           </CardHeader>
@@ -475,26 +475,26 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Year</TableHead>
-                    <TableHead>Age P1</TableHead>
-                    <TableHead>Age P2</TableHead>
-                    <TableHead className="text-right">Spending Need</TableHead>
-                    <TableHead className="text-right">Spending Met</TableHead>
-                    <TableHead className="text-right">Total Tax</TableHead>
-                    <TableHead className="text-right">Total Value</TableHead>
-                    <TableHead>Success</TableHead>
+                    <TableHead style={{ color: '#111827' }}>Year</TableHead>
+                    <TableHead style={{ color: '#111827' }}>Age P1</TableHead>
+                    <TableHead style={{ color: '#111827' }}>Age P2</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Spending Need</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Spending Met</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Total Tax</TableHead>
+                    <TableHead className="text-right" style={{ color: '#111827' }}>Total Value</TableHead>
+                    <TableHead style={{ color: '#111827' }}>Success</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {result.year_by_year.slice(0, 10).map((year) => (
                     <TableRow key={year.year}>
-                      <TableCell className="font-medium">{year.year}</TableCell>
-                      <TableCell>{year.age_p1}</TableCell>
-                      <TableCell>{year.age_p2}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(year.spending_need)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(year.spending_met)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(year.total_tax)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(year.total_value)}</TableCell>
+                      <TableCell className="font-medium" style={{ color: '#111827' }}>{year.year}</TableCell>
+                      <TableCell style={{ color: '#111827' }}>{year.age_p1}</TableCell>
+                      <TableCell style={{ color: '#111827' }}>{year.age_p2}</TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_need)}</TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_met)}</TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.total_tax)}</TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.total_value)}</TableCell>
                       <TableCell>
                         {year.plan_success ? (
                           <Badge variant="default">✓</Badge>
@@ -508,7 +508,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               </Table>
             </div>
             {result.year_by_year.length > 10 && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
+              <p className="text-xs text-center mt-2" style={{ color: '#111827' }}>
                 Showing first 10 of {result.year_by_year.length} years
               </p>
             )}

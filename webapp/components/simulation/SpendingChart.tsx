@@ -54,8 +54,8 @@ export function SpendingChart({ yearByYear }: SpendingChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Spending Analysis</CardTitle>
-        <CardDescription>Spending needs vs actual spending met</CardDescription>
+        <CardTitle style={{ color: '#111827' }}>Spending Analysis</CardTitle>
+        <CardDescription style={{ color: '#111827' }}>Spending needs vs actual spending met</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
@@ -71,12 +71,14 @@ export function SpendingChart({ yearByYear }: SpendingChartProps) {
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="year"
-              label={{ value: 'Year', position: 'insideBottom', offset: -5 }}
+              label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { fill: '#374151' } }}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <YAxis
-              label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft', style: { fill: '#374151' } }}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <Tooltip content={<CustomTooltip />} />

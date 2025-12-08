@@ -154,8 +154,8 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Year-by-Year Results</CardTitle>
-            <CardDescription>
+            <CardTitle style={{ color: '#111827' }}>Year-by-Year Results</CardTitle>
+            <CardDescription style={{ color: '#111827' }}>
               Detailed simulation results ({yearByYear.length} years)
             </CardDescription>
           </div>
@@ -173,15 +173,17 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                 <TableHead
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('year')}
+                  style={{ color: '#111827' }}
                 >
                   Year
                   <SortIcon column="year" />
                 </TableHead>
-                <TableHead>Ages</TableHead>
-                <TableHead className="text-right">CPP+OAS</TableHead>
+                <TableHead style={{ color: '#111827' }}>Ages</TableHead>
+                <TableHead className="text-right" style={{ color: '#111827' }}>CPP+OAS</TableHead>
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('spending_need')}
+                  style={{ color: '#111827' }}
                 >
                   Target
                   <SortIcon column="spending_need" />
@@ -189,6 +191,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('spending_met')}
+                  style={{ color: '#111827' }}
                 >
                   Spent
                   <SortIcon column="spending_met" />
@@ -196,6 +199,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('total_tax')}
+                  style={{ color: '#111827' }}
                 >
                   Tax
                   <SortIcon column="total_tax" />
@@ -203,11 +207,12 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('total_value')}
+                  style={{ color: '#111827' }}
                 >
                   Net Worth
                   <SortIcon column="total_value" />
                 </TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center" style={{ color: '#111827' }}>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -221,19 +226,19 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                     key={year.year}
                     className={hasGap ? 'bg-red-50 dark:bg-red-950/30' : ''}
                   >
-                    <TableCell className="font-medium">{year.year}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-medium" style={{ color: '#111827' }}>{year.year}</TableCell>
+                    <TableCell style={{ color: '#111827' }}>
                       {year.age_p1}/{year.age_p2}
                     </TableCell>
-                    <TableCell className="text-right text-blue-600">
+                    <TableCell className="text-right" style={{ color: '#2563EB' }}>
                       {formatCurrency(totalBenefits)}
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(year.spending_need)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(year.spending_met)}</TableCell>
-                    <TableCell className="text-right text-orange-600">
+                    <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_need)}</TableCell>
+                    <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_met)}</TableCell>
+                    <TableCell className="text-right" style={{ color: '#EA580C' }}>
                       {formatCurrency(year.total_tax)}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-medium" style={{ color: '#111827' }}>
                       {formatCurrency(year.total_value)}
                     </TableCell>
                     <TableCell className="text-center">
@@ -253,7 +258,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
         {/* Show More/Less Button */}
         {yearByYear.length > initialRowsToShow && (
           <div className="flex justify-center mt-4">
-            <Button variant="outline" onClick={() => setShowAll(!showAll)}>
+            <Button variant="outline" onClick={() => setShowAll(!showAll)} style={{ color: '#111827' }}>
               {showAll ? (
                 <>
                   <ChevronUp className="h-4 w-4 mr-2" />

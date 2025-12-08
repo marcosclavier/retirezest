@@ -61,8 +61,8 @@ export function IncomeCompositionChart({ chartData }: IncomeCompositionChartProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Income Composition</CardTitle>
-        <CardDescription>Taxable vs tax-free income by year</CardDescription>
+        <CardTitle style={{ color: '#111827' }}>Income Composition</CardTitle>
+        <CardDescription style={{ color: '#111827' }}>Taxable vs tax-free income by year</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -78,12 +78,14 @@ export function IncomeCompositionChart({ chartData }: IncomeCompositionChartProp
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="year"
-              label={{ value: 'Year', position: 'insideBottom', offset: -5 }}
+              label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { fill: '#374151' } }}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <YAxis
-              label={{ value: 'Income ($)', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'Income ($)', angle: -90, position: 'insideLeft', style: { fill: '#374151' } }}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <Tooltip content={<CustomTooltip />} />

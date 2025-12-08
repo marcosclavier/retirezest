@@ -54,8 +54,8 @@ export function TaxChart({ yearByYear }: TaxChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tax Paid Over Time</CardTitle>
-        <CardDescription>Annual tax liability for each person</CardDescription>
+        <CardTitle style={{ color: '#111827' }}>Tax Paid Over Time</CardTitle>
+        <CardDescription style={{ color: '#111827' }}>Annual tax liability for each person</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
@@ -71,12 +71,14 @@ export function TaxChart({ yearByYear }: TaxChartProps) {
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="year"
-              label={{ value: 'Year', position: 'insideBottom', offset: -5 }}
+              label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { fill: '#374151' } }}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <YAxis
-              label={{ value: 'Tax ($)', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'Tax ($)', angle: -90, position: 'insideLeft', style: { fill: '#374151' } }}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tick={{ fill: '#374151' }}
               className="text-xs"
             />
             <Tooltip content={<CustomTooltip />} />
