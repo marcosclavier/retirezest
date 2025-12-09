@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, category, description, amount, frequency, isEssential } = body;
+    const { id, category, description, amount, frequency, essential, isEssential, notes } = body;
 
     if (!id) {
       throw new ValidationError('Expense ID is required', 'id');
@@ -100,6 +100,8 @@ export async function PUT(request: NextRequest) {
       throw new NotFoundError('Expense');
     }
 
+    const essentialValue = essential !== undefined ? essential : (isEssential !== undefined ? isEssential : true);
+
     const updatedExpense = await prisma.expense.update({
       where: { id },
       data: {
@@ -107,7 +109,9 @@ export async function PUT(request: NextRequest) {
         description: description || null,
         amount: parseFloat(amount),
         frequency,
-        isEssential: isEssential !== undefined ? isEssential : true,
+        essential: essentialValue,
+        isEssential: essentialValue, // Keep for backwards compatibility
+        notes: notes || null,
       },
     });
 

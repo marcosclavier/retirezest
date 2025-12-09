@@ -6,7 +6,10 @@
 import { estimateCPPSimple } from './cpp';
 import { calculateNetOAS } from './oas';
 import { calculateGIS } from './gis';
-import { calculateTotalTax, calculateAfterTaxIncome } from './tax';
+import {
+  calculateCompleteTax,
+  type TaxCalculationInputs,
+} from './tax';
 
 export interface ProjectionInput {
   // Personal info
@@ -44,6 +47,9 @@ export interface ProjectionInput {
 
   // RRIF rules
   rrspToRrifAge: number; // Age 71
+
+  // Withdrawal strategy
+  withdrawalStrategy?: string; // e.g., "RRIF->Corp->NonReg->TFSA"
 }
 
 export interface YearProjection {
@@ -70,6 +76,7 @@ export interface YearProjection {
   // Taxes
   federalTax: number;
   provincialTax: number;
+  oasClawback: number;
   totalTax: number;
   averageTaxRate: number;
 
@@ -231,38 +238,136 @@ export function projectRetirement(input: ProjectionInput): ProjectionSummary {
       rrifMinWithdrawal = calculateRrifMinWithdrawal(rrspBalance, age);
     }
 
-    // Determine withdrawals
+    // Determine withdrawals based on strategy
     let rrspWithdrawal = 0;
     let tfsaWithdrawal = 0;
     let nonRegWithdrawal = 0;
 
     if (shortfall > 0 || rrifMinWithdrawal > 0) {
       const withdrawalNeeded = Math.max(shortfall, rrifMinWithdrawal);
+      const strategy = input.withdrawalStrategy || 'RRIF->Corp->NonReg->TFSA';
 
-      // Withdrawal strategy: TFSA first, then non-reg, then RRSP/RRIF
-      if (tfsaBalance > 0) {
-        tfsaWithdrawal = Math.min(tfsaBalance, withdrawalNeeded);
-        tfsaBalance -= tfsaWithdrawal;
+      // Execute withdrawal based on selected strategy
+      let remaining = withdrawalNeeded;
+
+      if (strategy === 'NonReg->RRIF->Corp->TFSA') {
+        // Strategy A: Non-Registered → RRIF → Corporate → TFSA
+        // 1. Non-Registered
+        if (remaining > 0 && nonRegBalance > 0) {
+          nonRegWithdrawal = Math.min(nonRegBalance, remaining);
+          nonRegBalance -= nonRegWithdrawal;
+          remaining -= nonRegWithdrawal;
+        }
+        // 2. RRIF/RRSP (account for tax)
+        if (remaining > 0 && rrspBalance > 0) {
+          const estimatedWithdrawal = remaining * 1.3; // Rough estimate for tax
+          rrspWithdrawal = Math.min(rrspBalance, estimatedWithdrawal);
+          rrspBalance -= rrspWithdrawal;
+          remaining -= rrspWithdrawal * 0.7; // After-tax amount
+        }
+        // 3. Corporate (not yet implemented - treat as non-reg for now)
+        // 4. TFSA (last resort)
+        if (remaining > 0 && tfsaBalance > 0) {
+          tfsaWithdrawal = Math.min(tfsaBalance, remaining);
+          tfsaBalance -= tfsaWithdrawal;
+          remaining -= tfsaWithdrawal;
+        }
+      } else if (strategy === 'RRIF->Corp->NonReg->TFSA') {
+        // Strategy B (Default): RRIF → Corporate → Non-Registered → TFSA
+        // 1. RRIF/RRSP (account for tax)
+        if (remaining > 0 && rrspBalance > 0) {
+          const estimatedWithdrawal = remaining * 1.3; // Rough estimate for tax
+          rrspWithdrawal = Math.min(rrspBalance, estimatedWithdrawal);
+          rrspBalance -= rrspWithdrawal;
+          remaining -= rrspWithdrawal * 0.7; // After-tax amount
+        }
+        // 2. Corporate (not yet implemented - treat as non-reg for now)
+        // 3. Non-Registered
+        if (remaining > 0 && nonRegBalance > 0) {
+          nonRegWithdrawal = Math.min(nonRegBalance, remaining);
+          nonRegBalance -= nonRegWithdrawal;
+          remaining -= nonRegWithdrawal;
+        }
+        // 4. TFSA (last resort)
+        if (remaining > 0 && tfsaBalance > 0) {
+          tfsaWithdrawal = Math.min(tfsaBalance, remaining);
+          tfsaBalance -= tfsaWithdrawal;
+          remaining -= tfsaWithdrawal;
+        }
+      } else if (strategy === 'Corp->RRIF->NonReg->TFSA') {
+        // Strategy C: Corporate → RRIF → Non-Registered → TFSA
+        // 1. Corporate (not yet implemented - treat as non-reg for now)
+        // 2. RRIF/RRSP (account for tax)
+        if (remaining > 0 && rrspBalance > 0) {
+          const estimatedWithdrawal = remaining * 1.3; // Rough estimate for tax
+          rrspWithdrawal = Math.min(rrspBalance, estimatedWithdrawal);
+          rrspBalance -= rrspWithdrawal;
+          remaining -= rrspWithdrawal * 0.7; // After-tax amount
+        }
+        // 3. Non-Registered
+        if (remaining > 0 && nonRegBalance > 0) {
+          nonRegWithdrawal = Math.min(nonRegBalance, remaining);
+          nonRegBalance -= nonRegWithdrawal;
+          remaining -= nonRegWithdrawal;
+        }
+        // 4. TFSA (last resort)
+        if (remaining > 0 && tfsaBalance > 0) {
+          tfsaWithdrawal = Math.min(tfsaBalance, remaining);
+          tfsaBalance -= tfsaWithdrawal;
+          remaining -= tfsaWithdrawal;
+        }
+      } else if (strategy === 'Hybrid') {
+        // Hybrid: RRIF top-up first → Non-Registered → Corporate → TFSA
+        // 1. RRIF minimum only (top-up to basic personal amount)
+        if (rrifMinWithdrawal > 0 && rrspBalance > 0) {
+          rrspWithdrawal = Math.min(rrspBalance, rrifMinWithdrawal);
+          rrspBalance -= rrspWithdrawal;
+          remaining -= rrspWithdrawal * 0.7; // After-tax amount
+        }
+        // 2. Non-Registered
+        if (remaining > 0 && nonRegBalance > 0) {
+          nonRegWithdrawal = Math.min(nonRegBalance, remaining);
+          nonRegBalance -= nonRegWithdrawal;
+          remaining -= nonRegWithdrawal;
+        }
+        // 3. Corporate (not yet implemented)
+        // 4. TFSA (last resort)
+        if (remaining > 0 && tfsaBalance > 0) {
+          tfsaWithdrawal = Math.min(tfsaBalance, remaining);
+          tfsaBalance -= tfsaWithdrawal;
+          remaining -= tfsaWithdrawal;
+        }
+        // 5. Additional RRIF if still needed
+        if (remaining > 0 && rrspBalance > 0) {
+          const estimatedWithdrawal = remaining * 1.3; // Rough estimate for tax
+          const additionalRrif = Math.min(rrspBalance, estimatedWithdrawal);
+          rrspBalance -= additionalRrif;
+          rrspWithdrawal += additionalRrif;
+        }
+      } else {
+        // Default fallback: TFSA first, then non-reg, then RRSP/RRIF
+        if (tfsaBalance > 0) {
+          tfsaWithdrawal = Math.min(tfsaBalance, remaining);
+          tfsaBalance -= tfsaWithdrawal;
+          remaining -= tfsaWithdrawal;
+        }
+        if (remaining > 0 && nonRegBalance > 0) {
+          nonRegWithdrawal = Math.min(nonRegBalance, remaining);
+          nonRegBalance -= nonRegWithdrawal;
+          remaining -= nonRegWithdrawal;
+        }
+        if (remaining > 0 && rrspBalance > 0) {
+          const estimatedWithdrawal = remaining * 1.3; // Rough estimate for tax
+          rrspWithdrawal = Math.min(rrspBalance, estimatedWithdrawal);
+          rrspBalance -= rrspWithdrawal;
+        }
       }
 
-      const remaining = withdrawalNeeded - tfsaWithdrawal;
-
-      if (remaining > 0 && nonRegBalance > 0) {
-        nonRegWithdrawal = Math.min(nonRegBalance, remaining);
-        nonRegBalance -= nonRegWithdrawal;
-      }
-
-      const stillRemaining = remaining - nonRegWithdrawal;
-
-      if (stillRemaining > 0 && rrspBalance > 0) {
-        // Need to account for tax on RRSP withdrawal
-        const estimatedWithdrawal = stillRemaining * 1.3; // Rough estimate for tax
-        rrspWithdrawal = Math.min(rrspBalance, estimatedWithdrawal);
-        rrspBalance -= rrspWithdrawal;
-      } else if (rrifMinWithdrawal > 0 && rrspBalance > 0) {
-        // Must withdraw RRIF minimum even if not needed
-        rrspWithdrawal = Math.max(rrspWithdrawal, rrifMinWithdrawal);
-        rrspBalance -= rrspWithdrawal;
+      // Ensure RRIF minimum is met if in RRIF age
+      if (isRrifAge && rrspWithdrawal < rrifMinWithdrawal && rrspBalance > 0) {
+        const additionalRrif = Math.min(rrspBalance, rrifMinWithdrawal - rrspWithdrawal);
+        rrspBalance -= additionalRrif;
+        rrspWithdrawal += additionalRrif;
       }
     }
 
@@ -274,11 +379,20 @@ export function projectRetirement(input: ProjectionInput): ProjectionSummary {
     tfsaBalance *= (1 + input.investmentReturnRate);
     nonRegBalance *= (1 + input.investmentReturnRate);
 
-    // Calculate taxable income
-    const taxableIncome = employmentIncome + pensionIncome + cppIncome + oasIncome + rentalIncome + otherIncome + rrspWithdrawal + (nonRegWithdrawal * 0.5); // 50% of capital gains
+    // Prepare tax calculation inputs using comprehensive tax system
+    const taxInputs: TaxCalculationInputs = {
+      ordinaryIncome: employmentIncome + rentalIncome + otherIncome,
+      pensionIncome: pensionIncome + cppIncome + rrspWithdrawal, // RRIF/RRSP counted as pension
+      eligibleDividends: 0, // TODO: Add dividend tracking
+      nonEligibleDividends: 0, // TODO: Add dividend tracking
+      capitalGains: nonRegWithdrawal, // Non-reg withdrawals treated as capital gains
+      oasReceived: oasIncome,
+      age,
+      province: input.province,
+    };
 
-    // Calculate tax
-    const tax = calculateTotalTax(taxableIncome, input.province, age, pensionIncome > 0 || rrspWithdrawal > 0);
+    // Calculate tax using comprehensive system (includes OAS clawback, age credits, etc.)
+    const tax = calculateCompleteTax(taxInputs);
 
     // Total income
     const totalGrossIncome = governmentAndOtherIncome + rrspWithdrawal + tfsaWithdrawal + nonRegWithdrawal;
@@ -310,9 +424,10 @@ export function projectRetirement(input: ProjectionInput): ProjectionSummary {
       nonRegWithdrawal: Math.round(nonRegWithdrawal),
       rrifMinWithdrawal: Math.round(rrifMinWithdrawal),
       totalGrossIncome: Math.round(totalGrossIncome),
-      taxableIncome: Math.round(taxableIncome),
+      taxableIncome: Math.round(tax.netIncome),
       federalTax: Math.round(tax.federalTax),
       provincialTax: Math.round(tax.provincialTax),
+      oasClawback: Math.round(tax.oasClawback),
       totalTax: Math.round(tax.totalTax),
       averageTaxRate: tax.averageRate,
       totalAfterTaxIncome: Math.round(totalAfterTaxIncome),

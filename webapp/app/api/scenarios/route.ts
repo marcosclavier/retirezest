@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       currentAge: body.currentAge,
       retirementAge: body.retirementAge,
       lifeExpectancy: body.lifeExpectancy || 95,
-      province: body.province || 'ON',
+      province: body.province || 'AB',
       rrspBalance: body.rrspBalance || 0,
       tfsaBalance: body.tfsaBalance || 0,
       nonRegBalance: body.nonRegBalance || 0,
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       investmentReturnRate: body.investmentReturnRate || 5.0,
       inflationRate: body.inflationRate || 2.0,
       rrspToRrifAge: body.rrspToRrifAge || 71,
+      withdrawalStrategy: body.withdrawalStrategy || 'RRIF->Corp->NonReg->TFSA',
     };
 
     // Run projection
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         currentAge: body.currentAge,
         retirementAge: body.retirementAge,
         lifeExpectancy: body.lifeExpectancy || 95,
-        province: body.province || 'ON',
+        province: body.province || 'AB',
         rrspBalance: body.rrspBalance || 0,
         tfsaBalance: body.tfsaBalance || 0,
         nonRegBalance: body.nonRegBalance || 0,
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
         investmentReturnRate: body.investmentReturnRate || 5.0,
         inflationRate: body.inflationRate || 2.0,
         rrspToRrifAge: body.rrspToRrifAge || 71,
+        withdrawalStrategy: body.withdrawalStrategy || 'RRIF->Corp->NonReg->TFSA',
         projectionResults: JSON.stringify(projection),
         isBaseline: body.isBaseline || false,
       },

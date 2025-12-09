@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -28,10 +29,23 @@ export default function ProfilePage() {
     maritalStatus: '',
   });
 
-  // Load user profile
+  // Load user profile and CSRF token
   useEffect(() => {
     loadProfile();
+    fetchCsrfToken();
   }, []);
+
+  const fetchCsrfToken = async () => {
+    try {
+      const response = await fetch('/api/csrf');
+      if (response.ok) {
+        const data = await response.json();
+        setCsrfToken(data.token);
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -79,9 +93,18 @@ export default function ProfilePage() {
     setMessage(null);
 
     try {
+      // Prepare headers with CSRF token
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken;
+      }
+
       const response = await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(formData),
       });
 
@@ -143,10 +166,116 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Financial Profile</h1>
         <p className="mt-2 text-gray-600">
           Manage your personal information and retirement planning details
         </p>
+      </div>
+
+      {/* Quick Navigation to Financial Sections */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Financial Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <a
+            href="/profile/assets"
+            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition"
+          >
+            <div className="flex-shrink-0">
+              <svg
+                className="h-8 w-8 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="font-semibold text-gray-900">Assets</h3>
+              <p className="text-sm text-gray-600">RRSP, TFSA, investments</p>
+            </div>
+          </a>
+
+          <a
+            href="/profile/income"
+            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition"
+          >
+            <div className="flex-shrink-0">
+              <svg
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="font-semibold text-gray-900">Income</h3>
+              <p className="text-sm text-gray-600">Salary, pensions, CPP/OAS</p>
+            </div>
+          </a>
+
+          <a
+            href="/profile/expenses"
+            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition"
+          >
+            <div className="flex-shrink-0">
+              <svg
+                className="h-8 w-8 text-orange-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="font-semibold text-gray-900">Expenses</h3>
+              <p className="text-sm text-gray-600">Monthly spending, bills</p>
+            </div>
+          </a>
+
+          <a
+            href="/profile/debts"
+            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition"
+          >
+            <div className="flex-shrink-0">
+              <svg
+                className="h-8 w-8 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="font-semibold text-gray-900">Debts</h3>
+              <p className="text-sm text-gray-600">Mortgages, loans</p>
+            </div>
+          </a>
+        </div>
       </div>
 
       {/* Success/Error Message */}

@@ -16,9 +16,10 @@ import { Switch } from '@/components/ui/switch';
 interface HouseholdFormProps {
   household: HouseholdInput;
   onChange: <K extends keyof HouseholdInput>(field: K, value: HouseholdInput[K]) => void;
+  isPrefilled?: boolean;
 }
 
-export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
+export function HouseholdForm({ household, onChange, isPrefilled = false }: HouseholdFormProps) {
   return (
     <div className="space-y-6">
       {/* Basic Settings */}
@@ -30,12 +31,17 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="province">Province</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="province">Province</Label>
+                {isPrefilled && (
+                  <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
+                )}
+              </div>
               <Select
                 value={household.province}
                 onValueChange={(value: Province) => onChange('province', value)}
               >
-                <SelectTrigger id="province">
+                <SelectTrigger id="province" className={isPrefilled ? "bg-blue-50 border-blue-200" : ""}>
                   <SelectValue placeholder="Select province" />
                 </SelectTrigger>
                 <SelectContent>
@@ -81,7 +87,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
                   <SelectItem key={option.value} value={option.value}>
                     <div>
                       <div className="font-medium">{option.label}</div>
-                      <div className="text-xs text-muted-foreground">{option.description}</div>
+                      <div className="text-xs text-gray-600">{option.description}</div>
                     </div>
                   </SelectItem>
                 ))}
@@ -99,7 +105,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Go-Go Years (Active retirement)</h3>
+            <h3 className="text-sm font-semibold text-blue-600">Go-Go Years (Active retirement)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="spending-go-go">Annual Spending ($)</Label>
@@ -123,7 +129,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Slow-Go Years (Reduced activity)</h3>
+            <h3 className="text-sm font-semibold text-blue-600">Slow-Go Years (Reduced activity)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="spending-slow-go">Annual Spending ($)</Label>
@@ -147,7 +153,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">No-Go Years (Limited mobility)</h3>
+            <h3 className="text-sm font-semibold text-blue-600">No-Go Years (Limited mobility)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="spending-no-go">Annual Spending ($)</Label>
@@ -211,7 +217,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
                 value={household.gap_tolerance}
                 onChange={(e) => onChange('gap_tolerance', parseFloat(e.target.value) || 0)}
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-600">
                 Acceptable shortfall in meeting spending goals
               </p>
             </div>
@@ -230,7 +236,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="reinvest-nonreg">Reinvest Non-Registered Distributions</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600">
                   Automatically reinvest dividends and distributions
                 </p>
               </div>
@@ -244,7 +250,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="stop-on-fail">Stop Simulation on Failure</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600">
                   End simulation when assets are depleted
                 </p>
               </div>
@@ -268,7 +274,7 @@ export function HouseholdForm({ household, onChange }: HouseholdFormProps) {
                 value={household.income_split_rrif_fraction}
                 onChange={(e) => onChange('income_split_rrif_fraction', parseFloat(e.target.value) || 0)}
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-600">
                 Fraction of RRIF income to split (0 to 1)
               </p>
             </div>

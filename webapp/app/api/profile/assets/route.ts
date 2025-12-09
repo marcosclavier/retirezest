@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, name, description, balance, currentValue, contributionRoom, returnRate, notes } = body;
+    const { type, name, description, balance, currentValue, contributionRoom, returnRate, owner, notes } = body;
 
     // Validation
     if (!type || !name) {
@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
         currentValue: parseFloat(balanceValue), // Keep for backwards compatibility
         contributionRoom: contributionRoom ? parseFloat(contributionRoom) : null,
         returnRate: returnRate ? parseFloat(returnRate) : null,
+        owner: owner || 'person1',
         notes: notes || null,
       },
     });
@@ -89,7 +90,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, type, name, description, balance, currentValue, contributionRoom, returnRate, notes } = body;
+    const { id, type, name, description, balance, currentValue, contributionRoom, returnRate, owner, notes } = body;
 
     if (!id) {
       throw new ValidationError('Asset ID is required', 'id');
@@ -116,6 +117,7 @@ export async function PUT(request: NextRequest) {
         currentValue: balanceValue !== undefined ? parseFloat(balanceValue) : undefined,
         contributionRoom: contributionRoom ? parseFloat(contributionRoom) : null,
         returnRate: returnRate ? parseFloat(returnRate) : null,
+        owner: owner !== undefined ? owner : undefined,
         notes: notes || null,
       },
     });

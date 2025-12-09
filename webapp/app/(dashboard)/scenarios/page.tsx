@@ -45,6 +45,7 @@ interface DBScenario {
   investmentReturnRate: number;
   inflationRate: number;
   rrspToRrifAge: number;
+  withdrawalStrategy: string;
   projectionResults: string | null;
   isBaseline: boolean;
   createdAt: string;
@@ -64,13 +65,14 @@ export default function ScenariosPage() {
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
 
   // Default scenario template
   const defaultInputs: ProjectionInput = {
     currentAge: 55,
     retirementAge: 65,
     lifeExpectancy: 90,
-    province: 'ON',
+    province: 'AB',
     rrspBalance: 500000,
     tfsaBalance: 100000,
     nonRegBalance: 150000,
@@ -89,6 +91,7 @@ export default function ScenariosPage() {
     investmentReturnRate: 0.05,
     inflationRate: 0.02,
     rrspToRrifAge: 71,
+    withdrawalStrategy: 'RRIF->Corp->NonReg->TFSA',
   };
 
   const [newScenario, setNewScenario] = useState<Partial<Scenario>>({
@@ -135,6 +138,19 @@ export default function ScenariosPage() {
     };
   };
 
+  // Fetch CSRF token
+  const fetchCsrfToken = async () => {
+    try {
+      const res = await fetch('/api/csrf');
+      if (res.ok) {
+        const data = await res.json();
+        setCsrfToken(data.token);
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+  };
+
   // Load scenarios from API
   useEffect(() => {
     const loadScenarios = async () => {
@@ -153,6 +169,7 @@ export default function ScenariosPage() {
     };
 
     loadScenarios();
+    fetchCsrfToken();
   }, []);
 
   const createScenario = async () => {
@@ -161,11 +178,20 @@ export default function ScenariosPage() {
       return;
     }
 
+    // Ensure we have a CSRF token before submitting
+    if (!csrfToken) {
+      alert('Security token not loaded. Please refresh the page and try again.');
+      return;
+    }
+
     setCreating(true);
     try {
       const response = await fetch('/api/scenarios', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         body: JSON.stringify({
           name: newScenario.name,
           ...newScenario.inputs,
@@ -278,8 +304,8 @@ export default function ScenariosPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Retirement Age</label>
                 <input
                   type="number"
-                  value={newScenario.inputs?.retirementAge}
-                  onChange={(e) => updateScenarioInput('retirementAge', parseInt(e.target.value))}
+                  value={newScenario.inputs?.retirementAge ?? ''}
+                  onChange={(e) => updateScenarioInput('retirementAge', parseInt(e.target.value) || 0)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                 />
               </div>
@@ -287,8 +313,8 @@ export default function ScenariosPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">CPP Start Age</label>
                 <input
                   type="number"
-                  value={newScenario.inputs?.cppStartAge}
-                  onChange={(e) => updateScenarioInput('cppStartAge', parseInt(e.target.value))}
+                  value={newScenario.inputs?.cppStartAge ?? ''}
+                  onChange={(e) => updateScenarioInput('cppStartAge', parseInt(e.target.value) || 0)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   min="60"
                   max="70"
@@ -298,12 +324,40 @@ export default function ScenariosPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Annual Expenses ($)</label>
                 <input
                   type="number"
-                  value={newScenario.inputs?.annualExpenses}
-                  onChange={(e) => updateScenarioInput('annualExpenses', parseFloat(e.target.value))}
+                  value={newScenario.inputs?.annualExpenses ?? ''}
+                  onChange={(e) => updateScenarioInput('annualExpenses', parseFloat(e.target.value) || 0)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   step="1000"
                 />
               </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Withdrawal Strategy
+                <span className="ml-2 text-xs text-gray-500">(Order of account withdrawals in retirement)</span>
+              </label>
+              <select
+                value={newScenario.inputs?.withdrawalStrategy}
+                onChange={(e) => updateScenarioInput('withdrawalStrategy', e.target.value)}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 p-2 border"
+              >
+                <option value="NonReg->RRIF->Corp->TFSA">
+                  Strategy A: Non-Registered → RRIF → Corporate → TFSA
+                </option>
+                <option value="RRIF->Corp->NonReg->TFSA">
+                  Strategy B: RRIF → Corporate → Non-Registered → TFSA (Default)
+                </option>
+                <option value="Corp->RRIF->NonReg->TFSA">
+                  Strategy C: Corporate → RRIF → Non-Registered → TFSA
+                </option>
+                <option value="Hybrid">
+                  Hybrid: RRIF top-up first → Non-Registered → Corporate → TFSA
+                </option>
+              </select>
+              <p className="mt-2 text-xs text-gray-500">
+                Different strategies optimize for different goals: tax efficiency, estate value, or government benefit maximization.
+              </p>
             </div>
 
             <div className="flex justify-end space-x-3">

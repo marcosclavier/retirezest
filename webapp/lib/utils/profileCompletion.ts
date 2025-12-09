@@ -139,7 +139,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       description: 'Set your target retirement age and life expectancy',
       weight: 15,
       action: 'Plan Retirement',
-      link: '/projection',
+      link: '/scenarios',
     });
   }
 

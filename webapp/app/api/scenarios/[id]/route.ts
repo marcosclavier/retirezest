@@ -98,6 +98,7 @@ export async function PUT(
       investmentReturnRate: body.investmentReturnRate ?? existingScenario.investmentReturnRate,
       inflationRate: body.inflationRate ?? existingScenario.inflationRate,
       rrspToRrifAge: body.rrspToRrifAge ?? existingScenario.rrspToRrifAge,
+      withdrawalStrategy: body.withdrawalStrategy ?? existingScenario.withdrawalStrategy,
     };
 
     // Run projection
@@ -131,6 +132,7 @@ export async function PUT(
         investmentReturnRate: body.investmentReturnRate ?? existingScenario.investmentReturnRate,
         inflationRate: body.inflationRate ?? existingScenario.inflationRate,
         rrspToRrifAge: body.rrspToRrifAge ?? existingScenario.rrspToRrifAge,
+        withdrawalStrategy: body.withdrawalStrategy ?? existingScenario.withdrawalStrategy,
         projectionResults: JSON.stringify(projection),
         isBaseline: body.isBaseline ?? existingScenario.isBaseline,
       },

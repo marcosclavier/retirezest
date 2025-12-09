@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker deployment
@@ -60,23 +59,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Export configuration with Sentry if DSN is configured
-// Sentry integration is optional - only wraps config if SENTRY_DSN is set
-export default process.env.SENTRY_DSN
-  ? withSentryConfig(nextConfig, {
-      // Sentry Webpack Plugin Options
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
-      silent: !process.env.CI,
-      widenClientFileUpload: true,
-      reactComponentAnnotation: {
-        enabled: true,
-      },
-      tunnelRoute: "/monitoring",
-      sourcemaps: {
-        disable: true, // Disable source map uploads in development
-      },
-      disableLogger: true,
-      automaticVercelMonitors: true,
-    })
-  : nextConfig;
+// Export configuration
+// Note: Sentry integration requires @sentry/nextjs to be installed
+// If you want to enable Sentry monitoring, install it with: npm install @sentry/nextjs
+export default nextConfig;

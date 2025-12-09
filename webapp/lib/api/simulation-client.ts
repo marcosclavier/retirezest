@@ -15,14 +15,21 @@ import type {
  * Calls Next.js API route which proxies to Python backend
  */
 export async function runSimulation(
-  householdInput: HouseholdInput
+  householdInput: HouseholdInput,
+  csrfToken: string | null = null
 ): Promise<SimulationResponse> {
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['x-csrf-token'] = csrfToken;
+    }
+
     const response = await fetch('/api/simulation/run', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(householdInput),
     });
 
@@ -60,14 +67,21 @@ export async function runSimulation(
  * Calls Next.js API route which proxies to Python backend
  */
 export async function analyzeComposition(
-  householdInput: HouseholdInput
+  householdInput: HouseholdInput,
+  csrfToken: string | null = null
 ): Promise<CompositionAnalysis | null> {
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['x-csrf-token'] = csrfToken;
+    }
+
     const response = await fetch('/api/simulation/analyze', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(householdInput),
     });
 
@@ -87,14 +101,12 @@ export async function analyzeComposition(
 
 /**
  * Health check - verify Python API is running
- * For development: directly checks Python API
- * For production: could be proxied through Next.js
+ * Checks through Next.js API to avoid CORS issues
  */
 export async function healthCheck(): Promise<boolean> {
   try {
-    // In development, check Python API directly
-    const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${pythonApiUrl}/api/health`, {
+    // Check through Next.js health endpoint
+    const response = await fetch('/api/health', {
       method: 'GET',
     });
 
@@ -103,7 +115,8 @@ export async function healthCheck(): Promise<boolean> {
     }
 
     const data = await response.json();
-    return data.status === 'ok';
+    // Check if Python API is up (healthy or degraded means database works at minimum)
+    return data.checks?.pythonApi?.status === 'up';
   } catch (error) {
     console.error('Health check failed:', error);
     return false;

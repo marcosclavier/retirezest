@@ -49,14 +49,14 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      throw new AuthenticationError('Invalid email or password');
+      throw new AuthenticationError('Email or password does not match. Please check your credentials or register.');
     }
 
     // Verify password
     const isValid = await verifyPassword(password, user.passwordHash);
 
     if (!isValid) {
-      throw new AuthenticationError('Invalid email or password');
+      throw new AuthenticationError('Email or password does not match. Please check your credentials or register.');
     }
 
     // Update last login

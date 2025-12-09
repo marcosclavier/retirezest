@@ -21,10 +21,10 @@ export default async function DashboardPage() {
   });
 
   // Calculate total assets
-  const totalAssets = user?.assets.reduce((sum, asset) => sum + asset.currentValue, 0) || 0;
+  const totalAssets = user?.assets.reduce((sum, asset) => sum + (asset.currentValue || 0), 0) || 0;
 
   // Calculate total debts
-  const totalDebts = user?.debts.reduce((sum, debt) => sum + debt.currentBalance, 0) || 0;
+  const totalDebts = user?.debts.reduce((sum, debt) => sum + (debt.currentBalance || 0), 0) || 0;
 
   // Calculate net worth
   const netWorth = totalAssets - totalDebts;

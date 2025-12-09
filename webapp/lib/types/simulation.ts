@@ -411,8 +411,8 @@ export const defaultPersonInput: PersonInput = {
 
 // Default household input
 export const defaultHouseholdInput: HouseholdInput = {
-  p1: { ...defaultPersonInput, name: 'Person 1' },
-  p2: { ...defaultPersonInput, name: 'Person 2' },
+  p1: { ...defaultPersonInput, name: 'Me' },
+  p2: { ...defaultPersonInput, name: 'Partner' },
 
   province: 'AB',
   start_year: 2025,

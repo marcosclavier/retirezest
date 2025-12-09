@@ -92,7 +92,12 @@ export default function SimulationPage() {
               ...prev.p1,
               ...data.person1Input,
             },
-            p2: partnerData,
+            p2: {
+              ...prev.p2,
+              ...partnerData,
+              // Preserve user-entered name if it exists and isn't empty
+              name: prev.p2.name || partnerData.name,
+            },
           }));
 
           setIncludePartner(shouldIncludePartner);
@@ -348,6 +353,7 @@ export default function SimulationPage() {
             personLabel={household.p1.name || 'You'}
             personNumber="p1"
             onChange={(field, value) => updatePerson('p1', field, value)}
+            isPrefilled={prefillAvailable}
           />
 
           {/* Add/Remove Partner Button */}
@@ -371,6 +377,7 @@ export default function SimulationPage() {
                   personLabel={household.p2.name || 'Partner'}
                   personNumber="p2"
                   onChange={(field, value) => updatePerson('p2', field, value)}
+                  isPrefilled={prefillAvailable}
                 />
                 <Button
                   variant="ghost"
@@ -386,7 +393,7 @@ export default function SimulationPage() {
           )}
 
           {/* Household Settings */}
-          <HouseholdForm household={household} onChange={updateHousehold} />
+          <HouseholdForm household={household} onChange={updateHousehold} isPrefilled={prefillAvailable} />
         </TabsContent>
 
         {/* Results Tab */}

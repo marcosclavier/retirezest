@@ -11,6 +11,7 @@ interface Asset {
   currentValue: number;
   contributionRoom: number | null;
   returnRate: number | null;
+  owner: string | null;
   notes: string | null;
 }
 
@@ -27,6 +28,7 @@ export default function AssetsPage() {
     balance: '',
     contributionRoom: '',
     returnRate: '',
+    owner: 'person1',
     notes: '',
   });
 
@@ -96,6 +98,7 @@ export default function AssetsPage() {
           balance: '',
           contributionRoom: '',
           returnRate: '',
+          owner: 'person1',
           notes: '',
         });
       } else {
@@ -116,6 +119,7 @@ export default function AssetsPage() {
       balance: asset.balance.toString(),
       contributionRoom: asset.contributionRoom?.toString() || '',
       returnRate: asset.returnRate?.toString() || '',
+      owner: asset.owner || 'person1',
       notes: asset.notes || '',
     });
     setEditingId(asset.id);
@@ -184,6 +188,7 @@ export default function AssetsPage() {
               balance: '',
               contributionRoom: '',
               returnRate: '',
+              owner: 'person1',
               notes: '',
             });
           }}
@@ -196,7 +201,7 @@ export default function AssetsPage() {
       {/* Summary Card */}
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Assets Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div>
             <div className="text-sm text-gray-500">Total Assets</div>
             <div className="text-2xl font-bold text-gray-900">
@@ -204,9 +209,9 @@ export default function AssetsPage() {
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">RRSP</div>
+            <div className="text-sm text-gray-500">RRSP/RRIF</div>
             <div className="text-2xl font-bold text-blue-600">
-              ${(assetsByType.rrsp || 0).toLocaleString()}
+              ${((assetsByType.rrsp || 0) + (assetsByType.rrif || 0)).toLocaleString()}
             </div>
           </div>
           <div>
@@ -216,9 +221,15 @@ export default function AssetsPage() {
             </div>
           </div>
           <div>
+            <div className="text-sm text-gray-500">Corporate</div>
+            <div className="text-2xl font-bold text-orange-600">
+              ${(assetsByType.corporate || 0).toLocaleString()}
+            </div>
+          </div>
+          <div>
             <div className="text-sm text-gray-500">Non-Registered</div>
             <div className="text-2xl font-bold text-purple-600">
-              ${(assetsByType.non_registered || 0).toLocaleString()}
+              ${(assetsByType.nonreg || 0).toLocaleString()}
             </div>
           </div>
         </div>
@@ -307,6 +318,23 @@ export default function AssetsPage() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   placeholder="For RRSP/TFSA"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Owner *</label>
+                <select
+                  value={formData.owner}
+                  onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  required
+                >
+                  <option value="person1">Me (Person 1)</option>
+                  <option value="person2">Partner (Person 2)</option>
+                  <option value="joint">Joint (50/50 split)</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  For couples planning: specify who owns this asset
+                </p>
               </div>
 
               <div>
@@ -417,6 +445,16 @@ export default function AssetsPage() {
                       {asset.type === 'tfsa' && (
                         <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
                           Tax-Free
+                        </span>
+                      )}
+                      {asset.owner && (
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
+                          asset.owner === 'person1' ? 'bg-purple-100 text-purple-800' :
+                          asset.owner === 'person2' ? 'bg-pink-100 text-pink-800' :
+                          'bg-indigo-100 text-indigo-800'
+                        }`}>
+                          {asset.owner === 'person1' ? 'Person 1' :
+                           asset.owner === 'person2' ? 'Person 2' : 'Joint'}
                         </span>
                       )}
                     </div>
