@@ -222,13 +222,16 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tfsa-contribution">Annual TFSA Contribution (each) ($)</Label>
+              <Label htmlFor="tfsa-contribution">Annual TFSA Contribution (per person) ($)</Label>
               <Input
                 id="tfsa-contribution"
                 type="number"
                 value={household.tfsa_contribution_each}
                 onChange={(e) => onChange('tfsa_contribution_each', parseFloat(e.target.value) || 0)}
               />
+              <p className="text-xs text-gray-600">
+                Amount to contribute to TFSA each year during retirement (must not exceed available contribution room)
+              </p>
             </div>
           </div>
 

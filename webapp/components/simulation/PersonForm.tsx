@@ -530,30 +530,34 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           description="Available TFSA contribution room and annual growth"
           defaultOpen={false}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`${personNumber}-tfsa-room-start`}>Starting Room ($)</Label>
-                {isPrefilled && person.tfsa_room_start > 0 && (
-                  <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
-                )}
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <div className="flex items-start gap-2">
+                <div className="text-sm text-blue-900">
+                  <p className="font-semibold mb-1">Starting Room: ${person.tfsa_room_start.toLocaleString()}</p>
+                  <p className="text-xs">
+                    This value is automatically loaded from your Financial Profile and cannot be edited here.
+                    To update it, go to Profile → Assets and edit your TFSA contribution room.
+                  </p>
+                </div>
               </div>
-              <Input
-                id={`${personNumber}-tfsa-room-start`}
-                type="number"
-                value={person.tfsa_room_start}
-                onChange={(e) => onChange('tfsa_room_start', parseFloat(e.target.value) || 0)}
-                className={isPrefilled && person.tfsa_room_start > 0 ? "bg-blue-50 border-blue-200" : ""}
-              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-tfsa-room-growth`}>Annual Growth ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-tfsa-room-growth`}
+                tooltip="The annual TFSA contribution limit increase (e.g., $7,000 for 2024). This represents how much new contribution room is added each year."
+              >
+                Annual Limit Growth ($)
+              </LabelWithTooltip>
               <Input
                 id={`${personNumber}-tfsa-room-growth`}
                 type="number"
                 value={person.tfsa_room_annual_growth}
                 onChange={(e) => onChange('tfsa_room_annual_growth', parseFloat(e.target.value) || 0)}
               />
+              <p className="text-xs text-gray-600">
+                Typical value: $7,000 (2024 limit)
+              </p>
             </div>
           </div>
         </Collapsible>
