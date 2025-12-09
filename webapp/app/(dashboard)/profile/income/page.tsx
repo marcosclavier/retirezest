@@ -9,6 +9,7 @@ interface IncomeSource {
   amount: number;
   frequency: string;
   startAge?: number;
+  owner?: string;
   notes?: string;
 }
 
@@ -23,6 +24,7 @@ export default function IncomePage() {
     amount: 0,
     frequency: 'annual',
     startAge: undefined,
+    owner: 'person1',
     notes: '',
   });
 
@@ -84,6 +86,7 @@ export default function IncomePage() {
           amount: 0,
           frequency: 'annual',
           startAge: undefined,
+          owner: 'person1',
           notes: '',
         });
       } else {
@@ -175,6 +178,22 @@ export default function IncomePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Owner *
+                </label>
+                <select
+                  value={formData.owner || 'person1'}
+                  onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  required
+                >
+                  <option value="person1">Person 1</option>
+                  <option value="person2">Person 2</option>
+                  <option value="joint">Joint</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Annual Amount (CAD) *
                 </label>
                 <input
@@ -258,6 +277,7 @@ export default function IncomePage() {
                       amount: 0,
                       frequency: 'annual',
                       startAge: undefined,
+                      owner: 'person1',
                       notes: '',
                     });
                   }}
@@ -295,6 +315,13 @@ export default function IncomePage() {
                           <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                             {income.frequency}
                           </span>
+                          {income.owner && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded capitalize">
+                              {income.owner === 'person1' ? 'Person 1' :
+                               income.owner === 'person2' ? 'Person 2' :
+                               'Joint'}
+                            </span>
+                          )}
                         </div>
                         <p className="text-2xl font-bold text-green-600">
                           ${income.amount.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
