@@ -19,6 +19,13 @@ model User {
   dateOfBirth       DateTime?
   province          String?
   maritalStatus     String?
+
+  // Couples planning
+  includePartner      Boolean   @default(false)
+  partnerFirstName    String?
+  partnerLastName     String?
+  partnerDateOfBirth  DateTime?
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
