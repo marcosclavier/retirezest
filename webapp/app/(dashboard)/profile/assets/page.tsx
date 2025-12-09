@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Asset {
   id: string;
@@ -16,6 +17,7 @@ interface Asset {
 }
 
 export default function AssetsPage() {
+  const router = useRouter();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -170,6 +172,12 @@ export default function AssetsPage() {
 
   return (
     <div className="space-y-6">
+      <button
+        onClick={() => router.push('/dashboard')}
+        className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
+      >
+        ← Back to Dashboard
+      </button>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Assets</h1>

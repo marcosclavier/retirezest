@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Debt {
   id: string;
@@ -12,6 +13,7 @@ interface Debt {
 }
 
 export default function DebtsPage() {
+  const router = useRouter();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -162,6 +164,12 @@ export default function DebtsPage() {
 
   return (
     <div className="space-y-6">
+      <button
+        onClick={() => router.push('/dashboard')}
+        className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
+      >
+        ← Back to Dashboard
+      </button>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Debts</h1>

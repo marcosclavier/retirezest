@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Expense {
   id: string;
@@ -14,6 +15,7 @@ interface Expense {
 }
 
 export default function ExpensesPage() {
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -176,6 +178,12 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-6">
+      <button
+        onClick={() => router.push('/dashboard')}
+        className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
+      >
+        ← Back to Dashboard
+      </button>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Expenses</h1>
