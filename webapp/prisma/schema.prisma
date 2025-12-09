@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -63,12 +63,14 @@ model Asset {
   currentValue    Float?    // Legacy field, use balance instead
   contributionRoom Float?   // For RRSP/TFSA
   returnRate      Float?    // Expected annual return rate percentage
+  owner           String?   @default("person1") // person1, person2, joint - for couples planning
   notes           String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@index([userId])
   @@index([userId, type])
+  @@index([userId, owner])
   @@index([createdAt])
 }
 
@@ -156,6 +158,9 @@ model Scenario {
 
   // RRIF rules
   rrspToRrifAge           Int       @default(71)
+
+  // Withdrawal strategy
+  withdrawalStrategy      String    @default("RRIF->Corp->NonReg->TFSA") // NonReg->RRIF->Corp->TFSA, RRIF->Corp->NonReg->TFSA, Corp->RRIF->NonReg->TFSA, Hybrid
 
   // Projection results (JSON)
   projectionResults       String?   // Cached projection results
