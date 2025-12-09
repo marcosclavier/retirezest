@@ -273,7 +273,7 @@ export default function IncomePage() {
         {/* Income Sources List */}
         <div className="bg-white rounded-lg shadow-md">
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Your Income Sources</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Income Sources</h2>
 
             {incomeSources.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
