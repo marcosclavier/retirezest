@@ -76,7 +76,7 @@ export default function SimulationPage() {
     }
   }, [includePartner, isInitialized]);
 
-  // Check API health, fetch CSRF token, and load prefill data on mount
+  // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
     healthCheck().then(setApiHealthy);
 
@@ -89,6 +89,19 @@ export default function SimulationPage() {
         }
       })
       .catch(err => console.error('Failed to fetch CSRF token:', err));
+
+    // Fetch profile settings to get couples planning preference
+    const hasSavedIncludePartner = localStorage.getItem('simulation_includePartner');
+    if (!hasSavedIncludePartner) {
+      fetch('/api/profile/settings')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.includePartner !== undefined) {
+            setIncludePartner(data.includePartner);
+          }
+        })
+        .catch(err => console.error('Failed to fetch profile settings:', err));
+    }
 
     // Only load prefill data if there's no saved data
     const hasSavedData = localStorage.getItem('simulation_household');
