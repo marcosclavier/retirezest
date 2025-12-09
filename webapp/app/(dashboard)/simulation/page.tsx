@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, Play, UserPlus, UserMinus } from 'lucide-react';
+import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw } from 'lucide-react';
 import { runSimulation, healthCheck } from '@/lib/api/simulation-client';
 import {
   defaultHouseholdInput,
@@ -40,6 +40,41 @@ export default function SimulationPage() {
   const [prefillLoading, setPrefillLoading] = useState(true);
   const [prefillAvailable, setPrefillAvailable] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load saved data from localStorage on mount
+  useEffect(() => {
+    const savedHousehold = localStorage.getItem('simulation_household');
+    const savedIncludePartner = localStorage.getItem('simulation_includePartner');
+
+    if (savedHousehold) {
+      try {
+        setHousehold(JSON.parse(savedHousehold));
+      } catch (error) {
+        console.error('Failed to parse saved household data:', error);
+      }
+    }
+
+    if (savedIncludePartner) {
+      setIncludePartner(savedIncludePartner === 'true');
+    }
+
+    setIsInitialized(true);
+  }, []);
+
+  // Save household data to localStorage whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('simulation_household', JSON.stringify(household));
+    }
+  }, [household, isInitialized]);
+
+  // Save includePartner to localStorage whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('simulation_includePartner', includePartner.toString());
+    }
+  }, [includePartner, isInitialized]);
 
   // Check API health, fetch CSRF token, and load prefill data on mount
   useEffect(() => {
@@ -55,8 +90,13 @@ export default function SimulationPage() {
       })
       .catch(err => console.error('Failed to fetch CSRF token:', err));
 
-    // Fetch prefill data from user profile and assets
-    loadPrefillData();
+    // Only load prefill data if there's no saved data
+    const hasSavedData = localStorage.getItem('simulation_household');
+    if (!hasSavedData) {
+      loadPrefillData();
+    } else {
+      setPrefillLoading(false);
+    }
   }, []);
 
   const loadPrefillData = async () => {
@@ -145,6 +185,22 @@ export default function SimulationPage() {
       ...prev,
       p2: { ...defaultPersonInput, name: '' },
     }));
+  };
+
+  const handleReloadFromProfile = async () => {
+    // Clear localStorage
+    localStorage.removeItem('simulation_household');
+    localStorage.removeItem('simulation_includePartner');
+
+    // Reset to defaults
+    setHousehold({
+      ...defaultHouseholdInput,
+      p1: { ...defaultPersonInput, name: 'Me' },
+    });
+    setIncludePartner(false);
+
+    // Reload from profile
+    await loadPrefillData();
   };
 
   const handleRunSimulation = async () => {
@@ -315,7 +371,7 @@ export default function SimulationPage() {
       )}
 
       {/* Run Simulation Button */}
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-4">
         <Button
           onClick={handleRunSimulation}
           disabled={isLoading || apiHealthy === false}
@@ -333,6 +389,15 @@ export default function SimulationPage() {
               Run Simulation
             </>
           )}
+        </Button>
+        <Button
+          onClick={handleReloadFromProfile}
+          disabled={isLoading || prefillLoading}
+          size="lg"
+          variant="outline"
+        >
+          <RefreshCw className="mr-2 h-5 w-5" />
+          Reload from Profile
         </Button>
       </div>
 
