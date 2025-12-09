@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { YearResult } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download, ChevronRight } from 'lucide-react';
 
 interface YearByYearTableProps {
   yearByYear: YearResult[];
@@ -24,6 +24,17 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
   const [showAll, setShowAll] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof YearResult>('year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+
+  const toggleRow = (year: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(year)) {
+      newExpanded.delete(year);
+    } else {
+      newExpanded.add(year);
+    }
+    setExpandedRows(newExpanded);
+  };
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-CA', {
@@ -170,6 +181,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]" style={{ color: '#111827' }}></TableHead>
                 <TableHead
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('year')}
@@ -179,29 +191,22 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                   <SortIcon column="year" />
                 </TableHead>
                 <TableHead style={{ color: '#111827' }}>Ages</TableHead>
-                <TableHead className="text-right" style={{ color: '#111827' }}>CPP+OAS</TableHead>
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('spending_need')}
                   style={{ color: '#111827' }}
                 >
-                  Target
+                  Spending Target
                   <SortIcon column="spending_need" />
                 </TableHead>
-                <TableHead
-                  className="text-right cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort('spending_met')}
-                  style={{ color: '#111827' }}
-                >
-                  Spent
-                  <SortIcon column="spending_met" />
-                </TableHead>
+                <TableHead className="text-right" style={{ color: '#111827' }}>Total Inflows</TableHead>
+                <TableHead className="text-right" style={{ color: '#111827' }}>Total Withdrawals</TableHead>
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('total_tax')}
                   style={{ color: '#111827' }}
                 >
-                  Tax
+                  Tax Paid
                   <SortIcon column="total_tax" />
                 </TableHead>
                 <TableHead
@@ -217,38 +222,290 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
             </TableHeader>
             <TableBody>
               {displayedData.map((year) => {
-                const totalBenefits =
-                  year.cpp_p1 + year.cpp_p2 + year.oas_p1 + year.oas_p2;
+                const isExpanded = expandedRows.has(year.year);
+                const totalBenefits = year.cpp_p1 + year.cpp_p2 + year.oas_p1 + year.oas_p2;
+                const totalWithdrawals =
+                  year.rrif_withdrawal_p1 + year.rrif_withdrawal_p2 +
+                  year.tfsa_withdrawal_p1 + year.tfsa_withdrawal_p2 +
+                  year.nonreg_withdrawal_p1 + year.nonreg_withdrawal_p2 +
+                  year.corporate_withdrawal_p1 + year.corporate_withdrawal_p2;
+                const totalInflows = totalBenefits + totalWithdrawals;
                 const hasGap = year.spending_gap > 0;
 
                 return (
-                  <TableRow
-                    key={year.year}
-                    className={hasGap ? 'bg-red-50 dark:bg-red-950/30' : ''}
-                  >
-                    <TableCell className="font-medium" style={{ color: '#111827' }}>{year.year}</TableCell>
-                    <TableCell style={{ color: '#111827' }}>
-                      {year.age_p1}/{year.age_p2}
-                    </TableCell>
-                    <TableCell className="text-right" style={{ color: '#2563EB' }}>
-                      {formatCurrency(totalBenefits)}
-                    </TableCell>
-                    <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_need)}</TableCell>
-                    <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_met)}</TableCell>
-                    <TableCell className="text-right" style={{ color: '#EA580C' }}>
-                      {formatCurrency(year.total_tax)}
-                    </TableCell>
-                    <TableCell className="text-right font-medium" style={{ color: '#111827' }}>
-                      {formatCurrency(year.total_value)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {year.plan_success ? (
-                        <Badge variant="default" className="bg-green-600">OK</Badge>
-                      ) : (
-                        <Badge variant="destructive">Gap</Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                  <Fragment key={year.year}>
+                    <TableRow
+                      className={`cursor-pointer hover:bg-muted/30 ${hasGap ? 'bg-red-50 dark:bg-red-950/30' : ''}`}
+                      onClick={() => toggleRow(year.year)}
+                    >
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="font-medium" style={{ color: '#111827' }}>
+                        {year.year}
+                      </TableCell>
+                      <TableCell style={{ color: '#111827' }}>
+                        {year.age_p1}/{year.age_p2}
+                      </TableCell>
+                      <TableCell className="text-right" style={{ color: '#111827' }}>
+                        {formatCurrency(year.spending_need)}
+                      </TableCell>
+                      <TableCell className="text-right" style={{ color: '#10B981' }}>
+                        {formatCurrency(totalInflows)}
+                      </TableCell>
+                      <TableCell className="text-right" style={{ color: '#2563EB' }}>
+                        {formatCurrency(totalWithdrawals)}
+                      </TableCell>
+                      <TableCell className="text-right" style={{ color: '#EA580C' }}>
+                        {formatCurrency(year.total_tax)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium" style={{ color: '#111827' }}>
+                        {formatCurrency(year.total_value)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {year.plan_success ? (
+                          <Badge variant="default" className="bg-green-600">
+                            OK
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive">Gap</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+
+                    {/* Expanded Detail Row */}
+                    {isExpanded && (
+                      <TableRow key={`${year.year}-detail`}>
+                        <TableCell colSpan={9} className="bg-muted/20 p-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* INFLOWS Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm uppercase text-green-700 dark:text-green-400 mb-3">
+                                💰 Inflows
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>CPP (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.cpp_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>CPP (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.cpp_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>OAS (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.oas_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>OAS (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.oas_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t">
+                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                    Gov. Benefits
+                                  </span>
+                                  <span className="font-semibold" style={{ color: '#10B981' }}>
+                                    {formatCurrency(totalBenefits)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* WITHDRAWALS Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm uppercase text-blue-700 dark:text-blue-400 mb-3">
+                                📤 Account Withdrawals
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>RRIF (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.rrif_withdrawal_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>RRIF (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.rrif_withdrawal_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>TFSA (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.tfsa_withdrawal_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>TFSA (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.tfsa_withdrawal_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Non-Reg (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.nonreg_withdrawal_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Non-Reg (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.nonreg_withdrawal_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Corporate (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.corporate_withdrawal_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Corporate (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.corporate_withdrawal_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t">
+                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                    Total Withdrawals
+                                  </span>
+                                  <span className="font-semibold" style={{ color: '#2563EB' }}>
+                                    {formatCurrency(totalWithdrawals)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* OUTFLOWS Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm uppercase text-orange-700 dark:text-orange-400 mb-3">
+                                💸 Outflows
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Tax (P1)</span>
+                                  <span className="font-medium" style={{ color: '#EA580C' }}>
+                                    {formatCurrency(year.total_tax_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Tax (P2)</span>
+                                  <span className="font-medium" style={{ color: '#EA580C' }}>
+                                    {formatCurrency(year.total_tax_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t">
+                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                    Total Tax
+                                  </span>
+                                  <span className="font-semibold" style={{ color: '#EA580C' }}>
+                                    {formatCurrency(year.total_tax)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between pt-2">
+                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                    Spending Met
+                                  </span>
+                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.spending_met)}
+                                  </span>
+                                </div>
+                                {year.spending_gap > 0 && (
+                                  <div className="flex justify-between pt-2 border-t border-red-200">
+                                    <span className="font-semibold text-red-600">
+                                      Shortfall
+                                    </span>
+                                    <span className="font-semibold text-red-600">
+                                      {formatCurrency(year.spending_gap)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* END BALANCES Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-sm uppercase text-gray-700 dark:text-gray-400 mb-3">
+                                💼 End-of-Year Balances
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>RRIF (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.rrif_balance_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>RRIF (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.rrif_balance_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>TFSA (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.tfsa_balance_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>TFSA (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.tfsa_balance_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Non-Reg (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.nonreg_balance_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Non-Reg (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.nonreg_balance_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Corporate (P1)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.corporate_balance_p1)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Corporate (P2)</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.corporate_balance_p2)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t">
+                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                    Net Worth
+                                  </span>
+                                  <span className="font-semibold text-green-600">
+                                    {formatCurrency(year.total_value)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
                 );
               })}
             </TableBody>

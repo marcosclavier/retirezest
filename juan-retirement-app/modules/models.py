@@ -264,6 +264,10 @@ class YearResult:
     oas_clawback_p1: float = 0.0
     oas_clawback_p2: float = 0.0
 
+    # Taxable income per person
+    taxable_inc_p1: float = 0.0
+    taxable_inc_p2: float = 0.0
+
     # Non-registered income breakdown
     nr_interest_p1: float = 0.0
     nr_interest_p2: float = 0.0

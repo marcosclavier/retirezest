@@ -333,7 +333,7 @@ def tax_for_detailed(
     Returns household tax components (federal + provincial) for this candidate incremental withdrawal mix.
 
     Returns:
-        tuple: (total_tax, federal_tax, provincial_tax, federal_oas_clawback, provincial_oas_clawback)
+        tuple: (total_tax, federal_tax, provincial_tax, federal_oas_clawback, provincial_oas_clawback, taxable_income)
 
     This mirrors the call signature to progressive_tax(...) but returns detailed breakdown.
     """
@@ -393,7 +393,10 @@ def tax_for_detailed(
     prov_tax = float(res_p["net_tax"])
     total_tax = fed_tax + prov_tax
 
-    return total_tax, fed_tax, prov_tax, fed_oas_clawback, prov_oas_clawback
+    # Extract taxable income (same for federal and provincial)
+    taxable_income = float(res_f.get("taxable_income", 0.0))
+
+    return total_tax, fed_tax, prov_tax, fed_oas_clawback, prov_oas_clawback, taxable_income
 
 
 def tax_for(
@@ -434,7 +437,7 @@ def tax_for(
     - fed_params, prov_params: *already indexed* tax parameter objects for that year
     """
     # Use the detailed function and return just the total
-    total_tax, _, _, _, _ = tax_for_detailed(
+    total_tax, _, _, _, _, _ = tax_for_detailed(
         add_nonreg=add_nonreg,
         add_rrif=add_rrif,
         add_corp_dividend=add_corp_dividend,
@@ -1067,7 +1070,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # NOTE: Distributions are ALWAYS passed to tax_for() for taxation,
     # regardless of the reinvest_nonreg_dist flag. This ensures phantom income
     # is properly captured even when distributions are reinvested.
-    base_tax, base_fed_tax, base_prov_tax, base_fed_oas_clawback, base_prov_oas_clawback = tax_for_detailed(
+    base_tax, base_fed_tax, base_prov_tax, base_fed_oas_clawback, base_prov_oas_clawback, taxable_income = tax_for_detailed(
         add_nonreg = withdrawals["nonreg"],   # they're selling this much non-reg principal
         add_rrif   = 0.0,                     # no EXTRA RRIF beyond withdrawals["rrif"] yet
         add_corp_dividend = withdrawals["corp"],
@@ -1208,7 +1211,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # Determine available balance from the current source
         if k == "rrif":
-            available = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
+            # RRIF strategy includes both RRIF and RRSP (before age 71, use RRSP; after 71, use RRIF)
+            # This allows "RRIF-first" strategies to work before mandatory conversion age
+            rrif_available = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
+            rrsp_available = max(getattr(person, "rrsp_balance", 0.0), 0.0)
+            available = rrif_available + rrsp_available
         elif k == "corp":
             # CDA-aware Corp withdrawal: prioritize CDA (zero-tax) before paid-up capital
             # For Balanced strategy specifically, we want to take CDA first as it's zero-tax
@@ -1489,6 +1496,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "gis": gis_benefit,
                   "oas_clawback": base_oas_clawback,  # NEW: OAS clawback amount
+                  "taxable_income": taxable_income,  # NEW: Taxable income for this person
                   "breakdown": {"nr_interest": nr_interest, "nr_elig_div": nr_elig_div, "nr_nonelig_div": nr_nonelig_div,
                                 "nr_capg_dist": nr_capg_dist, "rrif": withdrawals["rrif"], "corp_div": withdrawals["corp"],
                                 "cg_from_sale": realized_cg}}
@@ -1891,9 +1899,33 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         if not _rel_tol_check(sum_parts, total_tax_after_split, rel_tol=1e-12):
             total_tax_after_split = sum_parts
 
-        # Update balances: subtract withdrawals, then grow  
-        p1.rrif_balance = max(p1.rrif_balance - w1["rrif"], 0.0) * (1 + p1.yield_rrif_growth)
-        p2.rrif_balance = max(p2.rrif_balance - w2["rrif"], 0.0) * (1 + p2.yield_rrif_growth)
+        # Update balances: subtract withdrawals, then grow
+        # RRIF withdrawals can come from RRSP (before age 71) or RRIF (after age 71)
+        # Prioritize withdrawing from RRSP first if available, then RRIF
+        rrif_withdrawal_p1 = w1["rrif"]
+        rrif_withdrawal_p2 = w2["rrif"]
+
+        # Person 1: withdraw from RRSP first, then RRIF
+        rrsp_available_p1 = max(getattr(p1, "rrsp_balance", 0.0), 0.0)
+        if rrif_withdrawal_p1 > 0:
+            rrsp_taken_p1 = min(rrif_withdrawal_p1, rrsp_available_p1)
+            rrif_taken_p1 = rrif_withdrawal_p1 - rrsp_taken_p1
+            p1.rrsp_balance = max(getattr(p1, "rrsp_balance", 0.0) - rrsp_taken_p1, 0.0)
+            p1.rrif_balance = max(p1.rrif_balance - rrif_taken_p1, 0.0)
+        # Apply growth to both RRSP and RRIF
+        p1.rrsp_balance *= (1 + p1.yield_rrsp_growth)
+        p1.rrif_balance *= (1 + p1.yield_rrif_growth)
+
+        # Person 2: withdraw from RRSP first, then RRIF
+        rrsp_available_p2 = max(getattr(p2, "rrsp_balance", 0.0), 0.0)
+        if rrif_withdrawal_p2 > 0:
+            rrsp_taken_p2 = min(rrif_withdrawal_p2, rrsp_available_p2)
+            rrif_taken_p2 = rrif_withdrawal_p2 - rrsp_taken_p2
+            p2.rrsp_balance = max(getattr(p2, "rrsp_balance", 0.0) - rrsp_taken_p2, 0.0)
+            p2.rrif_balance = max(p2.rrif_balance - rrif_taken_p2, 0.0)
+        # Apply growth to both RRSP and RRIF
+        p2.rrsp_balance *= (1 + p2.yield_rrsp_growth)
+        p2.rrif_balance *= (1 + p2.yield_rrif_growth)
         p1.tfsa_balance = max(p1.tfsa_balance - w1["tfsa"], 0.0) * (1 + p1.yield_tfsa_growth)
         p2.tfsa_balance = max(p2.tfsa_balance - w2["tfsa"], 0.0) * (1 + p2.yield_tfsa_growth)
 
@@ -2173,6 +2205,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             gis_p1=t1["gis"], gis_p2=t2["gis"],
             #OAS Clawback
             oas_clawback_p1=float(t1.get("oas_clawback", 0.0)), oas_clawback_p2=float(t2.get("oas_clawback", 0.0)),
+            #Taxable income per person
+            taxable_inc_p1=float(t1.get("taxable_income", 0.0)), taxable_inc_p2=float(t2.get("taxable_income", 0.0)),
             #withdrawls
             withdraw_nonreg_p1=w1["nonreg"], withdraw_nonreg_p2=w2["nonreg"],
             withdraw_rrif_p1=w1["rrif"], withdraw_rrif_p2=w2["rrif"],
