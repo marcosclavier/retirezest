@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "installCommand": "npm install",
   "env": {
-    "NEXT_PUBLIC_APP_URL": "https://retirezest.vercel.app"
+    "NEXT_PUBLIC_APP_URL": "https://retirezest.com"
   },
   "regions": ["iad1"],
   "headers": [
