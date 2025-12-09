@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { clearSession } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { handleApiError } from '@/lib/errors';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     await clearSession();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
+    // Redirect to home page after logout
+    const url = new URL('/', request.url);
+    return NextResponse.redirect(url);
   } catch (error) {
     logger.error('Logout failed', error, {
       endpoint: '/api/auth/logout',
@@ -22,7 +22,7 @@ export async function POST() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   // Allow GET method as well for convenience
-  return POST();
+  return POST(request);
 }
