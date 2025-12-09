@@ -19,6 +19,7 @@ export default function IncomePage() {
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [includePartner, setIncludePartner] = useState(false);
   const [formData, setFormData] = useState<IncomeSource>({
     type: 'employment',
     amount: 0,
@@ -31,6 +32,7 @@ export default function IncomePage() {
   useEffect(() => {
     fetchIncomeSources();
     fetchCsrfToken();
+    fetchSettings();
   }, []);
 
   const fetchCsrfToken = async () => {
@@ -42,6 +44,18 @@ export default function IncomePage() {
       }
     } catch (error) {
       console.error('Error fetching CSRF token:', error);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/profile/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setIncludePartner(data.includePartner || false);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
     }
   };
 
@@ -176,21 +190,23 @@ export default function IncomePage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Owner *
-                </label>
-                <select
-                  value={formData.owner || 'person1'}
-                  onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  required
-                >
-                  <option value="person1">Person 1</option>
-                  <option value="person2">Person 2</option>
-                  <option value="joint">Joint</option>
-                </select>
-              </div>
+              {includePartner && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Owner *
+                  </label>
+                  <select
+                    value={formData.owner || 'person1'}
+                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    required
+                  >
+                    <option value="person1">Person 1</option>
+                    <option value="person2">Person 2</option>
+                    <option value="joint">Joint</option>
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -315,7 +331,7 @@ export default function IncomePage() {
                           <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                             {income.frequency}
                           </span>
-                          {income.owner && (
+                          {includePartner && income.owner && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded capitalize">
                               {income.owner === 'person1' ? 'Person 1' :
                                income.owner === 'person2' ? 'Person 2' :

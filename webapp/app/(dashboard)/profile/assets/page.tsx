@@ -23,6 +23,7 @@ export default function AssetsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [includePartner, setIncludePartner] = useState(false);
   const [formData, setFormData] = useState({
     type: 'rrsp',
     name: '',
@@ -37,6 +38,7 @@ export default function AssetsPage() {
   useEffect(() => {
     fetchAssets();
     fetchCsrfToken();
+    fetchSettings();
   }, []);
 
   const fetchCsrfToken = async () => {
@@ -48,6 +50,18 @@ export default function AssetsPage() {
       }
     } catch (error) {
       console.error('Error fetching CSRF token:', error);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/profile/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setIncludePartner(data.includePartner || false);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
     }
   };
 
@@ -328,22 +342,24 @@ export default function AssetsPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Owner *</label>
-                <select
-                  value={formData.owner}
-                  onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  required
-                >
-                  <option value="person1">Me (Person 1)</option>
-                  <option value="person2">Partner (Person 2)</option>
-                  <option value="joint">Joint (50/50 split)</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  For couples planning: specify who owns this asset
-                </p>
-              </div>
+              {includePartner && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Owner *</label>
+                  <select
+                    value={formData.owner}
+                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                    required
+                  >
+                    <option value="person1">Me (Person 1)</option>
+                    <option value="person2">Partner (Person 2)</option>
+                    <option value="joint">Joint (50/50 split)</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Specify who owns this asset
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
