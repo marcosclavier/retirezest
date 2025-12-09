@@ -10,6 +10,10 @@ interface UserProfile {
   dateOfBirth: string | null;
   province: string | null;
   maritalStatus: string | null;
+  includePartner: boolean;
+  partnerFirstName: string | null;
+  partnerLastName: string | null;
+  partnerDateOfBirth: string | null;
 }
 
 export default function ProfilePage() {
@@ -161,7 +165,20 @@ export default function ProfilePage() {
     return age;
   };
 
+  const calculatePartnerAge = () => {
+    if (!user.partnerDateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(user.partnerDateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const age = calculateAge();
+  const partnerAge = calculatePartnerAge();
 
   return (
     <div className="space-y-6">
@@ -517,6 +534,57 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+
+          {/* Partner Information - Shown only when couples planning is enabled */}
+          {user.includePartner && (
+            <>
+              <div className="border-t pt-6">
+                <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center">
+                  <span className="mr-2">Partner Information</span>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Person 2</span>
+                </h3>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {/* Partner First Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">First Name</label>
+                    <div className="mt-1 text-sm text-gray-900">{user.partnerFirstName || 'Not provided'}</div>
+                  </div>
+
+                  {/* Partner Last Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                    <div className="mt-1 text-sm text-gray-900">{user.partnerLastName || 'Not provided'}</div>
+                  </div>
+
+                  {/* Partner Date of Birth */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <div className="mt-1 text-sm text-gray-900">
+                      {user.partnerDateOfBirth ? (
+                        <>
+                          {new Date(user.partnerDateOfBirth).toLocaleDateString()}
+                          {partnerAge !== null && <span className="text-gray-500"> (Age: {partnerAge})</span>}
+                        </>
+                      ) : (
+                        'Not provided'
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <a
+                    href="/profile/settings"
+                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Edit partner information in Settings
+                  </a>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
