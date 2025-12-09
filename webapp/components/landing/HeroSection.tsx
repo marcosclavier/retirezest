@@ -61,7 +61,7 @@ export default function HeroSection() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">✅</span>
-                <span className="text-sm font-medium text-gray-700">2025 Rates</span>
+                <span className="text-sm font-medium text-gray-700">2026 Rates</span>
               </div>
             </div>
           </div>
