@@ -122,7 +122,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            ${monthlyExpenses.toLocaleString()}
+            ${monthlyExpenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {user?.expenses.length || 0} expense(s) tracked
