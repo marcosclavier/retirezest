@@ -42,6 +42,7 @@ model Income {
   amount      Float
   frequency   String    // monthly, annual, biweekly, weekly
   startAge    Int?      // Age when income starts (for CPP, OAS, pension)
+  owner       String?   @default("person1") // person1, person2, joint - for couples planning
   notes       String?
   isTaxable   Boolean   @default(true)
   createdAt   DateTime  @default(now())
@@ -49,6 +50,7 @@ model Income {
 
   @@index([userId])
   @@index([userId, type])
+  @@index([userId, owner])
   @@index([createdAt])
 }
 
