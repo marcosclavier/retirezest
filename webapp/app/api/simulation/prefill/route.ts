@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       throw new AuthenticationError();
     }
 
-    // Fetch user profile
+    // Fetch user profile with partner information
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: {
@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
         dateOfBirth: true,
         province: true,
         maritalStatus: true,
+        includePartner: true,
+        partnerFirstName: true,
+        partnerLastName: true,
+        partnerDateOfBirth: true,
       },
     });
 
@@ -49,6 +53,18 @@ export async function GET(request: NextRequest) {
       const monthDiff = today.getMonth() - birthDate.getMonth();
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
+      }
+    }
+
+    // Calculate partner age from date of birth
+    let partnerAge = age; // default to same as person1
+    if (user?.partnerDateOfBirth) {
+      const today = new Date();
+      const birthDate = new Date(user.partnerDateOfBirth);
+      partnerAge = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        partnerAge--;
       }
     }
 
@@ -164,19 +180,20 @@ export async function GET(request: NextRequest) {
       corp_invest_bucket: person1Totals.corporate_balance * 0.85,
     };
 
-    // Build person 2 input (for partner) - only if they have assets or user is married
+    // Build person 2 input (for partner) - only if couples planning is enabled or they have assets
     const hasPartnerAssets = Object.values(person2Totals).some(val => val > 0);
+    const shouldIncludePartner = user?.includePartner || hasPartnerAssets;
     let person2Input: PersonInput | null = null;
 
-    if (hasPartnerAssets) {
+    if (shouldIncludePartner) {
       person2Input = {
         ...defaultPersonInput,
-        name: 'Partner',
-        start_age: age, // Default to same age, user can adjust
+        name: user?.partnerFirstName || 'Partner',
+        start_age: partnerAge,
 
         // Government benefits
-        cpp_start_age: Math.max(age, 65),
-        oas_start_age: Math.max(age, 65),
+        cpp_start_age: Math.max(partnerAge, 65),
+        oas_start_age: Math.max(partnerAge, 65),
 
         // Account balances from assets (person 2's share)
         tfsa_balance: person2Totals.tfsa_balance,
@@ -212,9 +229,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Check if married for partner inclusion
-    const isMarried = user?.maritalStatus?.toLowerCase() === 'married';
-    const includePartner = isMarried || hasPartnerAssets;
+    // Use includePartner setting from profile (takes priority over marital status or assets)
+    const includePartner = shouldIncludePartner;
 
     // Calculate total net worth
     const totalNetWorth = Object.values(person1Totals).reduce((sum, val) => sum + val, 0) +

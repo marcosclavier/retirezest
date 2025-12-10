@@ -18,9 +18,10 @@ import { ChevronDown, ChevronUp, Download, ChevronRight } from 'lucide-react';
 interface YearByYearTableProps {
   yearByYear: YearResult[];
   initialRowsToShow?: number;
+  reinvestNonregDist?: boolean;
 }
 
-export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYearTableProps) {
+export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true }: YearByYearTableProps) {
   const [showAll, setShowAll] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof YearResult>('year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -229,7 +230,8 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                   year.tfsa_withdrawal_p1 + year.tfsa_withdrawal_p2 +
                   year.nonreg_withdrawal_p1 + year.nonreg_withdrawal_p2 +
                   year.corporate_withdrawal_p1 + year.corporate_withdrawal_p2;
-                const totalInflows = totalBenefits + totalWithdrawals;
+                const nonregDistributions = year.nonreg_distributions || 0;
+                const totalInflows = totalBenefits + totalWithdrawals + nonregDistributions;
                 const hasGap = year.spending_gap > 0;
 
                 return (
@@ -322,6 +324,17 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10 }: YearByYe
                                     {formatCurrency(totalBenefits)}
                                   </span>
                                 </div>
+                                {/* NonReg Distributions (Passive Income) - Only show when NOT reinvesting (i.e., when available for spending) */}
+                                {!reinvestNonregDist && year.nonreg_distributions !== undefined && (
+                                  <div className="flex justify-between pt-2 border-t">
+                                    <span className="font-semibold text-sm" style={{ color: '#111827' }}>
+                                      NonReg Distributions
+                                    </span>
+                                    <span className="font-semibold" style={{ color: '#10B981' }}>
+                                      {formatCurrency(year.nonreg_distributions)}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
 

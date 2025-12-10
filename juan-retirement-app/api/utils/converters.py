@@ -24,6 +24,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def map_api_strategy_to_internal(api_strategy: str) -> str:
+    """
+    Map API strategy names to internal simulation engine strategy names.
+
+    API uses kebab-case names like "corporate-optimized".
+    Simulation engine uses descriptive names like "Corp->RRIF->NonReg->TFSA".
+
+    Args:
+        api_strategy: Strategy name from API request
+
+    Returns:
+        Strategy name for internal simulation engine
+    """
+    strategy_mapping = {
+        "corporate-optimized": "Corp->RRIF->NonReg->TFSA",
+        "minimize-income": "RRIF->Corp->NonReg->TFSA",
+        "rrif-splitting": "RRIF->Corp->NonReg->TFSA",
+        "capital-gains-optimized": "NonReg->RRIF->Corp->TFSA",
+        "tfsa-first": "TFSA->Corp->RRIF->NonReg",
+        "balanced": "Balanced",
+        "manual": "NonReg->RRIF->Corp->TFSA",  # Default order
+    }
+
+    return strategy_mapping.get(api_strategy, api_strategy)
+
+
 def api_person_to_internal(api_person: PersonInput) -> Person:
     """
     Convert API PersonInput to internal Person dataclass.
@@ -122,7 +148,7 @@ def api_household_to_internal(
         start_year=api_household.start_year,
         end_age=api_household.end_age,
 
-        strategy=api_household.strategy,
+        strategy=map_api_strategy_to_internal(api_household.strategy),
 
         spending_go_go=api_household.spending_go_go,
         go_go_end_age=api_household.go_go_end_age,
@@ -157,6 +183,39 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
 
     for _, row in df.iterrows():
         try:
+            # Calculate spending components first for reuse
+            government_benefits = float(
+                row.get('cpp_p1', 0) + row.get('cpp_p2', 0) +
+                row.get('oas_p1', 0) + row.get('oas_p2', 0) +
+                row.get('gis_p1', 0) + row.get('gis_p2', 0)
+            )
+
+            withdrawals = float(
+                row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0)) +
+                row.get('withdraw_tfsa_p2', row.get('tfsa_withdrawal_p2', 0)) +
+                row.get('withdraw_rrif_p1', row.get('rrif_withdrawal_p1', 0)) +
+                row.get('withdraw_rrif_p2', row.get('rrif_withdrawal_p2', 0)) +
+                row.get('withdraw_nonreg_p1', row.get('nonreg_withdrawal_p1', 0)) +
+                row.get('withdraw_nonreg_p2', row.get('nonreg_withdrawal_p2', 0)) +
+                row.get('withdraw_corp_p1', row.get('corporate_withdrawal_p1', 0)) +
+                row.get('withdraw_corp_p2', row.get('corporate_withdrawal_p2', 0))
+            )
+
+            taxes = float(row.get('total_tax_after_split', row.get('total_tax', 0)))
+
+            # NonReg distributions: Always include for transparency in reports
+            # When reinvest_nonreg_dist=False, these count as spending cash
+            # When reinvest_nonreg_dist=True, these are reinvested and not available for spending
+            nonreg_distributions = float(row.get('nr_dist_tot', 0))
+            reinvest_nonreg = row.get('reinvest_nonreg_dist', True)
+
+            # Only count distributions as spending cash when NOT reinvesting
+            distributions_as_cash = 0 if reinvest_nonreg else nonreg_distributions
+
+            spending_need = float(row.get('spend_target_after_tax', row.get('spending_need', 0)))
+            spending_met = government_benefits + withdrawals + distributions_as_cash - taxes
+            spending_gap = max(0, spending_need - spending_met)  # Gap can't be negative
+
             results.append(YearResult(
                 year=int(row.get('year', 0)),
                 age_p1=int(row.get('age_p1', 0)),
@@ -171,6 +230,9 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 gis_p2=float(row.get('gis_p2', 0)),
                 oas_clawback_p1=float(row.get('oas_clawback_p1', 0)),
                 oas_clawback_p2=float(row.get('oas_clawback_p2', 0)),
+
+                # NonReg passive distributions
+                nonreg_distributions=nonreg_distributions,
 
                 # Withdrawals (handle various column naming conventions)
                 tfsa_withdrawal_p1=float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))),
@@ -198,14 +260,14 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 taxable_income_p2=float(row.get('taxable_inc_p2', row.get('taxable_income_p2', 0))),
                 total_tax_p1=float(row.get('tax_after_split_p1', row.get('tax_p1', 0))),
                 total_tax_p2=float(row.get('tax_after_split_p2', row.get('tax_p2', 0))),
-                total_tax=float(row.get('total_tax_after_split', row.get('total_tax', 0))),
+                total_tax=taxes,
                 marginal_rate_p1=float(row.get('marginal_rate_p1', row.get('marginal_p1', 0))),
                 marginal_rate_p2=float(row.get('marginal_rate_p2', row.get('marginal_p2', 0))),
 
-                # Spending
-                spending_need=float(row.get('spend_target_after_tax', row.get('spending_need', 0))),
-                spending_met=float(row.get('spend_target_after_tax', row.get('spending_met', 0))),
-                spending_gap=float(row.get('underfunded_after_tax', row.get('spending_gap', 0))),
+                # Spending - Now properly calculated
+                spending_need=spending_need,
+                spending_met=spending_met,
+                spending_gap=spending_gap,
 
                 # Status
                 plan_success=bool(row.get('plan_success', row.get('success', True))),
@@ -357,14 +419,21 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
     final_estate_after_tax = float(final_row.get('after_tax_legacy', final_estate_gross * 0.75))
 
     # Tax rates
+    # Calculate effective tax rate based on total taxable income
+    # First try using taxable_inc columns, then fall back to total income+withdrawals
     total_income_cols = ['taxable_inc_p1', 'taxable_inc_p2']
     if all(col in df.columns for col in total_income_cols):
-        total_income = df[total_income_cols].sum().sum()
-        avg_effective_tax_rate = (
-            (total_tax_paid / total_income)
-            if total_income > 0
-            else 0.0
-        )
+        total_taxable_income = df[total_income_cols].sum().sum()
+        if total_taxable_income > 0:
+            avg_effective_tax_rate = total_tax_paid / total_taxable_income
+        elif total_income_and_withdrawals > 0:
+            # Fallback: use total income + withdrawals if taxable income is zero
+            avg_effective_tax_rate = total_tax_paid / total_income_and_withdrawals
+        else:
+            avg_effective_tax_rate = 0.0
+    elif total_income_and_withdrawals > 0:
+        # Fallback: columns don't exist, use total income + withdrawals
+        avg_effective_tax_rate = total_tax_paid / total_income_and_withdrawals
     else:
         avg_effective_tax_rate = 0.0
 
@@ -859,6 +928,9 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         gis_total = float(row.get('gis_p1', 0)) + float(row.get('gis_p2', 0))
         government_benefits_total = cpp_total + oas_total + gis_total
 
+        # NonReg distributions (passive income)
+        nonreg_distributions = float(row.get('nr_dist_tot', 0))
+
         # Aggregate balances (combined P1+P2)
         rrif_balance = float(row.get('end_rrif_p1', 0)) + float(row.get('end_rrif_p2', 0))
         tfsa_balance = float(row.get('end_tfsa_p1', 0)) + float(row.get('end_tfsa_p2', 0))
@@ -877,10 +949,23 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
 
         # Tax data
         total_tax = float(row.get('total_tax_after_split', row.get('total_tax', 0)))
-        taxable_income = float(row.get('taxable_inc_p1', 0)) + float(row.get('taxable_inc_p2', 0))
+
+        # Calculate taxable income from various sources
+        # RRIF withdrawals are fully taxable
+        # Corporate withdrawals (dividends) are taxable
+        # Non-reg withdrawals have taxable capital gains (50% of gains)
+        # CPP and OAS are taxable
+        # Note: We approximate taxable income here since we don't have the exact taxable_inc columns
+        taxable_income = (
+            rrif_withdrawal +  # Fully taxable
+            corporate_withdrawal +  # Taxable as dividends
+            (nonreg_withdrawal * 0.5) +  # Approximate: 50% of withdrawal is taxable gain
+            cpp_total +  # Taxable
+            oas_total  # Taxable
+        )
         effective_tax_rate = (total_tax / taxable_income * 100) if taxable_income > 0 else 0
 
-        # TFSA withdrawals are tax-free income
+        # TFSA withdrawals and GIS are tax-free income
         tax_free_income = tfsa_withdrawal + gis_total
 
         # Spending data
@@ -904,6 +989,7 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
             oas_total=oas_total,
             gis_total=gis_total,
             government_benefits_total=government_benefits_total,
+            nonreg_distributions=nonreg_distributions,
             total_tax=total_tax,
             effective_tax_rate=effective_tax_rate,
             taxable_income=taxable_income,

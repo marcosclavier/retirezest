@@ -140,6 +140,10 @@ def nonreg_distributions(person: Person) -> Dict[str, float]:
         yield_nonelig_div = float(getattr(person, "y_nr_inv_nonelig_div", 0.00))
         yield_capg = float(getattr(person, "y_nr_inv_capg", 0.02))
 
+        # Log balances and yields for debugging
+        logger.debug(f"  NonReg buckets - cash: ${cash_balance:,.0f}, gic: ${gic_balance:,.0f}, invest: ${invest_balance:,.0f}")
+        logger.debug(f"  NonReg yields - cash: {yield_cash_interest:.4f}, gic: {yield_gic_interest:.4f}, elig_div: {yield_elig_div:.4f}, capg: {yield_capg:.4f}")
+
         # Bucketed mode: each bucket gets its own yield
         # Cash bucket at cash interest rate
         cash_interest = cash_balance * yield_cash_interest
@@ -728,19 +732,23 @@ def calculate_gis_optimization_withdrawal(
         # = marginal_tax_rate + gis_loss_per_dollar
         total_cost = marginal_tax_rate + gis_loss_per_dollar
 
-        # TFSA preference: Add a penalty to defer TFSA withdrawal until necessary
-        # TFSA should be the last resort for spending, not the first choice
-        # Even though TFSA has 0% tax, it's valuable to preserve for future flexibility
+        # TFSA preference: Small preference to defer TFSA when tax cost is similar
+        # PRIORITY HIERARCHY:
+        # 1. FIRST: Fund spending (TFSA will be used if needed)
+        # 2. SECOND: Tax efficiency (slight preference for other sources if cost is similar)
+        # 3. THIRD: Legacy (preserve TFSA only after spending is met)
+        #
+        # Reduced from 10% to 2% penalty - enough to prefer other sources when costs are equal,
+        # but not enough to prevent TFSA withdrawal when it's needed for spending
         if source == "tfsa":
-            # Add 10% effective cost penalty to TFSA to make it less attractive than NonReg/Corp
-            # This defers TFSA use until other sources are depleted
-            total_cost += 0.10
+            # Small 2% penalty - only matters when choosing between equal-cost sources
+            total_cost += 0.02
 
         withdrawal_costs[source] = total_cost
         cost_breakdown[source] = {
             "marginal_tax_rate": marginal_tax_rate,
             "gis_clawback_rate": gis_loss_per_dollar,
-            "tfsa_preference_penalty": 0.10 if source == "tfsa" else 0.0,
+            "tfsa_preference_penalty": 0.02 if source == "tfsa" else 0.0,  # Reduced from 0.10 to 0.02
             "total_effective_cost": total_cost,
             "available": available
         }
@@ -1190,6 +1198,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         logger.debug(f"  After-tax target: ${after_tax_target:,.0f}")
         logger.debug(f"  Base after-tax: ${base_after_tax:,.0f}")
         logger.debug(f"  Initial shortfall: ${shortfall:,.0f}")
+        logger.debug(f"  NonReg distributions: interest=${nr_interest:,.0f}, elig_div=${nr_elig_div:,.0f}, capg=${nr_capg_dist:,.0f}")
+        logger.debug(f"  Reinvest NonReg dist: {hh.reinvest_nonreg_dist}")
         logger.debug(f"  Order: {order}")
         logger.debug(f"  Starting balances: RRIF=${person.rrif_balance:,.0f} CORP=${corporate_balance_start:,.0f} NONREG=${person.nonreg_balance:,.0f} TFSA=${person.tfsa_balance:,.0f}")
 
@@ -1240,24 +1250,31 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             if available > 1e-6 and ("Balanced" in strategy_name or "tax efficiency" in strategy_name.lower()):
                 logger.debug(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}")
         elif k == "tfsa":
-            # TFSA-last guard: only allow TFSA if all other sources are tapped
-            # FIX: Use the ORIGINAL starting balance, not current balance minus what we already withdrew
-            # This ensures we respect the withdrawal strategy order even if other sources still have funds
+            # PRIORITY HIERARCHY FIX:
+            # 1. FIRST: Fund spending requirement (withdraw from TFSA if needed)
+            # 2. SECOND: Tax efficiency (follow strategy order)
+            # 3. THIRD: Legacy (only preserve TFSA if spending is fully met)
+            #
+            # TFSA should be used when:
+            # - There's a spending shortfall, OR
+            # - All prior sources in the withdrawal order are depleted
+
             rrif_left   = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
             corp_left   = max(corporate_balance_start - (withdrawals["corp"] + extra["corp"]), 0.0)
             nonreg_left = max(person.nonreg_balance - (withdrawals["nonreg"] + extra["nonreg"]), 0.0)
 
-            # DEBUG: Log TFSA guard check
+            # DEBUG: Log TFSA decision
             if shortfall > 1e-6:
-                logger.debug(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}")
+                logger.debug(f"  TFSA check - shortfall=${shortfall:,.0f}, rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}")
 
-            # CRITICAL FIX: TFSA should ONLY be used if ALL other sources in the withdrawal order
-            # that come BEFORE TFSA have been fully depleted
-            if (nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9):
-                # Skip TFSA for now; other sources still have funds
+            # NEW LOGIC: Only skip TFSA if spending is met AND other sources still have funds
+            # This ensures spending requirement is ALWAYS prioritized over legacy preservation
+            if shortfall <= 1e-6 and ((nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9)):
+                # Spending is met and other sources available - preserve TFSA for legacy
                 if shortfall > 1e-6:
-                    logger.debug(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})")
+                    logger.debug(f"  -> Preserving TFSA (spending met, other sources available)")
                 continue
+
             available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
         else:
             available = 0.0
@@ -1367,6 +1384,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                             extra["rrif"] + extra["nonreg"] + extra["corp"] + extra["tfsa"] - t_new)
             shortfall = max(after_tax_target - new_after_tax, 0.0)
             base_tax = t_new
+
+            # DEBUG: Log shortfall recalculation
+            if k == "corp" and (year == 2039 or (year and year >= 2038)):
+                logger.debug(f"  -> After {k.upper()}: new_after_tax=${new_after_tax:,.0f}, shortfall=${shortfall:,.0f}, dist=${dist_in_available_cash:,.0f}")
 
 # -----  Apply the extra withdrawals decided above -----
     for k in extra:
@@ -1976,10 +1997,18 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Use TOTAL return on investments (not average of three separate yields)
         p1_yr_invest = float(getattr(p1, "y_nr_inv_total_return", 0.04))
 
+        # Calculate distributions as a percentage of the investment balance
+        # Distributions = dividends + realized capital gains
+        p1_dist_rate = float(getattr(p1, "y_nr_inv_elig_div", 0.0) +
+                            getattr(p1, "y_nr_inv_nonelig_div", 0.0) +
+                            getattr(p1, "y_nr_inv_capg", 0.0))
+        # Capital appreciation = total return - distributions
+        p1_yr_invest_cap_app = p1_yr_invest - p1_dist_rate
+
         p1_nr_cash_new = p1_nr_cash_after_wd * (1 + p1_yr_cash)
         p1_nr_gic_new = p1_nr_gic_after_wd * (1 + p1_yr_gic)
-        # Investment balance grows at the total return rate
-        p1_nr_invest_new = p1_nr_invest_after_wd * (1 + p1_yr_invest)
+        # Investment balance grows at capital appreciation rate only (distributions handled separately)
+        p1_nr_invest_new = p1_nr_invest_after_wd * (1 + p1_yr_invest_cap_app)
 
         # Update buckets and total balance
         p1.nr_cash = p1_nr_cash_new
@@ -2004,10 +2033,17 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Use TOTAL return on investments (not average of three separate yields)
         p2_yr_invest = float(getattr(p2, "y_nr_inv_total_return", 0.04))
 
+        # Calculate distributions as a percentage of the investment balance
+        p2_dist_rate = float(getattr(p2, "y_nr_inv_elig_div", 0.0) +
+                            getattr(p2, "y_nr_inv_nonelig_div", 0.0) +
+                            getattr(p2, "y_nr_inv_capg", 0.0))
+        # Capital appreciation = total return - distributions
+        p2_yr_invest_cap_app = p2_yr_invest - p2_dist_rate
+
         p2_nr_cash_new = p2_nr_cash_after_wd * (1 + p2_yr_cash)
         p2_nr_gic_new = p2_nr_gic_after_wd * (1 + p2_yr_gic)
-        # Investment balance grows at the total return rate
-        p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest)
+        # Investment balance grows at capital appreciation rate only (distributions handled separately)
+        p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest_cap_app)
 
         # Update buckets and total balance
         p2.nr_cash = p2_nr_cash_new

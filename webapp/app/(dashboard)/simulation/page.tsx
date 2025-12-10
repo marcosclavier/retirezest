@@ -517,7 +517,10 @@ export default function SimulationPage() {
                   {result.chart_data?.data_points && result.chart_data.data_points.length > 0 && (
                     <>
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <GovernmentBenefitsChart chartData={result.chart_data.data_points} />
+                        <GovernmentBenefitsChart
+                          chartData={result.chart_data.data_points}
+                          reinvestNonregDist={result.household_input?.reinvest_nonreg_dist ?? true}
+                        />
                         <WithdrawalsBySourceChart chartData={result.chart_data.data_points} />
                       </div>
                       <IncomeCompositionChart chartData={result.chart_data.data_points} />
@@ -525,7 +528,10 @@ export default function SimulationPage() {
                   )}
 
                   {/* Year-by-Year Table */}
-                  <YearByYearTable yearByYear={result.year_by_year} />
+                  <YearByYearTable
+                    yearByYear={result.year_by_year}
+                    reinvestNonregDist={result.household_input?.reinvest_nonreg_dist ?? true}
+                  />
                 </div>
               )}
             </>

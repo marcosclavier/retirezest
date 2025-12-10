@@ -118,6 +118,9 @@ export interface YearResult {
   oas_p1: number;
   oas_p2: number;
 
+  // NonReg passive distributions (dividends, interest, capital gains)
+  nonreg_distributions?: number;
+
   // Withdrawals by source
   tfsa_withdrawal_p1: number;
   tfsa_withdrawal_p2: number;
@@ -319,6 +322,7 @@ export interface ChartDataPoint {
   oas_total: number;
   gis_total: number;
   government_benefits_total: number;
+  nonreg_distributions: number; // Passive income from NonReg accounts
   total_tax: number;
   effective_tax_rate: number;
   taxable_income: number;
