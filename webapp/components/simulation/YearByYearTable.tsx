@@ -96,6 +96,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       'TFSA WD P2',
       'Corp WD P1',
       'Corp WD P2',
+      'NonReg Dist',
       'RRIF Bal P1',
       'RRIF Bal P2',
       'TFSA Bal P1',
@@ -132,6 +133,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       year.tfsa_withdrawal_p2,
       year.corporate_withdrawal_p1,
       year.corporate_withdrawal_p2,
+      year.nonreg_distributions || 0,
       year.rrif_balance_p1,
       year.rrif_balance_p2,
       year.tfsa_balance_p1,
@@ -202,6 +204,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                 </TableHead>
                 <TableHead className="text-right" style={{ color: '#111827' }}>Total Inflows</TableHead>
                 <TableHead className="text-right" style={{ color: '#111827' }}>Total Withdrawals</TableHead>
+                <TableHead className="text-right" style={{ color: '#111827' }}>NonReg Dist</TableHead>
                 <TableHead
                   className="text-right cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('total_tax')}
@@ -264,6 +267,9 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                       <TableCell className="text-right" style={{ color: '#2563EB' }}>
                         {formatCurrency(totalWithdrawals)}
                       </TableCell>
+                      <TableCell className="text-right" style={{ color: '#10B981' }}>
+                        {formatCurrency(nonregDistributions)}
+                      </TableCell>
                       <TableCell className="text-right" style={{ color: '#EA580C' }}>
                         {formatCurrency(year.total_tax)}
                       </TableCell>
@@ -284,7 +290,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                     {/* Expanded Detail Row */}
                     {isExpanded && (
                       <TableRow key={`${year.year}-detail`}>
-                        <TableCell colSpan={9} className="bg-muted/20 p-6">
+                        <TableCell colSpan={10} className="bg-muted/20 p-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {/* INFLOWS Section */}
                             <div className="space-y-3">
@@ -324,11 +330,11 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(totalBenefits)}
                                   </span>
                                 </div>
-                                {/* NonReg Distributions (Passive Income) - Only show when NOT reinvesting (i.e., when available for spending) */}
-                                {!reinvestNonregDist && year.nonreg_distributions !== undefined && (
+                                {/* NonReg Distributions (Passive Income) - Always show */}
+                                {year.nonreg_distributions !== undefined && (
                                   <div className="flex justify-between pt-2 border-t">
                                     <span className="font-semibold text-sm" style={{ color: '#111827' }}>
-                                      NonReg Distributions
+                                      NonReg Distributions{reinvestNonregDist ? ' (reinvested)' : ''}
                                     </span>
                                     <span className="font-semibold" style={{ color: '#10B981' }}>
                                       {formatCurrency(year.nonreg_distributions)}
