@@ -80,42 +80,57 @@ export default function SimulationPage() {
   useEffect(() => {
     healthCheck().then(setApiHealthy);
 
-    // Fetch CSRF token to ensure it's available for simulation requests
-    fetch('/api/csrf')
-      .then(res => res.json())
-      .then(data => {
-        if (data.token) {
-          setCsrfToken(data.token);
-        }
-      })
-      .catch(err => console.error('Failed to fetch CSRF token:', err));
+    // Fetch CSRF token first, then load prefill data
+    const initializeData = async () => {
+      try {
+        // Fetch CSRF token
+        const csrfRes = await fetch('/api/csrf');
+        const csrfData = await csrfRes.json();
+        const token = csrfData.token || null;
+        setCsrfToken(token);
 
-    // Fetch profile settings to get couples planning preference
-    const hasSavedIncludePartner = localStorage.getItem('simulation_includePartner');
-    if (!hasSavedIncludePartner) {
-      fetch('/api/profile/settings')
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.includePartner !== undefined) {
-            setIncludePartner(data.includePartner);
+        // Fetch profile settings to get couples planning preference
+        const hasSavedIncludePartner = localStorage.getItem('simulation_includePartner');
+        if (!hasSavedIncludePartner) {
+          try {
+            const settingsRes = await fetch('/api/profile/settings');
+            if (settingsRes.ok) {
+              const settingsData = await settingsRes.json();
+              if (settingsData?.includePartner !== undefined) {
+                setIncludePartner(settingsData.includePartner);
+              }
+            }
+          } catch (err) {
+            console.error('Failed to fetch profile settings:', err);
           }
-        })
-        .catch(err => console.error('Failed to fetch profile settings:', err));
-    }
+        }
 
-    // Only load prefill data if there's no saved data
-    const hasSavedData = localStorage.getItem('simulation_household');
-    if (!hasSavedData) {
-      loadPrefillData();
-    } else {
-      setPrefillLoading(false);
-    }
+        // Only load prefill data if there's no saved data
+        const hasSavedData = localStorage.getItem('simulation_household');
+        if (!hasSavedData) {
+          await loadPrefillData(token);
+        } else {
+          setPrefillLoading(false);
+        }
+      } catch (err) {
+        console.error('Failed to initialize data:', err);
+        setPrefillLoading(false);
+      }
+    };
+
+    initializeData();
   }, []);
 
-  const loadPrefillData = async () => {
+  const loadPrefillData = async (token: string | null = csrfToken) => {
     try {
       setPrefillLoading(true);
-      const response = await fetch('/api/simulation/prefill');
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['x-csrf-token'] = token;
+      }
+
+      const response = await fetch('/api/simulation/prefill', { headers });
 
       if (response.ok) {
         const data = await response.json();
