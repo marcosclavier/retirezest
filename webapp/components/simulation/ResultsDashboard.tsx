@@ -19,6 +19,19 @@ interface ResultsDashboardProps {
 }
 
 export function ResultsDashboard({ result }: ResultsDashboardProps) {
+  // Debug logging for tax values
+  if (result.year_by_year && result.year_by_year.length > 0) {
+    const year2025 = result.year_by_year[0];
+    console.log('=== RESULTS DASHBOARD DEBUG ===');
+    console.log('Year 2025 Data:', year2025);
+    console.log('Total Tax 2025:', year2025.total_tax);
+    console.log('Tax P1 2025:', year2025.total_tax_p1);
+    console.log('Tax P2 2025:', year2025.total_tax_p2);
+    console.log('Taxable Income P1:', year2025.taxable_income_p1);
+    console.log('Taxable Income P2:', year2025.taxable_income_p2);
+    console.log('================================');
+  }
+
   // Format currency
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-CA', {
@@ -397,41 +410,58 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             <CardTitle style={{ color: '#111827' }}>5-Year Withdrawal Plan</CardTitle>
             <CardDescription style={{ color: '#111827' }}>Recommended withdrawals for the first 5 years</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3">
             <div className="rounded-md border overflow-x-auto">
-              <Table>
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead style={{ color: '#111827' }}>Year</TableHead>
-                    <TableHead style={{ color: '#111827' }}>Age</TableHead>
-                    <TableHead className="text-right" style={{ color: '#111827' }}>Spending Target</TableHead>
-                    <TableHead className="text-right" style={{ color: '#111827' }}>RRIF</TableHead>
-                    <TableHead className="text-right" style={{ color: '#111827' }}>Non-Reg</TableHead>
-                    <TableHead className="text-right" style={{ color: '#111827' }}>TFSA</TableHead>
-                    <TableHead className="text-right" style={{ color: '#111827' }}>Corporate</TableHead>
-                    <TableHead className="text-right" style={{ color: '#111827' }}>Total</TableHead>
+                    <TableHead className="px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '45px' }}>Year</TableHead>
+                    <TableHead className="px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '50px' }}>Age</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '75px' }}>Target</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>CPP</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>OAS</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '65px' }}>RRIF</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '70px' }}>NonReg</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '55px' }}>TFSA</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '75px' }}>Corp</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px] font-semibold" style={{ color: '#111827', minWidth: '80px' }}>Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {result.five_year_plan.map((year) => (
                     <TableRow key={year.year}>
-                      <TableCell className="font-medium" style={{ color: '#111827' }}>{year.year}</TableCell>
-                      <TableCell style={{ color: '#111827' }}>{year.age_p1}/{year.age_p2}</TableCell>
-                      <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_target)}</TableCell>
-                      <TableCell className="text-right" style={{ color: '#111827' }}>
+                      <TableCell className="font-medium text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>{year.year}</TableCell>
+                      <TableCell className="text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>{year.age_p1}/{year.age_p2}</TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>{formatCurrency(year.spending_target)}</TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency(year.cpp_p1 + year.cpp_p2)}
+                      </TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency(year.oas_p1 + year.oas_p2)}
+                      </TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.rrif_withdrawal_p1 + year.rrif_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right" style={{ color: '#111827' }}>
-                        {formatCurrency(year.nonreg_withdrawal_p1 + year.nonreg_withdrawal_p2)}
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency(
+                          year.nonreg_withdrawal_p1 +
+                          year.nonreg_withdrawal_p2 +
+                          year.nonreg_distributions_total
+                        )}
                       </TableCell>
-                      <TableCell className="text-right" style={{ color: '#111827' }}>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.tfsa_withdrawal_p1 + year.tfsa_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right" style={{ color: '#111827' }}>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.corp_withdrawal_p1 + year.corp_withdrawal_p2)}
                       </TableCell>
-                      <TableCell className="text-right font-medium" style={{ color: '#111827' }}>
-                        {formatCurrency(year.total_withdrawn)}
+                      <TableCell className="text-right font-medium text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency(
+                          year.cpp_p1 + year.cpp_p2 +
+                          year.oas_p1 + year.oas_p2 +
+                          year.total_withdrawn +
+                          year.nonreg_distributions_total
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

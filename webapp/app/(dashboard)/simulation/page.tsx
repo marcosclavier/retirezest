@@ -41,6 +41,7 @@ export default function SimulationPage() {
   const [prefillAvailable, setPrefillAvailable] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [prefillAttempted, setPrefillAttempted] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -62,19 +63,21 @@ export default function SimulationPage() {
     setIsInitialized(true);
   }, []);
 
-  // Save household data to localStorage whenever it changes
+  // Save household data to localStorage whenever it changes (but not during initial load)
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && prefillAttempted) {
+      console.log('💾 Saving household to localStorage');
       localStorage.setItem('simulation_household', JSON.stringify(household));
     }
-  }, [household, isInitialized]);
+  }, [household, isInitialized, prefillAttempted]);
 
-  // Save includePartner to localStorage whenever it changes
+  // Save includePartner to localStorage whenever it changes (but not during initial load)
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && prefillAttempted) {
+      console.log('💾 Saving includePartner to localStorage');
       localStorage.setItem('simulation_includePartner', includePartner.toString());
     }
-  }, [includePartner, isInitialized]);
+  }, [includePartner, isInitialized, prefillAttempted]);
 
   // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
@@ -107,11 +110,17 @@ export default function SimulationPage() {
 
         // Only load prefill data if there's no saved data
         const hasSavedData = localStorage.getItem('simulation_household');
+        console.log('🔍 localStorage simulation_household:', hasSavedData ? 'EXISTS' : 'EMPTY');
         if (!hasSavedData) {
+          console.log('🔍 Loading prefill data because localStorage is empty...');
           await loadPrefillData(token);
         } else {
+          console.log('🔍 Skipping prefill because localStorage has saved data');
           setPrefillLoading(false);
         }
+
+        // Mark that we've attempted prefill (whether we loaded it or skipped it)
+        setPrefillAttempted(true);
       } catch (err) {
         console.error('Failed to initialize data:', err);
         setPrefillLoading(false);
@@ -132,15 +141,24 @@ export default function SimulationPage() {
 
       const response = await fetch('/api/simulation/prefill', { headers });
 
+      console.log('🔍 PREFILL API Response Status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 PREFILL DATA RECEIVED:', JSON.stringify(data, null, 2));
+        console.log('🔍 hasAssets:', data.hasAssets);
+        console.log('🔍 person1Input.start_age:', data.person1Input?.start_age);
+        console.log('🔍 includePartner:', data.includePartner);
+        console.log('🔍 person2Input:', data.person2Input);
 
         if (data.hasAssets || data.person1Input.start_age !== 65) {
+          console.log('🔍 Applying prefill data to household state...');
           // Determine partner data first
           let partnerData = { ...defaultPersonInput, name: '' };
           let shouldIncludePartner = false;
 
           if (data.includePartner && data.person2Input) {
+            console.log('🔍 Including partner with data:', data.person2Input.name);
             shouldIncludePartner = true;
             partnerData = {
               ...defaultPersonInput,
@@ -148,6 +166,7 @@ export default function SimulationPage() {
             };
           } else if (data.includePartner) {
             // Married but no partner assets yet
+            console.log('🔍 Including partner without assets');
             shouldIncludePartner = true;
             partnerData = { ...defaultPersonInput, name: 'Partner' };
           }
@@ -163,13 +182,14 @@ export default function SimulationPage() {
             p2: {
               ...prev.p2,
               ...partnerData,
-              // Preserve user-entered name if it exists and isn't empty
-              name: prev.p2.name || partnerData.name,
             },
           }));
 
           setIncludePartner(shouldIncludePartner);
           setPrefillAvailable(true);
+          console.log('🔍 Prefill data applied successfully');
+        } else {
+          console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65)');
         }
       }
     } catch (error) {
@@ -216,6 +236,7 @@ export default function SimulationPage() {
   };
 
   const handleReloadFromProfile = async () => {
+    console.log('🔄 Reloading from profile...');
     // Clear localStorage
     localStorage.removeItem('simulation_household');
     localStorage.removeItem('simulation_includePartner');
@@ -229,6 +250,9 @@ export default function SimulationPage() {
 
     // Reload from profile
     await loadPrefillData();
+
+    // Mark prefill as attempted so future changes get saved
+    setPrefillAttempted(true);
   };
 
   const handleRunSimulation = async () => {
@@ -245,6 +269,16 @@ export default function SimulationPage() {
 
     try {
       const response = await runSimulation(simulationData, csrfToken);
+
+      // Debug logging
+      if (response.success && response.year_by_year && response.year_by_year.length > 0) {
+        console.log('=== SIMULATION PAGE - API RESPONSE ===');
+        console.log('Year 2025 total_tax from API:', response.year_by_year[0].total_tax);
+        console.log('Year 2025 total_tax_p1:', response.year_by_year[0].total_tax_p1);
+        console.log('Year 2025 total_tax_p2:', response.year_by_year[0].total_tax_p2);
+        console.log('======================================');
+      }
+
       setResult(response);
 
       // Switch to results tab if simulation succeeded
