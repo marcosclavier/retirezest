@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   XAxis,
@@ -13,378 +11,328 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { Play, Trash2, Copy, Plus, TrendingUp, TrendingDown } from 'lucide-react';
+import { runSimulation } from '@/lib/api/simulation-client';
 import {
-  type ProjectionInput,
-  type ProjectionSummary,
-} from '@/lib/calculations/projection';
-
-interface DBScenario {
-  id: string;
-  userId: string;
-  name: string;
-  description: string | null;
-  currentAge: number;
-  retirementAge: number;
-  lifeExpectancy: number;
-  province: string;
-  rrspBalance: number;
-  tfsaBalance: number;
-  nonRegBalance: number;
-  realEstateValue: number;
-  employmentIncome: number;
-  pensionIncome: number;
-  rentalIncome: number;
-  otherIncome: number;
-  cppStartAge: number;
-  oasStartAge: number;
-  averageCareerIncome: number;
-  yearsOfCPPContributions: number;
-  yearsInCanada: number;
-  annualExpenses: number;
-  expenseInflationRate: number;
-  investmentReturnRate: number;
-  inflationRate: number;
-  rrspToRrifAge: number;
-  withdrawalStrategy: string;
-  projectionResults: string | null;
-  isBaseline: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+  type HouseholdInput,
+  type SimulationResponse,
+  strategyOptions,
+} from '@/lib/types/simulation';
 
 interface Scenario {
   id: string;
   name: string;
-  inputs: ProjectionInput;
-  projection?: ProjectionSummary;
+  description: string;
+  inputs: HouseholdInput;
+  results?: SimulationResponse;
+  isRunning: boolean;
 }
 
 export default function ScenariosPage() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
-
-  // Default scenario template
-  const defaultInputs: ProjectionInput = {
-    currentAge: 55,
-    retirementAge: 65,
-    lifeExpectancy: 90,
-    province: 'AB',
-    rrspBalance: 500000,
-    tfsaBalance: 100000,
-    nonRegBalance: 150000,
-    realEstateValue: 0,
-    employmentIncome: 80000,
-    pensionIncome: 20000,
-    rentalIncome: 0,
-    otherIncome: 0,
-    cppStartAge: 65,
-    oasStartAge: 65,
-    averageCareerIncome: 70000,
-    yearsOfCPPContributions: 35,
-    yearsInCanada: 40,
-    annualExpenses: 60000,
-    expenseInflationRate: 0.02,
-    investmentReturnRate: 0.05,
-    inflationRate: 0.02,
-    rrspToRrifAge: 71,
-    withdrawalStrategy: 'RRIF->Corp->NonReg->TFSA',
-  };
-
-  const [newScenario, setNewScenario] = useState<Partial<Scenario>>({
-    name: '',
-    inputs: defaultInputs,
-  });
-
-  // Convert database scenario to UI scenario
-  const dbScenarioToScenario = (dbScenario: DBScenario): Scenario => {
-    const inputs: ProjectionInput = {
-      currentAge: dbScenario.currentAge,
-      retirementAge: dbScenario.retirementAge,
-      lifeExpectancy: dbScenario.lifeExpectancy,
-      province: dbScenario.province,
-      rrspBalance: dbScenario.rrspBalance,
-      tfsaBalance: dbScenario.tfsaBalance,
-      nonRegBalance: dbScenario.nonRegBalance,
-      realEstateValue: dbScenario.realEstateValue,
-      employmentIncome: dbScenario.employmentIncome,
-      pensionIncome: dbScenario.pensionIncome,
-      rentalIncome: dbScenario.rentalIncome,
-      otherIncome: dbScenario.otherIncome,
-      cppStartAge: dbScenario.cppStartAge,
-      oasStartAge: dbScenario.oasStartAge,
-      averageCareerIncome: dbScenario.averageCareerIncome,
-      yearsOfCPPContributions: dbScenario.yearsOfCPPContributions,
-      yearsInCanada: dbScenario.yearsInCanada,
-      annualExpenses: dbScenario.annualExpenses,
-      expenseInflationRate: dbScenario.expenseInflationRate,
-      investmentReturnRate: dbScenario.investmentReturnRate,
-      inflationRate: dbScenario.inflationRate,
-      rrspToRrifAge: dbScenario.rrspToRrifAge,
-    };
-
-    const projection = dbScenario.projectionResults
-      ? JSON.parse(dbScenario.projectionResults)
-      : undefined;
-
-    return {
-      id: dbScenario.id,
-      name: dbScenario.name,
-      inputs,
-      projection,
-    };
-  };
+  const [baselineLoaded, setBaselineLoaded] = useState(false);
+  const [showQuickWhatIf, setShowQuickWhatIf] = useState(false);
 
   // Fetch CSRF token
-  const fetchCsrfToken = async () => {
-    try {
-      const res = await fetch('/api/csrf');
-      if (res.ok) {
-        const data = await res.json();
-        setCsrfToken(data.token);
-      }
-    } catch (error) {
-      console.error('Error fetching CSRF token:', error);
-    }
-  };
-
-  // Load scenarios from API
   useEffect(() => {
-    const loadScenarios = async () => {
+    const fetchCsrfToken = async () => {
       try {
-        const response = await fetch('/api/scenarios');
-        if (response.ok) {
-          const dbScenarios: DBScenario[] = await response.json();
-          const uiScenarios = dbScenarios.map(dbScenarioToScenario);
-          setScenarios(uiScenarios);
+        const res = await fetch('/api/csrf');
+        if (res.ok) {
+          const data = await res.json();
+          setCsrfToken(data.token);
         }
       } catch (error) {
-        console.error('Error loading scenarios:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching CSRF token:', error);
       }
     };
-
-    loadScenarios();
     fetchCsrfToken();
   }, []);
 
-  const createScenario = async () => {
-    if (!newScenario.name) {
-      alert('Please enter a scenario name');
-      return;
-    }
-
-    // Ensure we have a CSRF token before submitting
-    if (!csrfToken) {
-      alert('Security token not loaded. Please refresh the page and try again.');
-      return;
-    }
-
-    setCreating(true);
+  // Load baseline scenario from localStorage
+  const loadBaselineFromSimulation = () => {
     try {
-      const response = await fetch('/api/scenarios', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
-        },
-        body: JSON.stringify({
-          name: newScenario.name,
-          ...newScenario.inputs,
-        }),
-      });
+      const savedHousehold = localStorage.getItem('simulation_household');
+      if (savedHousehold) {
+        const household: HouseholdInput = JSON.parse(savedHousehold);
 
-      if (response.ok) {
-        const dbScenario: DBScenario = await response.json();
-        const uiScenario = dbScenarioToScenario(dbScenario);
-        setScenarios([...scenarios, uiScenario]);
-        setShowCreateForm(false);
-        setNewScenario({ name: '', inputs: defaultInputs });
-      } else {
-        alert('Failed to create scenario');
+        // Create baseline scenario
+        const baselineScenario: Scenario = {
+          id: `baseline-${Date.now()}`,
+          name: 'Current Plan (Baseline)',
+          description: 'Your current retirement plan from the simulation',
+          inputs: household,
+          isRunning: false,
+        };
+
+        setScenarios([baselineScenario]);
+        setBaselineLoaded(true);
+
+        // Auto-run baseline scenario
+        runScenarioSimulation(baselineScenario.id, household);
       }
     } catch (error) {
-      console.error('Error creating scenario:', error);
-      alert('Failed to create scenario');
-    } finally {
-      setCreating(false);
+      console.error('Failed to load baseline:', error);
     }
   };
 
-  const deleteScenario = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this scenario?')) {
+  const runScenarioSimulation = async (scenarioId: string, inputs: HouseholdInput) => {
+    setScenarios(prev =>
+      prev.map(s => (s.id === scenarioId ? { ...s, isRunning: true } : s))
+    );
+
+    try {
+      const results = await runSimulation(inputs, csrfToken);
+
+      setScenarios(prev =>
+        prev.map(s =>
+          s.id === scenarioId
+            ? { ...s, results, isRunning: false }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error('Simulation failed:', error);
+      setScenarios(prev =>
+        prev.map(s => (s.id === scenarioId ? { ...s, isRunning: false } : s))
+      );
+    }
+  };
+
+  const createWhatIfScenario = (
+    name: string,
+    description: string,
+    modifier: (baseline: HouseholdInput) => HouseholdInput
+  ) => {
+    const baseline = scenarios.find(s => s.name.includes('Baseline'))?.inputs;
+    if (!baseline) {
+      alert('Please load a baseline scenario first');
       return;
     }
 
-    try {
-      const response = await fetch(`/api/scenarios/${id}`, {
-        method: 'DELETE',
-      });
+    const modifiedInputs = modifier(JSON.parse(JSON.stringify(baseline)));
+    const newScenario: Scenario = {
+      id: `scenario-${Date.now()}`,
+      name,
+      description,
+      inputs: modifiedInputs,
+      isRunning: false,
+    };
 
-      if (response.ok) {
-        setScenarios(scenarios.filter(s => s.id !== id));
-        setSelectedScenarios(selectedScenarios.filter(sid => sid !== id));
-      } else {
-        alert('Failed to delete scenario');
+    setScenarios(prev => [...prev, newScenario]);
+    runScenarioSimulation(newScenario.id, modifiedInputs);
+  };
+
+  const quickWhatIfScenarios = [
+    {
+      category: 'Government Benefits Timing (Corporate Optimized)',
+      options: [
+        {
+          name: 'CPP & OAS at 65',
+          description: 'Take both at standard age - more income early',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'corporate-optimized',
+            p1: { ...input.p1, cpp_start_age: 65, oas_start_age: 65 },
+            p2: { ...input.p2, cpp_start_age: 65, oas_start_age: 65 },
+          }),
+        },
+        {
+          name: 'Delay CPP & OAS to 70',
+          description: 'Delay both - 42% higher CPP, 36% higher OAS',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'corporate-optimized',
+            p1: { ...input.p1, cpp_start_age: 70, oas_start_age: 70 },
+            p2: { ...input.p2, cpp_start_age: 70, oas_start_age: 70 },
+          }),
+        },
+        {
+          name: 'CPP at 70, OAS at 65',
+          description: 'Delay CPP for higher benefits, OAS at standard age',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'corporate-optimized',
+            p1: { ...input.p1, cpp_start_age: 70, oas_start_age: 65 },
+            p2: { ...input.p2, cpp_start_age: 70, oas_start_age: 65 },
+          }),
+        },
+        {
+          name: 'CPP at 60, OAS at 65',
+          description: 'Take CPP early for cash flow, OAS at standard age',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'corporate-optimized',
+            p1: { ...input.p1, cpp_start_age: 60, oas_start_age: 65 },
+            p2: { ...input.p2, cpp_start_age: 60, oas_start_age: 65 },
+          }),
+        },
+      ],
+    },
+    {
+      category: 'Spending Level',
+      options: [
+        {
+          name: 'Reduce Spending 20%',
+          description: 'More conservative spending approach',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            spending_go_go: input.spending_go_go * 0.8,
+            spending_slow_go: input.spending_slow_go * 0.8,
+            spending_no_go: input.spending_no_go * 0.8,
+          }),
+        },
+        {
+          name: 'Increase Spending 20%',
+          description: 'More aggressive spending approach',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            spending_go_go: input.spending_go_go * 1.2,
+            spending_slow_go: input.spending_slow_go * 1.2,
+            spending_no_go: input.spending_no_go * 1.2,
+          }),
+        },
+      ],
+    },
+    {
+      category: 'TFSA Strategy',
+      options: [
+        {
+          name: 'No TFSA Contributions',
+          description: 'Keep assets in taxable accounts',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            tfsa_contribution_each: 0,
+          }),
+        },
+        {
+          name: 'Maximize TFSA',
+          description: 'Transfer up to $7K/year to TFSA',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            tfsa_contribution_each: 7000,
+          }),
+        },
+      ],
+    },
+  ];
+
+  const deleteScenario = (id: string) => {
+    if (scenarios.find(s => s.id === id)?.name.includes('Baseline')) {
+      if (!confirm('This is your baseline scenario. Are you sure you want to delete it?')) {
+        return;
       }
-    } catch (error) {
-      console.error('Error deleting scenario:', error);
-      alert('Failed to delete scenario');
     }
+    setScenarios(prev => prev.filter(s => s.id !== id));
+    setSelectedScenarios(prev => prev.filter(sid => sid !== id));
+  };
+
+  const duplicateScenario = (id: string) => {
+    const scenario = scenarios.find(s => s.id === id);
+    if (!scenario) return;
+
+    const newScenario: Scenario = {
+      ...scenario,
+      id: `scenario-${Date.now()}`,
+      name: `${scenario.name} (Copy)`,
+      results: undefined,
+      isRunning: false,
+    };
+
+    setScenarios(prev => [...prev, newScenario]);
+    runScenarioSimulation(newScenario.id, newScenario.inputs);
   };
 
   const toggleScenarioSelection = (id: string) => {
     if (selectedScenarios.includes(id)) {
-      setSelectedScenarios(selectedScenarios.filter(sid => sid !== id));
-    } else if (selectedScenarios.length < 3) {
-      setSelectedScenarios([...selectedScenarios, id]);
+      setSelectedScenarios(prev => prev.filter(sid => sid !== id));
+    } else if (selectedScenarios.length < 4) {
+      setSelectedScenarios(prev => [...prev, id]);
     }
   };
 
-  const updateScenarioInput = (field: keyof ProjectionInput, value: any) => {
-    setNewScenario({
-      ...newScenario,
-      inputs: { ...newScenario.inputs!, [field]: value },
-    });
+  const selectedScenarioData = scenarios.filter(s =>
+    selectedScenarios.includes(s.id) && s.results?.success
+  );
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    return `$${value.toFixed(0)}`;
   };
 
-  const selectedScenarioData = scenarios.filter(s => selectedScenarios.includes(s.id));
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading scenarios...</p>
-        </div>
-      </div>
-    );
-  }
+  const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Scenario Comparison</h1>
+          <h1 className="text-3xl font-bold text-gray-900">What-If Scenario Analysis</h1>
           <p className="mt-2 text-gray-600">
-            Create and compare different retirement planning scenarios
+            Compare different retirement strategies and see which works best for you
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-          disabled={creating}
-        >
-          {showCreateForm ? 'Cancel' : 'Create Scenario'}
-        </button>
+        <div className="flex gap-3">
+          {!baselineLoaded && (
+            <button
+              onClick={loadBaselineFromSimulation}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+            >
+              Load Current Plan
+            </button>
+          )}
+          {baselineLoaded && (
+            <button
+              onClick={() => setShowQuickWhatIf(!showQuickWhatIf)}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Quick What-If
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Create Scenario Form */}
-      {showCreateForm && (
+      {/* Quick What-If Builder */}
+      {showQuickWhatIf && baselineLoaded && (
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Create New Scenario</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Scenario Name</label>
-              <input
-                type="text"
-                value={newScenario.name}
-                onChange={(e) => setNewScenario({ ...newScenario, name: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                placeholder="e.g., Retire at 60, Delay CPP to 70, Conservative Spending"
-              />
-            </div>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Quick What-If Scenarios</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Click any option below to instantly create and run that scenario
+          </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Retirement Age</label>
-                <input
-                  type="number"
-                  value={newScenario.inputs?.retirementAge ?? ''}
-                  onChange={(e) => updateScenarioInput('retirementAge', parseInt(e.target.value) || 0)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                />
+          <div className="space-y-6">
+            {quickWhatIfScenarios.map((category) => (
+              <div key={category.category}>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">{category.category}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {category.options.map((option) => (
+                    <button
+                      key={option.name}
+                      onClick={() => createWhatIfScenario(option.name, option.description, option.modifier)}
+                      className="text-left p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                    >
+                      <div className="font-medium text-gray-900">{option.name}</div>
+                      <div className="text-xs text-gray-500 mt-1">{option.description}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CPP Start Age</label>
-                <input
-                  type="number"
-                  value={newScenario.inputs?.cppStartAge ?? ''}
-                  onChange={(e) => updateScenarioInput('cppStartAge', parseInt(e.target.value) || 0)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  min="60"
-                  max="70"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Annual Expenses ($)</label>
-                <input
-                  type="number"
-                  value={newScenario.inputs?.annualExpenses ?? ''}
-                  onChange={(e) => updateScenarioInput('annualExpenses', parseFloat(e.target.value) || 0)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  step="1000"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Withdrawal Strategy
-                <span className="ml-2 text-xs text-gray-500">(Order of account withdrawals in retirement)</span>
-              </label>
-              <select
-                value={newScenario.inputs?.withdrawalStrategy}
-                onChange={(e) => updateScenarioInput('withdrawalStrategy', e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 p-2 border"
-              >
-                <option value="NonReg->RRIF->Corp->TFSA">
-                  Strategy A: Non-Registered → RRIF → Corporate → TFSA
-                </option>
-                <option value="RRIF->Corp->NonReg->TFSA">
-                  Strategy B: RRIF → Corporate → Non-Registered → TFSA (Default)
-                </option>
-                <option value="Corp->RRIF->NonReg->TFSA">
-                  Strategy C: Corporate → RRIF → Non-Registered → TFSA
-                </option>
-                <option value="Hybrid">
-                  Hybrid: RRIF top-up first → Non-Registered → Corporate → TFSA
-                </option>
-              </select>
-              <p className="mt-2 text-xs text-gray-500">
-                Different strategies optimize for different goals: tax efficiency, estate value, or government benefit maximization.
-              </p>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowCreateForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                disabled={creating}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={createScenario}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={creating}
-              >
-                {creating ? 'Creating...' : 'Create Scenario'}
-              </button>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Scenarios List */}
+      {/* Scenarios Grid */}
       {scenarios.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {scenarios.map((scenario) => {
             const isSelected = selectedScenarios.includes(scenario.id);
+            const summary = scenario.results?.summary;
+
             return (
               <div
                 key={scenario.id}
@@ -393,45 +341,93 @@ export default function ScenariosPage() {
                 }`}
                 onClick={() => toggleScenarioSelection(scenario.id)}
               >
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-medium text-gray-900">{scenario.name}</h3>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-900">{scenario.name}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{scenario.description}</p>
+                  </div>
                   {isSelected && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       Selected
                     </span>
                   )}
                 </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Retirement Age:</span>
-                    <span className="font-medium text-gray-900">{scenario.inputs.retirementAge}</span>
+
+                {scenario.isRunning && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Life Expectancy:</span>
-                    <span className="font-medium text-gray-900">{scenario.inputs.lifeExpectancy}</span>
+                )}
+
+                {!scenario.isRunning && summary && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Years Funded:</span>
+                      <span className={`font-medium ${summary.years_funded === summary.years_simulated ? 'text-green-600' : 'text-yellow-600'}`}>
+                        {summary.years_funded}/{summary.years_simulated}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Total Tax:</span>
+                      <span className="font-medium text-red-600">
+                        {formatCurrency(summary.total_tax_paid)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Final Estate:</span>
+                      <span className="font-medium text-blue-600">
+                        {formatCurrency(summary.final_estate_after_tax)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Health Score:</span>
+                      <span className={`font-medium ${
+                        summary.health_score >= 80 ? 'text-green-600' :
+                        summary.health_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {summary.health_score}/100 ({summary.health_rating})
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Total Income:</span>
-                    <span className="font-medium text-green-600">
-                      ${scenario.projection ? (scenario.projection.totalIncome / 1000000).toFixed(2) : 0}M
-                    </span>
+                )}
+
+                {!scenario.isRunning && !summary && (
+                  <div className="flex items-center justify-center py-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        runScenarioSimulation(scenario.id, scenario.inputs);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <Play className="w-4 h-4" />
+                      Run Simulation
+                    </button>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Remaining Assets:</span>
-                    <span className={`font-medium ${scenario.projection?.assetsDepleted ? 'text-red-600' : 'text-blue-600'}`}>
-                      ${scenario.projection ? (scenario.projection.remainingAssets / 1000000).toFixed(2) : 0}M
-                    </span>
-                  </div>
+                )}
+
+                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      duplicateScenario(scenario.id);
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center gap-1"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Duplicate
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteScenario(scenario.id);
+                    }}
+                    className="flex-1 px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 flex items-center justify-center gap-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteScenario(scenario.id);
-                  }}
-                  className="mt-4 w-full px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50"
-                >
-                  Delete
-                </button>
               </div>
             );
           })}
@@ -449,197 +445,246 @@ export default function ScenariosPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No scenarios
+              No scenarios yet
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new retirement scenario.
+              Load your current plan to start creating what-if scenarios.
             </p>
             <div className="mt-6">
               <button
-                type="button"
-                onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={loadBaselineFromSimulation}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
-                <svg
-                  className="-ml-1 mr-2 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Create Your First Scenario
+                Load Current Plan
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* What are scenarios? */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-5 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">
-            What are Scenarios?
-          </h2>
-        </div>
-        <div className="px-6 py-5">
-          <p className="text-sm text-gray-600 mb-4">
-            Scenarios allow you to compare different retirement planning
-            strategies side-by-side. Create multiple scenarios to answer
-            questions like:
-          </p>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li className="flex items-start">
-              <svg
-                className="h-5 w-5 text-green-500 mr-2 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>
-                What if I retire at 60 vs 65 vs 70?
-              </span>
-            </li>
-            <li className="flex items-start">
-              <svg
-                className="h-5 w-5 text-green-500 mr-2 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>
-                Should I start CPP early or delay for higher benefits?
-              </span>
-            </li>
-            <li className="flex items-start">
-              <svg
-                className="h-5 w-5 text-green-500 mr-2 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>
-                What if my expenses are higher or lower than expected?
-              </span>
-            </li>
-            <li className="flex items-start">
-              <svg
-                className="h-5 w-5 text-green-500 mr-2 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>
-                How do different investment returns affect my retirement?
-              </span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Scenario Comparison Charts */}
-      {selectedScenarioData.length > 0 && (
+      {/* Scenario Comparison */}
+      {selectedScenarioData.length > 1 && (
         <>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="text-sm font-medium text-blue-900">
-              Comparing {selectedScenarioData.length} Scenario{selectedScenarioData.length > 1 ? 's' : ''}
+              Comparing {selectedScenarioData.length} Scenarios
             </h3>
             <p className="text-xs text-blue-700 mt-1">
-              Click on scenarios above to select up to 3 for comparison
+              Click on scenarios above to select up to 4 for comparison
             </p>
           </div>
 
-          {/* Summary Comparison Table */}
+          {/* Key Metrics Comparison Table */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Summary Comparison</h2>
+              <h2 className="text-lg font-medium text-gray-900">Key Metrics Comparison</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Metric</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Metric
+                    </th>
                     {selectedScenarioData.map(scenario => (
-                      <th key={scenario.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th key={scenario.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {scenario.name}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
+                  {/* Years Funded */}
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Years Funded</td>
+                    {selectedScenarioData.map(scenario => {
+                      const allYearsFunded = scenario.results!.summary!.years_funded === scenario.results!.summary!.years_simulated;
+                      return (
+                        <td key={scenario.id} className="px-6 py-4 text-sm">
+                          <span className={`font-medium text-lg ${allYearsFunded ? 'text-green-600' : 'text-yellow-600'}`}>
+                            {scenario.results!.summary!.years_funded}/{scenario.results!.summary!.years_simulated}
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {allYearsFunded ? 'Fully funded' : `${scenario.results!.summary!.years_simulated - scenario.results!.summary!.years_funded} years short`}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+
+                  {/* Tax Analysis */}
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Retirement Age</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Total Tax Paid</td>
                     {selectedScenarioData.map(scenario => (
-                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
-                        {scenario.inputs.retirementAge}
+                      <td key={scenario.id} className="px-6 py-4 text-sm font-medium text-red-600">
+                        {formatCurrency(scenario.results!.summary!.total_tax_paid)}
                       </td>
                     ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Avg Effective Tax Rate</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {formatPercent(scenario.results!.summary!.avg_effective_tax_rate)}
+                      </td>
+                    ))}
+                  </tr>
+
+                  {/* Estate */}
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Final Estate (After-Tax)</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm font-medium text-blue-600">
+                        {formatCurrency(scenario.results!.summary!.final_estate_after_tax)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Tax at Death</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm font-medium text-orange-600">
+                        {scenario.results?.estate_summary?.taxes_at_death
+                          ? formatCurrency(scenario.results.estate_summary.taxes_at_death)
+                          : 'N/A'}
+                      </td>
+                    ))}
+                  </tr>
+
+                  {/* Government Benefits */}
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Total Govt Benefits</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm font-medium text-green-600">
+                        {formatCurrency(scenario.results!.summary!.total_government_benefits)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 pl-12">- CPP Total</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {formatCurrency(scenario.results!.summary!.total_cpp)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 pl-12">- OAS Total</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {formatCurrency(scenario.results!.summary!.total_oas)}
+                      </td>
+                    ))}
+                  </tr>
+
+                  {/* Health Score */}
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Health Score</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm">
+                        <span className={`font-medium ${
+                          scenario.results!.summary!.health_score >= 80 ? 'text-green-600' :
+                          scenario.results!.summary!.health_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                        }`}>
+                          {scenario.results!.summary!.health_score}/100
+                        </span>
+                        <div className="text-xs text-gray-500">
+                          {scenario.results!.summary!.health_rating}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+
+                  {/* Spending */}
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Total Spending</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {formatCurrency(scenario.results!.summary!.total_spending)}
+                      </td>
+                    ))}
+                  </tr>
+
+                  {/* Net Worth Change */}
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Net Worth Change</td>
+                    {selectedScenarioData.map(scenario => {
+                      const change = scenario.results!.summary!.net_worth_change_pct;
+                      return (
+                        <td key={scenario.id} className="px-6 py-4 text-sm">
+                          <div className="flex items-center gap-1">
+                            {change >= 0 ? (
+                              <TrendingUp className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <TrendingDown className="w-4 h-4 text-red-600" />
+                            )}
+                            <span className={`font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {change >= 0 ? '+' : ''}{formatPercent(change)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {scenario.results!.summary!.net_worth_trend}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+
+                  {/* Key Parameters */}
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 bg-gray-100" colSpan={selectedScenarioData.length + 1}>
+                      Key Parameters
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">CPP Start Age</td>
                     {selectedScenarioData.map(scenario => (
                       <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
-                        {scenario.inputs.cppStartAge}
+                        {scenario.inputs.p1.cpp_start_age}
+                        {scenario.inputs.p1.cpp_start_age !== scenario.inputs.p2.cpp_start_age &&
+                          ` / ${scenario.inputs.p2.cpp_start_age}`}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Total Income</td>
-                    {selectedScenarioData.map(scenario => (
-                      <td key={scenario.id} className="px-6 py-4 text-sm font-medium text-green-600">
-                        ${(scenario.projection!.totalIncome / 1000000).toFixed(2)}M
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Total Taxes</td>
-                    {selectedScenarioData.map(scenario => (
-                      <td key={scenario.id} className="px-6 py-4 text-sm font-medium text-red-600">
-                        ${(scenario.projection!.totalTaxesPaid / 1000000).toFixed(2)}M
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Remaining Assets</td>
-                    {selectedScenarioData.map(scenario => (
-                      <td key={scenario.id} className={`px-6 py-4 text-sm font-medium ${scenario.projection!.assetsDepleted ? 'text-red-600' : 'text-blue-600'}`}>
-                        ${(scenario.projection!.remainingAssets / 1000000).toFixed(2)}M
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Assets Depleted?</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">OAS Start Age</td>
                     {selectedScenarioData.map(scenario => (
                       <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
-                        {scenario.projection!.assetsDepleted ? `Yes, at ${scenario.projection!.assetsDepletedAge}` : 'No'}
+                        {scenario.inputs.p1.oas_start_age}
+                        {scenario.inputs.p1.oas_start_age !== scenario.inputs.p2.oas_start_age &&
+                          ` / ${scenario.inputs.p2.oas_start_age}`}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Withdrawal Strategy</td>
+                    {selectedScenarioData.map(scenario => {
+                      const strategyLabel = strategyOptions.find(s => s.value === scenario.inputs.strategy)?.label || scenario.inputs.strategy;
+                      return (
+                        <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                          {strategyLabel}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">TFSA Contribution</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {scenario.inputs.tfsa_contribution_each > 0
+                          ? `${formatCurrency(scenario.inputs.tfsa_contribution_each)}/year`
+                          : 'None'}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">Go-Go Spending</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {formatCurrency(scenario.inputs.spending_go_go)}
                       </td>
                     ))}
                   </tr>
@@ -648,75 +693,133 @@ export default function ScenariosPage() {
             </div>
           </div>
 
-          {/* Asset Balance Comparison Chart */}
+          {/* Tax Comparison Chart */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Asset Balance Comparison</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="age"
-                  label={{ value: 'Age', position: 'insideBottom', offset: -5 }}
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                />
-                <YAxis
-                  label={{ value: 'Assets ($)', angle: -90, position: 'insideLeft' }}
-                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  formatter={(value: number) => `$${value.toLocaleString()}`}
-                  labelFormatter={(label) => `Age ${label}`}
-                />
-                <Legend />
-                {selectedScenarioData.map((scenario, index) => {
-                  const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'];
-                  return (
-                    <Line
-                      key={scenario.id}
-                      data={scenario.projection!.projections}
-                      type="monotone"
-                      dataKey="totalAssets"
-                      stroke={colors[index]}
-                      name={scenario.name}
-                      strokeWidth={2}
-                    />
-                  );
-                })}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Income Comparison Chart */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Annual Income Comparison</h3>
-            <ResponsiveContainer width="100%" height={400}>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Tax Comparison</h3>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={selectedScenarioData.map(scenario => ({
-                  name: scenario.name,
-                  avgIncome: scenario.projection!.averageAnnualIncome,
-                  avgTax: scenario.projection!.totalTaxesPaid / scenario.projection!.totalYears,
-                  avgExpenses: scenario.projection!.averageAnnualExpenses,
+                  name: scenario.name.length > 30 ? scenario.name.substring(0, 27) + '...' : scenario.name,
+                  totalTax: scenario.results!.summary!.total_tax_paid,
+                  avgRate: scenario.results!.summary!.avg_effective_tax_rate,
                 }))}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                 <YAxis
-                  label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }}
-                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  yAxisId="left"
+                  label={{ value: 'Total Tax ($)', angle: -90, position: 'insideLeft' }}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  label={{ value: 'Avg Rate (%)', angle: 90, position: 'insideRight' }}
                 />
                 <Tooltip
-                  formatter={(value: number) => `$${value.toLocaleString()}`}
+                  formatter={(value: number, name: string) => {
+                    if (name === 'totalTax') return formatCurrency(value);
+                    return formatPercent(value);
+                  }}
                 />
                 <Legend />
-                <Bar dataKey="avgIncome" fill="#10b981" name="Avg Income" />
-                <Bar dataKey="avgTax" fill="#ef4444" name="Avg Tax" />
-                <Bar dataKey="avgExpenses" fill="#f59e0b" name="Avg Expenses" />
+                <Bar yAxisId="left" dataKey="totalTax" fill="#ef4444" name="Total Tax" />
+                <Bar yAxisId="right" dataKey="avgRate" fill="#f59e0b" name="Avg Rate %" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Estate Value Comparison */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Estate Value Comparison</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={selectedScenarioData.map(scenario => ({
+                  name: scenario.name.length > 30 ? scenario.name.substring(0, 27) + '...' : scenario.name,
+                  estate: scenario.results!.summary!.final_estate_after_tax,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                <YAxis
+                  label={{ value: 'Estate Value ($)', angle: -90, position: 'insideLeft' }}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Legend />
+                <Bar dataKey="estate" fill="#3b82f6" name="After-Tax Estate" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Government Benefits Comparison */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Government Benefits Comparison</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={selectedScenarioData.map(scenario => ({
+                  name: scenario.name.length > 30 ? scenario.name.substring(0, 27) + '...' : scenario.name,
+                  cpp: scenario.results!.summary!.total_cpp,
+                  oas: scenario.results!.summary!.total_oas,
+                  gis: scenario.results!.summary!.total_gis,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                <YAxis
+                  label={{ value: 'Benefits ($)', angle: -90, position: 'insideLeft' }}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Legend />
+                <Bar dataKey="cpp" stackId="a" fill="#10b981" name="CPP" />
+                <Bar dataKey="oas" stackId="a" fill="#3b82f6" name="OAS" />
+                <Bar dataKey="gis" stackId="a" fill="#8b5cf6" name="GIS" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </>
       )}
+
+      {/* Help Section */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-5 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">
+            How to Use What-If Analysis
+          </h2>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm text-gray-600 mb-4">
+            What-If analysis helps you understand how different decisions affect your retirement:
+          </p>
+          <ul className="space-y-2 text-sm text-gray-600">
+            <li className="flex items-start">
+              <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span><strong>Load Current Plan:</strong> Start with your baseline retirement plan from the simulation</span>
+            </li>
+            <li className="flex items-start">
+              <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span><strong>Quick What-If:</strong> Click any option to instantly create and run a variation</span>
+            </li>
+            <li className="flex items-start">
+              <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span><strong>Compare:</strong> Select up to 4 scenarios to see side-by-side comparisons</span>
+            </li>
+            <li className="flex items-start">
+              <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span><strong>Key Metrics:</strong> Focus on tax paid, estate value, and government benefits to make informed decisions</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
