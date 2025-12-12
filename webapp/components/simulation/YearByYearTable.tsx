@@ -398,6 +398,27 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(year.corporate_withdrawal_p2)}
                                   </span>
                                 </div>
+                                {/* NonReg Distributions - Passive Income */}
+                                {nonregDistributions > 0 && (
+                                  <>
+                                    <div className="flex justify-between pt-2 border-t border-dashed">
+                                      <span className="text-xs italic" style={{ color: '#6B7280' }}>
+                                        NonReg Dist (P1)
+                                      </span>
+                                      <span className="font-medium text-xs italic" style={{ color: '#10B981' }}>
+                                        {formatCurrency(nonregDistributions / 2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-xs italic" style={{ color: '#6B7280' }}>
+                                        NonReg Dist (P2)
+                                      </span>
+                                      <span className="font-medium text-xs italic" style={{ color: '#10B981' }}>
+                                        {formatCurrency(nonregDistributions / 2)}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
                                 <div className="flex justify-between pt-2 border-t">
                                   <span className="font-semibold" style={{ color: '#111827' }}>
                                     Total Withdrawals
@@ -406,6 +427,17 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(totalWithdrawals)}
                                   </span>
                                 </div>
+                                {/* Show NonReg Distributions Total if present */}
+                                {nonregDistributions > 0 && (
+                                  <div className="flex justify-between pt-1">
+                                    <span className="font-semibold text-xs" style={{ color: '#111827' }}>
+                                      + NonReg Distributions
+                                    </span>
+                                    <span className="font-semibold text-xs" style={{ color: '#10B981' }}>
+                                      {formatCurrency(nonregDistributions)}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
