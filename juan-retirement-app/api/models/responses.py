@@ -34,6 +34,9 @@ class YearResult(BaseModel):
     corporate_withdrawal_p1: float
     corporate_withdrawal_p2: float
 
+    # Non-registered distributions (passive income)
+    nonreg_distributions: float = Field(default=0.0, description="Total household non-reg distributions")
+
     # Balances
     tfsa_balance_p1: float
     tfsa_balance_p2: float
@@ -162,6 +165,12 @@ class FiveYearPlanYear(BaseModel):
     spending_target_p1: float = Field(default=0.0, description="Person 1 share of spending")
     spending_target_p2: float = Field(default=0.0, description="Person 2 share of spending")
 
+    # Government benefits
+    cpp_p1: float = Field(default=0.0, description="Person 1 CPP income")
+    cpp_p2: float = Field(default=0.0, description="Person 2 CPP income")
+    oas_p1: float = Field(default=0.0, description="Person 1 OAS income")
+    oas_p2: float = Field(default=0.0, description="Person 2 OAS income")
+
     # Withdrawals by person and source
     rrif_withdrawal_p1: float = Field(default=0.0)
     rrif_withdrawal_p2: float = Field(default=0.0)
@@ -171,6 +180,11 @@ class FiveYearPlanYear(BaseModel):
     tfsa_withdrawal_p2: float = Field(default=0.0)
     corp_withdrawal_p1: float = Field(default=0.0)
     corp_withdrawal_p2: float = Field(default=0.0)
+
+    # Non-registered distributions (passive income: interest, dividends, capital gains)
+    nonreg_distributions_p1: float = Field(default=0.0, description="Person 1 non-reg distributions")
+    nonreg_distributions_p2: float = Field(default=0.0, description="Person 2 non-reg distributions")
+    nonreg_distributions_total: float = Field(default=0.0, description="Total household non-reg distributions")
 
     # Totals
     total_withdrawn_p1: float = Field(default=0.0)
