@@ -237,9 +237,65 @@ export default function SimulationPage() {
 
   const handleReloadFromProfile = async () => {
     console.log('🔄 Reloading from profile...');
-    // Clear localStorage
-    localStorage.removeItem('simulation_household');
-    localStorage.removeItem('simulation_includePartner');
+
+    // Save current custom settings that aren't in the database
+    const currentHousehold = household;
+    const customSettings = {
+      // Government benefits (not in database)
+      p1_cpp_start_age: currentHousehold.p1.cpp_start_age,
+      p1_cpp_annual_at_start: currentHousehold.p1.cpp_annual_at_start,
+      p1_oas_start_age: currentHousehold.p1.oas_start_age,
+      p1_oas_annual_at_start: currentHousehold.p1.oas_annual_at_start,
+      p2_cpp_start_age: currentHousehold.p2.cpp_start_age,
+      p2_cpp_annual_at_start: currentHousehold.p2.cpp_annual_at_start,
+      p2_oas_start_age: currentHousehold.p2.oas_start_age,
+      p2_oas_annual_at_start: currentHousehold.p2.oas_annual_at_start,
+
+      // Yields (not in database)
+      p1_yields: {
+        y_nr_cash_interest: currentHousehold.p1.y_nr_cash_interest,
+        y_nr_gic_interest: currentHousehold.p1.y_nr_gic_interest,
+        y_nr_inv_total_return: currentHousehold.p1.y_nr_inv_total_return,
+        y_nr_inv_elig_div: currentHousehold.p1.y_nr_inv_elig_div,
+        y_nr_inv_nonelig_div: currentHousehold.p1.y_nr_inv_nonelig_div,
+        y_nr_inv_capg: currentHousehold.p1.y_nr_inv_capg,
+        y_nr_inv_roc_pct: currentHousehold.p1.y_nr_inv_roc_pct,
+        y_corp_cash_interest: currentHousehold.p1.y_corp_cash_interest,
+        y_corp_gic_interest: currentHousehold.p1.y_corp_gic_interest,
+        y_corp_inv_total_return: currentHousehold.p1.y_corp_inv_total_return,
+        y_corp_inv_elig_div: currentHousehold.p1.y_corp_inv_elig_div,
+        y_corp_inv_capg: currentHousehold.p1.y_corp_inv_capg,
+      },
+      p2_yields: {
+        y_nr_cash_interest: currentHousehold.p2.y_nr_cash_interest,
+        y_nr_gic_interest: currentHousehold.p2.y_nr_gic_interest,
+        y_nr_inv_total_return: currentHousehold.p2.y_nr_inv_total_return,
+        y_nr_inv_elig_div: currentHousehold.p2.y_nr_inv_elig_div,
+        y_nr_inv_nonelig_div: currentHousehold.p2.y_nr_inv_nonelig_div,
+        y_nr_inv_capg: currentHousehold.p2.y_nr_inv_capg,
+        y_nr_inv_roc_pct: currentHousehold.p2.y_nr_inv_roc_pct,
+        y_corp_cash_interest: currentHousehold.p2.y_corp_cash_interest,
+        y_corp_gic_interest: currentHousehold.p2.y_corp_gic_interest,
+        y_corp_inv_total_return: currentHousehold.p2.y_corp_inv_total_return,
+        y_corp_inv_elig_div: currentHousehold.p2.y_corp_inv_elig_div,
+        y_corp_inv_capg: currentHousehold.p2.y_corp_inv_capg,
+      },
+
+      // Spending & strategy (not in database)
+      spending_go_go: currentHousehold.spending_go_go,
+      go_go_end_age: currentHousehold.go_go_end_age,
+      spending_slow_go: currentHousehold.spending_slow_go,
+      slow_go_end_age: currentHousehold.slow_go_end_age,
+      spending_no_go: currentHousehold.spending_no_go,
+      spending_inflation: currentHousehold.spending_inflation,
+      general_inflation: currentHousehold.general_inflation,
+      strategy: currentHousehold.strategy,
+      reinvest_nonreg_dist: currentHousehold.reinvest_nonreg_dist,
+    };
+
+    // Don't clear localStorage - we want to keep custom settings
+    // localStorage.removeItem('simulation_household');
+    // localStorage.removeItem('simulation_includePartner');
 
     // Reset to defaults
     setHousehold({
@@ -248,8 +304,43 @@ export default function SimulationPage() {
     });
     setIncludePartner(false);
 
-    // Reload from profile
+    // Reload from profile (this will update asset balances from database)
     await loadPrefillData();
+
+    // Restore custom settings that aren't in the database
+    setHousehold((prev) => ({
+      ...prev,
+      // Restore P1 government benefits
+      p1: {
+        ...prev.p1,
+        cpp_start_age: customSettings.p1_cpp_start_age,
+        cpp_annual_at_start: customSettings.p1_cpp_annual_at_start,
+        oas_start_age: customSettings.p1_oas_start_age,
+        oas_annual_at_start: customSettings.p1_oas_annual_at_start,
+        // Restore P1 yields
+        ...customSettings.p1_yields,
+      },
+      // Restore P2 government benefits
+      p2: {
+        ...prev.p2,
+        cpp_start_age: customSettings.p2_cpp_start_age,
+        cpp_annual_at_start: customSettings.p2_cpp_annual_at_start,
+        oas_start_age: customSettings.p2_oas_start_age,
+        oas_annual_at_start: customSettings.p2_oas_annual_at_start,
+        // Restore P2 yields
+        ...customSettings.p2_yields,
+      },
+      // Restore household settings
+      spending_go_go: customSettings.spending_go_go,
+      go_go_end_age: customSettings.go_go_end_age,
+      spending_slow_go: customSettings.spending_slow_go,
+      slow_go_end_age: customSettings.slow_go_end_age,
+      spending_no_go: customSettings.spending_no_go,
+      spending_inflation: customSettings.spending_inflation,
+      general_inflation: customSettings.general_inflation,
+      strategy: customSettings.strategy,
+      reinvest_nonreg_dist: customSettings.reinvest_nonreg_dist,
+    }));
 
     // Mark prefill as attempted so future changes get saved
     setPrefillAttempted(true);
