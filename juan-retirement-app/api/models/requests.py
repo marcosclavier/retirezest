@@ -158,6 +158,7 @@ class HouseholdInput(BaseModel):
         "capital-gains-optimized",
         "tfsa-first",
         "balanced",
+        "rrif-frontload",
         "manual"
     ] = Field(default="corporate-optimized", description="Withdrawal strategy")
 

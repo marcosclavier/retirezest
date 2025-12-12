@@ -75,6 +75,7 @@ export type WithdrawalStrategy =
   | 'capital-gains-optimized'
   | 'tfsa-first'
   | 'balanced'
+  | 'rrif-frontload'
   | 'manual';
 
 export interface HouseholdInput {
@@ -292,6 +293,10 @@ export interface FiveYearPlanYear {
   spending_target: number;
   spending_target_p1: number;
   spending_target_p2: number;
+  cpp_p1: number;
+  cpp_p2: number;
+  oas_p1: number;
+  oas_p2: number;
   rrif_withdrawal_p1: number;
   rrif_withdrawal_p2: number;
   nonreg_withdrawal_p1: number;
@@ -300,6 +305,9 @@ export interface FiveYearPlanYear {
   tfsa_withdrawal_p2: number;
   corp_withdrawal_p1: number;
   corp_withdrawal_p2: number;
+  nonreg_distributions_p1: number;
+  nonreg_distributions_p2: number;
+  nonreg_distributions_total: number;
   total_withdrawn_p1: number;
   total_withdrawn_p2: number;
   total_withdrawn: number;
@@ -435,7 +443,7 @@ export const defaultHouseholdInput: HouseholdInput = {
 
   gap_tolerance: 1000,
   tfsa_contribution_each: 0,
-  reinvest_nonreg_dist: true,
+  reinvest_nonreg_dist: false,
   income_split_rrif_fraction: 0.0,
   hybrid_rrif_topup_per_person: 0,
   stop_on_fail: false,
@@ -472,6 +480,11 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
     value: 'balanced',
     label: 'Balanced',
     description: 'Balanced approach across all account types',
+  },
+  {
+    value: 'rrif-frontload',
+    label: 'RRIF Front-Load (Tax Smoothing)',
+    description: 'Withdraws 15% of RRIF before OAS/CPP starts, then 8% after - smooths tax curve and avoids age 70 spike',
   },
   {
     value: 'manual',

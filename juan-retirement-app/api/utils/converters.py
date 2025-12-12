@@ -44,6 +44,7 @@ def map_api_strategy_to_internal(api_strategy: str) -> str:
         "capital-gains-optimized": "NonReg->RRIF->Corp->TFSA",
         "tfsa-first": "TFSA->Corp->RRIF->NonReg",
         "balanced": "Balanced",
+        "rrif-frontload": "RRIF-Frontload",
         "manual": "NonReg->RRIF->Corp->TFSA",  # Default order
     }
 
@@ -207,7 +208,7 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
             # When reinvest_nonreg_dist=False, these count as spending cash
             # When reinvest_nonreg_dist=True, these are reinvested and not available for spending
             nonreg_distributions = float(row.get('nr_dist_tot', 0))
-            reinvest_nonreg = row.get('reinvest_nonreg_dist', True)
+            reinvest_nonreg = row.get('reinvest_nonreg_dist', False)  # Default False to match Household model
 
             # Only count distributions as spending cash when NOT reinvesting
             distributions_as_cash = 0 if reinvest_nonreg else nonreg_distributions
@@ -767,10 +768,31 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         corp_p1 = float(row.get('withdraw_corp_p1', 0))
         corp_p2 = float(row.get('withdraw_corp_p2', 0))
 
+        # Get non-registered distributions (passive income)
+        nr_dist_p1 = float(
+            row.get('nr_interest_p1', 0) +
+            row.get('nr_elig_div_p1', 0) +
+            row.get('nr_nonelig_div_p1', 0) +
+            row.get('nr_capg_dist_p1', 0)
+        )
+        nr_dist_p2 = float(
+            row.get('nr_interest_p2', 0) +
+            row.get('nr_elig_div_p2', 0) +
+            row.get('nr_nonelig_div_p2', 0) +
+            row.get('nr_capg_dist_p2', 0)
+        )
+        nr_dist_total = float(row.get('nr_dist_tot', nr_dist_p1 + nr_dist_p2))
+
         total_p1 = rrif_p1 + nonreg_p1 + tfsa_p1 + corp_p1
         total_p2 = rrif_p2 + nonreg_p2 + tfsa_p2 + corp_p2
 
         spending_target = float(row.get('spend_target_after_tax', 0))
+
+        # Get government benefits
+        cpp_p1 = float(row.get('cpp_p1', 0))
+        cpp_p2 = float(row.get('cpp_p2', 0))
+        oas_p1 = float(row.get('oas_p1', 0))
+        oas_p2 = float(row.get('oas_p2', 0))
 
         plan.append(FiveYearPlanYear(
             year=int(row.get('year', 0)),
@@ -779,6 +801,10 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             spending_target=spending_target,
             spending_target_p1=spending_target / 2,  # Split evenly for now
             spending_target_p2=spending_target / 2,
+            cpp_p1=cpp_p1,
+            cpp_p2=cpp_p2,
+            oas_p1=oas_p1,
+            oas_p2=oas_p2,
             rrif_withdrawal_p1=rrif_p1,
             rrif_withdrawal_p2=rrif_p2,
             nonreg_withdrawal_p1=nonreg_p1,
@@ -787,6 +813,9 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             tfsa_withdrawal_p2=tfsa_p2,
             corp_withdrawal_p1=corp_p1,
             corp_withdrawal_p2=corp_p2,
+            nonreg_distributions_p1=nr_dist_p1,
+            nonreg_distributions_p2=nr_dist_p2,
+            nonreg_distributions_total=nr_dist_total,
             total_withdrawn_p1=total_p1,
             total_withdrawn_p2=total_p2,
             total_withdrawn=total_p1 + total_p2,

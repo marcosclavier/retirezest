@@ -927,6 +927,10 @@ def _get_strategy_order(strategy_name: str) -> List[str]:
         return ["nonreg", "corp", "tfsa"]  # already added RRIF top-up
     elif strategy_name == "Corp->RRIF->NonReg->TFSA":
         return ["corp", "rrif", "nonreg", "tfsa"]
+    elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
+        # RRIF-Frontload: RRIF is pre-withdrawn at target amount (15% before OAS, 8% after)
+        # Then fill remaining shortfall with Corp -> NonReg -> TFSA
+        return ["corp", "nonreg", "tfsa"]
     elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
         # For balanced strategy: prioritize Corp (tax-credited), then RRIF (100% taxable at death - deplete early!),
         # then NonReg (ACB-protected), then TFSA (preserve for last)
@@ -1025,11 +1029,38 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # 2. RRIF->NonReg strategy to use RRIF first (including minimum)
     # 3. But in all cases, RRIF minimum is GUARANTEED to be withdrawn
 
+    # ===== RRIF FRONT-LOADING STRATEGY =====
+    # This strategy withdraws 15% of RRIF annually BEFORE OAS/CPP start,
+    # then switches to 8-10% after government benefits kick in.
+    # This smooths the tax curve and avoids the age 70 tax spike.
+    rrif_frontload_target = 0.0
+    if "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
+        # Determine OAS start age (use the earlier of p1 or p2)
+        oas_start = min(hh.p1.oas_start_age, hh.p2.oas_start_age) if hasattr(hh, 'p2') else person.oas_start_age
+
+        if age < oas_start:
+            # PHASE 1: BEFORE OAS/CPP - Front-load at 15% annually
+            rrif_frontload_target = person.rrif_balance * 0.15
+            logger.debug(f"RRIF-Frontload Phase 1 (age {age} < OAS {oas_start}): "
+                        f"Target 15% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
+        else:
+            # PHASE 2: AFTER OAS/CPP - Slower depletion at 8%
+            rrif_frontload_target = person.rrif_balance * 0.08
+            logger.debug(f"RRIF-Frontload Phase 2 (age {age} >= OAS {oas_start}): "
+                        f"Target 8% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
+
+        # Always respect CRA minimum as floor
+        rrif_frontload_target = max(rrif_frontload_target, rrif_min)
+
     # For non-Balanced strategies, start with zero and let strategy order determine it
     # For Balanced strategy, defer RRIF minimum enforcement until after other logic
     if "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
         rrif_min_deferred = rrif_min  # Enforce minimum for Balanced strategy at the end
         rrif_min_initial = 0.0
+    elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
+        # For RRIF-Frontload strategy, use the frontload target as the initial withdrawal
+        rrif_min_deferred = 0.0
+        rrif_min_initial = rrif_frontload_target
     else:
         rrif_min_deferred = 0.0  # Non-Balanced strategies enforce minimum immediately after strategy
         rrif_min_initial = 0.0  # Don't lock RRIF withdrawal before strategy runs
@@ -1420,6 +1451,34 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         withdrawals["rrif"] += rrif_shortfall_to_min
         # Note: This additional RRIF withdrawal will increase taxable income,
         # but it's mandatory by law and cannot be avoided
+
+    # -----  RECALCULATE FINAL TAX AND TAXABLE INCOME with actual withdrawal amounts -----
+    # The initial tax calculation (line 1081) happened BEFORE the withdrawal strategy ran,
+    # so it had corp=0 and potentially incorrect RRIF/NonReg amounts.
+    # Now that we have the FINAL withdrawal amounts, recalculate to get accurate taxable_income.
+    base_tax, base_fed_tax, base_prov_tax, base_fed_oas_clawback, base_prov_oas_clawback, taxable_income = tax_for_detailed(
+        add_nonreg = withdrawals["nonreg"],
+        add_rrif   = 0.0,
+        add_corp_dividend = withdrawals["corp"],
+
+        nonreg_balance      = person.nonreg_balance,
+        nonreg_acb          = getattr(person, "nonreg_acb", 0.0),
+        corp_dividend_type  = getattr(person, "corp_dividend_type", "non-eligible"),
+
+        nr_interest         = nr_interest,
+        nr_elig_div         = nr_elig_div,
+        nr_nonelig_div      = nr_nonelig_div,
+        nr_capg_dist        = nr_capg_dist,
+
+        withdrawals_rrif_base = withdrawals["rrif"],
+        cpp_income          = cpp,
+        oas_income          = oas,
+        age                 = age,
+
+        fed_params          = fed,
+        prov_params         = prov,
+    )
+    base_oas_clawback = base_fed_oas_clawback + base_prov_oas_clawback
 
     # -----  Track realized ACB/Capital Gain for non-reg principal sale  -----
     # realized_cg = withdrawals["nonreg"] * clamp(0.0 if person.nonreg_balance<=0 else (1.0 - person.nonreg_acb/max(person.nonreg_balance,1e-9)), 0.0, 1.0)
