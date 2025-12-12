@@ -495,7 +495,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {result.year_by_year && result.year_by_year.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle style={{ color: '#111827' }}>10 years Retirement Plan</CardTitle>
+            <CardTitle style={{ color: '#111827' }}>Year-by-Year Results</CardTitle>
             <CardDescription style={{ color: '#111827' }}>
               Detailed simulation results ({result.year_by_year.length} years)
             </CardDescription>

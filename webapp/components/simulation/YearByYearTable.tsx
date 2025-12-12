@@ -168,7 +168,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle style={{ color: '#111827' }}>Year-by-Year Results</CardTitle>
+            <CardTitle style={{ color: '#111827' }}>10 years Retirement Plan</CardTitle>
             <CardDescription style={{ color: '#111827' }}>
               Detailed simulation results ({yearByYear.length} years)
             </CardDescription>
