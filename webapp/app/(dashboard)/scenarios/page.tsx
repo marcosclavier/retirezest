@@ -134,7 +134,7 @@ export default function ScenariosPage() {
           description: 'Take both at standard age - more income early',
           modifier: (input: HouseholdInput) => ({
             ...input,
-            strategy: 'corporate-optimized',
+            strategy: 'corporate-optimized' as const,
             p1: { ...input.p1, cpp_start_age: 65, oas_start_age: 65 },
             p2: { ...input.p2, cpp_start_age: 65, oas_start_age: 65 },
           }),
@@ -144,7 +144,7 @@ export default function ScenariosPage() {
           description: 'Delay both - 42% higher CPP, 36% higher OAS',
           modifier: (input: HouseholdInput) => ({
             ...input,
-            strategy: 'corporate-optimized',
+            strategy: 'corporate-optimized' as const,
             p1: { ...input.p1, cpp_start_age: 70, oas_start_age: 70 },
             p2: { ...input.p2, cpp_start_age: 70, oas_start_age: 70 },
           }),
@@ -154,7 +154,7 @@ export default function ScenariosPage() {
           description: 'Delay CPP for higher benefits, OAS at standard age',
           modifier: (input: HouseholdInput) => ({
             ...input,
-            strategy: 'corporate-optimized',
+            strategy: 'corporate-optimized' as const,
             p1: { ...input.p1, cpp_start_age: 70, oas_start_age: 65 },
             p2: { ...input.p2, cpp_start_age: 70, oas_start_age: 65 },
           }),
@@ -164,7 +164,7 @@ export default function ScenariosPage() {
           description: 'Take CPP early for cash flow, OAS at standard age',
           modifier: (input: HouseholdInput) => ({
             ...input,
-            strategy: 'corporate-optimized',
+            strategy: 'corporate-optimized' as const,
             p1: { ...input.p1, cpp_start_age: 60, oas_start_age: 65 },
             p2: { ...input.p2, cpp_start_age: 60, oas_start_age: 65 },
           }),
