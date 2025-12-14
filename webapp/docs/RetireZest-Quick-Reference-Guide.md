@@ -27,10 +27,12 @@
 
 RetireZest provides comprehensive retirement planning through:
 
-- ✅ **Simulates** your retirement year-by-year from now until age 95
+- ✅ **Simulates** your retirement year-by-year from any start year (now or future retirement date) to any planning horizon (age 95 or your chosen age)
 - ✅ **Calculates** taxes, government benefits (CPP, OAS, GIS)
 - ✅ **Tracks** withdrawals from your accounts (RRSP/RRIF, TFSA, Non-Registered)
 - ✅ **Shows** if your money will last through retirement
+
+> **🎯 Flexible Planning:** Start from today or any future retirement year, and plan to any age you choose!
 
 ### 📋 What You'll Need
 
@@ -329,11 +331,19 @@ The simulation automatically loads data from your profile:
 
 **Province:** Should match your profile (already set)
 
-**Start Year:** Current year (already set)
+**Start Year:**
+- Default: Current year
+- 📅 **Customize:** You can start from any year (e.g., your planned retirement year)
+- Example: Start from 2030 if retiring then
 
-**End Age:** Age to simulate until (default: 95)
+**End Age:**
+- Default: Age 95
+- 📅 **Customize:** Plan to any age you choose (85, 90, 95, 100, etc.)
+- This is your planning horizon - how far ahead you want to project
 
 **Withdrawal Strategy:** Choose **"RRIF Front-Load"** (recommended for beginners)
+
+> **💡 Flexible Timeline:** Simulate from today through age 95, OR from your future retirement year to any age you want to plan for!
 
 ### Step 4: Set Spending Targets
 
@@ -421,7 +431,7 @@ After running the simulation, you'll see several sections:
 - Lower is better (but balance with other goals)
 
 **Final Estate:**
-- Money left at end of simulation
+- Money left at end of your planning horizon (e.g., age 95 or your chosen end year)
 - After-tax value for beneficiaries
 
 **Health Score:**
