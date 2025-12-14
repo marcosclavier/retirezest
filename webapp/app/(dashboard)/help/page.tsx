@@ -211,7 +211,7 @@ export default function HelpPage() {
               prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-h3:text-indigo-700
               prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2 prose-h4:text-gray-800
               prose-p:text-gray-700 prose-p:leading-relaxed
-              prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline
+              prose-a:text-indigo-600 prose-a:underline hover:prose-a:text-indigo-800
               prose-strong:text-gray-900 prose-strong:font-semibold
               prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6
               prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6
@@ -225,7 +225,19 @@ export default function HelpPage() {
               prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2 prose-td:text-gray-700
               prose-hr:my-8 prose-hr:border-gray-300
             ">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ node, ...props }) => (
+                    <a
+                      {...props}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 underline hover:text-indigo-800"
+                    />
+                  ),
+                }}
+              >
                 {guideContent}
               </ReactMarkdown>
             </article>
