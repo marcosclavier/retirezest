@@ -25,6 +25,11 @@ export const helpContent = {
     short: 'Converted from RRSP at age 71. Requires minimum annual withdrawals that are taxed as income.',
     long: 'A Registered Retirement Income Fund (RRIF) is what your RRSP becomes at age 71. You must withdraw a minimum percentage each year (starts at 5.28% at age 71, increases with age). All withdrawals are taxed as regular income.',
   },
+  corporate: {
+    title: 'Corporate Account',
+    short: 'Investment account held within a corporation. For business owners. Dividends receive special tax treatment.',
+    long: 'A Corporate account holds investments inside your corporation (for business owners). Withdrawals are typically taken as dividends, which benefit from dividend tax credits and can be more tax-efficient than salary. The small business tax rate allows income to be taxed at lower corporate rates before withdrawal. Useful for tax deferral and income splitting strategies.',
+  },
 
   // Government Benefits
   cpp: {

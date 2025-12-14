@@ -2,13 +2,38 @@
 
 import { useState } from 'react';
 import { helpContent } from '@/lib/help/helpContent';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function HelpPage() {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
+  const [guideContent, setGuideContent] = useState<string>('');
+  const [loadingGuide, setLoadingGuide] = useState(false);
 
   const toggleSection = (key: string) => {
     setOpenSection(openSection === key ? null : key);
+  };
+
+  const loadGuide = async () => {
+    if (guideContent) {
+      setShowGuide(!showGuide);
+      return;
+    }
+
+    setLoadingGuide(true);
+    try {
+      const response = await fetch('/api/guide');
+      const data = await response.json();
+      setGuideContent(data.content);
+      setShowGuide(true);
+    } catch (error) {
+      console.error('Error loading guide:', error);
+      alert('Failed to load guide. Please try again.');
+    } finally {
+      setLoadingGuide(false);
+    }
   };
 
   // Filter help content based on search
@@ -24,7 +49,7 @@ export default function HelpPage() {
 
   // Group content by category
   const categories = {
-    'Account Types': ['rrsp', 'tfsa', 'nonRegistered', 'rrif'],
+    'Account Types': ['rrsp', 'tfsa', 'nonRegistered', 'rrif', 'corporate'],
     'Government Benefits': ['cpp', 'oas', 'gis'],
     'Financial Planning': [
       'currentAge',
@@ -80,6 +105,141 @@ export default function HelpPage() {
           />
         </div>
       </div>
+
+      {/* Quick Reference Guide */}
+      {!searchQuery && (
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg
+                  className="h-6 w-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Complete Retirement Planning Guide
+                </h2>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                  NEW
+                </span>
+              </div>
+              <p className="text-gray-700 mb-4">
+                Comprehensive 100+ page guide covering everything from TFSA contribution limits to CPP/OAS estimates,
+                withdrawal strategies, and step-by-step retirement planning - all updated with 2026 data.
+              </p>
+              <div className="flex flex-wrap gap-2 text-sm text-gray-600 mb-4">
+                <span className="inline-flex items-center">
+                  ✓ 2026 TFSA, CPP & OAS amounts
+                </span>
+                <span className="inline-flex items-center">
+                  ✓ Where to find your data (CRA, Service Canada)
+                </span>
+                <span className="inline-flex items-center">
+                  ✓ Step-by-step simulation guide
+                </span>
+                <span className="inline-flex items-center">
+                  ✓ Quick reference tables
+                </span>
+              </div>
+              <button
+                onClick={loadGuide}
+                disabled={loadingGuide}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingGuide ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading Guide...
+                  </>
+                ) : showGuide ? (
+                  <>
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                    Hide Guide
+                  </>
+                ) : (
+                  <>
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                    View Complete Guide
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guide Content */}
+      {showGuide && guideContent && (
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden border-2 border-indigo-200">
+          <div className="bg-indigo-600 px-6 py-4 flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-white">RetireZest Quick Reference Guide</h2>
+            <button
+              onClick={() => setShowGuide(false)}
+              className="text-white hover:text-indigo-100 focus:outline-none"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="px-6 py-8 max-h-[800px] overflow-y-auto">
+            <article className="prose prose-slate max-w-none
+              prose-headings:font-bold
+              prose-h1:text-4xl prose-h1:mb-6 prose-h1:text-indigo-900
+              prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-indigo-800 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2
+              prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-h3:text-indigo-700
+              prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2 prose-h4:text-gray-800
+              prose-p:text-gray-700 prose-p:leading-relaxed
+              prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline
+              prose-strong:text-gray-900 prose-strong:font-semibold
+              prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6
+              prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6
+              prose-li:text-gray-700 prose-li:my-1
+              prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+              prose-code:text-sm prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600
+              prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg
+              prose-table:w-full prose-table:border-collapse
+              prose-thead:bg-gray-50
+              prose-th:border prose-th:border-gray-300 prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-gray-900
+              prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2 prose-td:text-gray-700
+              prose-hr:my-8 prose-hr:border-gray-300
+            ">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {guideContent}
+              </ReactMarkdown>
+            </article>
+            <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                ↑ Back to Top
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Links */}
       {!searchQuery && (
