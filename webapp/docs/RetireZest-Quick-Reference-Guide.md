@@ -21,135 +21,151 @@
 
 ## Welcome to RetireZest
 
-RetireZest helps you plan your retirement by simulating how your savings, investments, and government benefits will support you throughout retirement.
+> **RetireZest helps you plan your retirement by simulating how your savings, investments, and government benefits will support you throughout retirement.**
 
-### What RetireZest Does
+### 🎯 What RetireZest Does
 
-- **Simulates** your retirement year-by-year from now until age 95
-- **Calculates** taxes, government benefits (CPP, OAS, GIS)
-- **Tracks** withdrawals from your accounts (RRSP/RRIF, TFSA, Non-Registered)
-- **Shows** if your money will last through retirement
+RetireZest provides comprehensive retirement planning through:
 
-### What You'll Need
+- ✅ **Simulates** your retirement year-by-year from now until age 95
+- ✅ **Calculates** taxes, government benefits (CPP, OAS, GIS)
+- ✅ **Tracks** withdrawals from your accounts (RRSP/RRIF, TFSA, Non-Registered)
+- ✅ **Shows** if your money will last through retirement
+
+### 📋 What You'll Need
 
 Before starting, gather information about:
-- Your current age and retirement date
-- Account balances (RRSP, TFSA, Non-Registered savings)
-- Expected government benefits (CPP, OAS)
-- Annual spending needs in retirement
+
+- 📅 Your current age and retirement date
+- 💰 Account balances (RRSP, TFSA, Non-Registered savings)
+- 🏛️ Expected government benefits (CPP, OAS)
+- 💵 Annual spending needs in retirement
+
+> **💡 Tip:** Don't have exact numbers? Start with estimates - you can refine them later!
 
 ---
 
 ## Getting Started
 
-### 1. Create Your Profile
+### 1️⃣ Create Your Profile
 
-Navigate to: **Profile** → **Personal Information**
+**Navigate to:** `Profile` → `Personal Information`
 
-- Enter your name, date of birth, and province
-- Add partner information if married/common-law
-- Set your marital status
+Complete the following:
+- 👤 Enter your name, date of birth, and province
+- 💑 Add partner information if married/common-law
+- 💍 Set your marital status
 
-**Why this matters:** Your age determines when you can access government benefits. Your province affects tax calculations.
+> **⚠️ Why this matters:** Your age determines when you can access government benefits. Your province affects tax calculations.
 
-### 2. Add Your Assets
+### 2️⃣ Add Your Assets
 
-Navigate to: **Profile** → **Assets**
+**Navigate to:** `Profile` → `Assets`
 
 For each account you have, add:
 
-**RRSP/RRIF:**
-- Current balance
-- Owner (you or partner)
-- This grows tax-deferred; you pay tax when you withdraw
+#### 📊 **RRSP/RRIF:**
+- 💵 Current balance
+- 👤 Owner (you or partner)
+- 💰 *Tax-deferred growth; pay tax when you withdraw*
 
-**TFSA:**
-- Current balance
-- Available contribution room
-- Owner (you or partner)
-- Grows tax-free; no tax when you withdraw
+#### 🎯 **TFSA:**
+- 💵 Current balance
+- 📈 Available contribution room
+- 👤 Owner (you or partner)
+- ✨ *Tax-free growth; no tax on withdrawals*
 
-**Non-Registered:**
-- Current balance
-- Original cost (for capital gains calculation)
-- Owner (you, partner, or joint)
-- You pay tax on growth/dividends each year
+#### 📈 **Non-Registered:**
+- 💵 Current balance
+- 📝 Original cost (for capital gains calculation)
+- 👥 Owner (you, partner, or joint)
+- 💸 *Pay tax on growth/dividends annually*
 
-**Tip:** If you don't know exact amounts, use estimates. You can refine later.
+> **💡 Tip:** If you don't know exact amounts, use estimates. You can refine later.
 
-### 3. Set Up Government Benefits
+### 3️⃣ Set Up Government Benefits
 
-Navigate to: **Benefits**
+**Navigate to:** `Benefits`
 
-**CPP (Canada Pension Plan):**
-- Maximum at age 65: ~$17,640/year (2026)
-- Check your estimate at: canada.ca/cpp
-- Can start as early as 60 or delay to 70
+#### 🏛️ **CPP (Canada Pension Plan)**
+- 💰 **Maximum at age 65:** ~**$17,640/year** (2026)
+- 🔍 Check your estimate at: [canada.ca/cpp](https://www.canada.ca/cpp)
+- 📅 Can start as early as **age 60** or delay to **age 70**
 
-**OAS (Old Age Security):**
-- Maximum at age 65-74: ~$8,904/year (2026)
-- Maximum at age 75+: ~$9,804/year (2026)
-- Available from age 65 onward
-- Can delay to age 70 for 36% higher payments
+> **📊 CPP Strategy:** Start at 60 (64% of max), 65 (100%), or 70 (142%)
 
-**Tip:** If unsure, use the default amounts. The simulation uses realistic estimates.
+#### 🍁 **OAS (Old Age Security)**
+- 💰 **Maximum at age 65-74:** ~**$8,904/year** (2026)
+- 💰 **Maximum at age 75+:** ~**$9,804/year** (2026)
+- 📅 Available from **age 65** onward
+- ⏰ Can delay to **age 70** for **36% higher** payments
+
+> **⚠️ Important:** OAS is subject to clawback if your income exceeds ~$86,000/year
+
+> **💡 Tip:** If unsure, use the default amounts. The simulation uses realistic estimates.
 
 ---
 
 ## Where to Find Your Information
 
-Before running your simulation, you'll want accurate data about your accounts and benefits. Here's where to find everything:
+> **📍 Before running your simulation, you'll want accurate data about your accounts and benefits. Here's where to find everything:**
 
-### Finding Your TFSA Contribution Room
+---
 
-**What is TFSA?**
-A **Tax-Free Savings Account (TFSA)** is a registered account where your investments grow tax-free. You never pay tax on withdrawals. The government sets an annual contribution limit ($7,000 in 2026), and unused room carries forward.
+### 🎯 Finding Your TFSA Contribution Room
 
-**CRA My Account (Official Source):**
-1. Visit: **canada.ca/my-cra-account**
-2. Sign in with your CRA credentials (or create an account)
-3. Navigate to **"RRSP and TFSA"** section
-4. Look for **"TFSA contribution room"**
-5. This shows your total available room as of January 1 this year
+#### What is TFSA?
 
-**What You'll See:**
-- Total TFSA contribution room available
-- This includes unused room from previous years
-- Does NOT include contributions made this year yet
+> A **Tax-Free Savings Account (TFSA)** is a registered account where your investments grow tax-free. You never pay tax on withdrawals. The government sets an annual contribution limit (**$7,000** in 2026), and unused room carries forward.
 
-**In RetireZest:**
-- Enter this amount in **Assets → TFSA → Contribution Room**
-- The simulation will track room usage year-by-year
+#### 🔍 **CRA My Account (Official Source):**
 
-**Note:** If you've already maxed out your TFSA, your contribution room will be $0 or very low. The annual TFSA limit for 2026 is $7,000.
+1. 🌐 Visit: [**canada.ca/my-cra-account**](https://www.canada.ca/my-cra-account)
+2. 🔑 Sign in with your CRA credentials (or create an account)
+3. 📂 Navigate to **"RRSP and TFSA"** section
+4. 👀 Look for **"TFSA contribution room"**
+5. 📊 This shows your total available room as of January 1 this year
 
-### Finding Your CPP Estimate
+#### 📋 **What You'll See:**
+- ✅ Total TFSA contribution room available
+- ✅ This includes unused room from previous years
+- ⚠️ Does NOT include contributions made this year yet
 
-**What is CPP?**
-The **Canada Pension Plan (CPP)** is a government retirement pension that you earn by working and making contributions throughout your career. The amount you receive is based on how much and how long you contributed. Maximum benefit at age 65 is approximately $17,640/year (2026 projection).
+#### 💻 **In RetireZest:**
+- 📝 Enter this amount in `Assets` → `TFSA` → `Contribution Room`
+- 🔄 The simulation will track room usage year-by-year
 
-**My Service Canada Account (Official Source):**
-1. Visit: **canada.ca/my-service-canada-account**
-2. Sign in with your GCKey or Sign-In Partner
-3. Navigate to **"CPP and OAS"** section
-4. Click **"CPP Statement of Contributions"**
-5. View your **estimated monthly CPP retirement pension**
+> **📌 Note:** If you've already maxed out your TFSA, your contribution room will be $0 or very low. The annual TFSA limit for 2026 is **$7,000**.
 
-**What You'll See:**
-- **Estimated monthly payment at age 65** (this is the most accurate)
-- Payment estimates if you start at 60 or delay to 70
-- Based on your actual work history and contributions
+### 🏛️ Finding Your CPP Estimate
 
-**Converting to Annual:**
-- Multiply monthly amount by 12
-- Example: $1,200/month × 12 = $14,400/year
+#### What is CPP?
 
-**In RetireZest:**
-- Enter the **annual amount** in **Person Details → CPP Annual at Start**
-- Choose your preferred **CPP Start Age** (60-70)
-- Default is age 65
+> The **Canada Pension Plan (CPP)** is a government retirement pension that you earn by working and making contributions throughout your career. The amount you receive is based on how much and how long you contributed. Maximum benefit at age 65 is approximately **$17,640/year** (2026 projection).
 
-**Note:** If you're not yet working or have limited contributions, your estimate will be lower than the maximum (~$17,640/year in 2026).
+#### 🔍 **My Service Canada Account (Official Source):**
+
+1. 🌐 Visit: [**canada.ca/my-service-canada-account**](https://www.canada.ca/my-service-canada-account)
+2. 🔑 Sign in with your GCKey or Sign-In Partner
+3. 📂 Navigate to **"CPP and OAS"** section
+4. 📄 Click **"CPP Statement of Contributions"**
+5. 👀 View your **estimated monthly CPP retirement pension**
+
+#### 📋 **What You'll See:**
+- ✅ **Estimated monthly payment at age 65** (most accurate)
+- 📊 Payment estimates if you start at 60 or delay to 70
+- 📈 Based on your actual work history and contributions
+
+#### 🧮 **Converting to Annual:**
+- 💰 Multiply monthly amount by 12
+- 📝 Example: **$1,200/month × 12 = $14,400/year**
+
+#### 💻 **In RetireZest:**
+- 📝 Enter the **annual amount** in `Person Details` → `CPP Annual at Start`
+- 📅 Choose your preferred **CPP Start Age** (60-70)
+- ⚙️ Default is age 65
+
+> **📌 Note:** If you're not yet working or have limited contributions, your estimate will be lower than the maximum (~**$17,640/year** in 2026).
 
 ### Finding Your OAS Estimate
 
@@ -216,75 +232,81 @@ A **Non-Registered** (or taxable) account is a regular investment account with n
 - Check your business bank/investment accounts
 - Funds held inside your corporation
 
-### Quick Checklist
+### ✅ Quick Checklist
 
-Before running your first simulation, gather:
+> **Before running your first simulation, gather the following:**
 
-- ✅ **TFSA Room:** From CRA My Account (annual limit: $7,000 for 2026)
-- ✅ **CPP Estimate:** From My Service Canada Account (monthly amount × 12, max ~$17,640/year in 2026)
-- ✅ **OAS Eligibility:** Based on years in Canada (max ~$8,904/year for ages 65-74, ~$9,804/year for 75+ in 2026)
-- ✅ **RRSP/RRIF Balance:** From your bank/investment accounts
-- ✅ **TFSA Balance:** From your bank/investment accounts
-- ✅ **Non-Registered Balance:** From investment statements
-- ✅ **Current Age:** Your date of birth (calculate from profile)
+| Item | Source | 2026 Reference |
+|------|--------|----------------|
+| 🎯 **TFSA Room** | CRA My Account | Annual limit: **$7,000** |
+| 🏛️ **CPP Estimate** | My Service Canada Account | Monthly × 12, max **~$17,640/year** |
+| 🍁 **OAS Eligibility** | Based on years in Canada | Max **~$8,904/year** (65-74), **~$9,804/year** (75+) |
+| 📊 **RRSP/RRIF Balance** | Bank/investment accounts | Current balance |
+| 💰 **TFSA Balance** | Bank/investment accounts | Current balance |
+| 📈 **Non-Registered Balance** | Investment statements | Current balance + ACB |
+| 📅 **Current Age** | Your date of birth | For timeline calculation |
 
-**Don't have exact numbers?** That's okay! Use estimates for your first simulation, then refine as you gather more accurate data.
+> **💡 Don't have exact numbers?** That's okay! Use estimates for your first simulation, then refine as you gather more accurate data.
 
 ---
 
 ## Key Concepts Explained
 
-### Account Types
+### 💰 Account Types
 
-| Account Type | Tax Treatment | Best For |
-|-------------|---------------|----------|
-| **RRSP/RRIF** | Tax-deferred. You contribute pre-tax dollars. Pay tax when you withdraw. Converts to RRIF at age 71 with mandatory minimums. | Building large retirement savings |
-| **TFSA** | Tax-free. No tax on growth or withdrawals. | Emergency fund, flexible savings |
-| **Non-Registered** | Taxable. Pay tax on interest, dividends, capital gains annually. | Savings beyond RRSP/TFSA limits |
-| **Corporate** | For business owners. Complex tax treatment with dividend tax credits. | Business owners only |
+| Account Type | Tax Treatment | Best For | Key Feature |
+|-------------|---------------|----------|-------------|
+| 📊 **RRSP/RRIF** | Tax-deferred. Contribute pre-tax dollars. Pay tax on withdrawal. Converts to RRIF at age 71 with mandatory minimums. | Building large retirement savings | 💰 Tax deduction now, pay later |
+| 🎯 **TFSA** | Tax-free. No tax on growth or withdrawals. | Emergency fund, flexible savings | ✨ Tax-free forever! |
+| 📈 **Non-Registered** | Taxable. Pay tax on interest, dividends, capital gains annually. | Savings beyond RRSP/TFSA limits | 📊 50% capital gains inclusion |
+| 🏢 **Corporate** | For business owners. Complex tax treatment with dividend tax credits. | Business owners only | 💼 Business integration |
 
-### Retirement Phases
+### 📅 Retirement Phases
 
-**Go-Go Years (Typically 60-74):**
-- Active retirement
-- Higher spending (travel, hobbies, activities)
-- Default: $120,000/year
+> Understanding the three phases of retirement helps plan realistic spending patterns.
 
-**Slow-Go Years (Typically 75-84):**
-- Less active
-- Moderate spending
-- Default: $90,000/year
+#### 🏃 **Go-Go Years (Typically 60-74):**
+- 🌍 Active retirement, travel, hobbies
+- 💰 Higher spending (travel, hobbies, activities)
+- 📊 Default: **$120,000/year**
 
-**No-Go Years (Typically 85+):**
-- Limited mobility
-- Lower spending (but possible higher care costs)
-- Default: $70,000/year
+#### 🚶 **Slow-Go Years (Typically 75-84):**
+- 🏡 Less active
+- 💵 Moderate spending
+- 📊 Default: **$90,000/year**
 
-**Tip:** Adjust these to match YOUR lifestyle. These are household totals (you + partner combined).
+#### 🛋️ **No-Go Years (Typically 85+):**
+- 🏥 Limited mobility
+- 💳 Lower spending (but possible higher care costs)
+- 📊 Default: **$70,000/year**
 
-### Withdrawal Strategies
+> **💡 Tip:** Adjust these to match YOUR lifestyle. These are household totals (you + partner combined).
 
-| Strategy | Best For | Description |
-|----------|----------|-------------|
-| **Corporate-Optimized** | Business owners | Prioritizes corporate dividends for tax efficiency |
-| **RRIF Front-Load** | Most retirees | Withdraws more RRIF before age 65 to avoid tax spikes later |
-| **Balanced** | General use | Balanced approach across all accounts |
-| **TFSA-First** | Flexibility | Preserves TFSA for last (tax-free emergency fund) |
-| **Minimize Income** | Low income | Minimizes taxable income to preserve GIS benefits |
+### 🎯 Withdrawal Strategies
 
-**Recommended for beginners:** Start with **"RRIF Front-Load"** - it smooths your tax curve.
+| Strategy | Best For | Description | Icon |
+|----------|----------|-------------|------|
+| **Corporate-Optimized** | Business owners | Prioritizes corporate dividends for tax efficiency | 🏢 |
+| **RRIF Front-Load** | Most retirees | Withdraws more RRIF before age 65 to avoid tax spikes later | ⭐ |
+| **Balanced** | General use | Balanced approach across all accounts | ⚖️ |
+| **TFSA-First** | Flexibility | Preserves TFSA for last (tax-free emergency fund) | 🎯 |
+| **Minimize Income** | Low income | Minimizes taxable income to preserve GIS benefits | 💰 |
 
-### Inflation
+> **✨ Recommended for beginners:** Start with **"RRIF Front-Load"** - it smooths your tax curve.
 
-**Spending Inflation:** How much your spending increases each year
-- Default: 2.0%
-- At 2%, $100k today = $122k in 10 years
+### 📈 Inflation
 
-**General Inflation:** How much investments/benefits grow
-- Default: 2.0%
-- CPP and OAS are indexed to inflation
+#### 💸 **Spending Inflation:**
+How much your spending increases each year
+- ⚙️ Default: **2.0%**
+- 📊 At 2%, **$100k today = $122k in 10 years**
 
-**Tip:** Keep these at 2% unless you have specific reasons to change.
+#### 📊 **General Inflation:**
+How much investments/benefits grow
+- ⚙️ Default: **2.0%**
+- 🏛️ CPP and OAS are indexed to inflation
+
+> **💡 Tip:** Keep these at **2%** unless you have specific reasons to change.
 
 ---
 
