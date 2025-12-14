@@ -192,62 +192,142 @@ export default function HelpPage() {
       {/* Guide Content */}
       {showGuide && guideContent && (
         <div className="bg-white shadow-lg rounded-lg overflow-hidden border-2 border-indigo-200">
-          <div className="bg-indigo-600 px-6 py-4 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-white">RetireZest Quick Reference Guide</h2>
-            <button
-              onClick={() => setShowGuide(false)}
-              className="text-white hover:text-indigo-100 focus:outline-none"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-5 flex justify-between items-center sticky top-0 z-10 shadow-md">
+            <div className="flex items-center gap-3">
+              <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-            </button>
-          </div>
-          <div className="px-6 py-8 max-h-[800px] overflow-y-auto">
-            <article className="prose prose-slate max-w-none
-              prose-headings:font-bold
-              prose-h1:text-4xl prose-h1:mb-6 prose-h1:text-indigo-900
-              prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-indigo-800 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2
-              prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-h3:text-indigo-700
-              prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2 prose-h4:text-gray-800
-              prose-p:text-gray-700 prose-p:leading-relaxed
-              prose-a:text-indigo-600 prose-a:underline hover:prose-a:text-indigo-800
-              prose-strong:text-gray-900 prose-strong:font-semibold
-              prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6
-              prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6
-              prose-li:text-gray-700 prose-li:my-1
-              prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
-              prose-code:text-sm prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-indigo-600
-              prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg
-              prose-table:w-full prose-table:border-collapse
-              prose-thead:bg-gray-50
-              prose-th:border prose-th:border-gray-300 prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-gray-900
-              prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2 prose-td:text-gray-700
-              prose-hr:my-8 prose-hr:border-gray-300
-            ">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  a: ({ node, ...props }) => (
-                    <a
-                      {...props}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-600 underline hover:text-indigo-800"
-                    />
-                  ),
-                }}
-              >
-                {guideContent}
-              </ReactMarkdown>
-            </article>
-            <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+              <div>
+                <h2 className="text-xl font-bold text-white">RetireZest Quick Reference Guide</h2>
+                <p className="text-xs text-indigo-100">Complete retirement planning resource • Updated for 2026</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={() => window.print()}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 rounded-md transition-colors"
+                title="Print Guide"
               >
-                ↑ Back to Top
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
               </button>
+              <button
+                onClick={() => setShowGuide(false)}
+                className="text-white hover:bg-indigo-500 rounded-md p-2 transition-colors focus:outline-none"
+                title="Close Guide"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="relative">
+            {/* Scrollable Content */}
+            <div className="px-8 py-10 max-h-[85vh] overflow-y-auto bg-gradient-to-b from-white to-gray-50">
+              {/* Quick Stats Banner */}
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-900">$7,000</div>
+                  <div className="text-xs text-blue-700 mt-1">2026 TFSA Limit</div>
+                </div>
+                <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-green-900">$17,640</div>
+                  <div className="text-xs text-green-700 mt-1">Max CPP at 65</div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-900">$8,904</div>
+                  <div className="text-xs text-purple-700 mt-1">OAS 65-74</div>
+                </div>
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-amber-900">100+</div>
+                  <div className="text-xs text-amber-700 mt-1">Pages of Content</div>
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <article className="prose prose-slate max-w-none
+                prose-headings:font-bold prose-headings:tracking-tight
+                prose-h1:text-5xl prose-h1:mb-8 prose-h1:mt-0 prose-h1:text-indigo-900 prose-h1:border-b-4 prose-h1:border-indigo-200 prose-h1:pb-4
+                prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-indigo-800 prose-h2:border-b-2 prose-h2:border-gray-300 prose-h2:pb-3 prose-h2:scroll-mt-24
+                prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-indigo-700 prose-h3:scroll-mt-24
+                prose-h4:text-xl prose-h4:mt-6 prose-h4:mb-3 prose-h4:text-gray-800 prose-h4:font-semibold
+                prose-h5:text-lg prose-h5:mt-4 prose-h5:mb-2 prose-h5:text-gray-700
+                prose-p:text-base prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
+                prose-a:text-indigo-600 prose-a:font-medium prose-a:underline prose-a:decoration-2 prose-a:underline-offset-2 hover:prose-a:text-indigo-800 hover:prose-a:decoration-indigo-800
+                prose-strong:text-gray-900 prose-strong:font-bold
+                prose-em:text-gray-800 prose-em:italic
+                prose-ul:my-6 prose-ul:list-disc prose-ul:pl-6 prose-ul:space-y-2
+                prose-ol:my-6 prose-ol:list-decimal prose-ol:pl-6 prose-ol:space-y-2
+                prose-li:text-gray-700 prose-li:leading-relaxed
+                prose-blockquote:border-l-4 prose-blockquote:border-indigo-400 prose-blockquote:bg-indigo-50 prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-3 prose-blockquote:my-6 prose-blockquote:italic prose-blockquote:text-gray-700 prose-blockquote:rounded-r
+                prose-code:text-sm prose-code:bg-indigo-50 prose-code:text-indigo-700 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:font-mono prose-code:font-semibold prose-code:border prose-code:border-indigo-200
+                prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-6 prose-pre:rounded-xl prose-pre:shadow-lg prose-pre:overflow-x-auto prose-pre:my-6
+                prose-table:w-full prose-table:border-collapse prose-table:my-8 prose-table:shadow-sm prose-table:rounded-lg prose-table:overflow-hidden
+                prose-thead:bg-indigo-600
+                prose-th:border prose-th:border-indigo-500 prose-th:px-6 prose-th:py-4 prose-th:text-left prose-th:font-bold prose-th:text-white prose-th:text-sm prose-th:uppercase prose-th:tracking-wider
+                prose-tbody:bg-white
+                prose-tr:border-b prose-tr:border-gray-200 even:prose-tr:bg-gray-50
+                prose-td:border prose-td:border-gray-200 prose-td:px-6 prose-td:py-4 prose-td:text-gray-700 prose-td:text-sm
+                prose-hr:my-12 prose-hr:border-t-2 prose-hr:border-gray-300
+                prose-img:rounded-lg prose-img:shadow-md prose-img:my-8
+              ">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ node, ...props }) => (
+                      <a
+                        {...props}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 font-medium underline decoration-2 underline-offset-2 hover:text-indigo-800 hover:decoration-indigo-800 transition-colors"
+                      />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2 {...props} id={props.children?.toString().toLowerCase().replace(/\s+/g, '-')} />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3 {...props} id={props.children?.toString().toLowerCase().replace(/\s+/g, '-')} />
+                    ),
+                  }}
+                >
+                  {guideContent}
+                </ReactMarkdown>
+              </article>
+
+              {/* Footer Actions */}
+              <div className="mt-12 pt-8 border-t-2 border-gray-300">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6">
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm font-semibold text-gray-900">Found this guide helpful?</p>
+                    <p className="text-xs text-gray-600 mt-1">Share it with others planning their retirement</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      className="inline-flex items-center px-5 py-2.5 border-2 border-indigo-600 rounded-lg text-sm font-semibold text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm"
+                    >
+                      <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                      Back to Top
+                    </button>
+                    <button
+                      onClick={() => window.print()}
+                      className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm"
+                    >
+                      <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      Print Guide
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
