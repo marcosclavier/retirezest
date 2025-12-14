@@ -44,6 +44,21 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Fetch CPP and OAS income sources
+    const incomeSources = await prisma.income.findMany({
+      where: {
+        userId: session.userId,
+        type: { in: ['cpp', 'oas'] },
+      },
+      select: {
+        type: true,
+        amount: true,
+        startAge: true,
+        owner: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
     // Calculate age from date of birth
     let age = 65; // default
     if (user?.dateOfBirth) {
@@ -67,6 +82,36 @@ export async function GET(request: NextRequest) {
         partnerAge--;
       }
     }
+
+    // Extract CPP and OAS data by owner
+    const govBenefits = incomeSources.reduce((acc, income) => {
+      const owner = income.owner || 'person1';
+      const type = income.type.toLowerCase();
+
+      if (!acc[owner]) {
+        acc[owner] = {
+          cpp_start_age: null,
+          cpp_annual_at_start: null,
+          oas_start_age: null,
+          oas_annual_at_start: null,
+        };
+      }
+
+      if (type === 'cpp') {
+        acc[owner].cpp_start_age = income.startAge;
+        acc[owner].cpp_annual_at_start = income.amount;
+      } else if (type === 'oas') {
+        acc[owner].oas_start_age = income.startAge;
+        acc[owner].oas_annual_at_start = income.amount;
+      }
+
+      return acc;
+    }, {} as Record<string, {
+      cpp_start_age: number | null;
+      cpp_annual_at_start: number | null;
+      oas_start_age: number | null;
+      oas_annual_at_start: number | null;
+    }>);
 
     // Aggregate assets by type and owner
     const assetsByOwner = assets.reduce((acc, asset) => {
@@ -146,15 +191,20 @@ export async function GET(request: NextRequest) {
       tfsa_room: 0,
     };
 
+    // Get government benefits for person1 (use database values if available, otherwise defaults)
+    const person1Benefits = govBenefits.person1 || {};
+
     // Build person 1 input with profile and asset data
     const person1Input: PersonInput = {
       ...defaultPersonInput,
       name: user?.firstName || 'Me',
       start_age: age,
 
-      // Government benefits (keep defaults for now, could be enhanced)
-      cpp_start_age: Math.max(age, 65),
-      oas_start_age: Math.max(age, 65),
+      // Government benefits from database (or sensible defaults)
+      cpp_start_age: person1Benefits.cpp_start_age ?? Math.max(age, 65),
+      cpp_annual_at_start: person1Benefits.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
+      oas_start_age: person1Benefits.oas_start_age ?? Math.max(age, 65),
+      oas_annual_at_start: person1Benefits.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
       // Account balances from assets (person 1's share)
       tfsa_balance: person1Totals.tfsa_balance,
@@ -186,14 +236,19 @@ export async function GET(request: NextRequest) {
     let person2Input: PersonInput | null = null;
 
     if (shouldIncludePartner) {
+      // Get government benefits for person2 (use database values if available, otherwise defaults)
+      const person2Benefits = govBenefits.person2 || {};
+
       person2Input = {
         ...defaultPersonInput,
         name: user?.partnerFirstName || 'Partner',
         start_age: partnerAge,
 
-        // Government benefits
-        cpp_start_age: Math.max(partnerAge, 65),
-        oas_start_age: Math.max(partnerAge, 65),
+        // Government benefits from database (or sensible defaults)
+        cpp_start_age: person2Benefits.cpp_start_age ?? Math.max(partnerAge, 65),
+        cpp_annual_at_start: person2Benefits.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
+        oas_start_age: person2Benefits.oas_start_age ?? Math.max(partnerAge, 65),
+        oas_annual_at_start: person2Benefits.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
         // Account balances from assets (person 2's share)
         tfsa_balance: person2Totals.tfsa_balance,

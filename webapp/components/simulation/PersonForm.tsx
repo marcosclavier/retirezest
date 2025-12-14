@@ -524,10 +524,10 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           </div>
         </Collapsible>
 
-        {/* TFSA Room */}
+        {/* TFSA Strategy */}
         <Collapsible
-          title="TFSA Contribution Room"
-          description="Available TFSA contribution room and annual growth"
+          title="TFSA Strategy"
+          description="TFSA contribution room and annual contribution plan"
           defaultOpen={false}
         >
           <div className="space-y-4">
@@ -544,19 +544,19 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             </div>
             <div className="space-y-2">
               <LabelWithTooltip
-                htmlFor={`${personNumber}-tfsa-room-growth`}
-                tooltip="The annual TFSA contribution limit increase (e.g., $7,000 for 2024). This represents how much new contribution room is added each year."
+                htmlFor={`${personNumber}-tfsa-contribution`}
+                tooltip="Amount to contribute to TFSA each year during retirement. This transfers money from non-registered accounts to TFSA and must not exceed available contribution room."
               >
-                Annual Limit Growth ($)
+                Annual TFSA Contribution ($)
               </LabelWithTooltip>
               <Input
-                id={`${personNumber}-tfsa-room-growth`}
+                id={`${personNumber}-tfsa-contribution`}
                 type="number"
-                value={person.tfsa_room_annual_growth}
-                onChange={(e) => onChange('tfsa_room_annual_growth', parseFloat(e.target.value) || 0)}
+                value={person.tfsa_contribution_annual}
+                onChange={(e) => onChange('tfsa_contribution_annual', parseFloat(e.target.value) || 0)}
               />
               <p className="text-xs text-gray-600">
-                Typical value: $7,000 (2024 limit)
+                How much you'll contribute to TFSA each year (0 = no contributions)
               </p>
             </div>
           </div>

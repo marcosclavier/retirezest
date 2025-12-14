@@ -201,6 +201,29 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
         </CardContent>
       </Card>
 
+      {/* TFSA Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>TFSA Settings</CardTitle>
+          <CardDescription>Household-wide TFSA configuration</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="tfsa-room-growth">Annual TFSA Limit Growth ($)</Label>
+            <Input
+              id="tfsa-room-growth"
+              type="number"
+              value={household.tfsa_room_annual_growth}
+              onChange={(e) => onChange('tfsa_room_annual_growth', parseFloat(e.target.value) || 0)}
+            />
+            <p className="text-xs text-gray-600">
+              The annual TFSA contribution limit increase set by the government (e.g., $7,000 for 2024).
+              This is the same for everyone in Canada.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Advanced Options */}
       <Card>
         <CardHeader>
@@ -208,31 +231,17 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
           <CardDescription>Fine-tune simulation parameters</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="gap-tolerance">Spending Gap Tolerance ($)</Label>
-              <Input
-                id="gap-tolerance"
-                type="number"
-                value={household.gap_tolerance}
-                onChange={(e) => onChange('gap_tolerance', parseFloat(e.target.value) || 0)}
-              />
-              <p className="text-xs text-gray-600">
-                Acceptable shortfall in meeting spending goals
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tfsa-contribution">Annual TFSA Contribution (per person) ($)</Label>
-              <Input
-                id="tfsa-contribution"
-                type="number"
-                value={household.tfsa_contribution_each}
-                onChange={(e) => onChange('tfsa_contribution_each', parseFloat(e.target.value) || 0)}
-              />
-              <p className="text-xs text-gray-600">
-                Amount to contribute to TFSA each year during retirement (must not exceed available contribution room)
-              </p>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="gap-tolerance">Spending Gap Tolerance ($)</Label>
+            <Input
+              id="gap-tolerance"
+              type="number"
+              value={household.gap_tolerance}
+              onChange={(e) => onChange('gap_tolerance', parseFloat(e.target.value) || 0)}
+            />
+            <p className="text-xs text-gray-600">
+              Acceptable shortfall in meeting spending goals
+            </p>
           </div>
 
           <div className="space-y-4">

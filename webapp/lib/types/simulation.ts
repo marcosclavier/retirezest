@@ -61,9 +61,9 @@ export interface PersonInput {
 
   corp_dividend_type: 'eligible' | 'non-eligible';
 
-  // TFSA room
+  // TFSA settings (per person)
   tfsa_room_start: number;
-  tfsa_room_annual_growth: number;
+  tfsa_contribution_annual: number;
 }
 
 export type Province = 'AB' | 'BC' | 'ON' | 'QC';
@@ -99,9 +99,11 @@ export interface HouseholdInput {
   spending_inflation: number;
   general_inflation: number;
 
+  // TFSA settings (household-wide)
+  tfsa_room_annual_growth: number;
+
   // Advanced options
   gap_tolerance: number;
-  tfsa_contribution_each: number;
   reinvest_nonreg_dist: boolean;
   income_split_rrif_fraction: number;
   hybrid_rrif_topup_per_person: number;
@@ -121,6 +123,10 @@ export interface YearResult {
 
   // NonReg passive distributions (dividends, interest, capital gains)
   nonreg_distributions?: number;
+
+  // TFSA contributions (NonReg -> TFSA transfers)
+  tfsa_contribution_p1?: number;
+  tfsa_contribution_p2?: number;
 
   // Withdrawals by source
   tfsa_withdrawal_p1: number;
@@ -418,7 +424,7 @@ export const defaultPersonInput: PersonInput = {
   corp_dividend_type: 'eligible',
 
   tfsa_room_start: 7000,
-  tfsa_room_annual_growth: 7000,
+  tfsa_contribution_annual: 0,
 };
 
 // Default household input
@@ -441,8 +447,9 @@ export const defaultHouseholdInput: HouseholdInput = {
   spending_inflation: 2.0,
   general_inflation: 2.0,
 
+  tfsa_room_annual_growth: 7000,
+
   gap_tolerance: 1000,
-  tfsa_contribution_each: 0,
   reinvest_nonreg_dist: false,
   income_split_rrif_fraction: 0.0,
   hybrid_rrif_topup_per_person: 0,

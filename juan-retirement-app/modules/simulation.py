@@ -1736,10 +1736,16 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     rrsp_to_rrif1 = (age1 >= 71)
     rrsp_to_rrif2 = (age2 >= 71)
 
+    # Track if this is the first year (to avoid double-adding room growth)
+    is_first_year = True
+
     while age1 <= hh.end_age or age2 <= hh.end_age:
         # At start of year: Add annual room growth + last year's withdrawals
-        tfsa_room1 += p1.tfsa_room_annual_growth + tfsa_withdraw_last_year1
-        tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
+        # EXCEPT in first year, where tfsa_room_start already includes initial room
+        if not is_first_year:
+            tfsa_room1 += p1.tfsa_room_annual_growth + tfsa_withdraw_last_year1
+            tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
+        is_first_year = False
         max_age = max(age1, age2)
 
         base_spend = (
@@ -1812,8 +1818,23 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         target_p1_adjusted = target_each
         target_p2_adjusted = target_each
 
+        # ===== ADD TFSA CONTRIBUTIONS TO WITHDRAWAL TARGETS =====
+        # CRITICAL: TFSA contributions must be IN ADDITION to spending targets
+        # We need to withdraw: spending target + TFSA contribution amount
+        # Estimate contributions based on current TFSA room and NonReg balance
+        if hh.tfsa_contribution_each > 0:
+            # Maximize TFSA contributions up to available room
+            estimated_tfsa_contrib_p1 = min(max(p1.nonreg_balance, 0.0), tfsa_room1)
+            estimated_tfsa_contrib_p2 = min(max(p2.nonreg_balance, 0.0), tfsa_room2)
+        else:
+            estimated_tfsa_contrib_p1 = 0.0
+            estimated_tfsa_contrib_p2 = 0.0
+
+        target_p1_adjusted += estimated_tfsa_contrib_p1
+        target_p2_adjusted += estimated_tfsa_contrib_p2
+
         # Track original targets for buffer update calculation later
-        original_target_total = spend  # Total household spending target
+        original_target_total = spend  # Total household spending target (NOT including TFSA contributions)
 
         # Then call simulate_year with fed_y/prov_y (not the base fed/prov):
         w1, t1, info1 = simulate_year(
@@ -2149,8 +2170,17 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # We need to recalculate as: (start - withdrawal) * (1 + growth) + contributions + surplus
 
         # First, calculate contributions needed
-        c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance,0.0), tfsa_room1)
-        c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance,0.0), tfsa_room2)
+        # MAXIMIZE TFSA: Use ALL available contribution room (not just the configured amount)
+        # TFSA is the best account (tax-free), so we should fill it completely
+        # Only limited by: (1) available NonReg balance and (2) available TFSA room
+        if hh.tfsa_contribution_each > 0:
+            # If contributions enabled, maximize room usage (up to available room and NonReg balance)
+            c1 = min(max(p1.nonreg_balance, 0.0), tfsa_room1)
+            c2 = min(max(p2.nonreg_balance, 0.0), tfsa_room2)
+        else:
+            # If contributions disabled (set to $0), don't contribute
+            c1 = 0.0
+            c2 = 0.0
 
         # REINVEST SURPLUS: Surplus is added AFTER growth but BEFORE year-end balance
         # Get surplus from both people's simulate_year() calls (use household total)

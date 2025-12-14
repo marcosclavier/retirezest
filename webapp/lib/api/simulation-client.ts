@@ -11,6 +11,29 @@ import type {
 } from '@/lib/types/simulation';
 
 /**
+ * Convert new frontend structure to backend-compatible structure
+ * Temporarily needed until backend is updated to new structure
+ */
+function convertToBackendFormat(input: HouseholdInput): any {
+  const p1AnnualContribution = input.p1.tfsa_contribution_annual || 0;
+  const p2AnnualContribution = input.p2.tfsa_contribution_annual || 0;
+  const avgContribution = (p1AnnualContribution + p2AnnualContribution) / 2;
+
+  return {
+    ...input,
+    p1: {
+      ...input.p1,
+      tfsa_room_annual_growth: input.tfsa_room_annual_growth,
+    },
+    p2: {
+      ...input.p2,
+      tfsa_room_annual_growth: input.tfsa_room_annual_growth,
+    },
+    tfsa_contribution_each: avgContribution,
+  };
+}
+
+/**
  * Run full retirement simulation
  * Calls Next.js API route which proxies to Python backend
  */
@@ -27,10 +50,13 @@ export async function runSimulation(
       headers['x-csrf-token'] = csrfToken;
     }
 
+    // Convert to backend-compatible format
+    const backendInput = convertToBackendFormat(householdInput);
+
     const response = await fetch('/api/simulation/run', {
       method: 'POST',
       headers,
-      body: JSON.stringify(householdInput),
+      body: JSON.stringify(backendInput),
     });
 
     const data: SimulationResponse = await response.json();
@@ -79,10 +105,13 @@ export async function analyzeComposition(
       headers['x-csrf-token'] = csrfToken;
     }
 
+    // Convert to backend-compatible format
+    const backendInput = convertToBackendFormat(householdInput);
+
     const response = await fetch('/api/simulation/analyze', {
       method: 'POST',
       headers,
-      body: JSON.stringify(householdInput),
+      body: JSON.stringify(backendInput),
     });
 
     if (!response.ok) {

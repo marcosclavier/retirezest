@@ -204,15 +204,17 @@ export default function ScenariosPage() {
           description: 'Keep assets in taxable accounts',
           modifier: (input: HouseholdInput) => ({
             ...input,
-            tfsa_contribution_each: 0,
+            p1: { ...input.p1, tfsa_contribution_annual: 0 },
+            p2: { ...input.p2, tfsa_contribution_annual: 0 },
           }),
         },
         {
           name: 'Maximize TFSA',
-          description: 'Transfer up to $7K/year to TFSA',
+          description: 'Transfer up to $7K/year to TFSA for each person',
           modifier: (input: HouseholdInput) => ({
             ...input,
-            tfsa_contribution_each: 7000,
+            p1: { ...input.p1, tfsa_contribution_annual: 7000 },
+            p2: { ...input.p2, tfsa_contribution_annual: 7000 },
           }),
         },
       ],
@@ -671,11 +673,21 @@ export default function ScenariosPage() {
                     })}
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">TFSA Contribution</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">TFSA Contribution (P1)</td>
                     {selectedScenarioData.map(scenario => (
                       <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
-                        {scenario.inputs.tfsa_contribution_each > 0
-                          ? `${formatCurrency(scenario.inputs.tfsa_contribution_each)}/year`
+                        {scenario.inputs.p1.tfsa_contribution_annual > 0
+                          ? `${formatCurrency(scenario.inputs.p1.tfsa_contribution_annual)}/year`
+                          : 'None'}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">TFSA Contribution (P2)</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {scenario.inputs.p2.tfsa_contribution_annual > 0
+                          ? `${formatCurrency(scenario.inputs.p2.tfsa_contribution_annual)}/year`
                           : 'None'}
                       </td>
                     ))}

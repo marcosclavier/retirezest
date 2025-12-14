@@ -37,6 +37,10 @@ class YearResult(BaseModel):
     # Non-registered distributions (passive income)
     nonreg_distributions: float = Field(default=0.0, description="Total household non-reg distributions")
 
+    # TFSA contributions (NonReg -> TFSA transfers)
+    tfsa_contribution_p1: float = Field(default=0.0, description="TFSA contribution for person 1")
+    tfsa_contribution_p2: float = Field(default=0.0, description="TFSA contribution for person 2")
+
     # Balances
     tfsa_balance_p1: float
     tfsa_balance_p2: float

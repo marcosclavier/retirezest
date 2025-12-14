@@ -213,8 +213,13 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
             # Only count distributions as spending cash when NOT reinvesting
             distributions_as_cash = 0 if reinvest_nonreg else nonreg_distributions
 
+            # CRITICAL: TFSA contributions are SEPARATE from spending
+            # They are funded by withdrawals but should NOT count toward "spending met"
+            # spending_met should only reflect actual household spending, not savings
+            tfsa_contributions = float(row.get('contrib_tfsa_p1', 0)) + float(row.get('contrib_tfsa_p2', 0))
+
             spending_need = float(row.get('spend_target_after_tax', row.get('spending_need', 0)))
-            spending_met = government_benefits + withdrawals + distributions_as_cash - taxes
+            spending_met = government_benefits + withdrawals + distributions_as_cash - taxes - tfsa_contributions
             spending_gap = max(0, spending_need - spending_met)  # Gap can't be negative
 
             results.append(YearResult(
@@ -234,6 +239,10 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
 
                 # NonReg passive distributions
                 nonreg_distributions=nonreg_distributions,
+
+                # TFSA contributions (NonReg -> TFSA transfers)
+                tfsa_contribution_p1=float(row.get('contrib_tfsa_p1', 0)),
+                tfsa_contribution_p2=float(row.get('contrib_tfsa_p2', 0)),
 
                 # Withdrawals (handle various column naming conventions)
                 tfsa_withdrawal_p1=float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))),
