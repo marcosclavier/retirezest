@@ -108,15 +108,18 @@ export default function SimulationPage() {
           }
         }
 
-        // Only load prefill data if there's no saved data
+        // Always check prefill data to detect profile changes (like deleted assets)
         const hasSavedData = localStorage.getItem('simulation_household');
         console.log('🔍 localStorage simulation_household:', hasSavedData ? 'EXISTS' : 'EMPTY');
-        if (!hasSavedData) {
+
+        if (hasSavedData) {
+          console.log('🔍 Loading prefill to check for profile updates...');
+          // Load prefill data, which will intelligently merge with localStorage
+          // This ensures asset balances are always current from the database
+          await loadPrefillDataWithMerge(token, JSON.parse(hasSavedData));
+        } else {
           console.log('🔍 Loading prefill data because localStorage is empty...');
           await loadPrefillData(token);
-        } else {
-          console.log('🔍 Skipping prefill because localStorage has saved data');
-          setPrefillLoading(false);
         }
 
         // Mark that we've attempted prefill (whether we loaded it or skipped it)
@@ -129,6 +132,123 @@ export default function SimulationPage() {
 
     initializeData();
   }, []);
+
+  const loadPrefillDataWithMerge = async (
+    token: string | null = csrfToken,
+    savedHousehold: HouseholdInput
+  ) => {
+    try {
+      setPrefillLoading(true);
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['x-csrf-token'] = token;
+      }
+
+      const response = await fetch('/api/simulation/prefill', { headers });
+
+      console.log('🔍 PREFILL API Response Status (with merge):', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔄 Merging fresh profile data with saved custom settings...');
+
+        // Asset balance fields that should ALWAYS come from the database
+        const assetFields = [
+          'tfsa_balance',
+          'rrsp_balance',
+          'rrif_balance',
+          'nonreg_balance',
+          'corporate_balance',
+          'tfsa_room_start',
+          'nr_cash',
+          'nr_gic',
+          'nr_invest',
+          'nonreg_acb',
+          'corp_cash_bucket',
+          'corp_gic_bucket',
+          'corp_invest_bucket',
+        ];
+
+        // Custom fields that should be preserved from localStorage if user modified them
+        const customFields = [
+          'cpp_start_age',
+          'cpp_annual_at_start',
+          'oas_start_age',
+          'oas_annual_at_start',
+          'y_nr_cash_interest',
+          'y_nr_gic_interest',
+          'y_nr_inv_total_return',
+          'y_nr_inv_elig_div',
+          'y_nr_inv_nonelig_div',
+          'y_nr_inv_capg',
+          'y_nr_inv_roc_pct',
+          'y_corp_cash_interest',
+          'y_corp_gic_interest',
+          'y_corp_inv_total_return',
+          'y_corp_inv_elig_div',
+          'y_corp_inv_capg',
+        ];
+
+        // Helper to merge person data: use fresh assets, preserve custom settings
+        const mergePerson = (savedPerson: PersonInput, freshPerson: PersonInput): PersonInput => {
+          const merged = { ...savedPerson };
+
+          // Update asset balances from database (always fresh)
+          assetFields.forEach(field => {
+            if (field in freshPerson) {
+              // TypeScript: using any here is safe because we're copying values from PersonInput to PersonInput
+              (merged as any)[field] = (freshPerson as any)[field];
+            }
+          });
+
+          // Update age if it changed
+          if (freshPerson.start_age !== savedPerson.start_age) {
+            merged.start_age = freshPerson.start_age;
+          }
+
+          // Update name if it changed in profile
+          if (freshPerson.name !== savedPerson.name && freshPerson.name) {
+            merged.name = freshPerson.name;
+          }
+
+          return merged;
+        };
+
+        // Determine partner data
+        let partnerData = { ...defaultPersonInput, name: '' };
+        let shouldIncludePartner = false;
+
+        if (data.includePartner && data.person2Input) {
+          shouldIncludePartner = true;
+          // If we have saved partner data, merge it with fresh data
+          partnerData = mergePerson(savedHousehold.p2, data.person2Input);
+        } else if (data.includePartner) {
+          shouldIncludePartner = true;
+          partnerData = { ...defaultPersonInput, name: 'Partner' };
+        }
+
+        // Merge person 1 data
+        const mergedP1 = mergePerson(savedHousehold.p1, data.person1Input);
+
+        // Update household with merged data
+        setHousehold(prev => ({
+          ...prev,
+          province: data.province || prev.province,
+          p1: mergedP1,
+          p2: partnerData,
+        }));
+
+        setIncludePartner(shouldIncludePartner);
+        setPrefillAvailable(true);
+        console.log('✅ Profile data merged successfully - asset balances updated, custom settings preserved');
+      }
+    } catch (error) {
+      console.error('Failed to load and merge prefill data:', error);
+    } finally {
+      setPrefillLoading(false);
+    }
+  };
 
   const loadPrefillData = async (token: string | null = csrfToken) => {
     try {

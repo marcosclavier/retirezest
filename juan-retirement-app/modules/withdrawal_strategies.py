@@ -9,6 +9,9 @@ Supported Strategies:
 - RRIFFirstStrategy: RRIF → Corp → NonReg → TFSA
 - CorpFirstStrategy: Corp → RRIF → NonReg → TFSA
 - HybridStrategy: Hybrid (RRIF top-up first) → NonReg → Corp → TFSA
+- TFSAFirstStrategy: TFSA → Corp → RRIF → NonReg
+- GISOptimizedStrategy: NonReg → Corp → TFSA → RRIF
+- BalancedStrategy: Optimized for tax efficiency
 """
 
 from abc import ABC, abstractmethod
@@ -244,6 +247,49 @@ class HybridStrategy(WithdrawalStrategy):
         return float(getattr(hh, "hybrid_rrif_topup_per_person", 0.0))
 
 
+class TFSAFirstStrategy(WithdrawalStrategy):
+    """
+    TFSA-first withdrawal strategy.
+
+    Priority Order: TFSA → Corp → RRIF → NonReg
+
+    This strategy prioritizes TFSA withdrawals first, maximizing flexibility
+    since TFSA withdrawals are tax-free and contribution room can be recovered
+    in future years. This is useful for maintaining emergency funds or maximizing
+    tax-free withdrawals.
+
+    Benefits:
+    - Tax-free withdrawals that don't affect income-tested benefits
+    - Contribution room recovery in following years
+    - Maximum flexibility for emergency needs
+    - Preserves taxable accounts for later years
+    """
+
+    def name(self) -> str:
+        """Return strategy name."""
+        return "TFSA->Corp->RRIF->NonReg"
+
+    def get_withdrawal_order(self, has_corp_balance: bool) -> List[str]:
+        """
+        Return withdrawal order for TFSA-first strategy.
+
+        Examples:
+            >>> strategy = TFSAFirstStrategy()
+            >>> strategy.get_withdrawal_order(has_corp=True)
+            ["tfsa", "corp", "rrif", "nonreg"]
+            >>> strategy.get_withdrawal_order(has_corp=False)
+            ["tfsa", "rrif", "nonreg"]
+        """
+        if has_corp_balance:
+            return ["tfsa", "corp", "rrif", "nonreg"]
+        else:
+            return ["tfsa", "rrif", "nonreg"]
+
+    def get_hybrid_topup(self, person: Person, hh: Household) -> float:
+        """No hybrid adjustment for this strategy."""
+        return 0.0
+
+
 class GISOptimizedStrategy(WithdrawalStrategy):
     """
     GIS-optimized withdrawal strategy for maximum government benefits.
@@ -378,6 +424,7 @@ _STRATEGY_MAP = {
     "RRIF->Corp->NonReg->TFSA": RRIFFirstStrategy,
     "Corp->RRIF->NonReg->TFSA": CorpFirstStrategy,
     "Hybrid (RRIF top-up first) -> NonReg -> Corp -> TFSA": HybridStrategy,
+    "TFSA->Corp->RRIF->NonReg": TFSAFirstStrategy,
     "GIS-Optimized (NonReg->Corp->TFSA->RRIF)": GISOptimizedStrategy,
     "Balanced (Optimized for tax efficiency)": BalancedStrategy,
 }
@@ -422,11 +469,15 @@ def get_strategy(strategy_name: str) -> WithdrawalStrategy:
     # Try partial matching for flexibility
     if "Balanced" in normalized_name or "tax efficiency" in normalized_name.lower():
         return BalancedStrategy()
+    elif "TFSA" in normalized_name and normalized_name.startswith("TFSA"):
+        return TFSAFirstStrategy()
+    elif "GIS" in normalized_name.upper() or "GIS-Optimized" in normalized_name:
+        return GISOptimizedStrategy()
     elif "NonReg" in normalized_name and "RRIF" in normalized_name:
         return NonRegFirstStrategy()
     elif "Hybrid" in normalized_name:
         return HybridStrategy()
-    elif "RRIF" in normalized_name and "Corp" in normalized_name and "RRIF" in normalized_name:
+    elif "RRIF" in normalized_name and "Corp" in normalized_name:
         return RRIFFirstStrategy()
     elif "Corp" in normalized_name:
         return CorpFirstStrategy()

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
@@ -38,19 +39,38 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send email with reset link
-    // For now, we'll return the link in development
+    // Generate reset URL
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/reset-password?token=${resetToken}`;
 
-    // In production, you would send an email here
-    // await sendPasswordResetEmail(user.email, resetUrl);
+    // Send password reset email
+    const userName = user.firstName
+      ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
+      : undefined;
 
-    console.log('Password reset link:', resetUrl);
+    const emailResult = await sendPasswordResetEmail({
+      to: user.email,
+      resetUrl,
+      userName,
+    });
+
+    // Log the result
+    if (emailResult.success) {
+      console.log('Password reset email sent successfully to:', user.email);
+    } else {
+      console.error('Failed to send password reset email:', emailResult.error);
+      // In development, return the URL if email fails
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode - Reset URL:', resetUrl);
+      }
+    }
 
     return NextResponse.json({
       message: 'If an account exists with this email, a password reset link has been sent.',
-      // Remove this in production - only for development
-      resetUrl: process.env.NODE_ENV === 'development' ? resetUrl : undefined,
+      // In development, include the reset URL if email sending failed or if explicitly in dev mode
+      resetUrl:
+        process.env.NODE_ENV === 'development' && !emailResult.success
+          ? resetUrl
+          : undefined,
     });
   } catch (error) {
     console.error('Forgot password error:', error);

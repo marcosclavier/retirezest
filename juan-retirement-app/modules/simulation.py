@@ -913,33 +913,44 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
     return total, fed_tax, prov_tax
 
 
-def _get_strategy_order(strategy_name: str) -> List[str]:
+def _get_strategy_order(strategy_name: str, has_corp_balance: bool = False) -> List[str]:
     """
     Get the withdrawal order for a given strategy name.
 
     Used as a fallback when TaxOptimizer is disabled or fails.
+    Uses the strategy object's get_withdrawal_order() method to ensure consistency.
+
+    Args:
+        strategy_name: Name of the withdrawal strategy
+        has_corp_balance: Whether the person has a corporate balance
+
+    Returns:
+        List of account types in withdrawal priority order
     """
-    if strategy_name == "NonReg->RRIF->Corp->TFSA":
-        return ["nonreg", "rrif", "corp", "tfsa"]
-    elif strategy_name == "RRIF->Corp->NonReg->TFSA":
-        return ["rrif", "corp", "nonreg", "tfsa"]
-    elif strategy_name.startswith("Hybrid"):
-        return ["nonreg", "corp", "tfsa"]  # already added RRIF top-up
-    elif strategy_name == "Corp->RRIF->NonReg->TFSA":
-        return ["corp", "rrif", "nonreg", "tfsa"]
-    elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-        # RRIF-Frontload: RRIF is pre-withdrawn at target amount (15% before OAS, 8% after)
-        # Then fill remaining shortfall with Corp -> NonReg -> TFSA
-        return ["corp", "nonreg", "tfsa"]
-    elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
-        # For balanced strategy: prioritize Corp (tax-credited), then RRIF (100% taxable at death - deplete early!),
-        # then NonReg (ACB-protected), then TFSA (preserve for last)
-        # RRIF is placed SECOND (after Corp) because it's 100% fully taxable when inherited at death.
-        # Better to deplete RRIF during life than leave it for death tax shock.
-        # NonReg is placed THIRD because ACB protection means most of it is not taxable.
-        return ["corp", "rrif", "nonreg", "tfsa"]  # RRIF second (after Corp), before NonReg, TFSA last
-    else:
-        return ["nonreg", "rrif", "corp", "tfsa"]
+    try:
+        # Use the strategy object to get the correct withdrawal order
+        strategy_obj = get_strategy(strategy_name)
+        order = strategy_obj.get_withdrawal_order(has_corp_balance=has_corp_balance)
+        return order
+    except Exception as e:
+        logger.debug(f"  WARNING: Could not get strategy order from object ({str(e)}), using hardcoded fallback")
+        # Hardcoded fallback for legacy compatibility
+        if strategy_name == "NonReg->RRIF->Corp->TFSA":
+            return ["nonreg", "rrif", "corp", "tfsa"]
+        elif strategy_name == "RRIF->Corp->NonReg->TFSA":
+            return ["rrif", "corp", "nonreg", "tfsa"]
+        elif strategy_name.startswith("Hybrid"):
+            return ["nonreg", "corp", "tfsa"]  # already added RRIF top-up
+        elif strategy_name == "Corp->RRIF->NonReg->TFSA":
+            return ["corp", "rrif", "nonreg", "tfsa"]
+        elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
+            return ["corp", "nonreg", "tfsa"]
+        elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
+            return ["corp", "rrif", "nonreg", "tfsa"]
+        elif "TFSA" in strategy_name and strategy_name.startswith("TFSA"):
+            return ["tfsa", "corp", "rrif", "nonreg"]
+        else:
+            return ["nonreg", "rrif", "corp", "tfsa"]
 
 
 def simulate_year(person: Person, age: int, after_tax_target: float,
@@ -1209,11 +1220,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 logger.debug(f"  TaxOptimizer selected order: {order}")
         else:
             # Fallback to strategy-based order if optimizer returned empty
-            order = _get_strategy_order(strategy_name)
+            order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
     except Exception as e:
         # Fallback to strategy-based order on any optimizer error
         logger.debug(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order")
-        order = _get_strategy_order(strategy_name)
+        order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
 
     if "GIS-Optimized" in strategy_name:
         # GIS optimization already handled withdrawals above
