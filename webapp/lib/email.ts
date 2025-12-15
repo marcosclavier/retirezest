@@ -1,8 +1,5 @@
 import { Resend } from 'resend';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Default from email - update this to your verified domain
 const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
@@ -25,6 +22,10 @@ export async function sendPasswordResetEmail({
       console.error('RESEND_API_KEY is not configured');
       return { success: false, error: 'Email service not configured' };
     }
+
+    // Initialize Resend client only when needed (lazy initialization)
+    // This prevents errors during build time when env vars might not be available
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     const response = await resend.emails.send({
       from: FROM_EMAIL,
