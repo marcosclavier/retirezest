@@ -30,6 +30,14 @@ model User {
   resetToken          String?   @unique
   resetTokenExpiry    DateTime?
 
+  // Retirement planning
+  targetRetirementAge Int?
+  lifeExpectancy      Int?      @default(95)
+
+  // Benefits calculator usage tracking
+  cppCalculatorUsedAt DateTime?
+  oasCalculatorUsedAt DateTime?
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

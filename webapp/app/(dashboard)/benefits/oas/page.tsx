@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   calculateNetOAS,
   calculateOASDeferral,
@@ -20,8 +20,44 @@ export default function OASCalculatorPage() {
   const [deferMonths, setDeferMonths] = useState('0');
   const [result, setResult] = useState<any>(null);
   const [strategies, setStrategies] = useState<any>(null);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const res = await fetch('/api/csrf');
+        if (res.ok) {
+          const data = await res.json();
+          setCsrfToken(data.token);
+        }
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+      }
+    };
+    fetchCsrfToken();
+  }, []);
+
+  const recordCalculatorUsage = async () => {
+    if (!csrfToken) return;
+
+    try {
+      await fetch('/api/profile/calculator-usage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({ calculator: 'oas' }),
+      });
+    } catch (error) {
+      // Silently fail - this is just for tracking
+      console.error('Error recording calculator usage:', error);
+    }
+  };
 
   const handleCalculate = () => {
+    // Record that the user used the OAS calculator
+    recordCalculatorUsage();
     const years = parseInt(yearsInCanada);
     const currentAge = parseInt(age);
     const income = parseFloat(annualIncome);

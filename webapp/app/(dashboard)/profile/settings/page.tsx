@@ -15,6 +15,8 @@ interface ProfileSettings {
   partnerFirstName: string;
   partnerLastName: string;
   partnerDateOfBirth: string;
+  targetRetirementAge: number | null;
+  lifeExpectancy: number | null;
 }
 
 export default function SettingsPage() {
@@ -30,6 +32,8 @@ export default function SettingsPage() {
     partnerFirstName: '',
     partnerLastName: '',
     partnerDateOfBirth: '',
+    targetRetirementAge: null,
+    lifeExpectancy: null,
   });
 
   useEffect(() => {
@@ -70,6 +74,8 @@ export default function SettingsPage() {
           partnerFirstName: settingsData.partnerFirstName || '',
           partnerLastName: settingsData.partnerLastName || '',
           partnerDateOfBirth: settingsData.partnerDateOfBirth ? new Date(settingsData.partnerDateOfBirth).toISOString().split('T')[0] : '',
+          targetRetirementAge: settingsData.targetRetirementAge || null,
+          lifeExpectancy: settingsData.lifeExpectancy || 95,
         });
       }
     } catch (error) {
@@ -114,6 +120,8 @@ export default function SettingsPage() {
             partnerDateOfBirth: settings.includePartner && settings.partnerDateOfBirth
               ? new Date(settings.partnerDateOfBirth).toISOString()
               : null,
+            targetRetirementAge: settings.targetRetirementAge,
+            lifeExpectancy: settings.lifeExpectancy,
           }),
         }),
       ]);
@@ -293,6 +301,65 @@ export default function SettingsPage() {
               >
                 {saving ? 'Saving...' : 'Save Settings'}
               </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Retirement Goals */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Retirement Goals</CardTitle>
+            <CardDescription>
+              Set your retirement planning targets to improve simulation accuracy
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="retirement-age">Target Retirement Age</Label>
+                <Input
+                  id="retirement-age"
+                  type="number"
+                  min="50"
+                  max="75"
+                  value={settings.targetRetirementAge || ''}
+                  onChange={(e) => setSettings({ ...settings, targetRetirementAge: e.target.value ? parseInt(e.target.value) : null })}
+                  placeholder="e.g., 65"
+                />
+                <p className="text-xs text-gray-600">
+                  When do you plan to retire? (typically 60-70)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="life-expectancy">Life Expectancy</Label>
+                <Input
+                  id="life-expectancy"
+                  type="number"
+                  min="70"
+                  max="110"
+                  value={settings.lifeExpectancy || ''}
+                  onChange={(e) => setSettings({ ...settings, lifeExpectancy: e.target.value ? parseInt(e.target.value) : null })}
+                  placeholder="e.g., 95"
+                />
+                <p className="text-xs text-gray-600">
+                  Plan for longevity (default: 95 years)
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <h4 className="font-semibold text-green-900 text-sm">Profile Completion</h4>
+                  <p className="text-xs text-green-800 mt-1">
+                    Setting these values helps complete your profile and enables more accurate retirement projections
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

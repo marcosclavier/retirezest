@@ -18,6 +18,8 @@ export default async function DashboardPage() {
       expenses: true,
       debts: true,
     },
+    // Note: include already brings all user fields, including the new ones:
+    // targetRetirementAge, lifeExpectancy, cppCalculatorUsedAt, oasCalculatorUsedAt
   });
 
   // Calculate total assets
@@ -51,10 +53,10 @@ export default async function DashboardPage() {
     incomeCount: user?.incomeSources.length || 0,
     assetCount: user?.assets.length || 0,
     expenseCount: user?.expenses.length || 0,
-    hasRetirementAge: false, // This would come from a projection or profile setting
-    hasLifeExpectancy: false,
-    hasUsedCPPCalculator: false, // This would come from tracking calculator usage
-    hasUsedOASCalculator: false,
+    hasRetirementAge: !!user?.targetRetirementAge,
+    hasLifeExpectancy: !!user?.lifeExpectancy,
+    hasUsedCPPCalculator: !!user?.cppCalculatorUsedAt,
+    hasUsedOASCalculator: !!user?.oasCalculatorUsedAt,
   });
 
   const completionLevel = getCompletionLevel(completion.percentage);

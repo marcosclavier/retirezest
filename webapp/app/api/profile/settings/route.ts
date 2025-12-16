@@ -19,6 +19,8 @@ export async function GET() {
         partnerFirstName: true,
         partnerLastName: true,
         partnerDateOfBirth: true,
+        targetRetirementAge: true,
+        lifeExpectancy: true,
       },
     });
 
@@ -47,7 +49,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { includePartner, partnerFirstName, partnerLastName, partnerDateOfBirth } = body;
+    const { includePartner, partnerFirstName, partnerLastName, partnerDateOfBirth, targetRetirementAge, lifeExpectancy } = body;
 
     // Validation
     if (typeof includePartner !== 'boolean') {
@@ -67,6 +69,18 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate retirement planning fields
+    if (targetRetirementAge !== null && targetRetirementAge !== undefined) {
+      if (typeof targetRetirementAge !== 'number' || targetRetirementAge < 50 || targetRetirementAge > 75) {
+        throw new ValidationError('targetRetirementAge must be a number between 50 and 75');
+      }
+    }
+    if (lifeExpectancy !== null && lifeExpectancy !== undefined) {
+      if (typeof lifeExpectancy !== 'number' || lifeExpectancy < 70 || lifeExpectancy > 110) {
+        throw new ValidationError('lifeExpectancy must be a number between 70 and 110');
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: session.userId },
       data: {
@@ -76,12 +90,16 @@ export async function PUT(request: NextRequest) {
         partnerDateOfBirth: includePartner && partnerDateOfBirth
           ? new Date(partnerDateOfBirth)
           : null,
+        targetRetirementAge: targetRetirementAge !== undefined ? targetRetirementAge : undefined,
+        lifeExpectancy: lifeExpectancy !== undefined ? lifeExpectancy : undefined,
       },
       select: {
         includePartner: true,
         partnerFirstName: true,
         partnerLastName: true,
         partnerDateOfBirth: true,
+        targetRetirementAge: true,
+        lifeExpectancy: true,
       },
     });
 

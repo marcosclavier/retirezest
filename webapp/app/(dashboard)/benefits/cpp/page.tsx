@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   estimateCPPSimple,
   findOptimalCPPStartAge,
@@ -18,8 +18,44 @@ export default function CPPCalculatorPage() {
   const [lifeExpectancy, setLifeExpectancy] = useState('85');
   const [result, setResult] = useState<any>(null);
   const [comparison, setComparison] = useState<any>(null);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const res = await fetch('/api/csrf');
+        if (res.ok) {
+          const data = await res.json();
+          setCsrfToken(data.token);
+        }
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+      }
+    };
+    fetchCsrfToken();
+  }, []);
+
+  const recordCalculatorUsage = async () => {
+    if (!csrfToken) return;
+
+    try {
+      await fetch('/api/profile/calculator-usage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({ calculator: 'cpp' }),
+      });
+    } catch (error) {
+      // Silently fail - this is just for tracking
+      console.error('Error recording calculator usage:', error);
+    }
+  };
 
   const handleCalculate = () => {
+    // Record that the user used the CPP calculator
+    recordCalculatorUsage();
     const estimate = estimateCPPSimple(
       parseFloat(averageIncome),
       parseInt(yearsOfContributions),
