@@ -22,10 +22,43 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
   };
 
   const getScoreBackground = (score: number) => {
-    if (score >= 80) return 'bg-green-100 dark:bg-green-950';
-    if (score >= 60) return 'bg-yellow-100 dark:bg-yellow-950';
-    if (score >= 40) return 'bg-orange-100 dark:bg-orange-950';
-    return 'bg-red-100 dark:bg-red-950';
+    if (score >= 90) return 'bg-blue-600 dark:bg-blue-700';      // Excellent: Dark blue
+    if (score >= 70) return 'bg-green-600 dark:bg-green-700';    // Good: Dark green
+    if (score >= 50) return 'bg-yellow-100 dark:bg-yellow-200';  // Fair: Light yellow
+    return 'bg-red-100 dark:bg-red-200';                         // Poor: Light red
+  };
+
+  // Determine text color for optimal contrast
+  // Excellent (90+) & Good (70-89): WHITE text on dark backgrounds
+  // Fair (50-69) & Poor (<50): BLACK text on light backgrounds
+  const getTextColor = (score: number) => {
+    if (score >= 70) return 'text-white';           // White on blue/green
+    return 'text-gray-900 dark:text-gray-900';      // Black on yellow/red
+  };
+
+  const getTextColorSecondary = (score: number) => {
+    if (score >= 70) return 'text-white/90';
+    return 'text-gray-700 dark:text-gray-800';
+  };
+
+  const getTextColorMuted = (score: number) => {
+    if (score >= 70) return 'text-white/75';
+    return 'text-gray-600 dark:text-gray-700';
+  };
+
+  const getBadgeColor = (score: number) => {
+    if (score >= 70) return 'bg-white/20 border-white/30 text-white';
+    return 'bg-gray-900/10 border-gray-900/20 text-gray-900';
+  };
+
+  const getIconColor = (score: number) => {
+    if (score >= 70) return 'text-white';
+    return 'text-gray-900 dark:text-gray-900';
+  };
+
+  const getBorderColor = (score: number) => {
+    if (score >= 70) return 'border-white/20';
+    return 'border-gray-900/20 dark:border-gray-800/30';
   };
 
   const getRatingBadgeVariant = (rating: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -78,14 +111,14 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {getCriterionIcon(criterion.status)}
-            <span className="text-sm font-medium text-white">{getCriterionLabel(key)}</span>
+            <span className={`text-sm font-medium ${getTextColor(health_score)}`}>{getCriterionLabel(key)}</span>
           </div>
-          <span className="text-sm font-bold text-white">
+          <span className={`text-sm font-bold ${getTextColor(health_score)}`}>
             {criterion.score}/{criterion.max_score}
           </span>
         </div>
         <Progress value={percentage} className="h-2" />
-        <p className="text-xs text-white/70">{criterion.description}</p>
+        <p className={`text-xs ${getTextColorMuted(health_score)}`}>{criterion.description}</p>
       </div>
     );
   };
@@ -98,14 +131,14 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-white" />
-            <CardTitle className="text-white">Plan Health Score</CardTitle>
+            <Activity className={`h-5 w-5 ${getIconColor(health_score)}`} />
+            <CardTitle className={getTextColor(health_score)}>Plan Health Score</CardTitle>
           </div>
-          <Badge variant={getRatingBadgeVariant(health_rating)} className="text-white bg-white/20 border-white/30">
+          <Badge variant={getRatingBadgeVariant(health_rating)} className={getBadgeColor(health_score)}>
             {health_rating || 'Not Calculated'}
           </Badge>
         </div>
-        <CardDescription className="text-white/90">Overall assessment of your retirement plan</CardDescription>
+        <CardDescription className={getTextColorSecondary(health_score)}>Overall assessment of your retirement plan</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Main Score */}
@@ -136,16 +169,16 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-bold text-white">{health_score}</span>
-              <span className="text-xs text-white/80">out of 100</span>
+              <span className={`text-4xl font-bold ${getTextColor(health_score)}`}>{health_score}</span>
+              <span className={`text-xs ${getTextColorMuted(health_score)}`}>out of 100</span>
             </div>
           </div>
         </div>
 
         {/* Criteria Breakdown */}
         {hasHealthCriteria && (
-          <div className="space-y-4 pt-4 border-t border-white/20">
-            <h4 className="text-sm font-semibold text-white">Score Breakdown</h4>
+          <div className={`space-y-4 pt-4 border-t ${getBorderColor(health_score)}`}>
+            <h4 className={`text-sm font-semibold ${getTextColor(health_score)}`}>Score Breakdown</h4>
             {Object.entries(health_criteria).map(([key, criterion]) =>
               renderCriterion(key, criterion as HealthCriterion)
             )}
@@ -154,26 +187,26 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
 
         {/* Summary stats if no criteria */}
         {!hasHealthCriteria && (
-          <div className="space-y-3 pt-4 border-t border-white/20">
-            <h4 className="text-sm font-semibold text-white">Key Indicators</h4>
+          <div className={`space-y-3 pt-4 border-t ${getBorderColor(health_score)}`}>
+            <h4 className={`text-sm font-semibold ${getTextColor(health_score)}`}>Key Indicators</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-white/70">Success Rate</p>
-                <p className="font-medium text-white">{(summary.success_rate * 100).toFixed(1)}%</p>
+                <p className={getTextColorMuted(health_score)}>Success Rate</p>
+                <p className={`font-medium ${getTextColor(health_score)}`}>{(summary.success_rate * 100).toFixed(1)}%</p>
               </div>
               <div>
-                <p className="text-white/70">Years Funded</p>
-                <p className="font-medium text-white">
+                <p className={getTextColorMuted(health_score)}>Years Funded</p>
+                <p className={`font-medium ${getTextColor(health_score)}`}>
                   {summary.years_funded}/{summary.years_simulated}
                 </p>
               </div>
               <div>
-                <p className="text-white/70">Tax Efficiency</p>
-                <p className="font-medium text-white">{(summary.avg_effective_tax_rate * 100).toFixed(1)}%</p>
+                <p className={getTextColorMuted(health_score)}>Tax Efficiency</p>
+                <p className={`font-medium ${getTextColor(health_score)}`}>{(summary.avg_effective_tax_rate * 100).toFixed(1)}%</p>
               </div>
               <div>
-                <p className="text-white/70">Net Worth Trend</p>
-                <p className="font-medium text-white">{summary.net_worth_trend || 'N/A'}</p>
+                <p className={getTextColorMuted(health_score)}>Net Worth Trend</p>
+                <p className={`font-medium ${getTextColor(health_score)}`}>{summary.net_worth_trend || 'N/A'}</p>
               </div>
             </div>
           </div>
