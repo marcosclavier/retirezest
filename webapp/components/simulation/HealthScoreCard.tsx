@@ -78,14 +78,14 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {getCriterionIcon(criterion.status)}
-            <span className="text-sm font-medium">{getCriterionLabel(key)}</span>
+            <span className="text-sm font-medium text-white">{getCriterionLabel(key)}</span>
           </div>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm font-bold text-white">
             {criterion.score}/{criterion.max_score}
           </span>
         </div>
         <Progress value={percentage} className="h-2" />
-        <p className="text-xs text-muted-foreground">{criterion.description}</p>
+        <p className="text-xs text-white/70">{criterion.description}</p>
       </div>
     );
   };
@@ -98,12 +98,14 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            <CardTitle>Plan Health Score</CardTitle>
+            <Activity className="h-5 w-5 text-white" />
+            <CardTitle className="text-white">Plan Health Score</CardTitle>
           </div>
-          <Badge variant={getRatingBadgeVariant(health_rating)}>{health_rating || 'Not Calculated'}</Badge>
+          <Badge variant={getRatingBadgeVariant(health_rating)} className="text-white bg-white/20 border-white/30">
+            {health_rating || 'Not Calculated'}
+          </Badge>
         </div>
-        <CardDescription>Overall assessment of your retirement plan</CardDescription>
+        <CardDescription className="text-white/90">Overall assessment of your retirement plan</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Main Score */}
@@ -134,16 +136,16 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-4xl font-bold ${getScoreColor(health_score)}`}>{health_score}</span>
-              <span className="text-xs text-muted-foreground">out of 100</span>
+              <span className="text-4xl font-bold text-white">{health_score}</span>
+              <span className="text-xs text-white/80">out of 100</span>
             </div>
           </div>
         </div>
 
         {/* Criteria Breakdown */}
         {hasHealthCriteria && (
-          <div className="space-y-4 pt-4 border-t">
-            <h4 className="text-sm font-semibold">Score Breakdown</h4>
+          <div className="space-y-4 pt-4 border-t border-white/20">
+            <h4 className="text-sm font-semibold text-white">Score Breakdown</h4>
             {Object.entries(health_criteria).map(([key, criterion]) =>
               renderCriterion(key, criterion as HealthCriterion)
             )}
@@ -152,26 +154,26 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
 
         {/* Summary stats if no criteria */}
         {!hasHealthCriteria && (
-          <div className="space-y-3 pt-4 border-t">
-            <h4 className="text-sm font-semibold">Key Indicators</h4>
+          <div className="space-y-3 pt-4 border-t border-white/20">
+            <h4 className="text-sm font-semibold text-white">Key Indicators</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Success Rate</p>
-                <p className="font-medium">{(summary.success_rate * 100).toFixed(1)}%</p>
+                <p className="text-white/70">Success Rate</p>
+                <p className="font-medium text-white">{(summary.success_rate * 100).toFixed(1)}%</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Years Funded</p>
-                <p className="font-medium">
+                <p className="text-white/70">Years Funded</p>
+                <p className="font-medium text-white">
                   {summary.years_funded}/{summary.years_simulated}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Tax Efficiency</p>
-                <p className="font-medium">{(summary.avg_effective_tax_rate * 100).toFixed(1)}%</p>
+                <p className="text-white/70">Tax Efficiency</p>
+                <p className="font-medium text-white">{(summary.avg_effective_tax_rate * 100).toFixed(1)}%</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Net Worth Trend</p>
-                <p className="font-medium">{summary.net_worth_trend || 'N/A'}</p>
+                <p className="text-white/70">Net Worth Trend</p>
+                <p className="font-medium text-white">{summary.net_worth_trend || 'N/A'}</p>
               </div>
             </div>
           </div>

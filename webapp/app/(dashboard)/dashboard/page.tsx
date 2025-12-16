@@ -187,7 +187,7 @@ export default async function DashboardPage() {
           </a>
 
           <a
-            href="/projection"
+            href="/scenarios"
             className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
           >
             <div className="flex-1">

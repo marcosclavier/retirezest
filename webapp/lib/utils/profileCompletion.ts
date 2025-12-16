@@ -138,8 +138,8 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
       title: 'Retirement Planning Details',
       description: 'Set your target retirement age and life expectancy',
       weight: 15,
-      action: 'Plan Retirement',
-      link: '/scenarios',
+      action: 'Update Profile',
+      link: '/profile/settings',
     });
   }
 
@@ -151,7 +151,7 @@ export function calculateProfileCompletion(data: ProfileData): CompletionResult 
   } else {
     missingSections.push({
       title: 'Government Benefits',
-      description: 'Estimate your CPP and OAS benefits to understand government income',
+      description: 'Estimate your CPP and OAS benefits. Consult CRA (Canada Revenue Agency) for your personalized estimated amounts.',
       weight: 15,
       action: 'Calculate Benefits',
       link: '/benefits',

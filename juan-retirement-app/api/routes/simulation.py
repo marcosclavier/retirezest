@@ -93,6 +93,11 @@ async def run_simulation(
 
         tax_cfg = request.app.state.tax_cfg
 
+        # DEBUG: Check API input balances
+        print(f"🔎 API Input Received:")
+        print(f"   p1.name={household_input.p1.name}, p1.tfsa_balance=${household_input.p1.tfsa_balance:,.0f}")
+        print(f"   p2.name={household_input.p2.name}, p2.tfsa_balance=${household_input.p2.tfsa_balance:,.0f}")
+
         # Convert API model to internal Household
         logger.debug("Converting API input to internal models")
         household = api_household_to_internal(household_input, tax_cfg)
@@ -116,6 +121,11 @@ async def run_simulation(
                 warnings=["All account balances are currently $0. Please fill in your financial information in the Input tab."]
             )
 
+        # IMPORTANT: Analyze composition BEFORE running simulation
+        # The simulation modifies the household object in place, depleting balances
+        logger.debug("Analyzing asset composition (before simulation)")
+        composition = AssetAnalyzer.analyze(household)
+
         # Run simulation (tax params are loaded and indexed internally)
         logger.info(
             f"🚀 Running simulation: "
@@ -131,10 +141,6 @@ async def run_simulation(
         logger.debug("Converting results to API format")
         year_by_year = dataframe_to_year_results(df)
         summary = calculate_simulation_summary(df)
-
-        # Get composition analysis
-        logger.debug("Analyzing asset composition")
-        composition = AssetAnalyzer.analyze(household)
         composition_data = {
             "tfsa_pct": composition.tfsa_pct,
             "rrif_pct": composition.rrif_pct,
@@ -147,9 +153,13 @@ async def run_simulation(
 
         # Generate warnings
         warnings = []
-        if summary.success_rate < 1.0:
+        if summary.success_rate < 1.0 and summary.first_failure_year:
+            # Calculate ages at failure year
+            p1_age = household.p1.start_age + (summary.first_failure_year - household.start_year)
+            p2_age = household.p2.start_age + (summary.first_failure_year - household.start_year)
             warnings.append(
-                f"⚠️ Plan fails in year {summary.first_failure_year}. "
+                f"⚠️ Plan fails in year {summary.first_failure_year} when {household.p1.name} is {p1_age} "
+                f"and {household.p2.name} is {p2_age} years old. "
                 f"Consider reducing spending or adjusting strategy."
             )
         if summary.total_underfunded_years > 0:

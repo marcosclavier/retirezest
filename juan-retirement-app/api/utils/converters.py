@@ -66,7 +66,12 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         Person dataclass for simulation engine
     """
 
-    return Person(
+    # Debug logging - see what API is sending
+    print(f"🔄 Converting {api_person.name} to internal model:")
+    print(f"   API balances: TFSA=${api_person.tfsa_balance:,.0f}, RRIF=${api_person.rrif_balance:,.0f}, "
+          f"RRSP=${api_person.rrsp_balance:,.0f}, NonReg=${api_person.nonreg_balance:,.0f}, Corp=${api_person.corporate_balance:,.0f}")
+
+    person = Person(
         name=api_person.name,
         start_age=api_person.start_age,
 
@@ -125,6 +130,13 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         tfsa_room_annual_growth=api_person.tfsa_room_annual_growth,
     )
 
+    # Debug logging - verify Person object has correct balances
+    print(f"✅ Created Person object for {person.name}:")
+    print(f"   Person balances: TFSA=${person.tfsa_balance:,.0f}, RRIF=${person.rrif_balance:,.0f}, "
+          f"RRSP=${person.rrsp_balance:,.0f}, NonReg=${person.nonreg_balance:,.0f}, Corp=${person.corporate_balance:,.0f}")
+
+    return person
+
 
 def api_household_to_internal(
     api_household: HouseholdInput,
@@ -141,7 +153,7 @@ def api_household_to_internal(
         Household dataclass for simulation engine
     """
 
-    return Household(
+    household = Household(
         p1=api_person_to_internal(api_household.p1),
         p2=api_person_to_internal(api_household.p2),
 
@@ -167,6 +179,13 @@ def api_household_to_internal(
         hybrid_rrif_topup_per_person=api_household.hybrid_rrif_topup_per_person,
         stop_on_fail=api_household.stop_on_fail,
     )
+
+    # Debug: Verify Household has Person data
+    print(f"🏠 Household created:")
+    print(f"   p1.name={household.p1.name}, p1.tfsa_balance=${household.p1.tfsa_balance:,.0f}")
+    print(f"   p2.name={household.p2.name}, p2.tfsa_balance=${household.p2.tfsa_balance:,.0f}")
+
+    return household
 
 
 def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
@@ -462,6 +481,14 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
             if len(failure_rows) > 0
             else None
         )
+    elif 'net_worth_end' in df.columns:
+        # Fallback: use net_worth_end to detect first failure
+        failure_rows = df[df['net_worth_end'] <= 0]
+        first_failure_year = (
+            int(failure_rows.iloc[0]['year'])
+            if len(failure_rows) > 0
+            else None
+        )
     else:
         first_failure_year = None
 
@@ -560,53 +587,58 @@ def calculate_health_score(
     # Criterion 1: Full period funded
     # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
     full_period_funded = bool(success_rate >= 1.0)
+    criterion_score = 20 if full_period_funded else 0
     criteria['full_period_funded'] = {
-        'met': full_period_funded,
-        'points': 20 if full_period_funded else 0,
+        'score': criterion_score,
+        'max_score': 20,
+        'status': 'Excellent' if criterion_score == 20 else 'Poor',
         'description': 'Plan funds all years'
     }
-    if full_period_funded:
-        score += 20
+    score += criterion_score
 
     # Criterion 2: Adequate funding reserve (80%+ of period)
     adequate_reserve = bool(success_rate >= 0.80)
+    criterion_score = 20 if adequate_reserve else 0
     criteria['adequate_reserve'] = {
-        'met': adequate_reserve,
-        'points': 20 if adequate_reserve else 0,
+        'score': criterion_score,
+        'max_score': 20,
+        'status': 'Excellent' if criterion_score == 20 else 'Poor',
         'description': 'Plan funds 80%+ of years'
     }
-    if adequate_reserve:
-        score += 20
+    score += criterion_score
 
     # Criterion 3: Good tax efficiency (<25% effective rate)
     good_tax_efficiency = bool(avg_effective_tax_rate < 0.25)
+    criterion_score = 20 if good_tax_efficiency else 0
     criteria['good_tax_efficiency'] = {
-        'met': good_tax_efficiency,
-        'points': 20 if good_tax_efficiency else 0,
+        'score': criterion_score,
+        'max_score': 20,
+        'status': 'Excellent' if criterion_score == 20 else 'Poor',
         'description': 'Effective tax rate under 25%'
     }
-    if good_tax_efficiency:
-        score += 20
+    score += criterion_score
 
     # Criterion 4: Government benefits available
     has_benefits = bool(total_government_benefits > 0)
+    criterion_score = 20 if has_benefits else 0
     criteria['government_benefits'] = {
-        'met': has_benefits,
-        'points': 20 if has_benefits else 0,
+        'score': criterion_score,
+        'max_score': 20,
+        'status': 'Excellent' if criterion_score == 20 else 'Poor',
         'description': 'Receiving government benefits (CPP/OAS/GIS)'
     }
-    if has_benefits:
-        score += 20
+    score += criterion_score
 
     # Criterion 5: Growing or stable net worth
     growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+    criterion_score = 20 if growing_net_worth else 0
     criteria['growing_net_worth'] = {
-        'met': growing_net_worth,
-        'points': 20 if growing_net_worth else 0,
+        'score': criterion_score,
+        'max_score': 20,
+        'status': 'Excellent' if criterion_score == 20 else 'Poor',
         'description': 'Net worth maintained or growing'
     }
-    if growing_net_worth:
-        score += 20
+    score += criterion_score
 
     # Determine rating based on score
     if score >= 80:
