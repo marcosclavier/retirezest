@@ -79,7 +79,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <Input
                 id={`${personNumber}-tfsa`}
                 type="number"
-                value={person.tfsa_balance}
+                value={person.tfsa_balance ?? 0}
                 onChange={(e) => onChange('tfsa_balance', parseFloat(e.target.value) || 0)}
               />
             </div>
@@ -88,7 +88,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <Input
                 id={`${personNumber}-rrif`}
                 type="number"
-                value={person.rrif_balance}
+                value={person.rrif_balance ?? 0}
                 onChange={(e) => onChange('rrif_balance', parseFloat(e.target.value) || 0)}
               />
             </div>
@@ -97,7 +97,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <Input
                 id={`${personNumber}-rrsp`}
                 type="number"
-                value={person.rrsp_balance}
+                value={person.rrsp_balance ?? 0}
                 onChange={(e) => onChange('rrsp_balance', parseFloat(e.target.value) || 0)}
               />
             </div>
@@ -106,7 +106,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <Input
                 id={`${personNumber}-nonreg`}
                 type="number"
-                value={person.nonreg_balance}
+                value={person.nonreg_balance ?? 0}
                 onChange={(e) => onChange('nonreg_balance', parseFloat(e.target.value) || 0)}
               />
             </div>
@@ -115,7 +115,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <Input
                 id={`${personNumber}-corporate`}
                 type="number"
-                value={person.corporate_balance}
+                value={person.corporate_balance ?? 0}
                 onChange={(e) => onChange('corporate_balance', parseFloat(e.target.value) || 0)}
               />
             </div>
