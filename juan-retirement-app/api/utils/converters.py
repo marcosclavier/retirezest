@@ -298,8 +298,8 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 spending_met=spending_met,
                 spending_gap=spending_gap,
 
-                # Status
-                plan_success=bool(row.get('plan_success', row.get('success', True))),
+                # Status - Success when spending needs are met (not underfunded)
+                plan_success=not bool(row.get('is_underfunded', False)),
                 failure_reason=row.get('failure_reason', None),
             ))
         except Exception as e:
@@ -339,7 +339,17 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         )
 
     years_simulated = len(df)
-    years_funded = len(df[df['net_worth_end'] > 0]) if 'net_worth_end' in df.columns else years_simulated
+
+    # Count years where spending needs were actually met (underfunded < $1)
+    # This is more accurate than just checking if net_worth > 0
+    if 'underfunded_after_tax' in df.columns:
+        years_funded = len(df[df['underfunded_after_tax'] < 1.0])
+    elif 'net_worth_end' in df.columns:
+        # Fallback to old method if underfunded column not available
+        years_funded = len(df[df['net_worth_end'] > 0])
+    else:
+        years_funded = years_simulated
+
     success_rate = years_funded / years_simulated if years_simulated > 0 else 0.0
 
     # === Government Benefits Totals ===

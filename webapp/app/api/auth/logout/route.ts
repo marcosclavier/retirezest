@@ -8,9 +8,12 @@ export async function POST(request: NextRequest) {
   try {
     await clearSession();
 
-    // Redirect to home page after logout
-    const url = new URL('/', request.url);
-    return NextResponse.redirect(url);
+    // Return JSON success response instead of redirect
+    // The client will handle the redirect
+    return NextResponse.json(
+      { success: true, message: 'Logged out successfully' },
+      { status: 200 }
+    );
   } catch (error) {
     logger.error('Logout failed', error, {
       endpoint: '/api/auth/logout',
@@ -23,6 +26,18 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  // Allow GET method as well for convenience
-  return POST(request);
+  // Allow GET method and redirect for convenience (e.g., when navigating directly to logout URL)
+  try {
+    await clearSession();
+    const url = new URL('/', request.url);
+    return NextResponse.redirect(url);
+  } catch (error) {
+    logger.error('Logout failed', error, {
+      endpoint: '/api/auth/logout',
+      method: 'GET'
+    });
+
+    const url = new URL('/', request.url);
+    return NextResponse.redirect(url);
+  }
 }

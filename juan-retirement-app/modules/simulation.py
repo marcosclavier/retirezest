@@ -1205,26 +1205,37 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # PHASE 5a: Call TaxOptimizer to get intelligent withdrawal order
     # The optimizer will return a withdrawal order that minimizes lifetime taxes
     # (retirement + death), taking into account GIS/OAS clawback, TFSA strategic placement, etc.
-    try:
-        optimizer_plan = tax_optimizer.optimize_withdrawals(
-            person=person,
-            household=hh,
-            year=year
-        )
-        optimizer_order = optimizer_plan.withdrawal_order
-
-        # Use optimizer order if it returned a valid list
-        if optimizer_order and len(optimizer_order) > 0:
-            order = optimizer_order
-            if shortfall > 1e-6:
-                logger.debug(f"  TaxOptimizer selected order: {order}")
-        else:
-            # Fallback to strategy-based order if optimizer returned empty
-            order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
-    except Exception as e:
-        # Fallback to strategy-based order on any optimizer error
-        logger.debug(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order")
+    #
+    # IMPORTANT: For RRIF-Frontload strategy, SKIP the optimizer and use the explicit
+    # strategy-defined order (corp → nonreg → tfsa). The RRIF frontload strategy has
+    # a specific tax smoothing goal that requires corporate dividends before NonReg.
+    if "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
+        # Use explicit strategy order for RRIF frontload
         order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
+        if shortfall > 1e-6:
+            logger.debug(f"  RRIF-Frontload strategy: using explicit order {order}")
+    else:
+        # For all other strategies, use TaxOptimizer
+        try:
+            optimizer_plan = tax_optimizer.optimize_withdrawals(
+                person=person,
+                household=hh,
+                year=year
+            )
+            optimizer_order = optimizer_plan.withdrawal_order
+
+            # Use optimizer order if it returned a valid list
+            if optimizer_order and len(optimizer_order) > 0:
+                order = optimizer_order
+                if shortfall > 1e-6:
+                    logger.debug(f"  TaxOptimizer selected order: {order}")
+            else:
+                # Fallback to strategy-based order if optimizer returned empty
+                order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
+        except Exception as e:
+            # Fallback to strategy-based order on any optimizer error
+            logger.debug(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order")
+            order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
 
     if "GIS-Optimized" in strategy_name:
         # GIS optimization already handled withdrawals above
@@ -2327,9 +2338,15 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         buffer_end_year = cash_buffer
         buffer_flow_year = year_cash_flow
 
+        # Calculate underfunded amount (spending shortfall)
+        # Positive when spending needs exceed available funds
+        underfunded_amount = max(0.0, original_target_total - total_available_after_tax)
+
         rows.append(YearResult(
             year=year, age_p1=age1, age_p2=age2, years_since_start=years_since_start,
             spend_target_after_tax=spend,
+            underfunded_after_tax=underfunded_amount,
+            is_underfunded=(underfunded_amount >= 1.0),
             # base taxes + per person after split
             tax_p1=t1["tax"], tax_p2=t2["tax"],
             tax_after_split_p1=tax1_after, tax_after_split_p2=tax2_after,

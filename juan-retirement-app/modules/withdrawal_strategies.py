@@ -473,6 +473,10 @@ def get_strategy(strategy_name: str) -> WithdrawalStrategy:
         return TFSAFirstStrategy()
     elif "GIS" in normalized_name.upper() or "GIS-Optimized" in normalized_name:
         return GISOptimizedStrategy()
+    elif "RRIF-Frontload" in normalized_name or "rrif-frontload" in normalized_name.lower():
+        # RRIF Frontload uses Corp first, then NonReg
+        # Special strategy: frontloads RRIF withdrawals, then uses corp → nonreg → tfsa
+        return CorpFirstStrategy()  # Corp-first gives us ["corp", "rrif", "nonreg", "tfsa"]
     elif "NonReg" in normalized_name and "RRIF" in normalized_name:
         return NonRegFirstStrategy()
     elif "Hybrid" in normalized_name:

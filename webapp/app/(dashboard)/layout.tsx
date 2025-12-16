@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { LogoutButton } from '@/components/LogoutButton';
 
 export default async function DashboardLayout({
   children,
@@ -36,14 +37,7 @@ export default async function DashboardLayout({
               <span className="text-sm text-gray-600">
                 {session.email}
               </span>
-              <form action="/api/auth/logout" method="POST">
-                <button
-                  type="submit"
-                  className="text-sm text-gray-600 hover:text-gray-900"
-                >
-                  Logout
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </div>
