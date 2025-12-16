@@ -124,6 +124,20 @@ async def run_simulation(
         # IMPORTANT: Analyze composition BEFORE running simulation
         # The simulation modifies the household object in place, depleting balances
         logger.debug("Analyzing asset composition (before simulation)")
+
+        # DEBUG: Inspect household object before AssetAnalyzer
+        print(f"🔍 DEBUG: About to call AssetAnalyzer.analyze()")
+        print(f"   household type: {type(household)}")
+        print(f"   household.p1 type: {type(household.p1)}")
+        print(f"   household.p1.name: {household.p1.name}")
+        print(f"   household.p1.tfsa_balance: ${household.p1.tfsa_balance:,.2f}")
+        print(f"   household.p1.rrif_balance: ${household.p1.rrif_balance:,.2f}")
+        print(f"   household.p1.nonreg_balance: ${household.p1.nonreg_balance:,.2f}")
+        print(f"   household.p2.name: {household.p2.name}")
+        print(f"   household.p2.tfsa_balance: ${household.p2.tfsa_balance:,.2f}")
+        print(f"   household.p2.rrif_balance: ${household.p2.rrif_balance:,.2f}")
+        print(f"   household.p2.nonreg_balance: ${household.p2.nonreg_balance:,.2f}")
+
         composition = AssetAnalyzer.analyze(household)
 
         # Run simulation (tax params are loaded and indexed internally)

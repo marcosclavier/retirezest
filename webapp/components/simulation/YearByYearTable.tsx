@@ -429,7 +429,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     Gross Cash Inflows
                                   </span>
                                   <span className="font-semibold" style={{ color: '#10B981' }}>
-                                    {formatCurrency(totalWithdrawals + nonregDistributions)}
+                                    {formatCurrency(totalWithdrawals + (reinvestNonregDist ? 0 : nonregDistributions))}
                                   </span>
                                 </div>
                               </div>
@@ -483,7 +483,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     Net for Spending
                                   </span>
                                   <span className="font-bold" style={{ color: '#059669' }}>
-                                    {formatCurrency(totalWithdrawals + nonregDistributions - tfsaContributions - year.total_tax)}
+                                    {formatCurrency(totalWithdrawals + (reinvestNonregDist ? 0 : nonregDistributions) - tfsaContributions - year.total_tax)}
                                   </span>
                                 </div>
 
@@ -497,7 +497,9 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                 </div>
 
                                 {(() => {
-                                  const netForSpending = totalWithdrawals + nonregDistributions - tfsaContributions - year.total_tax;
+                                  // Match API calculation: only count distributions as cash when NOT reinvesting
+                                  const distributions_as_cash = reinvestNonregDist ? 0 : nonregDistributions;
+                                  const netForSpending = totalWithdrawals + distributions_as_cash - tfsaContributions - year.total_tax;
                                   const difference = netForSpending - year.spending_need;
                                   const isSurplus = difference >= 0;
                                   return (

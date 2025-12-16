@@ -85,6 +85,14 @@ class AssetAnalyzer:
 
         total = tfsa_total + rrif_total + nonreg_total + corporate_total
 
+        # Debug logging
+        print(f"🔍 Portfolio Validation:")
+        print(f"   TFSA: ${tfsa_total:,.0f}")
+        print(f"   RRIF: ${rrif_total:,.0f}")
+        print(f"   NonReg: ${nonreg_total:,.0f}")
+        print(f"   Corporate: ${corporate_total:,.0f}")
+        print(f"   TOTAL: ${total:,.0f}")
+
         if total <= 0:
             raise ValueError("Total portfolio value must be positive")
 

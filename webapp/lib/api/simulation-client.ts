@@ -53,6 +53,24 @@ export async function runSimulation(
     // Convert to backend-compatible format
     const backendInput = convertToBackendFormat(householdInput);
 
+    // Debug logging
+    console.log('🚀 Sending simulation request:', {
+      p1_balances: {
+        tfsa: householdInput.p1.tfsa_balance,
+        rrif: householdInput.p1.rrif_balance,
+        rrsp: householdInput.p1.rrsp_balance,
+        nonreg: householdInput.p1.nonreg_balance,
+        corporate: householdInput.p1.corporate_balance
+      },
+      p2_balances: {
+        tfsa: householdInput.p2.tfsa_balance,
+        rrif: householdInput.p2.rrif_balance,
+        rrsp: householdInput.p2.rrsp_balance,
+        nonreg: householdInput.p2.nonreg_balance,
+        corporate: householdInput.p2.corporate_balance
+      }
+    });
+
     const response = await fetch('/api/simulation/run', {
       method: 'POST',
       headers,
@@ -63,7 +81,8 @@ export async function runSimulation(
 
     // Even if HTTP status is not ok, the response body may contain useful error info
     if (!response.ok) {
-      console.error('Simulation API error:', data);
+      console.error('❌ Simulation API error:', data);
+      console.error('Response status:', response.status, response.statusText);
       return {
         success: false,
         message: data.message || 'Failed to run simulation',

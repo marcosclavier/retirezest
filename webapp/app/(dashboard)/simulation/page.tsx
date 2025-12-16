@@ -668,6 +668,7 @@ export default function SimulationPage() {
           disabled={isLoading || prefillLoading}
           size="lg"
           variant="outline"
+          className="text-gray-700 hover:text-gray-900"
         >
           <RefreshCw className="mr-2 h-5 w-5" />
           Reload from Profile
