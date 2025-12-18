@@ -11,8 +11,10 @@ cmds = [
 [phases.build]
 cmds = [
   'cd webapp',
-  'npm run build'
+  'npm run build',
+  'cp -r public .next/standalone/public',
+  'cp -r .next/static .next/standalone/.next/static'
 ]
 
 [start]
-cmd = 'node webapp/server.js'
+cmd = 'cd webapp/.next/standalone && node server.js'
