@@ -181,6 +181,12 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             </div>
 
             <div className="space-y-2 pt-2 border-t">
+              {result.household_input?.strategy && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold" style={{ color: '#111827' }}>Selected Strategy:</span>
+                  <Badge variant="outline">{result.household_input.strategy}</Badge>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold" style={{ color: '#111827' }}>Dominant Account:</span>
                 <Badge variant="secondary">{result.composition_analysis.dominant_account}</Badge>

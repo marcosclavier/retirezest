@@ -120,6 +120,10 @@ export interface YearResult {
   cpp_p2: number;
   oas_p1: number;
   oas_p2: number;
+  oas_clawback_p1?: number;
+  oas_clawback_p2?: number;
+  gis_p1?: number;
+  gis_p2?: number;
 
   // NonReg passive distributions (dividends, interest, capital gains)
   nonreg_distributions?: number;
@@ -490,8 +494,8 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
   },
   {
     value: 'rrif-frontload',
-    label: 'RRIF Front-Load (Tax Smoothing)',
-    description: 'Withdraws 15% of RRIF before OAS/CPP starts, then 8% after - smooths tax curve and avoids age 70 spike',
+    label: 'RRIF Front-Load (Tax Smoothing + OAS Protection)',
+    description: 'Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
   },
   {
     value: 'manual',

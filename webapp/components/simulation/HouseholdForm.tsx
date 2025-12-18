@@ -217,7 +217,7 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
               onChange={(e) => onChange('tfsa_room_annual_growth', parseFloat(e.target.value) || 0)}
             />
             <p className="text-xs text-gray-600">
-              The annual TFSA contribution limit increase set by the government (e.g., $7,000 for 2024).
+              The annual TFSA contribution limit increase set by the government (e.g., $7,000 for 2026).
               This is the same for everyone in Canada.
             </p>
           </div>

@@ -10,6 +10,7 @@ Supported Strategies:
 - CorpFirstStrategy: Corp → RRIF → NonReg → TFSA
 - HybridStrategy: Hybrid (RRIF top-up first) → NonReg → Corp → TFSA
 - TFSAFirstStrategy: TFSA → Corp → RRIF → NonReg
+- RRIFFrontloadOASProtectionStrategy: NonReg → RRIF → TFSA → Corp (OAS clawback protection)
 - GISOptimizedStrategy: NonReg → Corp → TFSA → RRIF
 - BalancedStrategy: Optimized for tax efficiency
 """
@@ -290,6 +291,53 @@ class TFSAFirstStrategy(WithdrawalStrategy):
         return 0.0
 
 
+class RRIFFrontloadOASProtectionStrategy(WithdrawalStrategy):
+    """
+    RRIF Frontload with OAS Clawback Protection withdrawal strategy.
+
+    Priority Order: NonReg → RRIF → TFSA → Corp
+
+    This strategy is specifically designed for the RRIF-Frontload approach to:
+    1. Prioritize NonReg withdrawals (50% capital gains inclusion = tax-efficient)
+    2. Allow additional RRIF withdrawals if needed (beyond mandatory 15%/8%)
+    3. Use TFSA before Corporate (tax-free vs 100% taxable)
+    4. Use Corporate LAST to avoid triggering OAS clawback
+
+    Why this order avoids OAS clawback:
+    - NonReg first: Only 50% of capital gains are taxable (most tax-efficient)
+    - TFSA third: Tax-free withdrawals don't increase taxable income
+    - Corporate LAST: 100% taxable income → only used when absolutely necessary
+
+    This ensures that when RRIF + NonReg balances are depleted, we withdraw
+    from TFSA (tax-free) instead of Corporate (100% taxable), preventing the
+    OAS clawback that occurs when taxable income exceeds ~$90-100K.
+    """
+
+    def name(self) -> str:
+        """Return strategy name."""
+        return "RRIF-Frontload with OAS Protection (NonReg→RRIF→TFSA→Corp)"
+
+    def get_withdrawal_order(self, has_corp_balance: bool) -> List[str]:
+        """
+        Return withdrawal order for RRIF-Frontload with OAS protection.
+
+        Examples:
+            >>> strategy = RRIFFrontloadOASProtectionStrategy()
+            >>> strategy.get_withdrawal_order(has_corp=True)
+            ["nonreg", "rrif", "tfsa", "corp"]
+            >>> strategy.get_withdrawal_order(has_corp=False)
+            ["nonreg", "rrif", "tfsa"]
+        """
+        if has_corp_balance:
+            return ["nonreg", "rrif", "tfsa", "corp"]
+        else:
+            return ["nonreg", "rrif", "tfsa"]
+
+    def get_hybrid_topup(self, person: Person, hh: Household) -> float:
+        """No hybrid adjustment for this strategy."""
+        return 0.0
+
+
 class GISOptimizedStrategy(WithdrawalStrategy):
     """
     GIS-optimized withdrawal strategy for maximum government benefits.
@@ -474,9 +522,11 @@ def get_strategy(strategy_name: str) -> WithdrawalStrategy:
     elif "GIS" in normalized_name.upper() or "GIS-Optimized" in normalized_name:
         return GISOptimizedStrategy()
     elif "RRIF-Frontload" in normalized_name or "rrif-frontload" in normalized_name.lower():
-        # RRIF Frontload uses Corp first, then NonReg
-        # Special strategy: frontloads RRIF withdrawals, then uses corp → nonreg → tfsa
-        return CorpFirstStrategy()  # Corp-first gives us ["corp", "rrif", "nonreg", "tfsa"]
+        # RRIF Frontload: Tax-efficient withdrawal order to avoid OAS clawback
+        # Front-loads RRIF withdrawals (15% before OAS, 8% after), then uses NonReg → RRIF → TFSA → Corp
+        # TFSA is prioritized BEFORE Corporate to avoid taxable income triggering OAS clawback
+        # NonReg is first for its favorable 50% capital gains treatment
+        return RRIFFrontloadOASProtectionStrategy()  # Returns ["nonreg", "rrif", "tfsa", "corp"]
     elif "NonReg" in normalized_name and "RRIF" in normalized_name:
         return NonRegFirstStrategy()
     elif "Hybrid" in normalized_name:

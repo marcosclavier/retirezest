@@ -301,10 +301,10 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                       <TableRow key={`${year.year}-detail`}>
                         <TableCell colSpan={11} className="bg-muted/20 p-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {/* COLUMN 1: INFLOWS (per person) */}
+                            {/* COLUMN 1: GOV BENEFITS (per person) */}
                             <div className="space-y-3">
                               <h4 className="font-semibold text-sm uppercase text-green-700 dark:text-green-400 mb-3">
-                                💰 Inflows
+                                💰 Gov Benefits
                               </h4>
                               <div className="space-y-2 text-sm">
                                 <div className="font-semibold text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
@@ -320,6 +320,22 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(year.oas_p1)}
                                   </span>
                                 </div>
+                                {(year.oas_clawback_p1 ?? 0) > 0 && (
+                                  <div className="flex justify-between">
+                                    <span style={{ color: '#DC2626' }}>OAS Clawback</span>
+                                    <span className="font-medium" style={{ color: '#DC2626' }}>
+                                      -{formatCurrency(year.oas_clawback_p1 ?? 0)}
+                                    </span>
+                                  </div>
+                                )}
+                                {(year.gis_p1 ?? 0) > 0 && (
+                                  <div className="flex justify-between">
+                                    <span style={{ color: '#111827' }}>GIS</span>
+                                    <span className="font-medium" style={{ color: '#10B981' }}>
+                                      {formatCurrency(year.gis_p1 ?? 0)}
+                                    </span>
+                                  </div>
+                                )}
                                 <div className="flex justify-between">
                                   <span style={{ color: '#111827' }}>NonReg Dist</span>
                                   <span className="font-medium" style={{ color: '#10B981' }}>
@@ -340,6 +356,22 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(year.oas_p2)}
                                   </span>
                                 </div>
+                                {(year.oas_clawback_p2 ?? 0) > 0 && (
+                                  <div className="flex justify-between">
+                                    <span style={{ color: '#DC2626' }}>OAS Clawback</span>
+                                    <span className="font-medium" style={{ color: '#DC2626' }}>
+                                      -{formatCurrency(year.oas_clawback_p2 ?? 0)}
+                                    </span>
+                                  </div>
+                                )}
+                                {(year.gis_p2 ?? 0) > 0 && (
+                                  <div className="flex justify-between">
+                                    <span style={{ color: '#111827' }}>GIS</span>
+                                    <span className="font-medium" style={{ color: '#10B981' }}>
+                                      {formatCurrency(year.gis_p2 ?? 0)}
+                                    </span>
+                                  </div>
+                                )}
                                 <div className="flex justify-between">
                                   <span style={{ color: '#111827' }}>NonReg Dist</span>
                                   <span className="font-medium" style={{ color: '#10B981' }}>
@@ -349,7 +381,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
 
                                 <div className="flex justify-between pt-2 border-t">
                                   <span className="font-semibold" style={{ color: '#111827' }}>
-                                    Total Inflows
+                                    Total Gov Benefits
                                   </span>
                                   <span className="font-semibold" style={{ color: '#10B981' }}>
                                     {formatCurrency(totalBenefits + nonregDistributions)}
@@ -424,48 +456,44 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(totalWithdrawals)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between pt-2 border-t">
-                                  <span className="font-semibold" style={{ color: '#111827' }}>
-                                    Gross Cash Inflows
-                                  </span>
-                                  <span className="font-semibold" style={{ color: '#10B981' }}>
-                                    {formatCurrency(totalWithdrawals + (reinvestNonregDist ? 0 : nonregDistributions))}
-                                  </span>
-                                </div>
                               </div>
                             </div>
 
-                            {/* COLUMN 3: OUTFLOWS (per person) */}
+                            {/* COLUMN 3: CASH FLOW SUMMARY */}
                             <div className="space-y-3">
                               <h4 className="font-semibold text-sm uppercase text-orange-700 dark:text-orange-400 mb-3">
-                                💸 Outflows
+                                💸 Cash Flow Summary
                               </h4>
                               <div className="space-y-2 text-sm">
-                                <div className="font-semibold text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>TFSA Contrib</span>
-                                  <span className="font-medium" style={{ color: '#8B5CF6' }}>
-                                    {formatCurrency(year.tfsa_contribution_p1 ?? 0)}
+                                <div className="flex justify-between pt-2 border-t-2 border-green-600">
+                                  <span className="font-bold" style={{ color: '#059669' }}>
+                                    Gross Cash Inflows
                                   </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Tax Paid</span>
-                                  <span className="font-medium" style={{ color: '#EA580C' }}>
-                                    {formatCurrency(year.total_tax_p1)}
+                                  <span className="font-bold" style={{ color: '#059669' }}>
+                                    {formatCurrency(totalBenefits + nonregDistributions + totalWithdrawals)}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                <div className="font-semibold text-xs pt-3" style={{ color: '#6B7280' }}>OUTFLOWS</div>
+
+                                <div className="flex justify-between">
+                                  <span style={{ color: '#111827' }}>Spending Target</span>
+                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                    {formatCurrency(year.spending_need)}
+                                  </span>
+                                </div>
+
                                 <div className="flex justify-between">
                                   <span style={{ color: '#111827' }}>TFSA Contrib</span>
                                   <span className="font-medium" style={{ color: '#8B5CF6' }}>
-                                    {formatCurrency(year.tfsa_contribution_p2 ?? 0)}
+                                    {formatCurrency(tfsaContributions)}
                                   </span>
                                 </div>
+
                                 <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Tax Paid</span>
+                                  <span style={{ color: '#111827' }}>Taxes</span>
                                   <span className="font-medium" style={{ color: '#EA580C' }}>
-                                    {formatCurrency(year.total_tax_p2)}
+                                    {formatCurrency(year.total_tax)}
                                   </span>
                                 </div>
 
@@ -474,41 +502,22 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     Total Outflows
                                   </span>
                                   <span className="font-semibold" style={{ color: '#EA580C' }}>
-                                    {formatCurrency(tfsaContributions + year.total_tax)}
-                                  </span>
-                                </div>
-
-                                <div className="flex justify-between pt-2 border-t border-2 border-green-600">
-                                  <span className="font-bold" style={{ color: '#059669' }}>
-                                    Net for Spending
-                                  </span>
-                                  <span className="font-bold" style={{ color: '#059669' }}>
-                                    {formatCurrency(totalWithdrawals + (reinvestNonregDist ? 0 : nonregDistributions) - tfsaContributions - year.total_tax)}
-                                  </span>
-                                </div>
-
-                                <div className="flex justify-between pt-2 border-t border-dashed">
-                                  <span className="font-semibold" style={{ color: '#6B7280' }}>
-                                    Spending Target
-                                  </span>
-                                  <span className="font-semibold" style={{ color: '#6B7280' }}>
-                                    {formatCurrency(year.spending_need)}
+                                    {formatCurrency(year.spending_need + tfsaContributions + year.total_tax)}
                                   </span>
                                 </div>
 
                                 {(() => {
-                                  // Match API calculation: only count distributions as cash when NOT reinvesting
-                                  const distributions_as_cash = reinvestNonregDist ? 0 : nonregDistributions;
-                                  const netForSpending = totalWithdrawals + distributions_as_cash - tfsaContributions - year.total_tax;
-                                  const difference = netForSpending - year.spending_need;
-                                  const isSurplus = difference >= 0;
+                                  const grossCashInflows = totalBenefits + nonregDistributions + totalWithdrawals;
+                                  const totalOutflows = year.spending_need + tfsaContributions + year.total_tax;
+                                  const netCashFlow = grossCashInflows - totalOutflows;
+                                  const isBalanced = Math.abs(netCashFlow) < 1.0;
                                   return (
-                                    <div className={`flex justify-between pt-2 border-t-2 ${isSurplus ? 'border-green-600' : 'border-red-600'}`}>
-                                      <span className="font-bold" style={{ color: isSurplus ? '#059669' : '#DC2626' }}>
-                                        {isSurplus ? '✓ Surplus' : '⚠ Shortfall'}
+                                    <div className={`flex justify-between pt-2 border-t-2 ${isBalanced ? 'border-green-600' : 'border-amber-600'}`}>
+                                      <span className="font-bold" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
+                                        Net Cash Flow
                                       </span>
-                                      <span className="font-bold" style={{ color: isSurplus ? '#059669' : '#DC2626' }}>
-                                        {formatCurrency(Math.abs(difference))}
+                                      <span className="font-bold" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
+                                        {netCashFlow >= 0 ? '' : '-'}{formatCurrency(Math.abs(netCashFlow))}
                                       </span>
                                     </div>
                                   );
