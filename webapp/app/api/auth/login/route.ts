@@ -7,6 +7,7 @@ import { handleApiError, ValidationError, AuthenticationError } from '@/lib/erro
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   // Apply rate limiting FIRST - protect against brute force attacks

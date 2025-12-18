@@ -6,6 +6,7 @@ import { handleApiError, AuthenticationError, ValidationError } from '@/lib/erro
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET - Fetch user settings
 export async function GET() {

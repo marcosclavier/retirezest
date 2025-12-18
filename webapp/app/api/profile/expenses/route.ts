@@ -6,6 +6,7 @@ import { handleApiError, AuthenticationError, NotFoundError, ValidationError } f
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET - Fetch all expenses for the user
 export async function GET(request: NextRequest) {

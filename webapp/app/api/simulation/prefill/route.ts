@@ -11,6 +11,7 @@ import { defaultPersonInput, type PersonInput } from '@/lib/types/simulation';
  */
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
