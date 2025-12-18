@@ -21,10 +21,8 @@ RUN npm config set fetch-timeout 600000 && \
 COPY webapp/package*.json ./
 COPY webapp/prisma ./prisma/
 
-# Install dependencies with BuildKit cache mount for npm
-# This caches downloaded packages between builds (~18min -> ~30sec on cache hit)
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --legacy-peer-deps --no-audit --no-fund --ignore-scripts
+# Install dependencies
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --ignore-scripts
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -42,10 +40,9 @@ COPY webapp/ .
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build Next.js application with cache mount
+# Build Next.js application
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN --mount=type=cache,target=/app/.next/cache \
-    npx next build
+RUN npx next build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
