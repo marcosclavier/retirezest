@@ -1,0 +1,18 @@
+[phases.setup]
+nixPkgs = ['nodejs_20', 'openssl']
+
+[phases.install]
+cmds = [
+  'cd webapp',
+  'npm ci --legacy-peer-deps',
+  'npx prisma generate'
+]
+
+[phases.build]
+cmds = [
+  'cd webapp',
+  'npm run build'
+]
+
+[start]
+cmd = 'cd webapp && node server.js'
