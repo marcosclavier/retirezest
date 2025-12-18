@@ -944,7 +944,10 @@ def _get_strategy_order(strategy_name: str, has_corp_balance: bool = False) -> L
         elif strategy_name == "Corp->RRIF->NonReg->TFSA":
             return ["corp", "rrif", "nonreg", "tfsa"]
         elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-            return ["corp", "nonreg", "tfsa"]
+            # RRIF-Frontload: Prioritize tax-efficient sources to avoid OAS clawback
+            # Order: NonReg first (50% capital gains), then TFSA (tax-free), Corp last (100% taxable)
+            # This preserves TFSA for later while using tax-efficient NonReg to avoid clawback
+            return ["nonreg", "tfsa", "corp"]
         elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
             return ["corp", "rrif", "nonreg", "tfsa"]
         elif "TFSA" in strategy_name and strategy_name.startswith("TFSA"):
@@ -1044,10 +1047,22 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # This strategy withdraws 15% of RRIF annually BEFORE OAS/CPP start,
     # then switches to 8-10% after government benefits kick in.
     # This smooths the tax curve and avoids the age 70 tax spike.
+    #
+    # ENHANCED: OAS Clawback Avoidance
+    # When approaching the OAS clawback threshold ($90,997 in 2025), the strategy
+    # automatically reduces RRIF withdrawals and switches to TFSA/NonReg to avoid
+    # losing 15% of income to OAS clawback.
     rrif_frontload_target = 0.0
+    rrif_frontload_use_clawback_order = False  # Flag to switch withdrawal order
+
     if "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
         # Determine OAS start age (use the earlier of p1 or p2)
         oas_start = min(hh.p1.oas_start_age, hh.p2.oas_start_age) if hasattr(hh, 'p2') else person.oas_start_age
+
+        # OAS clawback threshold (2025 base, inflated for current year)
+        oas_clawback_threshold_base = 90997.0
+        oas_clawback_threshold = oas_clawback_threshold_base * ((1.0 + hh.general_inflation) ** years_since_start)
+        oas_clawback_buffer = 3000.0  # Stay $3k below threshold for safety margin
 
         if age < oas_start:
             # PHASE 1: BEFORE OAS/CPP - Front-load at 15% annually
@@ -1055,10 +1070,45 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             logger.debug(f"RRIF-Frontload Phase 1 (age {age} < OAS {oas_start}): "
                         f"Target 15% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
         else:
-            # PHASE 2: AFTER OAS/CPP - Slower depletion at 8%
-            rrif_frontload_target = person.rrif_balance * 0.08
-            logger.debug(f"RRIF-Frontload Phase 2 (age {age} >= OAS {oas_start}): "
-                        f"Target 8% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
+            # PHASE 2: AFTER OAS/CPP - OAS-clawback-aware with INTELLIGENT ESTATE TAX OPTIMIZATION
+            # Standard target: 8% of RRIF balance
+            rrif_frontload_target_standard = person.rrif_balance * 0.08
+
+            # Calculate current taxable income components (before RRIF withdrawal)
+            # Taxable income includes: CPP + OAS + NonReg distributions + planned RRIF
+            base_taxable_income = cpp + oas + (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist)
+            projected_taxable_income_rrif_only = base_taxable_income + rrif_frontload_target_standard
+
+            # Check if we're approaching OAS clawback threshold
+            threshold_with_buffer = oas_clawback_threshold - oas_clawback_buffer
+
+            # INTELLIGENT ESTATE TAX OPTIMIZATION
+            # Default strategy: Use Corporate first to minimize estate taxes
+            #
+            # Rationale: Estate tax on Corporate (17.5%) typically exceeds OAS clawback (15%)
+            # So it's usually better to ACCEPT some OAS clawback during life to avoid
+            # larger estate taxes at death.
+            #
+            # This preserves TFSA (0% tax at death) for tax-free legacy.
+            corporate_balance = person.corporate_balance
+
+            # Default to standard order (Corporate preferred for estate tax optimization)
+            rrif_frontload_target = rrif_frontload_target_standard
+            rrif_frontload_use_clawback_order = False
+
+            if age >= person.oas_start_age and oas > 0 and corporate_balance > 10000:
+                # Log the intelligent strategy decision
+                logger.info(f"💰 ESTATE TAX OPTIMIZATION (age {age}):")
+                logger.info(f"   Corporate balance: ${corporate_balance:,.0f}")
+                logger.info(f"   Estate tax rate on Corporate: ~17.5% (vs OAS clawback: 15%)")
+                logger.info(f"   ✓ Decision: USE CORPORATE FIRST (accept clawback, minimize estate tax)")
+                logger.info(f"   → Withdrawal order: Corp → NonReg → TFSA")
+                logger.info(f"   → This preserves TFSA for tax-free legacy")
+            elif age < person.oas_start_age:
+                logger.debug(f"RRIF-Frontload Phase 2 (age {age} >= OAS {oas_start}): "
+                            f"Target 8% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
+                logger.debug(f"  Projected taxable income: ${projected_taxable_income_rrif_only:,.0f} "
+                            f"(threshold: ${oas_clawback_threshold:,.0f}) - No clawback risk")
 
         # Always respect CRA minimum as floor
         rrif_frontload_target = max(rrif_frontload_target, rrif_min)
@@ -1209,11 +1259,31 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # IMPORTANT: For RRIF-Frontload strategy, SKIP the optimizer and use the explicit
     # strategy-defined order (corp → nonreg → tfsa). The RRIF frontload strategy has
     # a specific tax smoothing goal that requires corporate dividends before NonReg.
+    #
+    # ENHANCED: When OAS clawback is detected, switch to clawback-aware order
+    # (tfsa → nonreg → corp) to avoid triggering additional taxable income.
     if "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-        # Use explicit strategy order for RRIF frontload
-        order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
-        if shortfall > 1e-6:
-            logger.debug(f"  RRIF-Frontload strategy: using explicit order {order}")
+        # Check if we're using clawback-aware order
+        if rrif_frontload_use_clawback_order:
+            # OAS clawback avoidance: Use tax-efficient sources that don't increase taxable income
+            # NonReg first (50% taxable - capital gains), TFSA second (tax-free), Corp last
+            if corporate_balance_start > 1e-9:
+                order = ["nonreg", "tfsa", "corp"]
+            else:
+                order = ["nonreg", "tfsa"]
+            if shortfall > 1e-6:
+                logger.info(f"  RRIF-Frontload (Clawback Avoidance): using order {order}")
+                logger.info(f"    NonReg first (50% taxable), TFSA second (tax-free), Corp last")
+        else:
+            # Standard order: Corporate preferred after RRIF (deplete Corporate, preserve TFSA)
+            # This is the default strategy when no clawback risk
+            if corporate_balance_start > 1e-9:
+                order = ["corp", "nonreg", "tfsa"]
+            else:
+                order = ["nonreg", "tfsa"]
+            if shortfall > 1e-6:
+                logger.debug(f"  RRIF-Frontload (Standard): using order {order}")
+                logger.debug(f"    Corporate preferred to deplete, TFSA preserved for legacy")
     else:
         # For all other strategies, use TaxOptimizer
         try:

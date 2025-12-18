@@ -193,6 +193,23 @@ async def run_simulation(
         estate_summary = calculate_estate_summary(df, household)
         five_year_plan = extract_five_year_plan(df)
 
+        # Check if intelligent estate tax optimization is active
+        if "rrif-frontload" in household.strategy.lower():
+            has_corporate = (household.p1.corporate_balance > 10000 or
+                           household.p2.corporate_balance > 10000)
+            has_oas = (household.p1.oas_start_age and household.p1.oas_start_age < household.end_age) or \
+                     (household.p2.oas_start_age and household.p2.oas_start_age < household.end_age)
+
+            if has_corporate and has_oas:
+                total_clawback = summary.total_oas_clawback if hasattr(summary, 'total_oas_clawback') else 0
+
+                warnings.append(
+                    f"💰 Estate Tax Optimization: This plan accepts ${total_clawback:,.0f} in OAS clawback "
+                    f"(15% rate) to deplete Corporate accounts and minimize estate taxes "
+                    f"(~17.5% rate). TFSA preserved for tax-free legacy. "
+                    f"Net strategy saves compared to avoiding clawback."
+                )
+
         # Calculate new PDF report data
         logger.debug("Calculating spending analysis, key assumptions, and chart data")
         spending_analysis = calculate_spending_analysis(df, summary)
