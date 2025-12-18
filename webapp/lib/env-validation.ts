@@ -27,17 +27,22 @@ interface ValidationError {
 
 /**
  * Validates required environment variables
+ * During build time, some runtime-only variables are optional
  */
 export function validateEnv(): { valid: boolean; errors: ValidationError[] } {
   const errors: ValidationError[] = [];
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
+                      process.env.npm_lifecycle_event === 'build';
 
-  // Check required variables
+  // Check required variables (but allow DATABASE_URL and JWT_SECRET to be missing during build)
   if (!process.env.DATABASE_URL) {
-    errors.push({
-      variable: 'DATABASE_URL',
-      issue: 'Required environment variable is missing',
-    });
-  } else if (!process.env.DATABASE_URL.startsWith('postgresql://')) {
+    if (!isBuildTime) {
+      errors.push({
+        variable: 'DATABASE_URL',
+        issue: 'Required environment variable is missing',
+      });
+    }
+  } else if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('postgresql://') && !isBuildTime) {
     errors.push({
       variable: 'DATABASE_URL',
       issue: 'Must be a valid PostgreSQL connection string starting with postgresql://',
@@ -45,10 +50,12 @@ export function validateEnv(): { valid: boolean; errors: ValidationError[] } {
   }
 
   if (!process.env.JWT_SECRET) {
-    errors.push({
-      variable: 'JWT_SECRET',
-      issue: 'Required environment variable is missing',
-    });
+    if (!isBuildTime) {
+      errors.push({
+        variable: 'JWT_SECRET',
+        issue: 'Required environment variable is missing',
+      });
+    }
   } else if (process.env.JWT_SECRET.length < 32) {
     errors.push({
       variable: 'JWT_SECRET',
@@ -57,10 +64,12 @@ export function validateEnv(): { valid: boolean; errors: ValidationError[] } {
   }
 
   if (!process.env.NEXT_PUBLIC_API_URL) {
-    errors.push({
-      variable: 'NEXT_PUBLIC_API_URL',
-      issue: 'Required environment variable is missing',
-    });
+    if (!isBuildTime) {
+      errors.push({
+        variable: 'NEXT_PUBLIC_API_URL',
+        issue: 'Required environment variable is missing',
+      });
+    }
   } else if (
     !process.env.NEXT_PUBLIC_API_URL.startsWith('http://') &&
     !process.env.NEXT_PUBLIC_API_URL.startsWith('https://')
@@ -109,6 +118,8 @@ export function validateEnv(): { valid: boolean; errors: ValidationError[] } {
  */
 export function getEnvConfig(): EnvConfig {
   const validation = validateEnv();
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
+                      process.env.npm_lifecycle_event === 'build';
 
   if (!validation.valid) {
     console.error('Environment validation failed:');
@@ -116,7 +127,7 @@ export function getEnvConfig(): EnvConfig {
       console.error(`  - ${error.variable}: ${error.issue}`);
     });
 
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !isBuildTime) {
       throw new Error(
         'Invalid environment configuration. Check the errors above.'
       );
@@ -124,9 +135,9 @@ export function getEnvConfig(): EnvConfig {
   }
 
   return {
-    DATABASE_URL: process.env.DATABASE_URL!,
-    JWT_SECRET: process.env.JWT_SECRET!,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL!,
+    DATABASE_URL: process.env.DATABASE_URL || (isBuildTime ? 'postgresql://build:build@localhost:5432/build' : ''),
+    JWT_SECRET: process.env.JWT_SECRET || (isBuildTime ? 'build-time-secret-not-used-at-runtime-only-for-build' : ''),
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || (isBuildTime ? 'http://localhost:3000' : ''),
     NODE_ENV: process.env.NODE_ENV as 'development' | 'staging' | 'production',
     SENTRY_DSN: process.env.SENTRY_DSN,
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
