@@ -8,6 +8,9 @@ import { handleApiError, AuthenticationError, NotFoundError, ValidationError } f
  * GET /api/profile
  * Get the current user's profile
  */
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();

@@ -4,6 +4,9 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { handleApiError, AuthenticationError, ValidationError } from '@/lib/errors';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 // GET - Fetch user settings
 export async function GET() {
   try {

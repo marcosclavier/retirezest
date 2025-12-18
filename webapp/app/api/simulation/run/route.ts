@@ -12,6 +12,9 @@ import { handleApiError, AuthenticationError } from '@/lib/errors';
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:8000';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 

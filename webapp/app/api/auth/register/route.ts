@@ -5,6 +5,9 @@ import { registerRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   // Apply rate limiting - prevent abuse of registration endpoint
   const rateLimitResult = await registerRateLimit(request as any);

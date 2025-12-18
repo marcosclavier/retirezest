@@ -5,6 +5,9 @@ import { loginRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { handleApiError, ValidationError, AuthenticationError } from '@/lib/errors';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   // Apply rate limiting FIRST - protect against brute force attacks
   const rateLimitResult = await loginRateLimit(request as any);

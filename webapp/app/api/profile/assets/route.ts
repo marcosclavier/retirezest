@@ -4,6 +4,9 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { handleApiError, AuthenticationError, NotFoundError, ValidationError } from '@/lib/errors';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 // GET - Fetch all assets for the user
 export async function GET(request: NextRequest) {
   try {

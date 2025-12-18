@@ -4,6 +4,9 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { handleApiError, AuthenticationError, ValidationError } from '@/lib/errors';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 // POST - Record calculator usage
 export async function POST(request: NextRequest) {
   try {

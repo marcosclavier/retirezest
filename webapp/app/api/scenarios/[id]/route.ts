@@ -9,6 +9,9 @@ import { handleApiError, AuthenticationError, NotFoundError } from '@/lib/errors
  * GET /api/scenarios/:id
  * Get a specific scenario
  */
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

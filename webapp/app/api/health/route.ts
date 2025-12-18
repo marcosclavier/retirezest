@@ -30,6 +30,9 @@ interface HealthStatus {
   };
 }
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const startTime = Date.now();
   const checks: HealthStatus['checks'] = {

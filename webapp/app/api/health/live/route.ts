@@ -9,6 +9,9 @@
 
 import { NextResponse } from 'next/server';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   return NextResponse.json(
     {

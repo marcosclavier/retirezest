@@ -4,6 +4,9 @@ import { clearSession } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { handleApiError } from '@/lib/errors';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     await clearSession();

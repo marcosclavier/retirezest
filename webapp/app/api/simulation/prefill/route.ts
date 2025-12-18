@@ -9,6 +9,9 @@ import { defaultPersonInput, type PersonInput } from '@/lib/types/simulation';
  * GET /api/simulation/prefill
  * Fetch user profile and assets, then transform into simulation-ready format
  */
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();

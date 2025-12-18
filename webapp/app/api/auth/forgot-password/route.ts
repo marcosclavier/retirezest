@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
 
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
