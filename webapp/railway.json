@@ -5,7 +5,7 @@
     "nixpacksPath": "nixpacks.toml"
   },
   "deploy": {
-    "startCommand": "cd .next/standalone && node server.js",
+    "startCommand": "cd .next/standalone && HOSTNAME=\"0.0.0.0\" PORT=${PORT} node server.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
