@@ -3,18 +3,13 @@ nixPkgs = ['nodejs_20', 'openssl']
 
 [phases.install]
 cmds = [
-  'cd webapp',
-  'npm ci --legacy-peer-deps',
-  'npx prisma generate'
+  'cd webapp && npm ci --legacy-peer-deps && npx prisma generate'
 ]
 
 [phases.build]
 cmds = [
-  'cd webapp',
-  'npm run build',
-  'cp -r public .next/standalone/public',
-  'cp -r .next/static .next/standalone/.next/static'
+  'cd webapp && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/'
 ]
 
 [start]
-cmd = 'cd webapp/.next/standalone && node server.js'
+cmd = 'cd webapp/.next/standalone && HOSTNAME=0.0.0.0 PORT=${PORT:-3000} node server.js'
