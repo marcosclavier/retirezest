@@ -34,28 +34,28 @@ export const prisma =
     ? createMockPrismaClient()
     : (globalForPrisma.prisma ??
       new PrismaClient({
-    datasources: {
-      db: {
-        url: DATABASE_URL,
-      },
-    },
-    log: process.env.NODE_ENV === 'development'
-      ? [
-          { emit: 'event', level: 'query' },
-          { emit: 'stdout', level: 'error' },
-          { emit: 'stdout', level: 'warn' },
-        ]
-      : [{ emit: 'stdout', level: 'error' }],
-    // Connection pool configuration for Neon serverless
-    // Prevents "terminating connection due to administrator command" errors
-    // These settings help maintain stable connections with serverless databases
-    errorFormat: 'minimal',
-    transactionOptions: {
-      timeout: 10000, // 10 seconds
-      maxWait: 5000,  // 5 seconds
-      isolationLevel: 'ReadCommitted',
-    },
-  });
+        datasources: {
+          db: {
+            url: DATABASE_URL,
+          },
+        },
+        log: process.env.NODE_ENV === 'development'
+          ? [
+              { emit: 'event', level: 'query' },
+              { emit: 'stdout', level: 'error' },
+              { emit: 'stdout', level: 'warn' },
+            ]
+          : [{ emit: 'stdout', level: 'error' }],
+        // Connection pool configuration for Neon serverless
+        // Prevents "terminating connection due to administrator command" errors
+        // These settings help maintain stable connections with serverless databases
+        errorFormat: 'minimal',
+        transactionOptions: {
+          timeout: 10000, // 10 seconds
+          maxWait: 5000,  // 5 seconds
+          isolationLevel: 'ReadCommitted',
+        },
+      }));
 
 // Log slow queries in development
 if (process.env.NODE_ENV === 'development') {
