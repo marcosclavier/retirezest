@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ['nodejs_20', 'openssl']
+
+[phases.install]
+cmds = [
+  'npm ci --legacy-peer-deps && npx prisma generate'
+]
+
+[phases.build]
+cmds = [
+  'npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/'
+]
+
+[start]
+cmd = 'cd .next/standalone && HOSTNAME=0.0.0.0 PORT=${PORT:-3000} node server.js'
