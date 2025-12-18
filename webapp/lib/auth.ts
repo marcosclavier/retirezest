@@ -2,19 +2,25 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 
-// Validate JWT_SECRET is set and secure
-if (!process.env.JWT_SECRET) {
-  throw new Error(
-    'FATAL: JWT_SECRET environment variable is required. ' +
-    'Generate one with: openssl rand -base64 32'
-  );
+// Detect build time
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
+                    process.env.npm_lifecycle_event === 'build';
+
+// Validate JWT_SECRET is set and secure (skip during build)
+if (!isBuildTime) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error(
+      'FATAL: JWT_SECRET environment variable is required. ' +
+      'Generate one with: openssl rand -base64 32'
+    );
+  }
+
+  if (process.env.JWT_SECRET.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters long for security');
+  }
 }
 
-if (process.env.JWT_SECRET.length < 32) {
-  throw new Error('FATAL: JWT_SECRET must be at least 32 characters long for security');
-}
-
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'build-time-placeholder-secret-minimum-32-chars');
 
 export interface TokenPayload {
   userId: string;

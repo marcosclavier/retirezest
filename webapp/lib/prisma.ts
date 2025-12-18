@@ -20,13 +20,31 @@ const DATABASE_URL = process.env.DATABASE_URL ||
 
 // Create a mock Prisma client during build time that returns empty results
 const createMockPrismaClient = () => {
-  const handler: ProxyHandler<any> = {
-    get: (_target, _prop) => {
-      // Return a function that returns an empty result for all operations
-      return () => Promise.resolve(null);
-    },
+  // Create a deeply nested proxy that can handle any property access or method call
+  const createDeepProxy: any = (): any => {
+    return new Proxy(() => Promise.resolve(null), {
+      get: (_target, prop) => {
+        // Handle special Prisma methods
+        if (prop === '$disconnect' || prop === '$connect') {
+          return () => Promise.resolve();
+        }
+        if (prop === '$on') {
+          return () => {};
+        }
+        if (prop === 'then') {
+          return undefined; // Prevent proxy from being treated as a Promise
+        }
+        // Return another proxy for chaining
+        return createDeepProxy();
+      },
+      apply: (_target, _thisArg, _args) => {
+        // Return a promise that resolves to null
+        return Promise.resolve(null);
+      },
+    });
   };
-  return new Proxy({}, handler) as PrismaClient;
+
+  return createDeepProxy() as PrismaClient;
 };
 
 export const prisma =
