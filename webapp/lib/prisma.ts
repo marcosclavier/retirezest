@@ -11,7 +11,12 @@ const globalForPrisma = globalThis as unknown as {
 
 // Connection pool configuration
 // For serverless environments (Vercel, etc.), use connection pooling URL
-const DATABASE_URL = process.env.DATABASE_URL;
+// During build time, provide a dummy URL to prevent connection errors
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
+                    process.env.npm_lifecycle_event === 'build';
+
+const DATABASE_URL = process.env.DATABASE_URL ||
+  (isBuildTime ? 'postgresql://build:build@localhost:5432/build' : undefined);
 
 export const prisma =
   globalForPrisma.prisma ??
