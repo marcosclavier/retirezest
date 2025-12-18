@@ -12,4 +12,4 @@ cmds = [
 ]
 
 [start]
-cmd = 'cd .next/standalone && PORT=${PORT} node server.js'
+cmd = 'cd .next/standalone && HOSTNAME="0.0.0.0" PORT=${PORT} node server.js'
