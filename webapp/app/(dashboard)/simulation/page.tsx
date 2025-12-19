@@ -42,6 +42,7 @@ export default function SimulationPage() {
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [prefillAttempted, setPrefillAttempted] = useState(false);
+  const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -240,6 +241,7 @@ export default function SimulationPage() {
         }));
 
         setIncludePartner(shouldIncludePartner);
+        setUserProfileProvince(data.userProfileProvince || null);
         setPrefillAvailable(true);
         console.log('✅ Profile data merged successfully - asset balances updated, custom settings preserved');
       }
@@ -306,6 +308,7 @@ export default function SimulationPage() {
           }));
 
           setIncludePartner(shouldIncludePartner);
+          setUserProfileProvince(data.userProfileProvince || null);
           setPrefillAvailable(true);
           console.log('🔍 Prefill data applied successfully');
         } else {
@@ -732,7 +735,12 @@ export default function SimulationPage() {
           )}
 
           {/* Household Settings */}
-          <HouseholdForm household={household} onChange={updateHousehold} isPrefilled={prefillAvailable} />
+          <HouseholdForm
+            household={household}
+            onChange={updateHousehold}
+            isPrefilled={prefillAvailable}
+            userProfileProvince={userProfileProvince}
+          />
         </TabsContent>
 
         {/* Results Tab */}

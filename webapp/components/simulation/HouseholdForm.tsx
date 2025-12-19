@@ -3,6 +3,7 @@
 import { HouseholdInput, Province, WithdrawalStrategy, provinceOptions, strategyOptions } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -17,11 +18,56 @@ interface HouseholdFormProps {
   household: HouseholdInput;
   onChange: <K extends keyof HouseholdInput>(field: K, value: HouseholdInput[K]) => void;
   isPrefilled?: boolean;
+  userProfileProvince?: string | null;
 }
 
-export function HouseholdForm({ household, onChange, isPrefilled = false }: HouseholdFormProps) {
+export function HouseholdForm({ household, onChange, isPrefilled = false, userProfileProvince = null }: HouseholdFormProps) {
+  // Helper function to get full province name
+  const getProvinceName = (code: string): string => {
+    const provinceNames: Record<string, string> = {
+      'AB': 'Alberta',
+      'BC': 'British Columbia',
+      'ON': 'Ontario',
+      'QC': 'Quebec',
+      'SK': 'Saskatchewan',
+      'MB': 'Manitoba',
+      'NB': 'New Brunswick',
+      'NS': 'Nova Scotia',
+      'PE': 'Prince Edward Island',
+      'NL': 'Newfoundland and Labrador',
+      'YT': 'Yukon',
+      'NT': 'Northwest Territories',
+      'NU': 'Nunavut',
+    };
+    return provinceNames[code.toUpperCase()] || code;
+  };
+
+  // Check if user's province was mapped to a different province
+  const showProvinceWarning = userProfileProvince &&
+    userProfileProvince.toUpperCase() !== household.province;
+
   return (
     <div className="space-y-6">
+      {/* Province Warning Message */}
+      {showProvinceWarning && (
+        <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-semibold text-yellow-800">Province not supported at this moment</h3>
+              <p className="mt-1 text-sm text-yellow-700">
+                Your profile province (<strong>{getProvinceName(userProfileProvince!)}</strong>) is not currently supported for tax calculations.
+                Using <strong>{getProvinceName(household.province)}</strong> tax rates instead.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Basic Settings */}
       <Card>
         <CardHeader>
@@ -52,6 +98,9 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-600 mt-1">
+                Tax calculations currently supported for AB, BC, ON, and QC only
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="start-year">Start Year</Label>
@@ -109,11 +158,10 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="spending-go-go">Annual Spending ($)</Label>
-                <Input
+                <CurrencyInput
                   id="spending-go-go"
-                  type="number"
                   value={household.spending_go_go}
-                  onChange={(e) => onChange('spending_go_go', parseFloat(e.target.value) || 0)}
+                  onChange={(value) => onChange('spending_go_go', value)}
                 />
               </div>
               <div className="space-y-2">
@@ -133,11 +181,10 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="spending-slow-go">Annual Spending ($)</Label>
-                <Input
+                <CurrencyInput
                   id="spending-slow-go"
-                  type="number"
                   value={household.spending_slow_go}
-                  onChange={(e) => onChange('spending_slow_go', parseFloat(e.target.value) || 0)}
+                  onChange={(value) => onChange('spending_slow_go', value)}
                 />
               </div>
               <div className="space-y-2">
@@ -157,11 +204,10 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="spending-no-go">Annual Spending ($)</Label>
-                <Input
+                <CurrencyInput
                   id="spending-no-go"
-                  type="number"
                   value={household.spending_no_go}
-                  onChange={(e) => onChange('spending_no_go', parseFloat(e.target.value) || 0)}
+                  onChange={(value) => onChange('spending_no_go', value)}
                 />
               </div>
             </div>
@@ -210,11 +256,10 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="tfsa-room-growth">Annual TFSA Limit Growth ($)</Label>
-            <Input
+            <CurrencyInput
               id="tfsa-room-growth"
-              type="number"
               value={household.tfsa_room_annual_growth}
-              onChange={(e) => onChange('tfsa_room_annual_growth', parseFloat(e.target.value) || 0)}
+              onChange={(value) => onChange('tfsa_room_annual_growth', value)}
             />
             <p className="text-xs text-gray-600">
               The annual TFSA contribution limit increase set by the government (e.g., $7,000 for 2026).
@@ -233,11 +278,10 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="gap-tolerance">Spending Gap Tolerance ($)</Label>
-            <Input
+            <CurrencyInput
               id="gap-tolerance"
-              type="number"
               value={household.gap_tolerance}
-              onChange={(e) => onChange('gap_tolerance', parseFloat(e.target.value) || 0)}
+              onChange={(value) => onChange('gap_tolerance', value)}
             />
             <p className="text-xs text-gray-600">
               Acceptable shortfall in meeting spending goals
@@ -292,11 +336,10 @@ export function HouseholdForm({ household, onChange, isPrefilled = false }: Hous
             </div>
             <div className="space-y-2">
               <Label htmlFor="hybrid-rrif-topup">Hybrid RRIF Top-up (per person) ($)</Label>
-              <Input
+              <CurrencyInput
                 id="hybrid-rrif-topup"
-                type="number"
                 value={household.hybrid_rrif_topup_per_person}
-                onChange={(e) => onChange('hybrid_rrif_topup_per_person', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('hybrid_rrif_topup_per_person', value)}
               />
             </div>
           </div>

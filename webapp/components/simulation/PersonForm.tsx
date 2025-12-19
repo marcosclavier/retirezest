@@ -3,6 +3,7 @@
 import { PersonInput } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -76,47 +77,42 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-tfsa`}>TFSA Balance ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-tfsa`}
-                type="number"
                 value={person.tfsa_balance ?? 0}
-                onChange={(e) => onChange('tfsa_balance', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('tfsa_balance', value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-rrif`}>RRIF Balance ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-rrif`}
-                type="number"
                 value={person.rrif_balance ?? 0}
-                onChange={(e) => onChange('rrif_balance', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('rrif_balance', value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-rrsp`}>RRSP Balance ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-rrsp`}
-                type="number"
                 value={person.rrsp_balance ?? 0}
-                onChange={(e) => onChange('rrsp_balance', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('rrsp_balance', value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-nonreg`}>Non-Registered Balance ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-nonreg`}
-                type="number"
                 value={person.nonreg_balance ?? 0}
-                onChange={(e) => onChange('nonreg_balance', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('nonreg_balance', value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-corporate`}>Corporate Balance ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-corporate`}
-                type="number"
                 value={person.corporate_balance ?? 0}
-                onChange={(e) => onChange('corporate_balance', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('corporate_balance', value)}
               />
             </div>
           </div>
@@ -140,11 +136,10 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-cpp-amount`}>CPP Annual Amount ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-cpp-amount`}
-                type="number"
                 value={person.cpp_annual_at_start}
-                onChange={(e) => onChange('cpp_annual_at_start', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('cpp_annual_at_start', value)}
               />
             </div>
             <div className="space-y-2">
@@ -158,11 +153,10 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${personNumber}-oas-amount`}>OAS Annual Amount ($)</Label>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-oas-amount`}
-                type="number"
                 value={person.oas_annual_at_start}
-                onChange={(e) => onChange('oas_annual_at_start', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('oas_annual_at_start', value)}
               />
             </div>
           </div>
@@ -185,38 +179,34 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   >
                     Adjusted Cost Base ($)
                   </LabelWithTooltip>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-nonreg-acb`}
-                    type="number"
                     value={person.nonreg_acb}
-                    onChange={(e) => onChange('nonreg_acb', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('nonreg_acb', value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`${personNumber}-nr-cash`}>Cash ($)</Label>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-nr-cash`}
-                    type="number"
                     value={person.nr_cash}
-                    onChange={(e) => onChange('nr_cash', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('nr_cash', value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`${personNumber}-nr-gic`}>GIC ($)</Label>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-nr-gic`}
-                    type="number"
                     value={person.nr_gic}
-                    onChange={(e) => onChange('nr_gic', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('nr_gic', value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`${personNumber}-nr-invest`}>Investments ($)</Label>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-nr-invest`}
-                    type="number"
                     value={person.nr_invest}
-                    onChange={(e) => onChange('nr_invest', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('nr_invest', value)}
                   />
                 </div>
               </div>
@@ -373,29 +363,26 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={`${personNumber}-corp-cash`}>Cash Bucket ($)</Label>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-corp-cash`}
-                    type="number"
                     value={person.corp_cash_bucket}
-                    onChange={(e) => onChange('corp_cash_bucket', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('corp_cash_bucket', value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`${personNumber}-corp-gic`}>GIC Bucket ($)</Label>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-corp-gic`}
-                    type="number"
                     value={person.corp_gic_bucket}
-                    onChange={(e) => onChange('corp_gic_bucket', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('corp_gic_bucket', value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`${personNumber}-corp-invest`}>Investment Bucket ($)</Label>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-corp-invest`}
-                    type="number"
                     value={person.corp_invest_bucket}
-                    onChange={(e) => onChange('corp_invest_bucket', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('corp_invest_bucket', value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -405,11 +392,10 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   >
                     RDTOH ($)
                   </LabelWithTooltip>
-                  <Input
+                  <CurrencyInput
                     id={`${personNumber}-corp-rdtoh`}
-                    type="number"
                     value={person.corp_rdtoh}
-                    onChange={(e) => onChange('corp_rdtoh', parseFloat(e.target.value) || 0)}
+                    onChange={(value) => onChange('corp_rdtoh', value)}
                   />
                 </div>
               </div>
@@ -549,11 +535,10 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               >
                 Annual TFSA Contribution ($)
               </LabelWithTooltip>
-              <Input
+              <CurrencyInput
                 id={`${personNumber}-tfsa-contribution`}
-                type="number"
                 value={person.tfsa_contribution_annual}
-                onChange={(e) => onChange('tfsa_contribution_annual', parseFloat(e.target.value) || 0)}
+                onChange={(value) => onChange('tfsa_contribution_annual', value)}
               />
               <p className="text-xs text-gray-600">
                 How much you'll contribute to TFSA each year (0 = no contributions)

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 interface Debt {
   id: string;
   type: string;
+  creditor: string;
   description: string | null;
   currentBalance: number;
   interestRate: number;
@@ -21,6 +22,7 @@ export default function DebtsPage() {
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [formData, setFormData] = useState({
     type: 'mortgage',
+    creditor: '',
     description: '',
     currentBalance: '',
     interestRate: '',
@@ -88,6 +90,7 @@ export default function DebtsPage() {
         setEditingId(null);
         setFormData({
           type: 'mortgage',
+          creditor: '',
           description: '',
           currentBalance: '',
           interestRate: '',
@@ -106,6 +109,7 @@ export default function DebtsPage() {
   const handleEdit = (debt: Debt) => {
     setFormData({
       type: debt.type,
+      creditor: debt.creditor,
       description: debt.description || '',
       currentBalance: debt.currentBalance.toString(),
       interestRate: debt.interestRate.toString(),
@@ -183,6 +187,7 @@ export default function DebtsPage() {
             setEditingId(null);
             setFormData({
               type: 'mortgage',
+              creditor: '',
               description: '',
               currentBalance: '',
               interestRate: '',
@@ -242,6 +247,18 @@ export default function DebtsPage() {
                   <option value="line_of_credit">Line of Credit</option>
                   <option value="other">Other</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Creditor / Lender</label>
+                <input
+                  type="text"
+                  value={formData.creditor}
+                  onChange={(e) => setFormData({ ...formData, creditor: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                  placeholder="e.g., TD Bank, RBC, Scotiabank"
+                  required
+                />
               </div>
 
               <div>
@@ -365,6 +382,7 @@ export default function DebtsPage() {
                       <h3 className="text-lg font-medium text-gray-900 capitalize">
                         {debt.type.replace('_', ' ')}
                       </h3>
+                      <span className="text-sm text-gray-600">• {debt.creditor}</span>
                       <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
                         {debt.interestRate}% APR
                       </span>

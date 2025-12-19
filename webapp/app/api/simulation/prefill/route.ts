@@ -279,12 +279,29 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Determine province
-    let province = 'AB'; // default
+    // Determine province - map user's profile province to supported simulation provinces
+    // Only AB, BC, ON, QC have tax calculation support in the backend
+    let province = 'ON'; // default to Ontario
     if (user?.province) {
       const provinceUpper = user.province.toUpperCase();
+
+      // If user's province is directly supported, use it
       if (['AB', 'BC', 'ON', 'QC'].includes(provinceUpper)) {
         province = provinceUpper as any;
+      } else {
+        // Map other provinces to nearest supported province for tax calculations
+        const provinceMapping: Record<string, string> = {
+          'SK': 'AB',  // Saskatchewan -> Alberta (prairie provinces)
+          'MB': 'ON',  // Manitoba -> Ontario (central Canada)
+          'NB': 'QC',  // New Brunswick -> Quebec (Maritime, bilingual)
+          'NS': 'QC',  // Nova Scotia -> Quebec (Maritime)
+          'PE': 'QC',  // Prince Edward Island -> Quebec (Maritime)
+          'NL': 'QC',  // Newfoundland and Labrador -> Quebec (Atlantic)
+          'YT': 'BC',  // Yukon -> British Columbia (Pacific region)
+          'NT': 'AB',  // Northwest Territories -> Alberta (northern)
+          'NU': 'AB',  // Nunavut -> Alberta (northern)
+        };
+        province = (provinceMapping[provinceUpper] || 'ON') as any;
       }
     }
 
@@ -299,6 +316,7 @@ export async function GET(request: NextRequest) {
       person1Input,
       person2Input,
       province,
+      userProfileProvince: user?.province || null, // Original province from profile
       includePartner,
       hasAssets: assets.length > 0,
       hasPartnerAssets,

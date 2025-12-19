@@ -484,26 +484,46 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium text-gray-700">Province</label>
               {editing ? (
-                <select
-                  value={formData.province}
-                  onChange={(e) => handleChange('province', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
-                >
-                  <option value="">Select province</option>
-                  <option value="ON">Ontario</option>
-                  <option value="BC">British Columbia</option>
-                  <option value="AB">Alberta</option>
-                  <option value="SK">Saskatchewan</option>
-                  <option value="MB">Manitoba</option>
-                  <option value="QC">Quebec</option>
-                  <option value="NB">New Brunswick</option>
-                  <option value="NS">Nova Scotia</option>
-                  <option value="PE">Prince Edward Island</option>
-                  <option value="NL">Newfoundland and Labrador</option>
-                  <option value="YT">Yukon</option>
-                  <option value="NT">Northwest Territories</option>
-                  <option value="NU">Nunavut</option>
-                </select>
+                <>
+                  <select
+                    value={formData.province}
+                    onChange={(e) => handleChange('province', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border text-gray-900"
+                  >
+                    <option value="">Select province</option>
+                    <option value="AB">Alberta</option>
+                    <option value="BC">British Columbia</option>
+                    <option value="MB">Manitoba</option>
+                    <option value="NB">New Brunswick</option>
+                    <option value="NL">Newfoundland and Labrador</option>
+                    <option value="NT">Northwest Territories</option>
+                    <option value="NS">Nova Scotia</option>
+                    <option value="NU">Nunavut</option>
+                    <option value="ON">Ontario</option>
+                    <option value="PE">Prince Edward Island</option>
+                    <option value="QC">Quebec</option>
+                    <option value="SK">Saskatchewan</option>
+                    <option value="YT">Yukon</option>
+                  </select>
+                  {formData.province && !['AB', 'BC', 'ON', 'QC'].includes(formData.province) && (
+                    <div className="mt-2 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md p-2">
+                      Province not supported. Using {(() => {
+                        const provinceMapping: Record<string, string> = {
+                          'SK': 'Alberta',
+                          'MB': 'Ontario',
+                          'NB': 'Quebec',
+                          'NS': 'Quebec',
+                          'PE': 'Quebec',
+                          'NL': 'Quebec',
+                          'YT': 'British Columbia',
+                          'NT': 'Alberta',
+                          'NU': 'Alberta',
+                        };
+                        return provinceMapping[formData.province] || 'Ontario';
+                      })()} tax rates instead.
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="mt-1 text-sm text-gray-900">{user.province || 'Not provided'}</div>
               )}
