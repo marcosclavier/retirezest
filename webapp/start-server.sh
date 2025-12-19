@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "=== Railway Deployment Debug ==="
@@ -34,7 +34,7 @@ export NODE_ENV="${NODE_ENV:-production}"
 echo "HOSTNAME=$HOSTNAME"
 echo "PORT=$PORT"
 echo "NODE_ENV=$NODE_ENV"
-echo "DATABASE_URL=${DATABASE_URL:0:30}..." # Show first 30 chars only
+echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo "YES" || echo "NO")"
 
 echo ""
 echo "Starting Next.js server..."
