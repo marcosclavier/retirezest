@@ -12,4 +12,4 @@ cmds = [
 ]
 
 [start]
-cmd = 'sh start-server.sh'
+cmd = 'bash start-server.sh'
