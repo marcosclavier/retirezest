@@ -7,6 +7,12 @@
 export async function register() {
   // Initialize monitoring and observability tools
 
+  // Skip Sentry completely in development to reduce resource usage
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📊 Sentry disabled in development mode (battery saver)');
+    return;
+  }
+
   // Skip initialization if no DSN is configured
   if (!process.env.SENTRY_DSN) {
     return;

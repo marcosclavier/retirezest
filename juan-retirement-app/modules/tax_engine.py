@@ -10,6 +10,7 @@ This module handles all federal and provincial tax calculations:
 """
 
 from typing import Dict, List
+from collections import OrderedDict
 from modules.models import TaxParams, Bracket
 
 
@@ -257,6 +258,42 @@ def capital_gains_inclusion(amount: float, over_250k: bool = False) -> Dict[str,
     }
 
 
+# Tax calculation cache for performance optimization
+# Key: (params_id, age, rounded_income_tuple)
+# Value: tax calculation result
+_tax_cache: OrderedDict = OrderedDict()
+_tax_cache_max_size = 1024
+
+
+def _make_cache_key(
+    params: TaxParams,
+    age: int,
+    ordinary_income: float,
+    elig_dividends: float,
+    nonelig_dividends: float,
+    cap_gains: float,
+    pension_income: float,
+    oas_received: float,
+) -> tuple:
+    """
+    Create a hashable cache key for tax calculations.
+
+    Uses id(params) to identify the tax configuration (federal vs provincial)
+    and rounds float values to nearest dollar to reduce cache misses from
+    tiny float differences while maintaining accuracy.
+    """
+    return (
+        id(params),
+        age,
+        round(ordinary_income),
+        round(elig_dividends),
+        round(nonelig_dividends),
+        round(cap_gains),
+        round(pension_income),
+        round(oas_received),
+    )
+
+
 def progressive_tax(
     params: TaxParams,
     age: int,
@@ -320,6 +357,17 @@ def progressive_tax(
         >>> result['net_tax']  # Should be around 9000 after BPA credit
         8775.0
     """
+    # Check cache first
+    cache_key = _make_cache_key(
+        params, age, ordinary_income, elig_dividends, nonelig_dividends,
+        cap_gains, pension_income, oas_received
+    )
+
+    if cache_key in _tax_cache:
+        # Move to end (LRU) and return cached result
+        _tax_cache.move_to_end(cache_key)
+        return _tax_cache[cache_key]
+
     # Ensure all inputs are floats (defensive programming)
     ordinary_income = float(ordinary_income) if ordinary_income is not None else 0.0
     elig_dividends = float(elig_dividends) if elig_dividends is not None else 0.0
@@ -407,7 +455,7 @@ def progressive_tax(
         cg_result['includable_amount'] * marginal_rate if cap_gains > 0 else 0.0
     )
 
-    return {
+    result = {
         'taxable_income': taxable_income,
         'gross_tax': gross_tax,
         'tax_on_ordinary': apply_tax_brackets(ordinary_income, params.brackets),
@@ -422,3 +470,11 @@ def progressive_tax(
         'marginal_rate': marginal_rate,
         'effective_rate': effective_rate,
     }
+
+    # Store in cache and maintain max size
+    _tax_cache[cache_key] = result
+    if len(_tax_cache) > _tax_cache_max_size:
+        # Remove oldest entry (FIFO from front)
+        _tax_cache.popitem(last=False)
+
+    return result

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { YearResult } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,7 +18,7 @@ interface PortfolioChartProps {
   yearByYear: YearResult[];
 }
 
-export function PortfolioChart({ yearByYear }: PortfolioChartProps) {
+export const PortfolioChart = memo(function PortfolioChart({ yearByYear }: PortfolioChartProps) {
   // Prepare data for chart
   const chartData = yearByYear.map((year) => ({
     year: year.year,
@@ -126,4 +127,4 @@ export function PortfolioChart({ yearByYear }: PortfolioChartProps) {
       </CardContent>
     </Card>
   );
-}
+});

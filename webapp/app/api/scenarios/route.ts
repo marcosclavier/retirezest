@@ -21,12 +21,75 @@ export async function GET(request: NextRequest) {
     }
     const userId = session.userId;
 
-    const scenarios = await prisma.scenario.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Pagination parameters
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+    const skip = (page - 1) * limit;
 
-    return NextResponse.json(scenarios);
+    // Fetch scenarios and total count in parallel
+    const [scenarios, total] = await Promise.all([
+      prisma.scenario.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          description: true,
+          currentAge: true,
+          retirementAge: true,
+          lifeExpectancy: true,
+          province: true,
+          rrspBalance: true,
+          tfsaBalance: true,
+          nonRegBalance: true,
+          realEstateValue: true,
+          employmentIncome: true,
+          pensionIncome: true,
+          rentalIncome: true,
+          otherIncome: true,
+          cppStartAge: true,
+          oasStartAge: true,
+          averageCareerIncome: true,
+          yearsOfCPPContributions: true,
+          yearsInCanada: true,
+          annualExpenses: true,
+          expenseInflationRate: true,
+          investmentReturnRate: true,
+          inflationRate: true,
+          rrspToRrifAge: true,
+          withdrawalStrategy: true,
+          isBaseline: true,
+          createdAt: true,
+          updatedAt: true,
+          // Exclude projectionResults to reduce payload size in list view
+          // (fetch it separately when viewing individual scenario)
+        },
+      }),
+      prisma.scenario.count({ where: { userId } }),
+    ]);
+
+    return NextResponse.json(
+      {
+        scenarios,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasMore: skip + scenarios.length < total,
+        },
+      },
+      {
+        headers: {
+          // Cache for 60 seconds (private cache for user-specific data)
+          'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (error) {
     logger.error('Error fetching scenarios', error, {
       endpoint: '/api/scenarios',

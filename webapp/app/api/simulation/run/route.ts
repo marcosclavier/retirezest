@@ -30,25 +30,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.json();
 
-    // Debug: Log account balances
-    console.log('📊 API received balances:', {
-      p1: {
-        tfsa: body.p1?.tfsa_balance,
-        rrif: body.p1?.rrif_balance,
-        rrsp: body.p1?.rrsp_balance,
-        nonreg: body.p1?.nonreg_balance,
-        corporate: body.p1?.corporate_balance
-      },
-      p2: {
-        tfsa: body.p2?.tfsa_balance,
-        rrif: body.p2?.rrif_balance,
-        rrsp: body.p2?.rrsp_balance,
-        nonreg: body.p2?.nonreg_balance,
-        corporate: body.p2?.corporate_balance
-      }
-    });
-
-    // Log request (remove sensitive data for production)
+    // Log request (sensitive data excluded for production)
     logger.info('Simulation request started', {
       user: session.email,
       endpoint: '/api/simulation/run'

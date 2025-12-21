@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -18,14 +19,39 @@ import { PersonForm } from '@/components/simulation/PersonForm';
 import { HouseholdForm } from '@/components/simulation/HouseholdForm';
 import { Collapsible } from '@/components/ui/collapsible';
 import { ResultsDashboard } from '@/components/simulation/ResultsDashboard';
-import { PortfolioChart } from '@/components/simulation/PortfolioChart';
-import { TaxChart } from '@/components/simulation/TaxChart';
-import { SpendingChart } from '@/components/simulation/SpendingChart';
 import { HealthScoreCard } from '@/components/simulation/HealthScoreCard';
-import { GovernmentBenefitsChart } from '@/components/simulation/GovernmentBenefitsChart';
-import { IncomeCompositionChart } from '@/components/simulation/IncomeCompositionChart';
-import { WithdrawalsBySourceChart } from '@/components/simulation/WithdrawalsBySourceChart';
 import { YearByYearTable } from '@/components/simulation/YearByYearTable';
+
+// Dynamically import chart components to reduce initial bundle size
+const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
+
+const TaxChart = dynamic(() => import('@/components/simulation/TaxChart').then(mod => ({ default: mod.TaxChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
+
+const SpendingChart = dynamic(() => import('@/components/simulation/SpendingChart').then(mod => ({ default: mod.SpendingChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
+
+const GovernmentBenefitsChart = dynamic(() => import('@/components/simulation/GovernmentBenefitsChart').then(mod => ({ default: mod.GovernmentBenefitsChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
+
+const IncomeCompositionChart = dynamic(() => import('@/components/simulation/IncomeCompositionChart').then(mod => ({ default: mod.IncomeCompositionChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
+
+const WithdrawalsBySourceChart = dynamic(() => import('@/components/simulation/WithdrawalsBySourceChart').then(mod => ({ default: mod.WithdrawalsBySourceChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
 
 export default function SimulationPage() {
   const [household, setHousehold] = useState<HouseholdInput>({

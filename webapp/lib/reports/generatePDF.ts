@@ -1,6 +1,3 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-
 /**
  * Generate PDF from HTML element
  * @param elementId - ID of the HTML element to convert to PDF
@@ -8,6 +5,12 @@ import html2canvas from 'html2canvas';
  */
 export async function generatePDF(elementId: string, filename: string): Promise<void> {
   try {
+    // Dynamic imports - only load PDF libraries when generating PDFs (~600KB savings on initial load)
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ]);
+
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error(`Element with ID "${elementId}" not found`);
@@ -83,6 +86,9 @@ export async function generateSimplePDF(
   filename: string
 ): Promise<void> {
   try {
+    // Dynamic import - only load jsPDF when generating PDFs
+    const { default: jsPDF } = await import('jspdf');
+
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();

@@ -43,7 +43,12 @@ export async function GET(request: NextRequest) {
       throw new NotFoundError('User');
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json(user, {
+      headers: {
+        // Cache for 5 minutes (private cache for user profile data)
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     logger.error('Error fetching profile', error, {
       endpoint: '/api/profile',
