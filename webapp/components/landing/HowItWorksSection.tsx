@@ -15,7 +15,7 @@ export default function HowItWorksSection() {
     {
       number: '2',
       title: 'Enter Your Info',
-      subtitle: '5 minutes',
+      subtitle: '15 minutes',
       description: 'Add your income, assets, and retirement goals through our simple guided forms.',
       icon: '📝',
     },
@@ -37,7 +37,7 @@ export default function HowItWorksSection() {
             Start Planning in 3 Simple Steps
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-            From signup to your complete retirement plan in under 10 minutes
+            From signup to your complete retirement plan in under 20 minutes
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default function HowItWorksSection() {
             </Button>
           </Link>
           <p className="mt-4 text-sm text-gray-600">
-            No credit card required • 5-minute setup • Cancel anytime
+            No credit card required • 15-minute setup • Cancel anytime
           </p>
         </div>
 
