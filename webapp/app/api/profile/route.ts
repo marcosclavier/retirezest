@@ -60,6 +60,18 @@ export async function GET(request: NextRequest) {
  * Update the current user's profile
  */
 export async function PUT(request: NextRequest) {
+  return await updateProfile(request);
+}
+
+/**
+ * PATCH /api/profile
+ * Partially update the current user's profile
+ */
+export async function PATCH(request: NextRequest) {
+  return await updateProfile(request);
+}
+
+async function updateProfile(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
@@ -109,11 +121,53 @@ export async function PUT(request: NextRequest) {
     }
 
     if (body.maritalStatus !== undefined) {
-      const validStatuses = ['single', 'married', 'divorced', 'widowed', 'common_law'];
+      const validStatuses = ['single', 'married', 'divorced', 'widowed', 'common_law', 'common-law'];
       if (!validStatuses.includes(body.maritalStatus)) {
         throw new ValidationError('Invalid marital status', 'maritalStatus');
       }
       updates.maritalStatus = body.maritalStatus;
+    }
+
+    // Partner information
+    if (body.includePartner !== undefined) {
+      updates.includePartner = Boolean(body.includePartner);
+    }
+
+    if (body.partnerFirstName !== undefined) {
+      updates.partnerFirstName = body.partnerFirstName ? body.partnerFirstName.trim() : null;
+    }
+
+    if (body.partnerLastName !== undefined) {
+      updates.partnerLastName = body.partnerLastName ? body.partnerLastName.trim() : null;
+    }
+
+    if (body.partnerDateOfBirth !== undefined) {
+      if (body.partnerDateOfBirth) {
+        const dob = new Date(body.partnerDateOfBirth);
+        if (isNaN(dob.getTime())) {
+          throw new ValidationError('Invalid partner date of birth', 'partnerDateOfBirth');
+        }
+        updates.partnerDateOfBirth = dob;
+      } else {
+        updates.partnerDateOfBirth = null;
+      }
+    }
+
+    // Retirement goals
+    if (body.targetRetirementAge !== undefined) {
+      const age = parseInt(String(body.targetRetirementAge), 10);
+      if (isNaN(age) || age < 40 || age > 80) {
+        throw new ValidationError('Target retirement age must be between 40 and 80', 'targetRetirementAge');
+      }
+      updates.targetRetirementAge = age;
+    }
+
+    if (body.lifeExpectancy !== undefined) {
+      const age = parseInt(String(body.lifeExpectancy), 10);
+      if (isNaN(age) || age < 65 || age > 120) {
+        throw new ValidationError('Life expectancy must be between 65 and 120', 'lifeExpectancy');
+      }
+      updates.lifeExpectancy = age;
     }
 
     // Check if there are any updates to apply

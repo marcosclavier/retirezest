@@ -181,23 +181,32 @@ export function findOptimalCPPStartAge(
 
 /**
  * Estimate CPP with simplified input (for users without full contribution history)
+ * Properly accounts for zero-earning years in the contributory period
  */
 export function estimateCPPSimple(
   averageAnnualIncome: number,
   yearsOfContributions: number,
-  startAge: number = 65
+  startAge: number = 65,
+  currentAge: number = 65
 ): CPPEstimate {
-  // Create simplified contribution history
+  // Calculate full contributory period (age 18 to CPP start age)
+  const contributoryYears = Math.max(startAge - 18, 0);
+
+  // Create full contribution history including zero-earning years
   const currentYear = new Date().getFullYear();
   const contributionHistory = [];
 
-  for (let i = 0; i < yearsOfContributions; i++) {
-    const year = currentYear - i;
+  // Fill contribution history from most recent backwards
+  for (let i = 0; i < contributoryYears; i++) {
+    const year = currentYear - (currentAge - startAge) - i;
     const ympe = YMPE_HISTORY[year] || 71300; // Use latest if not in history
+
+    // Only count actual contribution years, rest are zeros
+    const isContributionYear = i < yearsOfContributions;
 
     contributionHistory.push({
       year,
-      pensionableEarnings: Math.min(averageAnnualIncome, ympe),
+      pensionableEarnings: isContributionYear ? Math.min(averageAnnualIncome, ympe) : 0,
     });
   }
 

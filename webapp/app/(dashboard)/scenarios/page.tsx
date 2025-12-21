@@ -11,11 +11,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Play, Trash2, Copy, Plus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Play, Trash2, Copy, Plus, TrendingUp, TrendingDown, Settings } from 'lucide-react';
 import { runSimulation } from '@/lib/api/simulation-client';
 import {
   type HouseholdInput,
   type SimulationResponse,
+  type WithdrawalStrategy,
   strategyOptions,
 } from '@/lib/types/simulation';
 
@@ -34,6 +35,13 @@ export default function ScenariosPage() {
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [baselineLoaded, setBaselineLoaded] = useState(false);
   const [showQuickWhatIf, setShowQuickWhatIf] = useState(false);
+  const [showCustomBuilder, setShowCustomBuilder] = useState(false);
+
+  // Custom scenario builder state
+  const [customStrategy, setCustomStrategy] = useState<WithdrawalStrategy | 'baseline'>('baseline');
+  const [customBenefitsTiming, setCustomBenefitsTiming] = useState<'baseline' | '65' | '70' | '70-65' | '60-65'>('baseline');
+  const [customSpending, setCustomSpending] = useState<'baseline' | 'reduce' | 'increase'>('baseline');
+  const [customTFSA, setCustomTFSA] = useState<'baseline' | 'none' | 'maximize'>('baseline');
 
   // Fetch CSRF token
   useEffect(() => {
@@ -125,7 +133,154 @@ export default function ScenariosPage() {
     runScenarioSimulation(newScenario.id, modifiedInputs);
   };
 
+  const createCustomScenario = () => {
+    const baseline = scenarios.find(s => s.name.includes('Baseline'))?.inputs;
+    if (!baseline) {
+      alert('Please load a baseline scenario first');
+      return;
+    }
+
+    let modifiedInputs = JSON.parse(JSON.stringify(baseline)) as HouseholdInput;
+    const changes: string[] = [];
+
+    // Apply strategy change
+    if (customStrategy !== 'baseline') {
+      modifiedInputs.strategy = customStrategy;
+      changes.push(strategyOptions.find(s => s.value === customStrategy)?.label || customStrategy);
+    }
+
+    // Apply benefits timing change
+    if (customBenefitsTiming !== 'baseline') {
+      switch (customBenefitsTiming) {
+        case '65':
+          modifiedInputs.p1 = { ...modifiedInputs.p1, cpp_start_age: 65, oas_start_age: 65 };
+          modifiedInputs.p2 = { ...modifiedInputs.p2, cpp_start_age: 65, oas_start_age: 65 };
+          changes.push('CPP & OAS at 65');
+          break;
+        case '70':
+          modifiedInputs.p1 = { ...modifiedInputs.p1, cpp_start_age: 70, oas_start_age: 70 };
+          modifiedInputs.p2 = { ...modifiedInputs.p2, cpp_start_age: 70, oas_start_age: 70 };
+          changes.push('CPP & OAS delayed to 70');
+          break;
+        case '70-65':
+          modifiedInputs.p1 = { ...modifiedInputs.p1, cpp_start_age: 70, oas_start_age: 65 };
+          modifiedInputs.p2 = { ...modifiedInputs.p2, cpp_start_age: 70, oas_start_age: 65 };
+          changes.push('CPP at 70, OAS at 65');
+          break;
+        case '60-65':
+          modifiedInputs.p1 = { ...modifiedInputs.p1, cpp_start_age: 60, oas_start_age: 65 };
+          modifiedInputs.p2 = { ...modifiedInputs.p2, cpp_start_age: 60, oas_start_age: 65 };
+          changes.push('CPP at 60, OAS at 65');
+          break;
+      }
+    }
+
+    // Apply spending change
+    if (customSpending !== 'baseline') {
+      const multiplier = customSpending === 'reduce' ? 0.8 : 1.2;
+      modifiedInputs.spending_go_go = modifiedInputs.spending_go_go * multiplier;
+      modifiedInputs.spending_slow_go = modifiedInputs.spending_slow_go * multiplier;
+      modifiedInputs.spending_no_go = modifiedInputs.spending_no_go * multiplier;
+      changes.push(customSpending === 'reduce' ? 'Spending -20%' : 'Spending +20%');
+    }
+
+    // Apply TFSA strategy change
+    if (customTFSA !== 'baseline') {
+      const amount = customTFSA === 'maximize' ? 7000 : 0;
+      modifiedInputs.p1 = { ...modifiedInputs.p1, tfsa_contribution_annual: amount };
+      modifiedInputs.p2 = { ...modifiedInputs.p2, tfsa_contribution_annual: amount };
+      changes.push(customTFSA === 'maximize' ? 'Maximize TFSA' : 'No TFSA contributions');
+    }
+
+    const scenarioName = changes.length > 0 ? changes.join(' + ') : 'Custom Scenario';
+    const newScenario: Scenario = {
+      id: `scenario-${Date.now()}`,
+      name: scenarioName,
+      description: 'Custom scenario with combined changes',
+      inputs: modifiedInputs,
+      isRunning: false,
+    };
+
+    setScenarios(prev => [...prev, newScenario]);
+    runScenarioSimulation(newScenario.id, modifiedInputs);
+
+    // Reset custom builder
+    setCustomStrategy('baseline');
+    setCustomBenefitsTiming('baseline');
+    setCustomSpending('baseline');
+    setCustomTFSA('baseline');
+  };
+
   const quickWhatIfScenarios = [
+    {
+      category: 'Withdrawal Strategy',
+      options: [
+        {
+          name: 'Corporate Optimized',
+          description: 'Optimize for corporate asset integration',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'corporate-optimized' as const,
+          }),
+        },
+        {
+          name: 'Minimize Income',
+          description: 'Minimize taxable income to reduce clawbacks',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'minimize-income' as const,
+          }),
+        },
+        {
+          name: 'RRIF Splitting',
+          description: 'Optimize RRIF withdrawals with income splitting',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'rrif-splitting' as const,
+          }),
+        },
+        {
+          name: 'Capital Gains Optimized',
+          description: 'Focus on capital gains for tax efficiency',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'capital-gains-optimized' as const,
+          }),
+        },
+        {
+          name: 'TFSA First',
+          description: 'Prioritize TFSA withdrawals',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'tfsa-first' as const,
+          }),
+        },
+        {
+          name: 'Balanced',
+          description: 'Balanced withdrawal approach',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'balanced' as const,
+          }),
+        },
+        {
+          name: 'RRIF Front-Load',
+          description: 'Higher RRIF withdrawals early to reduce future tax',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'rrif-frontload' as const,
+          }),
+        },
+        {
+          name: 'Manual',
+          description: 'Manual withdrawal strategy',
+          modifier: (input: HouseholdInput) => ({
+            ...input,
+            strategy: 'manual' as const,
+          }),
+        },
+      ],
+    },
     {
       category: 'Government Benefits Timing (Corporate Optimized)',
       options: [
@@ -287,16 +442,250 @@ export default function ScenariosPage() {
             </button>
           )}
           {baselineLoaded && (
-            <button
-              onClick={() => setShowQuickWhatIf(!showQuickWhatIf)}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Quick What-If
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setShowCustomBuilder(!showCustomBuilder);
+                  setShowQuickWhatIf(false);
+                }}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 font-medium flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Custom Scenario
+              </button>
+              <button
+                onClick={() => {
+                  setShowQuickWhatIf(!showQuickWhatIf);
+                  setShowCustomBuilder(false);
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Quick What-If
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {/* Custom Scenario Builder */}
+      {showCustomBuilder && baselineLoaded && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Custom Scenario Builder</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Click buttons below to select options from each category, then create your combined scenario
+          </p>
+
+          <div className="space-y-6">
+            {/* Withdrawal Strategy */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Withdrawal Strategy</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                <button
+                  onClick={() => setCustomStrategy('baseline')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customStrategy === 'baseline'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Keep Baseline</div>
+                  <div className="text-xs text-gray-700">No change</div>
+                </button>
+                {strategyOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setCustomStrategy(option.value)}
+                    className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                      customStrategy === option.value
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-bold text-sm text-gray-900">{option.label}</div>
+                    <div className="text-xs text-gray-700">{option.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Government Benefits Timing */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Government Benefits Timing</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                <button
+                  onClick={() => setCustomBenefitsTiming('baseline')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customBenefitsTiming === 'baseline'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Keep Baseline</div>
+                  <div className="text-xs text-gray-700">No change</div>
+                </button>
+                <button
+                  onClick={() => setCustomBenefitsTiming('65')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customBenefitsTiming === '65'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">CPP & OAS at 65</div>
+                  <div className="text-xs text-gray-700">Standard age</div>
+                </button>
+                <button
+                  onClick={() => setCustomBenefitsTiming('70')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customBenefitsTiming === '70'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Delay Both to 70</div>
+                  <div className="text-xs text-gray-700">Max benefits</div>
+                </button>
+                <button
+                  onClick={() => setCustomBenefitsTiming('70-65')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customBenefitsTiming === '70-65'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">CPP at 70, OAS at 65</div>
+                  <div className="text-xs text-gray-700">Hybrid approach</div>
+                </button>
+                <button
+                  onClick={() => setCustomBenefitsTiming('60-65')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customBenefitsTiming === '60-65'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">CPP at 60, OAS at 65</div>
+                  <div className="text-xs text-gray-700">Early cash flow</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Spending Level */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Spending Level</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <button
+                  onClick={() => setCustomSpending('baseline')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customSpending === 'baseline'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Keep Baseline</div>
+                  <div className="text-xs text-gray-700">No change</div>
+                </button>
+                <button
+                  onClick={() => setCustomSpending('reduce')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customSpending === 'reduce'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Reduce by 20%</div>
+                  <div className="text-xs text-gray-700">More conservative</div>
+                </button>
+                <button
+                  onClick={() => setCustomSpending('increase')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customSpending === 'increase'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Increase by 20%</div>
+                  <div className="text-xs text-gray-700">More spending</div>
+                </button>
+              </div>
+            </div>
+
+            {/* TFSA Strategy */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">TFSA Contribution Strategy</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <button
+                  onClick={() => setCustomTFSA('baseline')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customTFSA === 'baseline'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Keep Baseline</div>
+                  <div className="text-xs text-gray-700">No change</div>
+                </button>
+                <button
+                  onClick={() => setCustomTFSA('none')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customTFSA === 'none'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">No TFSA Contributions</div>
+                  <div className="text-xs text-gray-700">Keep in taxable</div>
+                </button>
+                <button
+                  onClick={() => setCustomTFSA('maximize')}
+                  className={`text-left p-3 border-2 rounded-lg transition-colors ${
+                    customTFSA === 'maximize'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-gray-900">Maximize TFSA</div>
+                  <div className="text-xs text-gray-700">$7,000/year per person</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              {customStrategy === 'baseline' &&
+                customBenefitsTiming === 'baseline' &&
+                customSpending === 'baseline' &&
+                customTFSA === 'baseline' ? (
+                <span className="text-amber-600">Select at least one option above</span>
+              ) : (
+                <span className="text-green-600">
+                  {[
+                    customStrategy !== 'baseline' && (strategyOptions.find(s => s.value === customStrategy)?.label || customStrategy),
+                    customBenefitsTiming !== 'baseline' && 'Benefits timing',
+                    customSpending !== 'baseline' && 'Spending',
+                    customTFSA !== 'baseline' && 'TFSA'
+                  ].filter(Boolean).join(' + ')} selected
+                </span>
+              )}
+            </div>
+            <button
+              onClick={createCustomScenario}
+              disabled={
+                customStrategy === 'baseline' &&
+                customBenefitsTiming === 'baseline' &&
+                customSpending === 'baseline' &&
+                customTFSA === 'baseline'
+              }
+              className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Create Custom Scenario
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick What-If Builder */}
       {showQuickWhatIf && baselineLoaded && (
@@ -363,6 +752,12 @@ export default function ScenariosPage() {
 
                 {!scenario.isRunning && summary && (
                   <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Strategy:</span>
+                      <span className="font-medium text-purple-600">
+                        {strategyOptions.find(s => s.value === scenario.inputs.strategy)?.label || scenario.inputs.strategy}
+                      </span>
+                    </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Years Funded:</span>
                       <span className={`font-medium ${summary.years_funded === summary.years_simulated ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -578,6 +973,14 @@ export default function ScenariosPage() {
                     {selectedScenarioData.map(scenario => (
                       <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
                         {formatCurrency(scenario.results!.summary!.total_oas)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 pl-12">- GIS Total</td>
+                    {selectedScenarioData.map(scenario => (
+                      <td key={scenario.id} className="px-6 py-4 text-sm text-gray-600">
+                        {formatCurrency(scenario.results!.summary!.total_gis)}
                       </td>
                     ))}
                   </tr>

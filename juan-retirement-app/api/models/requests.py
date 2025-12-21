@@ -24,6 +24,9 @@ class PersonInput(BaseModel):
     oas_start_age: int = Field(default=65, ge=65, le=70, description="Age to start OAS")
     oas_annual_at_start: float = Field(default=0, ge=0, le=15000, description="Annual OAS at start age")
 
+    # Employer pension
+    employer_pension_annual: float = Field(default=0, ge=0, le=200000, description="Annual employer pension (DB/DC)")
+
     # Account balances
     tfsa_balance: float = Field(default=0, ge=0, description="TFSA balance")
     rrif_balance: float = Field(default=0, ge=0, description="RRIF balance")

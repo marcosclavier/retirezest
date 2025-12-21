@@ -14,11 +14,61 @@ import { getShortHelp } from '@/lib/help/helpContent';
 export default function CPPCalculatorPage() {
   const [averageIncome, setAverageIncome] = useState('70000');
   const [yearsOfContributions, setYearsOfContributions] = useState('35');
+  const [currentAge, setCurrentAge] = useState('65');
   const [startAge, setStartAge] = useState('65');
   const [lifeExpectancy, setLifeExpectancy] = useState('85');
   const [result, setResult] = useState<any>(null);
   const [comparison, setComparison] = useState<any>(null);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [ageFromProfile, setAgeFromProfile] = useState(false);
+
+  // Load saved values from localStorage on mount
+  useEffect(() => {
+    const savedCurrentAge = localStorage.getItem('cpp_calculator_current_age');
+    const savedAverageIncome = localStorage.getItem('cpp_calculator_average_income');
+    const savedYearsOfContributions = localStorage.getItem('cpp_calculator_years_of_contributions');
+    const savedStartAge = localStorage.getItem('cpp_calculator_start_age');
+    const savedLifeExpectancy = localStorage.getItem('cpp_calculator_life_expectancy');
+
+    if (savedCurrentAge) setCurrentAge(savedCurrentAge);
+    if (savedAverageIncome) setAverageIncome(savedAverageIncome);
+    if (savedYearsOfContributions) setYearsOfContributions(savedYearsOfContributions);
+    if (savedStartAge) setStartAge(savedStartAge);
+    if (savedLifeExpectancy) setLifeExpectancy(savedLifeExpectancy);
+  }, []);
+
+  // Fetch user profile to populate current age
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/profile');
+        if (res.ok) {
+          const profile = await res.json();
+          if (profile.dateOfBirth) {
+            // Calculate age from date of birth
+            const today = new Date();
+            const birthDate = new Date(profile.dateOfBirth);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+            }
+
+            // Only set if not already saved in localStorage
+            const savedCurrentAge = localStorage.getItem('cpp_calculator_current_age');
+            if (!savedCurrentAge) {
+              setCurrentAge(age.toString());
+              localStorage.setItem('cpp_calculator_current_age', age.toString());
+              setAgeFromProfile(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     const fetchCsrfToken = async () => {
@@ -34,6 +84,27 @@ export default function CPPCalculatorPage() {
     };
     fetchCsrfToken();
   }, []);
+
+  // Save to localStorage whenever values change
+  useEffect(() => {
+    localStorage.setItem('cpp_calculator_current_age', currentAge);
+  }, [currentAge]);
+
+  useEffect(() => {
+    localStorage.setItem('cpp_calculator_average_income', averageIncome);
+  }, [averageIncome]);
+
+  useEffect(() => {
+    localStorage.setItem('cpp_calculator_years_of_contributions', yearsOfContributions);
+  }, [yearsOfContributions]);
+
+  useEffect(() => {
+    localStorage.setItem('cpp_calculator_start_age', startAge);
+  }, [startAge]);
+
+  useEffect(() => {
+    localStorage.setItem('cpp_calculator_life_expectancy', lifeExpectancy);
+  }, [lifeExpectancy]);
 
   const recordCalculatorUsage = async () => {
     if (!csrfToken) return;
@@ -59,16 +130,23 @@ export default function CPPCalculatorPage() {
     const estimate = estimateCPPSimple(
       parseFloat(averageIncome),
       parseInt(yearsOfContributions),
-      parseInt(startAge)
+      parseInt(startAge),
+      parseInt(currentAge)
     );
 
-    // Get optimal age analysis
+    // Build proper contribution history for break-even and optimal age analysis
     const contributionHistory = [];
     const currentYear = new Date().getFullYear();
-    for (let i = 0; i < parseInt(yearsOfContributions); i++) {
+    const contributoryYears = Math.max(parseInt(startAge) - 18, 0);
+
+    // Fill contribution history including zero-earning years
+    for (let i = 0; i < contributoryYears; i++) {
+      const year = currentYear - (parseInt(currentAge) - parseInt(startAge)) - i;
+      const isContributionYear = i < parseInt(yearsOfContributions);
+
       contributionHistory.push({
-        year: currentYear - i,
-        pensionableEarnings: Math.min(parseFloat(averageIncome), 71300),
+        year,
+        pensionableEarnings: isContributionYear ? Math.min(parseFloat(averageIncome), 71300) : 0,
       });
     }
 
@@ -98,6 +176,31 @@ export default function CPPCalculatorPage() {
         </p>
       </div>
 
+      {/* Important Notice */}
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-blue-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-blue-800">
+              <strong className="font-semibold">This is an estimate only.</strong> For more accurate results and to see your actual CPP contribution history, please visit{' '}
+              <a
+                href="https://www.canada.ca/en/employment-social-development/services/my-account.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold underline hover:text-blue-900"
+              >
+                Service Canada My Account
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Input Form */}
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Your Information</h2>
@@ -107,12 +210,12 @@ export default function CPPCalculatorPage() {
               Average Annual Income
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-500">$</span>
+              <span className="absolute left-3 top-2 text-gray-600 font-medium">$</span>
               <input
                 type="number"
                 value={averageIncome}
                 onChange={(e) => setAverageIncome(e.target.value)}
-                className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="pl-7 block w-full rounded-md border-2 border-gray-400 bg-white text-gray-900 font-medium shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 min="0"
                 step="1000"
               />
@@ -130,12 +233,36 @@ export default function CPPCalculatorPage() {
               type="number"
               value={yearsOfContributions}
               onChange={(e) => setYearsOfContributions(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="block w-full rounded-md border-2 border-gray-400 bg-white text-gray-900 font-medium shadow-sm focus:border-blue-500 focus:ring-blue-500"
               min="10"
               max="47"
             />
             <p className="mt-1 text-xs text-gray-500">
               Number of years you've contributed to CPP (ages 18-65)
+            </p>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Current Age
+              </label>
+              {ageFromProfile && (
+                <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
+              )}
+            </div>
+            <input
+              type="number"
+              value={currentAge}
+              onChange={(e) => setCurrentAge(e.target.value)}
+              className={`block w-full rounded-md border-2 bg-white text-gray-900 font-medium shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                ageFromProfile ? 'border-blue-200 bg-blue-50' : 'border-gray-400'
+              }`}
+              min="18"
+              max="100"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Your current age (used to calculate contributory period)
             </p>
           </div>
 
@@ -152,9 +279,9 @@ export default function CPPCalculatorPage() {
               min="60"
               max="70"
             />
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm text-gray-700 font-medium">
               <span>60</span>
-              <span className="font-medium text-lg text-blue-600">{startAge}</span>
+              <span className="font-bold text-xl text-blue-600">{startAge}</span>
               <span>70</span>
             </div>
             <p className="mt-1 text-xs text-gray-500">
@@ -171,7 +298,7 @@ export default function CPPCalculatorPage() {
               type="number"
               value={lifeExpectancy}
               onChange={(e) => setLifeExpectancy(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="block w-full rounded-md border-2 border-gray-400 bg-white text-gray-900 font-medium shadow-sm focus:border-blue-500 focus:ring-blue-500"
               min="65"
               max="100"
             />
@@ -221,7 +348,8 @@ export default function CPPCalculatorPage() {
                 const estimate = estimateCPPSimple(
                   parseFloat(averageIncome),
                   parseInt(yearsOfContributions),
-                  ageNum
+                  ageNum,
+                  parseInt(currentAge)
                 );
                 const isSelected = ageNum === parseInt(startAge);
 

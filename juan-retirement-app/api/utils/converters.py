@@ -80,6 +80,7 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         cpp_annual_at_start=api_person.cpp_annual_at_start,
         oas_start_age=api_person.oas_start_age,
         oas_annual_at_start=api_person.oas_annual_at_start,
+        employer_pension_annual=api_person.employer_pension_annual,
 
         # Account balances
         tfsa_balance=api_person.tfsa_balance,
@@ -255,6 +256,10 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 gis_p2=float(row.get('gis_p2', 0)),
                 oas_clawback_p1=float(row.get('oas_clawback_p1', 0)),
                 oas_clawback_p2=float(row.get('oas_clawback_p2', 0)),
+
+                # Employer pension
+                employer_pension_p1=float(row.get('employer_pension_p1', 0)),
+                employer_pension_p2=float(row.get('employer_pension_p2', 0)),
 
                 # NonReg passive distributions
                 nonreg_distributions=nonreg_distributions,

@@ -38,6 +38,13 @@ model User {
   cppCalculatorUsedAt DateTime?
   oasCalculatorUsedAt DateTime?
 
+  // Onboarding and user journey
+  hasSeenWelcome       Boolean   @default(false)
+  userPath             String?   // 'guided' or 'experienced'
+  onboardingCompleted  Boolean   @default(false)
+  onboardingStep       Int?      // Current step in guided wizard (1-7)
+  completedGuideAt     DateTime? // When they finished the guided setup
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

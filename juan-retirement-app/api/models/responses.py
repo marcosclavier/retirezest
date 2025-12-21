@@ -23,6 +23,8 @@ class YearResult(BaseModel):
     gis_p2: float = Field(default=0.0, description="GIS benefit for person 2")
     oas_clawback_p1: float = Field(default=0.0, description="OAS clawback for person 1")
     oas_clawback_p2: float = Field(default=0.0, description="OAS clawback for person 2")
+    employer_pension_p1: float = Field(default=0.0, description="Employer pension for person 1")
+    employer_pension_p2: float = Field(default=0.0, description="Employer pension for person 2")
 
     # Withdrawals by source
     tfsa_withdrawal_p1: float

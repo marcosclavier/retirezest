@@ -329,6 +329,7 @@ def tax_for_detailed(
     withdrawals_rrif_base: float,
     cpp_income: float,
     oas_income: float,
+    employer_pension: float,
     age: int,
     fed_params,
     prov_params,
@@ -361,7 +362,8 @@ def tax_for_detailed(
 
     # Pension-type income for progressive_tax:
     #   RRIF is pension_income once you're in RRIF-land
-    pension_income = float(withdrawals_rrif_base) + float(add_rrif) + float(cpp_income)
+    #   Also includes CPP and employer pension (DB/DC)
+    pension_income = float(withdrawals_rrif_base) + float(add_rrif) + float(cpp_income) + float(employer_pension)
 
     oas_received = float(oas_income)
 
@@ -419,6 +421,7 @@ def tax_for(
     withdrawals_rrif_base: float,
     cpp_income: float,
     oas_income: float,
+    employer_pension: float,
     age: int,
     fed_params,
     prov_params,
@@ -437,6 +440,7 @@ def tax_for(
     - withdrawals_rrif_base:
         RRIF dollars already withdrawn (and considered pension income) before add_rrif
     - cpp_income, oas_income: baseline CPP & OAS for this person
+    - employer_pension: employer pension (DB/DC) annual income
     - age: this person's age in this tax year
     - fed_params, prov_params: *already indexed* tax parameter objects for that year
     """
@@ -455,6 +459,7 @@ def tax_for(
         withdrawals_rrif_base=withdrawals_rrif_base,
         cpp_income=cpp_income,
         oas_income=oas_income,
+        employer_pension=employer_pension,
         age=age,
         fed_params=fed_params,
         prov_params=prov_params,
@@ -1013,7 +1018,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     oas = 0.0
     if age >= person.oas_start_age:
-        oas = person.oas_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)   
+        oas = person.oas_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)
+
+    # Employer pension (DB/DC) - starts immediately, grows with inflation
+    employer_pension = 0.0
+    if hasattr(person, 'employer_pension_annual') and person.employer_pension_annual > 0:
+        employer_pension = person.employer_pension_annual * ((1 + hh.general_inflation) ** years_since_start)
 
     # Convert  RRSP to RRIF if needed (this may be zero RRSP and add RRIF)
     if rrsp_to_rrif and person.rrsp_balance > 0:
@@ -1075,8 +1085,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             rrif_frontload_target_standard = person.rrif_balance * 0.08
 
             # Calculate current taxable income components (before RRIF withdrawal)
-            # Taxable income includes: CPP + OAS + NonReg distributions + planned RRIF
-            base_taxable_income = cpp + oas + (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist)
+            # Taxable income includes: CPP + OAS + Employer Pension + NonReg distributions + planned RRIF
+            base_taxable_income = cpp + oas + employer_pension + (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist)
             projected_taxable_income_rrif_only = base_taxable_income + rrif_frontload_target_standard
 
             # Check if we're approaching OAS clawback threshold
@@ -1164,7 +1174,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # Normal mode: distributions are available for spending
         dist_for_cash = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
-    pre_tax_cash = (cpp + oas + dist_for_cash + withdrawals["rrif"])
+    pre_tax_cash = (cpp + oas + employer_pension + dist_for_cash + withdrawals["rrif"])
 
     # Compute that person's tax bill on the *base* withdrawal mix
     # NOTE: Distributions are ALWAYS passed to tax_for() for taxation,
@@ -1187,6 +1197,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         withdrawals_rrif_base = withdrawals["rrif"],
         cpp_income          = cpp,
         oas_income          = oas,
+        employer_pension    = employer_pension,
         age                 = age,
 
         fed_params          = fed,
@@ -1424,7 +1435,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # --- For taxable sources (nonreg / rrif / corp), compute tax-aware sizing ---
         def person_tax_for(candidate_nonreg, candidate_rrif, candidate_corp,
                         *, person, age, fed_params, prov_params,
-                        cpp_income, oas_income,
+                        cpp_income, oas_income, employer_pension,
                         nr_interest, nr_elig_div, nr_nonelig_div, nr_capg_dist,
                         rrif_base_already_taken):
             return tax_for(
@@ -1444,6 +1455,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals_rrif_base = float(rrif_base_already_taken),
                 cpp_income          = float(cpp_income),
                 oas_income          = float(oas_income),
+                employer_pension    = float(employer_pension),
                 age                 = int(age),
 
                 fed_params          = fed_params,
@@ -1461,7 +1473,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals["rrif"]   + extra["rrif"]   + (mid if k == "rrif"   else 0.0),
                 withdrawals["corp"]   + extra["corp"]   + (mid if k == "corp"   else 0.0),
                 person=person, age=age_cur, fed_params=fed, prov_params=prov,
-                cpp_income=cpp_cur, oas_income=oas_cur,
+                cpp_income=cpp_cur, oas_income=oas_cur, employer_pension=employer_pension,
                 nr_interest=nr_interest, nr_elig_div=nr_elig_div,
                 nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
                 rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
@@ -1489,7 +1501,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals["rrif"] + extra["rrif"],
                 withdrawals["corp"] + extra["corp"],
                 person=person, age=age_cur, fed_params=fed, prov_params=prov,
-                cpp_income=cpp_cur, oas_income=oas_cur,
+                cpp_income=cpp_cur, oas_income=oas_cur, employer_pension=employer_pension,
                 nr_interest=nr_interest, nr_elig_div=nr_elig_div,
                 nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
                 rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
@@ -1565,6 +1577,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         withdrawals_rrif_base = withdrawals["rrif"],
         cpp_income          = cpp,
         oas_income          = oas,
+        employer_pension    = employer_pension,
         age                 = age,
 
         fed_params          = fed,
@@ -1666,7 +1679,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         logger.debug(f"    nr_interest={nr_interest:.2f}, nr_elig_div={nr_elig_div:.2f}, nr_nonelig_div={nr_nonelig_div:.2f}")
         logger.debug(f"    withdrawals: rrif={withdrawals['rrif']:.2f}, nonreg={withdrawals['nonreg']:.2f}, corp={withdrawals['corp']:.2f}")
 
-    tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "gis": gis_benefit,
+    tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "employer_pension": employer_pension, "gis": gis_benefit,
                   "oas_clawback": base_oas_clawback,  # NEW: OAS clawback amount
                   "taxable_income": taxable_income,  # NEW: Taxable income for this person
                   "breakdown": {"nr_interest": nr_interest, "nr_elig_div": nr_elig_div, "nr_nonelig_div": nr_nonelig_div,
@@ -1696,6 +1709,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         "gis_benefit": gis_benefit,  # GIS calculated for this person
         "cpp": cpp,  # CPP income
         "oas": oas,  # OAS income
+        "employer_pension": employer_pension,  # Employer pension (DB/DC) income
         "oas_clawback": base_oas_clawback,  # NEW: OAS clawback for this person
     }
     return withdrawals, tax_detail, info
@@ -2426,6 +2440,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             #Pensions
             oas_p1=t1["oas"], oas_p2=t2["oas"], cpp_p1=t1["cpp"], cpp_p2=t2["cpp"],
             gis_p1=t1["gis"], gis_p2=t2["gis"],
+            employer_pension_p1=t1["employer_pension"], employer_pension_p2=t2["employer_pension"],
             #OAS Clawback
             oas_clawback_p1=float(t1.get("oas_clawback", 0.0)), oas_clawback_p2=float(t2.get("oas_clawback", 0.0)),
             #Taxable income per person

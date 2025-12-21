@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateProfileCompletion, getCompletionLevel, getNextAction } from '@/lib/utils/profileCompletion';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -21,6 +22,11 @@ export default async function DashboardPage() {
     // Note: include already brings all user fields, including the new ones:
     // targetRetirementAge, lifeExpectancy, cppCalculatorUsedAt, oasCalculatorUsedAt
   });
+
+  // Redirect to welcome page if first-time user
+  if (user && !user.hasSeenWelcome) {
+    redirect('/welcome');
+  }
 
   // Calculate total assets
   const totalAssets = user?.assets.reduce((sum, asset) => sum + (asset.currentValue || 0), 0) || 0;
@@ -159,7 +165,7 @@ export default async function DashboardPage() {
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <a
             href="/profile"
             className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
@@ -193,6 +199,19 @@ export default async function DashboardPage() {
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900">View Projection</h3>
               <p className="text-sm text-gray-600">See your retirement outlook</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+          </a>
+
+          <a
+            href="/welcome"
+            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
+          >
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900">Guided Setup</h3>
+              <p className="text-sm text-gray-600">Access step-by-step wizard</p>
             </div>
             <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />

@@ -72,6 +72,7 @@ class Person:
     cpp_start_age: int = 70
     oas_annual_at_start: float = 0.0
     oas_start_age: int = 70
+    employer_pension_annual: float = 0.0  # Annual employer pension (DB/DC pension income)
 
     # Registered accounts
     rrsp_balance: float = 0.0
@@ -211,6 +212,8 @@ class YearResult:
     cpp_p2: float
     gis_p1: float
     gis_p2: float
+    employer_pension_p1: float
+    employer_pension_p2: float
 
     # RRIF withdrawals
     withdraw_rrif_p1: float
