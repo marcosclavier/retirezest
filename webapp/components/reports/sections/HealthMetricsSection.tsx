@@ -2,6 +2,7 @@ import { SimulationSummary, SpendingAnalysis, HealthCriterion } from '@/lib/type
 import { SectionHeader } from '../shared/SectionHeader';
 import { MetricCard } from '../shared/MetricCard';
 import { ReportTable } from '../shared/ReportTable';
+import { formatCurrency } from '@/lib/utils';
 
 interface HealthMetricsSectionProps {
   summary: SimulationSummary;
@@ -128,11 +129,11 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
         <div className="grid grid-cols-3 gap-2">
           <MetricCard
             label="Initial Net Worth"
-            value={`$${(summary.initial_net_worth || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.initial_net_worth || 0)}
           />
           <MetricCard
             label="Final Net Worth"
-            value={`$${(summary.final_net_worth || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.final_net_worth || 0)}
             valueClassName={summary.final_net_worth >= summary.initial_net_worth * 0.9 ? 'text-green-600' : 'text-red-600'}
           />
           <MetricCard
@@ -156,20 +157,20 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <MetricCard
             label="Total CPP"
-            value={`$${(summary.total_cpp || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.total_cpp || 0)}
           />
           <MetricCard
             label="Total OAS"
-            value={`$${(summary.total_oas || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.total_oas || 0)}
           />
           <MetricCard
             label="Total GIS"
-            value={`$${(summary.total_gis || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.total_gis || 0)}
           />
           <MetricCard
             label="All Benefits"
-            value={`$${(summary.total_government_benefits || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-            subValue={`Avg: $${(summary.avg_annual_benefits || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}/year`}
+            value={formatCurrency(summary.total_government_benefits || 0)}
+            subValue={`Avg: ${formatCurrency(summary.avg_annual_benefits || 0)}/year`}
             valueClassName="text-blue-600"
           />
         </div>
@@ -182,20 +183,20 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <MetricCard
               label="Portfolio Withdrawals"
-              value={`$${(spendingAnalysis.portfolio_withdrawals || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={formatCurrency(spendingAnalysis.portfolio_withdrawals || 0)}
             />
             <MetricCard
               label="Government Benefits"
-              value={`$${(spendingAnalysis.government_benefits_total || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={formatCurrency(spendingAnalysis.government_benefits_total || 0)}
             />
             <MetricCard
               label="Total Available"
-              value={`$${(spendingAnalysis.total_spending_available || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={formatCurrency(spendingAnalysis.total_spending_available || 0)}
               valueClassName="text-blue-600"
             />
             <MetricCard
               label="Spending Target"
-              value={`$${(spendingAnalysis.spending_target_total || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={formatCurrency(spendingAnalysis.spending_target_total || 0)}
             />
             <MetricCard
               label="Coverage"
@@ -204,7 +205,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
             />
             <MetricCard
               label="Avg Annual Spending"
-              value={`$${(spendingAnalysis.avg_annual_spending || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={formatCurrency(spendingAnalysis.avg_annual_spending || 0)}
             />
           </div>
           <p className="text-xs text-gray-700 mt-2">{spendingAnalysis.plan_status_text}</p>
@@ -217,11 +218,11 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <MetricCard
             label="Total Taxes (Lifetime)"
-            value={`$${(summary.total_tax_paid || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.total_tax_paid || 0)}
           />
           <MetricCard
             label="OAS Clawback"
-            value={`$${(summary.total_oas_clawback || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            value={formatCurrency(summary.total_oas_clawback || 0)}
             valueClassName={summary.total_oas_clawback > 0 ? 'text-red-600' : 'text-green-600'}
           />
           <MetricCard
@@ -236,7 +237,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
             <p className="text-xs text-gray-700">
               <strong>Note:</strong> Your income exceeds the CRA OAS recovery threshold (income limit) in some years,
               resulting in an OAS clawback of{' '}
-              <strong>${(summary.total_oas_clawback || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong> over your retirement.
+              <strong>{formatCurrency(summary.total_oas_clawback || 0)}</strong> over your retirement.
               According to CRA, the OAS recovery threshold is $90,997 for 2025 and $93,454 for 2026 (indexed annually for inflation).
               The clawback is 15% of net income above the threshold.
             </p>

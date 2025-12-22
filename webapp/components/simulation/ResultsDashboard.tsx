@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { SimulationResponse } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -12,13 +14,45 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2, FileDown, Loader2 } from 'lucide-react';
+import { RetirementReport } from '@/components/reports/RetirementReport';
+import { generatePDF } from '@/lib/reports/generatePDF';
 
 interface ResultsDashboardProps {
   result: SimulationResponse;
 }
 
 export function ResultsDashboard({ result }: ResultsDashboardProps) {
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [reportSettings, setReportSettings] = useState<{ companyName?: string; companyLogo?: string }>({});
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state for client-side only rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Fetch report settings from API
+  useEffect(() => {
+    const fetchReportSettings = async () => {
+      try {
+        const response = await fetch('/api/profile/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setReportSettings({
+            companyName: data.companyName || undefined,
+            companyLogo: data.companyLogo || undefined,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching report settings:', error);
+        // Continue without settings if fetch fails
+      }
+    };
+
+    fetchReportSettings();
+  }, []);
+
   // Debug logging for tax values
   if (result.year_by_year && result.year_by_year.length > 0) {
     const year2025 = result.year_by_year[0];
@@ -44,6 +78,18 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
   // Format percentage
   const formatPercent = (value: number): string => {
     return `${(value * 100).toFixed(1)}%`;
+  };
+
+  // Generate PDF report
+  const handleExportPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      await generatePDF('retirement-report', 'RetireZest-Retirement-Report.pdf');
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   // Error state
@@ -78,6 +124,39 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             </ul>
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* PDF Export Button */}
+      {result.summary && result.year_by_year && result.household_input && (
+        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="flex items-center justify-between p-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Professional Retirement Report</h3>
+              <p className="text-sm text-gray-700 mt-1">
+                Download a comprehensive PDF report with detailed analysis, tax breakdown, estate planning, and
+                year-by-year projections.
+              </p>
+            </div>
+            <Button
+              onClick={handleExportPDF}
+              disabled={isGeneratingPDF}
+              size="lg"
+              className="ml-4 bg-blue-600 hover:bg-blue-700"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <FileDown className="h-5 w-5 mr-2" />
+                  Download PDF Report
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Summary Cards */}
@@ -151,12 +230,19 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       )}
 
       {/* Portfolio Composition */}
-      {result.composition_analysis && (
+      {result.composition_analysis && result.household_input && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle style={{ color: '#111827' }}>Portfolio Composition</CardTitle>
-              <CardDescription style={{ color: '#111827' }}>Asset allocation and recommended strategy</CardDescription>
+              <CardDescription style={{ color: '#111827' }}>
+                Asset allocation and recommended strategy
+                {result.household_input.start_year && (
+                  <span className="block mt-1 text-xs text-gray-500">
+                    Assets as of January {result.household_input.start_year}
+                  </span>
+                )}
+              </CardDescription>
             </div>
             <PieChart className="h-5 w-5 text-gray-500" />
           </CardHeader>
@@ -165,18 +251,83 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <div className="space-y-1">
                 <p className="text-sm font-medium" style={{ color: '#111827' }}>TFSA</p>
                 <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.tfsa_pct)}</p>
+                <p className="text-sm text-gray-600">
+                  {result.summary?.initial_net_worth && result.composition_analysis.tfsa_pct
+                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.tfsa_pct)
+                    : formatCurrency(
+                        (result.household_input.p1.tfsa_balance || 0) +
+                        (result.household_input.p2.tfsa_balance || 0)
+                      )
+                  }
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium" style={{ color: '#111827' }}>RRIF</p>
                 <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.rrif_pct)}</p>
+                <p className="text-sm text-gray-600">
+                  {result.summary?.initial_net_worth && result.composition_analysis.rrif_pct
+                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.rrif_pct)
+                    : formatCurrency(
+                        (result.household_input.p1.rrif_balance || 0) +
+                        (result.household_input.p2.rrif_balance || 0) +
+                        (result.household_input.p1.rrsp_balance || 0) +
+                        (result.household_input.p2.rrsp_balance || 0)
+                      )
+                  }
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium" style={{ color: '#111827' }}>Non-Registered</p>
                 <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.nonreg_pct)}</p>
+                <p className="text-sm text-gray-600">
+                  {result.summary?.initial_net_worth && result.composition_analysis.nonreg_pct
+                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.nonreg_pct)
+                    : formatCurrency(
+                        (result.household_input.p1.nonreg_balance || 0) +
+                        (result.household_input.p2.nonreg_balance || 0)
+                      )
+                  }
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium" style={{ color: '#111827' }}>Corporate</p>
                 <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.corporate_pct)}</p>
+                <p className="text-sm text-gray-600">
+                  {result.summary?.initial_net_worth && result.composition_analysis.corporate_pct
+                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.corporate_pct)
+                    : formatCurrency(
+                        (result.household_input.p1.corporate_balance || 0) +
+                        (result.household_input.p2.corporate_balance || 0)
+                      )
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* Total Row */}
+            <div className="pt-3 border-t border-gray-300">
+              <div className="flex justify-between items-center">
+                <p className="text-base font-bold" style={{ color: '#111827' }}>Total</p>
+                <div className="text-right">
+                  <p className="text-xl font-bold" style={{ color: '#111827' }}>100%</p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    {result.summary?.initial_net_worth
+                      ? formatCurrency(result.summary.initial_net_worth)
+                      : formatCurrency(
+                          (result.household_input.p1.tfsa_balance || 0) +
+                          (result.household_input.p2.tfsa_balance || 0) +
+                          (result.household_input.p1.rrif_balance || 0) +
+                          (result.household_input.p2.rrif_balance || 0) +
+                          (result.household_input.p1.rrsp_balance || 0) +
+                          (result.household_input.p2.rrsp_balance || 0) +
+                          (result.household_input.p1.nonreg_balance || 0) +
+                          (result.household_input.p2.nonreg_balance || 0) +
+                          (result.household_input.p1.corporate_balance || 0) +
+                          (result.household_input.p2.corporate_balance || 0)
+                        )
+                    }
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -550,6 +701,29 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Hidden PDF Report Container - Only render on client to avoid hydration errors */}
+      {isMounted && result.summary && result.year_by_year && result.household_input && (
+        <div
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: 0,
+            opacity: 0,
+            pointerEvents: 'none',
+            width: '1600px',
+            fontSize: '14px',
+            lineHeight: '1.5'
+          }}
+          className="print:block print:static print:left-0 print:opacity-100"
+        >
+          <RetirementReport
+            result={result}
+            companyName={reportSettings.companyName}
+            companyLogo={reportSettings.companyLogo}
+          />
+        </div>
       )}
     </div>
   );

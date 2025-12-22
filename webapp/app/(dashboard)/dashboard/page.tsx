@@ -28,11 +28,11 @@ export default async function DashboardPage() {
     redirect('/welcome');
   }
 
-  // Calculate total assets
-  const totalAssets = user?.assets.reduce((sum, asset) => sum + (asset.currentValue || 0), 0) || 0;
+  // Calculate total assets (use balance as primary, currentValue as fallback for legacy data)
+  const totalAssets = user?.assets.reduce((sum, asset) => sum + (asset.balance || asset.currentValue || 0), 0) || 0;
 
-  // Calculate total debts
-  const totalDebts = user?.debts.reduce((sum, debt) => sum + (debt.currentBalance || 0), 0) || 0;
+  // Calculate total debts (use balance as primary, currentBalance as fallback for legacy data)
+  const totalDebts = user?.debts.reduce((sum, debt) => sum + (debt.balance || debt.currentBalance || 0), 0) || 0;
 
   // Calculate net worth
   const netWorth = totalAssets - totalDebts;

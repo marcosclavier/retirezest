@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       select: {
         type: true,
         balance: true,
+        currentValue: true, // Legacy field for backwards compatibility
         owner: true,
         contributionRoom: true,
       },
@@ -120,7 +121,8 @@ export async function GET(request: NextRequest) {
     // Aggregate assets by type and owner
     const assetsByOwner = assets.reduce((acc, asset) => {
       const type = asset.type.toUpperCase();
-      const balance = asset.balance || 0;
+      // Use balance as primary, currentValue as fallback for legacy data
+      const balance = asset.balance || asset.currentValue || 0;
       const contributionRoom = asset.contributionRoom || 0;
       const owner = asset.owner || 'person1'; // Default to person1 if not specified
 
@@ -144,7 +146,9 @@ export async function GET(request: NextRequest) {
         switch (type) {
           case 'TFSA':
             acc[ownerKey].tfsa_balance += sharePerOwner;
-            acc[ownerKey].tfsa_room += roomPerOwner;
+            // TFSA contribution room is per person, not per account
+            // Use the maximum value across all TFSA accounts, don't sum
+            acc[ownerKey].tfsa_room = Math.max(acc[ownerKey].tfsa_room, roomPerOwner);
             break;
           case 'RRSP':
             acc[ownerKey].rrsp_balance += sharePerOwner;
@@ -308,9 +312,12 @@ export async function GET(request: NextRequest) {
     // Use includePartner setting from profile (takes priority over marital status or assets)
     const includePartner = shouldIncludePartner;
 
-    // Calculate total net worth
-    const totalNetWorth = Object.values(person1Totals).reduce((sum, val) => sum + val, 0) +
-                         Object.values(person2Totals).reduce((sum, val) => sum + val, 0);
+    // Calculate total net worth (exclude tfsa_room as it's not a balance)
+    const totalNetWorth =
+      person1Totals.tfsa_balance + person1Totals.rrsp_balance + person1Totals.rrif_balance +
+      person1Totals.nonreg_balance + person1Totals.corporate_balance +
+      person2Totals.tfsa_balance + person2Totals.rrsp_balance + person2Totals.rrif_balance +
+      person2Totals.nonreg_balance + person2Totals.corporate_balance;
 
     return NextResponse.json({
       person1Input,
