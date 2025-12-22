@@ -27,8 +27,10 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
     }, [value, isFocused]);
 
     const formatNumber = (num: number): string => {
-      if (num === 0) return '0';
-      return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
+      // Safari-safe: handle undefined/null values
+      const safeNum = num ?? 0;
+      if (safeNum === 0) return '0';
+      return safeNum.toLocaleString('en-US', { maximumFractionDigits: 2 });
     };
 
     const parseNumber = (str: string): number => {
@@ -50,7 +52,8 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
     const handleFocus = () => {
       setIsFocused(true);
       // Show unformatted number when focused for easier editing
-      setDisplayValue(value === 0 ? '' : value.toString());
+      const safeValue = value ?? 0;
+      setDisplayValue(safeValue === 0 ? '' : safeValue.toString());
     };
 
     const handleBlur = () => {
