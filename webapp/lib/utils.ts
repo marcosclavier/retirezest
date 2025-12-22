@@ -32,6 +32,12 @@ export function formatPercent(value: number | null | undefined): string {
   return `${safeValue.toFixed(1)}%`;
 }
 
+// Safari-safe number formatter for direct use
+export function formatNumber(value: number | null | undefined): string {
+  const safeValue = value ?? 0;
+  return safeValue.toLocaleString();
+}
+
 export function annualizeAmount(amount: number, frequency: string): number {
   switch (frequency.toLowerCase()) {
     case 'monthly':
