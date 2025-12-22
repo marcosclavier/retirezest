@@ -355,7 +355,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
       />
 
       {/* Comprehensive Year-by-Year Section with ALL data */}
-      <div style={{ pageBreakBefore: 'always' }}>
+      <div>
         <ComprehensiveYearByYearSection
           yearByYear={year_by_year}
           personOneName={personOneName}
