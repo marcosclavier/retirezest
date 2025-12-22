@@ -295,7 +295,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
 
       {/* Health Metrics Section - Start on Page 4 */}
       <div style={{ pageBreakBefore: 'always' }}>
-        <HealthMetricsSection summary={summary} spendingAnalysis={spending_analysis} />
+        <HealthMetricsSection summary={summary} spendingAnalysis={spending_analysis} grossAssetTotal={totalAssets} />
       </div>
 
       {/* Portfolio Balance Chart */}

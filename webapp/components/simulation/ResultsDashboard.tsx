@@ -230,108 +230,82 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       )}
 
       {/* Portfolio Composition */}
-      {result.composition_analysis && result.household_input && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle style={{ color: '#111827' }}>Portfolio Composition</CardTitle>
-              <CardDescription style={{ color: '#111827' }}>
-                Asset allocation and recommended strategy
-                {result.household_input.start_year && (
-                  <span className="block mt-1 text-xs text-gray-500">
-                    Assets as of January {result.household_input.start_year}
-                  </span>
-                )}
-              </CardDescription>
-            </div>
-            <PieChart className="h-5 w-5 text-gray-500" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium" style={{ color: '#111827' }}>TFSA</p>
-                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.tfsa_pct)}</p>
-                <p className="text-sm text-gray-600">
-                  {result.summary?.initial_net_worth && result.composition_analysis.tfsa_pct
-                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.tfsa_pct)
-                    : formatCurrency(
-                        (result.household_input.p1.tfsa_balance || 0) +
-                        (result.household_input.p2.tfsa_balance || 0)
-                      )
-                  }
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium" style={{ color: '#111827' }}>RRIF</p>
-                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.rrif_pct)}</p>
-                <p className="text-sm text-gray-600">
-                  {result.summary?.initial_net_worth && result.composition_analysis.rrif_pct
-                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.rrif_pct)
-                    : formatCurrency(
-                        (result.household_input.p1.rrif_balance || 0) +
-                        (result.household_input.p2.rrif_balance || 0) +
-                        (result.household_input.p1.rrsp_balance || 0) +
-                        (result.household_input.p2.rrsp_balance || 0)
-                      )
-                  }
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium" style={{ color: '#111827' }}>Non-Registered</p>
-                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.nonreg_pct)}</p>
-                <p className="text-sm text-gray-600">
-                  {result.summary?.initial_net_worth && result.composition_analysis.nonreg_pct
-                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.nonreg_pct)
-                    : formatCurrency(
-                        (result.household_input.p1.nonreg_balance || 0) +
-                        (result.household_input.p2.nonreg_balance || 0)
-                      )
-                  }
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium" style={{ color: '#111827' }}>Corporate</p>
-                <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.corporate_pct)}</p>
-                <p className="text-sm text-gray-600">
-                  {result.summary?.initial_net_worth && result.composition_analysis.corporate_pct
-                    ? formatCurrency(result.summary.initial_net_worth * result.composition_analysis.corporate_pct)
-                    : formatCurrency(
-                        (result.household_input.p1.corporate_balance || 0) +
-                        (result.household_input.p2.corporate_balance || 0)
-                      )
-                  }
-                </p>
-              </div>
-            </div>
+      {result.composition_analysis && result.household_input && (() => {
+        // Calculate original gross asset total from household input (before tax adjustments)
+        const grossAssetTotal =
+          (result.household_input.p1.tfsa_balance || 0) +
+          (result.household_input.p2.tfsa_balance || 0) +
+          (result.household_input.p1.rrif_balance || 0) +
+          (result.household_input.p2.rrif_balance || 0) +
+          (result.household_input.p1.rrsp_balance || 0) +
+          (result.household_input.p2.rrsp_balance || 0) +
+          (result.household_input.p1.nonreg_balance || 0) +
+          (result.household_input.p2.nonreg_balance || 0) +
+          (result.household_input.p1.corporate_balance || 0) +
+          (result.household_input.p2.corporate_balance || 0);
 
-            {/* Total Row */}
-            <div className="pt-3 border-t border-gray-300">
-              <div className="flex justify-between items-center">
-                <p className="text-base font-bold" style={{ color: '#111827' }}>Total</p>
-                <div className="text-right">
-                  <p className="text-xl font-bold" style={{ color: '#111827' }}>100%</p>
-                  <p className="text-sm font-semibold text-gray-700">
-                    {result.summary?.initial_net_worth
-                      ? formatCurrency(result.summary.initial_net_worth)
-                      : formatCurrency(
-                          (result.household_input.p1.tfsa_balance || 0) +
-                          (result.household_input.p2.tfsa_balance || 0) +
-                          (result.household_input.p1.rrif_balance || 0) +
-                          (result.household_input.p2.rrif_balance || 0) +
-                          (result.household_input.p1.rrsp_balance || 0) +
-                          (result.household_input.p2.rrsp_balance || 0) +
-                          (result.household_input.p1.nonreg_balance || 0) +
-                          (result.household_input.p2.nonreg_balance || 0) +
-                          (result.household_input.p1.corporate_balance || 0) +
-                          (result.household_input.p2.corporate_balance || 0)
-                        )
-                    }
+        return (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle style={{ color: '#111827' }}>Portfolio Composition</CardTitle>
+                <CardDescription style={{ color: '#111827' }}>
+                  Asset allocation and recommended strategy
+                  {result.household_input.start_year && (
+                    <span className="block mt-1 text-xs text-gray-500">
+                      Assets as of January {result.household_input.start_year}
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <PieChart className="h-5 w-5 text-gray-500" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium" style={{ color: '#111827' }}>TFSA</p>
+                  <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.tfsa_pct)}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(grossAssetTotal * result.composition_analysis.tfsa_pct)}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium" style={{ color: '#111827' }}>RRIF</p>
+                  <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.rrif_pct)}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(grossAssetTotal * result.composition_analysis.rrif_pct)}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium" style={{ color: '#111827' }}>Non-Registered</p>
+                  <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.nonreg_pct)}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(grossAssetTotal * result.composition_analysis.nonreg_pct)}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium" style={{ color: '#111827' }}>Corporate</p>
+                  <p className="text-xl font-bold" style={{ color: '#111827' }}>{formatPercent(result.composition_analysis.corporate_pct)}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(grossAssetTotal * result.composition_analysis.corporate_pct)}
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2 pt-2 border-t">
+              {/* Total Row */}
+              <div className="pt-3 border-t border-gray-300">
+                <div className="flex justify-between items-center">
+                  <p className="text-base font-bold" style={{ color: '#111827' }}>Total</p>
+                  <div className="text-right">
+                    <p className="text-xl font-bold" style={{ color: '#111827' }}>100%</p>
+                    <p className="text-sm font-semibold text-gray-700">
+                      {formatCurrency(grossAssetTotal)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t">
               {result.household_input?.strategy && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold" style={{ color: '#111827' }}>Selected Strategy:</span>
@@ -350,9 +324,10 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                 {result.composition_analysis.strategy_rationale}
               </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Spending Analysis */}
       {result.spending_analysis && (

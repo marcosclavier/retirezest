@@ -7,9 +7,10 @@ import { formatCurrency } from '@/lib/utils';
 interface HealthMetricsSectionProps {
   summary: SimulationSummary;
   spendingAnalysis?: SpendingAnalysis;
+  grossAssetTotal?: number; // Original gross asset total from household input (January 2026)
 }
 
-export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetricsSectionProps) {
+export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTotal }: HealthMetricsSectionProps) {
   // Determine health score color
   const getHealthScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -129,12 +130,12 @@ export function HealthMetricsSection({ summary, spendingAnalysis }: HealthMetric
         <div className="grid grid-cols-3 gap-2">
           <MetricCard
             label="Initial Net Worth"
-            value={formatCurrency(summary.initial_net_worth || 0)}
+            value={formatCurrency(grossAssetTotal || summary.initial_net_worth || 0)}
           />
           <MetricCard
             label="Final Net Worth"
             value={formatCurrency(summary.final_net_worth || 0)}
-            valueClassName={summary.final_net_worth >= summary.initial_net_worth * 0.9 ? 'text-green-600' : 'text-red-600'}
+            valueClassName={summary.final_net_worth >= (grossAssetTotal || summary.initial_net_worth) * 0.9 ? 'text-green-600' : 'text-red-600'}
           />
           <MetricCard
             label="Net Worth Trend"
