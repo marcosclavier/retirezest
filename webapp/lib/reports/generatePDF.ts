@@ -8,6 +8,11 @@ export async function generatePDF(elementId: string, filename: string): Promise<
   try {
     console.log('Starting PDF generation for element:', elementId);
 
+    // Detect mobile browser
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
+    console.log('User agent:', navigator.userAgent);
+
     // Dynamic import - only load PDF library when generating PDFs
     const html2pdf = (await import('html2pdf.js')).default;
     console.log('html2pdf.js loaded');
@@ -40,8 +45,9 @@ export async function generatePDF(elementId: string, filename: string): Promise<
     void element.offsetHeight;
 
     // Wait for charts and images to render
+    // Mobile browsers may need more time
     console.log('Waiting for charts to render...');
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await new Promise((resolve) => setTimeout(resolve, isMobile ? 3500 : 2500));
 
     // Check if element has content
     console.log('Element dimensions after wait:', element.scrollWidth, 'x', element.scrollHeight);
@@ -58,16 +64,17 @@ export async function generatePDF(elementId: string, filename: string): Promise<
       day: 'numeric',
     });
 
+    // Mobile-friendly settings: lower scale and quality to reduce memory usage
     const options = {
       margin: [13, 6, 13, 6] as [number, number, number, number], // top, right, bottom, left in mm (0.5 inch top/bottom, ~0.25 inch left/right)
       filename: filename,
-      image: { type: 'jpeg' as const, quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: isMobile ? 0.85 : 0.98 },
       html2canvas: {
-        scale: 2,
+        scale: isMobile ? 1.5 : 2, // Lower scale on mobile to reduce memory usage
         useCORS: true,
         logging: true,
         backgroundColor: '#ffffff',
-        windowWidth: 1600,
+        windowWidth: isMobile ? 1200 : 1600, // Smaller window width for mobile
       },
       jsPDF: {
         unit: 'mm' as const,
@@ -82,7 +89,8 @@ export async function generatePDF(elementId: string, filename: string): Promise<
       },
     };
 
-    console.log('Starting html2pdf rendering...');
+    console.log('Starting html2pdf rendering...', isMobile ? '(Mobile Mode)' : '(Desktop Mode)');
+    console.log('PDF options:', JSON.stringify(options, null, 2));
 
     // Generate PDF
     const worker = html2pdf()
