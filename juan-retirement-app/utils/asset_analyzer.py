@@ -17,6 +17,7 @@ from typing import Optional
 
 class WithdrawalStrategy(Enum):
     """Available withdrawal optimization strategies."""
+    RRIF_FRONTLOAD = "rrif-frontload"
     CORPORATE_OPTIMIZED = "corporate-optimized"
     MINIMIZE_INCOME = "minimize-income"
     RRIF_SPLITTING = "rrif-splitting"
@@ -119,7 +120,8 @@ class AssetAnalyzer:
             is_rrif_heavy,
             is_nonreg_heavy,
             is_tfsa_significant,
-            corporate_pct
+            corporate_pct,
+            rrif_pct
         )
 
         return AssetComposition(
@@ -171,7 +173,8 @@ class AssetAnalyzer:
         is_rrif_heavy: bool,
         is_nonreg_heavy: bool,
         is_tfsa_significant: bool,
-        corporate_pct: float
+        corporate_pct: float,
+        rrif_pct: float
     ) -> tuple:
         """
         Recommend withdrawal strategy based on composition.
@@ -182,22 +185,38 @@ class AssetAnalyzer:
             is_nonreg_heavy: NonReg > 25%
             is_tfsa_significant: TFSA > 15%
             corporate_pct: Corporate percentage (for detailed assessment)
+            rrif_pct: RRIF percentage (for detailed assessment)
 
         Returns:
             Tuple of (WithdrawalStrategy, rationale_string)
         """
 
-        # Priority 1: Corporate-heavy (40%+ or more)
+        # Priority 1: RRIF-Frontload when both Corporate-heavy AND RRIF present (>8%)
+        # This strategy depletes RRIF early while leveraging corporate benefits
+        # Better estate outcomes despite OAS clawback
         if is_corporate_heavy:
+            # Check if RRIF is significant enough to warrant frontloading (>8%)
+            # Note: We use a lower threshold than is_rrif_heavy (25%) because
+            # even 10-20% RRIF can compound into tax problems if not addressed
+            if rrif_pct > 0.08:  # 8% or more RRIF
+                rationale = (
+                    f"Corporate-heavy ({corporate_pct*100:.1f}%) with significant RRIF ({rrif_pct*100:.1f}%). "
+                    "RRIF-Frontload strategy depletes RRIF early (15% before OAS/CPP, 8% after) "
+                    "to avoid compounding tax issues, while still leveraging corporate benefits. "
+                    "Better estate outcomes despite potential OAS clawback."
+                )
+                return WithdrawalStrategy.RRIF_FRONTLOAD, rationale
+
+            # Fallback to corporate-optimized if no significant RRIF
             if corporate_pct > 0.55:
                 rationale = (
-                    "Corporate account dominates (>55%). "
+                    "Corporate account dominates (>55%) with minimal RRIF. "
                     "Dividend tax credits are very valuable. "
                     "Maximize corporate withdrawals."
                 )
             else:
                 rationale = (
-                    "Corporate-heavy portfolio (40-55%). "
+                    "Corporate-heavy portfolio (40-55%) with minimal RRIF. "
                     "Dividend tax credits are valuable. "
                     "Prioritize corporate withdrawals."
                 )
@@ -251,6 +270,27 @@ class AssetAnalyzer:
         """
 
         descriptions = {
+            WithdrawalStrategy.RRIF_FRONTLOAD: {
+                "name": "RRIF-Frontload Strategy",
+                "description": (
+                    "Depletes RRIF early (15% before OAS/CPP, 8% after) while "
+                    "leveraging corporate benefits. Optimal for corporate-heavy "
+                    "portfolios (40%+) with significant RRIF (8%+). Avoids "
+                    "compounding tax issues and yields better estate outcomes "
+                    "despite potential OAS clawback."
+                ),
+                "priority_order": ["TFSA", "RRIF (frontload)", "Corporate", "NonReg"],
+                "tax_rate": "~26-28% effective (balanced approach)",
+                "best_for": "Portfolios with 40%+ corporate and 8%+ RRIF",
+                "benefits": [
+                    "Depletes RRIF early to avoid compounding tax issues",
+                    "Still leverages corporate dividend tax credits",
+                    "Better estate outcomes than pure corporate strategy",
+                    "Reduces future RRIF minimum withdrawal burden",
+                    "Optimal balance between tax efficiency and estate preservation"
+                ]
+            },
+
             WithdrawalStrategy.CORPORATE_OPTIMIZED: {
                 "name": "Corporate-Optimized Withdrawal",
                 "description": (

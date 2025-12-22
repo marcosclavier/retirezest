@@ -1,77 +1,146 @@
 /**
- * Generate PDF from HTML element
+ * Generate PDF from HTML element with page numbers and headers/footers
+ * Uses html2pdf.js for better page break handling
  * @param elementId - ID of the HTML element to convert to PDF
  * @param filename - Name of the PDF file to download
  */
 export async function generatePDF(elementId: string, filename: string): Promise<void> {
   try {
-    // Dynamic imports - only load PDF libraries when generating PDFs (~600KB savings on initial load)
-    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-      import('html2canvas'),
-      import('jspdf'),
-    ]);
+    console.log('Starting PDF generation for element:', elementId);
+
+    // Dynamic import - only load PDF library when generating PDFs
+    const html2pdf = (await import('html2pdf.js')).default;
+    console.log('html2pdf.js loaded');
 
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error(`Element with ID "${elementId}" not found`);
     }
+    console.log('Element found, dimensions:', element.scrollWidth, 'x', element.scrollHeight);
 
-    // Temporarily make the element and its parent visible for rendering
+    // Temporarily make the element fully visible for rendering
     const parentElement = element.parentElement;
-    const originalParentDisplay = parentElement?.style.display || '';
-    const originalElementDisplay = element.style.display || '';
+    const originalParentOpacity = parentElement?.style.opacity || '';
+    const originalParentLeft = parentElement?.style.left || '';
+    const originalParentPosition = parentElement?.style.position || '';
+    const originalParentZIndex = parentElement?.style.zIndex || '';
+    const originalElementOpacity = element.style.opacity || '';
 
-    if (parentElement && parentElement.classList.contains('hidden')) {
-      parentElement.style.display = 'block';
+    // Move element INTO viewport (but under everything else) for capturing
+    if (parentElement) {
+      parentElement.style.opacity = '1';
       parentElement.style.position = 'absolute';
-      parentElement.style.left = '-9999px';
+      parentElement.style.left = '0';
+      parentElement.style.top = '0';
+      parentElement.style.zIndex = '-9999'; // Behind everything
+    }
+    element.style.opacity = '1';
+
+    // Force a reflow to ensure the element is rendered
+    void element.offsetHeight;
+
+    // Wait for charts and images to render
+    console.log('Waiting for charts to render...');
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+    // Check if element has content
+    console.log('Element dimensions after wait:', element.scrollWidth, 'x', element.scrollHeight);
+    console.log('Element innerHTML length:', element.innerHTML.length);
+
+    if (element.scrollHeight === 0 || element.scrollWidth === 0) {
+      throw new Error('Element has no dimensions - content may not be rendered');
     }
 
-    element.style.display = 'block';
-
-    // Capture the element as a canvas
-    const canvas = await html2canvas(element, {
-      scale: 2, // Higher quality
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
+    // Configure html2pdf options
+    const today = new Date().toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
 
-    // Restore original display states
+    const options = {
+      margin: [13, 6, 13, 6], // top, right, bottom, left in mm (0.5 inch top/bottom, ~0.25 inch left/right)
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        backgroundColor: '#ffffff',
+        windowWidth: 1600,
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'letter',
+        orientation: 'landscape',
+      },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy'], // Respect CSS page-break properties
+        before: '.page-break-before',
+        after: '.page-break-after',
+        avoid: ['section', '.page-break', '.avoid-break'],
+      },
+    };
+
+    console.log('Starting html2pdf rendering...');
+
+    // Generate PDF
+    const worker = html2pdf()
+      .set(options)
+      .from(element)
+      .toPdf()
+      .get('pdf')
+      .then((pdf: any) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // Add headers and footers to all pages
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+
+          // Header
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text('RetireZest Retirement Planning Report', pageWidth / 2, 10, { align: 'center' });
+
+          // Footer - left side with date
+          pdf.setFontSize(7);
+          pdf.text(`Generated: ${today}`, 10, pageHeight - 8);
+
+          // Footer - right side with page number
+          pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 10, pageHeight - 8, { align: 'right' });
+
+          // Footer - center with disclaimer
+          pdf.setFontSize(6);
+          pdf.text('Confidential - For Planning Purposes Only', pageWidth / 2, pageHeight - 8, {
+            align: 'center',
+          });
+        }
+
+        console.log('PDF generated with', totalPages, 'pages');
+      })
+      .save();
+
+    await worker;
+
+    // Restore original styles
     if (parentElement) {
-      parentElement.style.display = originalParentDisplay;
-      parentElement.style.position = '';
-      parentElement.style.left = '';
+      parentElement.style.opacity = originalParentOpacity;
+      parentElement.style.left = originalParentLeft;
+      parentElement.style.position = originalParentPosition;
+      parentElement.style.zIndex = originalParentZIndex;
     }
-    element.style.display = originalElementDisplay;
+    element.style.opacity = originalElementOpacity;
 
-    // Get canvas dimensions
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-
-    // Create PDF
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    let position = 0;
-
-    // Add image to PDF
-    const imgData = canvas.toDataURL('image/png');
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add new pages if content is longer than one page
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // Download the PDF
-    pdf.save(filename);
+    console.log('PDF generation complete');
   } catch (error) {
     console.error('Error generating PDF:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    alert(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }
 }
