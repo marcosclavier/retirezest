@@ -17,17 +17,19 @@ export function calculateAge(dateOfBirth: Date): number {
   return age;
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | null | undefined): string {
+  const safeAmount = amount ?? 0;
   return new Intl.NumberFormat('en-CA', {
     style: 'currency',
     currency: 'CAD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
-export function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
+export function formatPercent(value: number | null | undefined): string {
+  const safeValue = value ?? 0;
+  return `${safeValue.toFixed(1)}%`;
 }
 
 export function annualizeAmount(amount: number, frequency: string): number {
