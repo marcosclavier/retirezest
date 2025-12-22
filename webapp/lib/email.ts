@@ -9,6 +9,12 @@ interface SendPasswordResetEmailParams {
   userName?: string;
 }
 
+interface SendAdminNotificationParams {
+  userEmail: string;
+  userName: string;
+  registrationDate: Date;
+}
+
 /**
  * Send a password reset email to a user
  */
@@ -135,6 +141,161 @@ function getPasswordResetEmailTemplate({
               </p>
               <p style="margin: 0; color: #9ca3af; font-size: 12px; text-align: center; line-height: 1.5;">
                 If you have any questions, please contact our support team.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Footer spacing -->
+        <table width="600" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding: 20px 0;">
+              <p style="margin: 0; color: #9ca3af; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} RetireZest. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Send admin notification when a new user registers
+ */
+export async function sendAdminNewUserNotification({
+  userEmail,
+  userName,
+  registrationDate,
+}: SendAdminNotificationParams): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const adminEmail = 'jrcb@hotmail.com';
+
+    const response = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: adminEmail,
+      subject: '🎉 New User Registered on RetireZest',
+      html: getAdminNotificationTemplate({ userEmail, userName, registrationDate }),
+    });
+
+    if (response.error) {
+      console.error('Failed to send admin notification:', response.error);
+      return { success: false, error: response.error.message };
+    }
+
+    console.log('Admin notification sent successfully:', response.data?.id);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending admin notification:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * HTML template for admin notification email
+ */
+function getAdminNotificationTemplate({
+  userEmail,
+  userName,
+  registrationDate,
+}: {
+  userEmail: string;
+  userName: string;
+  registrationDate: Date;
+}): string {
+  const formattedDate = registrationDate.toLocaleString('en-CA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New User Registration</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 40px 30px; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; text-align: center;">
+                🎉 New User Registration
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="margin: 0 0 30px; color: #374151; font-size: 16px; line-height: 1.6;">
+                A new user has just registered on RetireZest!
+              </p>
+
+              <!-- User Details Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0;">
+                          <strong style="color: #6b7280; font-size: 14px; display: block; margin-bottom: 4px;">Name:</strong>
+                          <span style="color: #111827; font-size: 16px; font-weight: 600;">${userName}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0;">
+                          <strong style="color: #6b7280; font-size: 14px; display: block; margin-bottom: 4px;">Email:</strong>
+                          <span style="color: #111827; font-size: 16px;">${userEmail}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0;">
+                          <strong style="color: #6b7280; font-size: 14px; display: block; margin-bottom: 4px;">Registration Date:</strong>
+                          <span style="color: #111827; font-size: 16px;">${formattedDate}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+
+              <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                This is an automated notification sent when a new user completes registration on RetireZest.com.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px 40px; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px; text-align: center; line-height: 1.5;">
+                RetireZest Admin Notification
               </p>
             </td>
           </tr>

@@ -4,6 +4,7 @@ import { hashPassword, createToken, setSession } from '@/lib/auth';
 import { registerRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
+import { sendAdminNewUserNotification } from '@/lib/email';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,21 @@ export async function POST(request: Request) {
 
     // Set session cookie
     await setSession(token);
+
+    // Send admin notification email (non-blocking - don't wait for it)
+    // This runs in the background and won't affect the user's registration experience
+    const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'No name provided';
+    sendAdminNewUserNotification({
+      userEmail: user.email,
+      userName: userName,
+      registrationDate: user.createdAt,
+    }).catch((error) => {
+      // Log error but don't fail the registration
+      logger.error('Failed to send admin notification', error, {
+        userId: user.id,
+        userEmail: user.email,
+      });
+    });
 
     return NextResponse.json({
       success: true,
