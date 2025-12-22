@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import "./safari-polyfill";
 
 // Optimized font loading with next/font
 const inter = Inter({
