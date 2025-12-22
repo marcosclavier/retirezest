@@ -30,7 +30,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'Which provinces are supported?',
-    answer: 'Currently, our tax calculator supports Ontario, with other provinces coming soon. CPP, OAS, and GIS calculations work for all Canadians.',
+    answer: 'Our tax calculator fully supports Alberta, British Columbia, Ontario, and Quebec. Users in other provinces are automatically mapped to the nearest supported province for tax calculations. CPP, OAS, and GIS calculations work for all Canadians.',
   },
   {
     question: 'Can I share my plan with my financial advisor?',
