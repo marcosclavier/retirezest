@@ -520,7 +520,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
               <div className="flex items-start gap-2">
                 <div className="text-sm text-blue-900">
-                  <p className="font-semibold mb-1">Starting Room: ${person.tfsa_room_start.toLocaleString()}</p>
+                  <p className="font-semibold mb-1">Starting Room: ${(person.tfsa_room_start || 0).toLocaleString()}</p>
                   <p className="text-xs">
                     This value is automatically loaded from your Financial Profile and cannot be edited here.
                     To update it, go to Profile → Assets and edit your TFSA contribution room.
