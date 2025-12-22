@@ -70,7 +70,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
       <div className="border-b-4 border-blue-600 pb-6 mb-12" style={{ pageBreakInside: 'avoid' }}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2" style={{ wordSpacing: '0.25em' }}>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2" style={{ letterSpacing: '0.05em', wordSpacing: '0.3em' }}>
               Retirement Planning Report
             </h1>
             <p className="text-lg text-gray-600">Prepared for {userName}</p>
