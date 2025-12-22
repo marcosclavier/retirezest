@@ -9,7 +9,7 @@ export default function SolutionSection() {
         'Government benefit calculators (CPP, OAS, GIS)',
         'Year-by-year income and expense tracking',
         'Tax-efficient withdrawal strategies',
-        'Updated with 2025 government rates',
+        'Updated with 2025-2026 government rates',
       ],
     },
     {
@@ -45,7 +45,7 @@ export default function SolutionSection() {
           <div className="max-w-4xl mx-auto">
             <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
               Retire Zest is a comprehensive retirement planning tool designed specifically for Canadian seniors.
-              Our calculators use the latest 2025 government rates to project your CPP, OAS, and GIS benefits,
+              Our calculators use the latest 2025-2026 government rates to project your CPP, OAS, and GIS benefits,
               while our powerful projection engine shows you exactly how your savings will support your retirement lifestyle.
             </p>
           </div>

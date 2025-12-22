@@ -146,7 +146,7 @@ export default function LandingFooter() {
         <div className="pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-gray-500 text-center md:text-left">
-              Built with ❤️ for Canadians | Last updated: January 2025 (2025 tax rates)
+              Built with ❤️ for Canadians | Last updated: December 2025 (2025-2026 tax rates)
             </p>
 
             <div className="flex gap-6">

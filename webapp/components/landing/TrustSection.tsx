@@ -16,7 +16,7 @@ export default function TrustSection() {
       icon: '🇨🇦',
       title: 'Canadian-Specific',
       features: [
-        '2025 government rates',
+        '2025-2026 government rates',
         'All provinces supported',
         'CRA-aligned calculations',
         'PIPEDA compliant',
@@ -101,7 +101,7 @@ export default function TrustSection() {
               <div className="text-gray-600">Free to Use</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-green-600 mb-2">2025</div>
+              <div className="text-4xl font-bold text-green-600 mb-2">2026</div>
               <div className="text-gray-600">Latest Tax Rates</div>
             </div>
             <div>

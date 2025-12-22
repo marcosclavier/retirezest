@@ -14,7 +14,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How accurate are the CPP and OAS calculations?',
-    answer: 'Our calculators use official 2025 government rates and formulas. While we provide accurate estimates, your actual benefits may vary based on your complete earnings history. We recommend verifying with Service Canada.',
+    answer: 'Our calculators use official 2025-2026 government rates and formulas. While we provide accurate estimates, your actual benefits may vary based on your complete earnings history. We recommend verifying with Service Canada.',
   },
   {
     question: 'Is my financial data secure?',
