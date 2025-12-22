@@ -59,9 +59,9 @@ export async function generatePDF(elementId: string, filename: string): Promise<
     });
 
     const options = {
-      margin: [13, 6, 13, 6], // top, right, bottom, left in mm (0.5 inch top/bottom, ~0.25 inch left/right)
+      margin: [13, 6, 13, 6] as [number, number, number, number], // top, right, bottom, left in mm (0.5 inch top/bottom, ~0.25 inch left/right)
       filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
@@ -70,9 +70,9 @@ export async function generatePDF(elementId: string, filename: string): Promise<
         windowWidth: 1600,
       },
       jsPDF: {
-        unit: 'mm',
-        format: 'letter',
-        orientation: 'landscape',
+        unit: 'mm' as const,
+        format: 'letter' as const,
+        orientation: 'landscape' as const,
       },
       pagebreak: {
         mode: ['avoid-all', 'css', 'legacy'], // Respect CSS page-break properties
@@ -86,7 +86,7 @@ export async function generatePDF(elementId: string, filename: string): Promise<
 
     // Generate PDF
     const worker = html2pdf()
-      .set(options)
+      .set(options as any)
       .from(element)
       .toPdf()
       .get('pdf')
@@ -119,10 +119,10 @@ export async function generatePDF(elementId: string, filename: string): Promise<
         }
 
         console.log('PDF generated with', totalPages, 'pages');
-      })
-      .save();
+      });
 
-    await worker;
+    // @ts-ignore - html2pdf.js types are incomplete, .save() exists on worker
+    await worker.save();
 
     // Restore original styles
     if (parentElement) {
