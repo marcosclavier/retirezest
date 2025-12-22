@@ -16,8 +16,7 @@ const nextConfig: NextConfig = {
   // Optimize production bundle for better client battery life
   productionBrowserSourceMaps: false, // Disable source maps in production (reduces bundle size)
 
-  // SWC compiler optimizations (enabled by default in Next.js 15)
-  swcMinify: true,
+  // Note: SWC minification is enabled by default in Next.js 15+
 
   // Experimental features for better performance
   experimental: {
