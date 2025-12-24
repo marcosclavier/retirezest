@@ -165,6 +165,9 @@ export default function ExpensesPage() {
 
   const calculateMonthlyExpenses = () => {
     return expenses.reduce((total, expense) => {
+      // Only include recurring expenses in monthly/annual totals
+      if (!expense.isRecurring) return total;
+
       const amount = expense.frequency === 'annual' ? expense.amount / 12 : expense.amount;
       return total + amount;
     }, 0);
@@ -174,6 +177,9 @@ export default function ExpensesPage() {
     let essential = 0;
     let discretionary = 0;
     expenses.forEach(expense => {
+      // Only include recurring expenses in monthly/annual totals
+      if (!expense.isRecurring) return;
+
       const amount = expense.frequency === 'annual' ? expense.amount / 12 : expense.amount;
       const isEssential = expense.essential !== undefined ? expense.essential : expense.isEssential;
       if (isEssential) {
