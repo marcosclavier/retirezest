@@ -12,6 +12,8 @@ interface Expense {
   essential: boolean;
   isEssential: boolean; // Legacy field for backwards compatibility
   notes: string | null;
+  isRecurring: boolean;
+  plannedYear: number | null;
 }
 
 export default function ExpensesPage() {
@@ -28,6 +30,8 @@ export default function ExpensesPage() {
     frequency: 'monthly',
     isEssential: true,
     notes: '',
+    isRecurring: true,
+    plannedYear: '',
   });
 
   useEffect(() => {
@@ -74,8 +78,15 @@ export default function ExpensesPage() {
 
     const method = editingId ? 'PUT' : 'POST';
     const body = editingId
-      ? { id: editingId, ...formData }
-      : formData;
+      ? {
+          id: editingId,
+          ...formData,
+          plannedYear: formData.plannedYear ? parseInt(formData.plannedYear) : null
+        }
+      : {
+          ...formData,
+          plannedYear: formData.plannedYear ? parseInt(formData.plannedYear) : null
+        };
 
     try {
       const res = await fetch('/api/profile/expenses', {
@@ -98,6 +109,8 @@ export default function ExpensesPage() {
           frequency: 'monthly',
           isEssential: true,
           notes: '',
+          isRecurring: true,
+          plannedYear: '',
         });
       } else {
         const error = await res.json();
@@ -119,6 +132,8 @@ export default function ExpensesPage() {
       frequency: expense.frequency,
       isEssential: expense.essential || expense.isEssential,
       notes: expense.notes || '',
+      isRecurring: expense.isRecurring,
+      plannedYear: expense.plannedYear?.toString() || '',
     });
     setEditingId(expense.id);
     setShowForm(true);
@@ -190,6 +205,12 @@ export default function ExpensesPage() {
           <p className="mt-2 text-gray-600">
             Track your monthly and annual expenses for retirement planning
           </p>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> One-time expenses are tracked here but not yet included in retirement simulations.
+              Simulations currently use the spending amounts you set in your retirement goals.
+            </p>
+          </div>
         </div>
         <button
           onClick={() => {
@@ -202,6 +223,8 @@ export default function ExpensesPage() {
               frequency: 'monthly',
               isEssential: true,
               notes: '',
+              isRecurring: true,
+              plannedYear: '',
             });
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -277,17 +300,53 @@ export default function ExpensesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Frequency</label>
+                <label className="block text-sm font-medium text-gray-700">Expense Type</label>
                 <select
-                  value={formData.frequency}
-                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                  value={formData.isRecurring ? 'recurring' : 'one-time'}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    isRecurring: e.target.value === 'recurring',
+                    frequency: e.target.value === 'one-time' ? 'one-time' : formData.frequency
+                  })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 >
-                  <option value="monthly">Monthly</option>
-                  <option value="annual">Annual</option>
+                  <option value="recurring">Recurring Expense</option>
+                  <option value="one-time">One-Time / Major Planned Expense</option>
                 </select>
               </div>
+
+              {formData.isRecurring ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Frequency</label>
+                  <select
+                    value={formData.frequency}
+                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                    required
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="annual">Annual</option>
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Planned Year</label>
+                  <input
+                    type="number"
+                    min={new Date().getFullYear()}
+                    max={new Date().getFullYear() + 50}
+                    value={formData.plannedYear}
+                    onChange={(e) => setFormData({ ...formData, plannedYear: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                    placeholder="e.g., 2027"
+                    required
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Year when this expense will occur
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Amount ($)</label>
@@ -407,6 +466,11 @@ export default function ExpensesPage() {
                       <h3 className="text-lg font-medium text-gray-900 capitalize">
                         {expense.category}
                       </h3>
+                      {!expense.isRecurring && (
+                        <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                          One-Time ({expense.plannedYear})
+                        </span>
+                      )}
                       <span className={`px-2 py-1 text-xs font-medium rounded ${
                         (expense.essential !== undefined ? expense.essential : expense.isEssential)
                           ? 'bg-red-100 text-red-800'
@@ -423,16 +487,22 @@ export default function ExpensesPage() {
                     )}
                     <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
                       <span className="font-medium text-lg text-gray-900">
-                        ${expense.amount.toLocaleString()} / {expense.frequency}
+                        ${expense.amount.toLocaleString()}
+                        {expense.isRecurring && ` / ${expense.frequency}`}
                       </span>
-                      {expense.frequency === 'annual' && (
+                      {expense.isRecurring && expense.frequency === 'annual' && (
                         <span>
                           ${(expense.amount / 12).toLocaleString(undefined, { maximumFractionDigits: 0 })} / month
                         </span>
                       )}
-                      {expense.frequency === 'monthly' && (
+                      {expense.isRecurring && expense.frequency === 'monthly' && (
                         <span>
                           ${(expense.amount * 12).toLocaleString(undefined, { maximumFractionDigits: 0 })} / year
+                        </span>
+                      )}
+                      {!expense.isRecurring && expense.plannedYear && (
+                        <span className="text-purple-600 font-medium">
+                          Planned for {expense.plannedYear}
                         </span>
                       )}
                     </div>

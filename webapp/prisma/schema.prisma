@@ -45,6 +45,10 @@ model User {
   onboardingStep       Int?      // Current step in guided wizard (1-7)
   completedGuideAt     DateTime? // When they finished the guided setup
 
+  // Report settings (for PDF generation)
+  companyName          String?   // Optional company name for report branding
+  companyLogo          String?   // Optional company logo URL for report branding
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -110,16 +114,23 @@ model Expense {
   category    String    // housing, utilities, food, transportation, healthcare, insurance, entertainment, travel, shopping, subscriptions, gifts, other
   description String?
   amount      Float
-  frequency   String    // monthly, annual, quarterly, weekly
+  frequency   String    // monthly, annual, quarterly, weekly, one-time
   essential   Boolean   @default(true)  // Cannot be reduced
   isEssential Boolean?  // Legacy field, use essential instead
   notes       String?
+
+  // New fields for one-time/major planned expenses
+  isRecurring Boolean   @default(true)   // false for one-time expenses
+  plannedYear Int?                       // Specific year for one-time expense (e.g., 2027)
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([userId])
   @@index([userId, category])
   @@index([userId, essential])
+  @@index([userId, isRecurring])
+  @@index([userId, plannedYear])
   @@index([createdAt])
 }
 

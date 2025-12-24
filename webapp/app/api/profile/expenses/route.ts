@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { category, description, amount, frequency, essential, isEssential, notes } = body;
+    const { category, description, amount, frequency, essential, isEssential, notes, isRecurring, plannedYear } = body;
 
     // Validation
     if (!category || !amount || !frequency) {
@@ -51,6 +51,20 @@ export async function POST(request: NextRequest) {
 
     if (amount <= 0) {
       throw new ValidationError('Amount must be greater than 0', 'amount');
+    }
+
+    // Validate one-time expenses must have a planned year
+    const isRecurringValue = isRecurring !== undefined ? isRecurring : true;
+    if (!isRecurringValue && !plannedYear) {
+      throw new ValidationError('Planned year is required for one-time expenses', 'plannedYear');
+    }
+
+    // Validate planned year is reasonable (current year or future)
+    if (plannedYear !== undefined && plannedYear !== null) {
+      const currentYear = new Date().getFullYear();
+      if (plannedYear < currentYear) {
+        throw new ValidationError('Planned year must be current year or in the future', 'plannedYear');
+      }
     }
 
     const essentialValue = essential !== undefined ? essential : (isEssential !== undefined ? isEssential : true);
@@ -65,6 +79,8 @@ export async function POST(request: NextRequest) {
         essential: essentialValue,
         isEssential: essentialValue, // Keep for backwards compatibility
         notes: notes || null,
+        isRecurring: isRecurringValue,
+        plannedYear: plannedYear || null,
       },
     });
 
@@ -89,7 +105,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, category, description, amount, frequency, essential, isEssential, notes } = body;
+    const { id, category, description, amount, frequency, essential, isEssential, notes, isRecurring, plannedYear } = body;
 
     if (!id) {
       throw new ValidationError('Expense ID is required', 'id');
@@ -104,6 +120,20 @@ export async function PUT(request: NextRequest) {
       throw new NotFoundError('Expense');
     }
 
+    // Validate one-time expenses must have a planned year
+    const isRecurringValue = isRecurring !== undefined ? isRecurring : existingExpense.isRecurring;
+    if (!isRecurringValue && !plannedYear) {
+      throw new ValidationError('Planned year is required for one-time expenses', 'plannedYear');
+    }
+
+    // Validate planned year is reasonable (current year or future)
+    if (plannedYear !== undefined && plannedYear !== null) {
+      const currentYear = new Date().getFullYear();
+      if (plannedYear < currentYear) {
+        throw new ValidationError('Planned year must be current year or in the future', 'plannedYear');
+      }
+    }
+
     const essentialValue = essential !== undefined ? essential : (isEssential !== undefined ? isEssential : true);
 
     const updatedExpense = await prisma.expense.update({
@@ -116,6 +146,8 @@ export async function PUT(request: NextRequest) {
         essential: essentialValue,
         isEssential: essentialValue, // Keep for backwards compatibility
         notes: notes || null,
+        isRecurring: isRecurringValue,
+        plannedYear: plannedYear !== undefined ? plannedYear : existingExpense.plannedYear,
       },
     });
 
