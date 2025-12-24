@@ -104,7 +104,7 @@ export default function AssetsPage() {
       });
 
       if (res.ok) {
-        fetchAssets();
+        await fetchAssets();
         setShowForm(false);
         setEditingId(null);
         setFormData({
@@ -543,6 +543,13 @@ export default function AssetsPage() {
           <li><strong>Non-Registered:</strong> Regular investment accounts (capital gains tax applies)</li>
           <li><strong>Real Estate:</strong> Property value (home, rental properties)</li>
         </ul>
+        <div className="mt-3 pt-3 border-t border-blue-300">
+          <p className="text-xs text-blue-800">
+            <strong>Note on TFSA Contribution Room:</strong> Contribution room is per person, not per account.
+            If you have multiple TFSA accounts, enter the same contribution room value on each account
+            (e.g., $7,000 for 2026). The system will automatically use the correct per-person limit.
+          </p>
+        </div>
       </div>
     </div>
   );

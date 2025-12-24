@@ -25,3 +25,115 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Print styles for PDF generation */
+@media print {
+  @page {
+    margin: 0.5in; /* All sides: 0.5 inch */
+    size: letter landscape;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Hide non-print elements */
+  body > *:not(.print\\:block) {
+    display: none !important;
+  }
+
+  /* Show print-only content */
+  .print\:block {
+    display: block !important;
+    position: static !important;
+    left: auto !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Container sizing for print - use full available width */
+  #retirement-report {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Make tables fit better */
+  table {
+    width: 100% !important;
+    font-size: 10px !important;
+    border-collapse: collapse !important;
+  }
+
+  table th,
+  table td {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* Fix grid layouts for print */
+  .grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  /* Ensure text doesn't overlap */
+  * {
+    line-height: 1.4 !important;
+  }
+
+  /* Fix metric cards */
+  .grid > div {
+    min-width: 0 !important;
+    padding: 8px !important;
+  }
+
+  /* Remove unnecessary spacing at end */
+  body::after,
+  html::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* Ensure no extra blank pages */
+  .print\:block > *:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Better page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  table, figure, img {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Print colors */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Grid adjustments for print */
+  .grid {
+    gap: 8px !important;
+  }
+
+  /* Reduce excessive spacing */
+  section {
+    margin-bottom: 32px !important;
+  }
+}

@@ -25,6 +25,8 @@ export async function GET() {
         partnerDateOfBirth: true,
         targetRetirementAge: true,
         lifeExpectancy: true,
+        companyName: true,
+        companyLogo: true,
       },
     });
 
@@ -53,7 +55,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { includePartner, partnerFirstName, partnerLastName, partnerDateOfBirth, targetRetirementAge, lifeExpectancy } = body;
+    const { includePartner, partnerFirstName, partnerLastName, partnerDateOfBirth, targetRetirementAge, lifeExpectancy, companyName, companyLogo } = body;
 
     // Validation
     if (typeof includePartner !== 'boolean') {
@@ -85,6 +87,14 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate report settings
+    if (companyName !== null && companyName !== undefined && typeof companyName !== 'string') {
+      throw new ValidationError('companyName must be a string');
+    }
+    if (companyLogo !== null && companyLogo !== undefined && typeof companyLogo !== 'string') {
+      throw new ValidationError('companyLogo must be a string');
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: session.userId },
       data: {
@@ -96,6 +106,8 @@ export async function PUT(request: NextRequest) {
           : null,
         targetRetirementAge: targetRetirementAge !== undefined ? targetRetirementAge : undefined,
         lifeExpectancy: lifeExpectancy !== undefined ? lifeExpectancy : undefined,
+        companyName: companyName !== undefined ? companyName : undefined,
+        companyLogo: companyLogo !== undefined ? companyLogo : undefined,
       },
       select: {
         includePartner: true,
@@ -104,6 +116,8 @@ export async function PUT(request: NextRequest) {
         partnerDateOfBirth: true,
         targetRetirementAge: true,
         lifeExpectancy: true,
+        companyName: true,
+        companyLogo: true,
       },
     });
 

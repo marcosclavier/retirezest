@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const assets = await prisma.asset.findMany({
       where: { userId: session.userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { name: 'asc' },
     });
 
     return NextResponse.json({ assets });

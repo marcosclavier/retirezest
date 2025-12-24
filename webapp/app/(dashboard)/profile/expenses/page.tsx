@@ -191,22 +191,22 @@ export default function ExpensesPage() {
     return { essential, discretionary };
   };
 
-  // Helper function to organize one-time expenses by year and category
-  const getOneTimeExpensesByYear = () => {
+  // Helper function to organize ALL expenses by year and category
+  const getExpensesByYear = () => {
     const oneTimeExpenses = expenses.filter(e => !e.isRecurring && e.plannedYear);
 
-    // Get unique years and sort them
-    const years = [...new Set(oneTimeExpenses.map(e => e.plannedYear!))].sort();
+    // Get unique years from one-time expenses and sort them
+    const oneTimeYears = [...new Set(oneTimeExpenses.map(e => e.plannedYear!))];
 
     // Get current year and next 5 years
     const currentYear = new Date().getFullYear();
     const next5Years = Array.from({ length: 5 }, (_, i) => currentYear + i);
 
-    // Combine years (only show years that have expenses or are in next 5 years)
-    const allYears = [...new Set([...years, ...next5Years])].sort();
+    // Combine years (only show years that have one-time expenses or are in next 5 years)
+    const allYears = [...new Set([...oneTimeYears, ...next5Years])].sort();
 
-    // Get unique categories that have one-time expenses
-    const categories = [...new Set(oneTimeExpenses.map(e => e.category))];
+    // Get all unique categories from all expenses
+    const categories = [...new Set(expenses.map(e => e.category))];
 
     // Build table data
     const tableData: { [year: number]: { [category: string]: number } } = {};
@@ -214,10 +214,20 @@ export default function ExpensesPage() {
     allYears.forEach(year => {
       tableData[year] = {};
       categories.forEach(category => {
-        const categoryExpenses = oneTimeExpenses.filter(
-          e => e.plannedYear === year && e.category === category
-        );
-        const total = categoryExpenses.reduce((sum, e) => sum + e.amount, 0);
+        // Get one-time expenses for this year and category
+        const oneTimeAmount = oneTimeExpenses
+          .filter(e => e.plannedYear === year && e.category === category)
+          .reduce((sum, e) => sum + e.amount, 0);
+
+        // Get recurring expenses for this category (annualized)
+        const recurringAmount = expenses
+          .filter(e => e.isRecurring && e.category === category)
+          .reduce((sum, e) => {
+            const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+            return sum + annualAmount;
+          }, 0);
+
+        const total = oneTimeAmount + recurringAmount;
         if (total > 0) {
           tableData[year][category] = total;
         }
@@ -227,18 +237,40 @@ export default function ExpensesPage() {
     return { years: allYears, categories, tableData };
   };
 
-  // Calculate totals by year
+  // Calculate totals by year (recurring annual + one-time for that year)
   const getYearTotal = (year: number) => {
-    return expenses
+    // One-time expenses for this year
+    const oneTimeTotal = expenses
       .filter(e => !e.isRecurring && e.plannedYear === year)
       .reduce((sum, e) => sum + e.amount, 0);
+
+    // Recurring expenses (annualized) - same for every year
+    const recurringTotal = expenses
+      .filter(e => e.isRecurring)
+      .reduce((sum, e) => {
+        const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+        return sum + annualAmount;
+      }, 0);
+
+    return oneTimeTotal + recurringTotal;
   };
 
-  // Calculate totals by category
-  const getCategoryTotal = (category: string) => {
-    return expenses
+  // Calculate totals by category (recurring annual + all one-time)
+  const getCategoryTotal = (category: string, years: number[]) => {
+    // Recurring expenses for this category (annualized, multiplied by number of years)
+    const recurringTotal = expenses
+      .filter(e => e.isRecurring && e.category === category)
+      .reduce((sum, e) => {
+        const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+        return sum + (annualAmount * years.length);
+      }, 0);
+
+    // One-time expenses for this category (all years)
+    const oneTimeTotal = expenses
       .filter(e => !e.isRecurring && e.category === category)
       .reduce((sum, e) => sum + e.amount, 0);
+
+    return recurringTotal + oneTimeTotal;
   };
 
   if (loading) {
@@ -479,18 +511,18 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* One-Time Expenses by Year Table */}
-      {expenses.filter(e => !e.isRecurring).length > 0 && (
+      {/* All Expenses by Year Table */}
+      {expenses.length > 0 && (
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">One-Time Expenses by Year</h2>
+            <h2 className="text-lg font-medium text-gray-900">Annual Expenses by Category</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Planning view for the next 5 years and beyond
+              Projected annual spending for the next 5 years (recurring expenses shown every year, one-time expenses in specific years)
             </p>
           </div>
           <div className="overflow-x-auto">
             {(() => {
-              const { years, categories, tableData } = getOneTimeExpensesByYear();
+              const { years, categories, tableData } = getExpensesByYear();
               const hasAnyExpenses = years.some(year => getYearTotal(year) > 0);
 
               if (!hasAnyExpenses) {
@@ -520,7 +552,7 @@ export default function ExpensesPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {categories.map(category => {
-                      const categoryTotal = getCategoryTotal(category);
+                      const categoryTotal = getCategoryTotal(category, years);
                       if (categoryTotal === 0) return null;
 
                       return (
@@ -568,7 +600,7 @@ export default function ExpensesPage() {
                         );
                       })}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-900 bg-blue-100">
-                        ${expenses.filter(e => !e.isRecurring).reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
+                        ${years.reduce((sum, year) => sum + getYearTotal(year), 0).toLocaleString()}
                       </td>
                     </tr>
                   </tbody>
