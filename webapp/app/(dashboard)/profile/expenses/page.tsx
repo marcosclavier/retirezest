@@ -191,6 +191,56 @@ export default function ExpensesPage() {
     return { essential, discretionary };
   };
 
+  // Helper function to organize one-time expenses by year and category
+  const getOneTimeExpensesByYear = () => {
+    const oneTimeExpenses = expenses.filter(e => !e.isRecurring && e.plannedYear);
+
+    // Get unique years and sort them
+    const years = [...new Set(oneTimeExpenses.map(e => e.plannedYear!))].sort();
+
+    // Get current year and next 5 years
+    const currentYear = new Date().getFullYear();
+    const next5Years = Array.from({ length: 5 }, (_, i) => currentYear + i);
+
+    // Combine years (only show years that have expenses or are in next 5 years)
+    const allYears = [...new Set([...years, ...next5Years])].sort();
+
+    // Get unique categories that have one-time expenses
+    const categories = [...new Set(oneTimeExpenses.map(e => e.category))];
+
+    // Build table data
+    const tableData: { [year: number]: { [category: string]: number } } = {};
+
+    allYears.forEach(year => {
+      tableData[year] = {};
+      categories.forEach(category => {
+        const categoryExpenses = oneTimeExpenses.filter(
+          e => e.plannedYear === year && e.category === category
+        );
+        const total = categoryExpenses.reduce((sum, e) => sum + e.amount, 0);
+        if (total > 0) {
+          tableData[year][category] = total;
+        }
+      });
+    });
+
+    return { years: allYears, categories, tableData };
+  };
+
+  // Calculate totals by year
+  const getYearTotal = (year: number) => {
+    return expenses
+      .filter(e => !e.isRecurring && e.plannedYear === year)
+      .reduce((sum, e) => sum + e.amount, 0);
+  };
+
+  // Calculate totals by category
+  const getCategoryTotal = (category: string) => {
+    return expenses
+      .filter(e => !e.isRecurring && e.category === category)
+      .reduce((sum, e) => sum + e.amount, 0);
+  };
+
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
@@ -426,6 +476,106 @@ export default function ExpensesPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* One-Time Expenses by Year Table */}
+      {expenses.filter(e => !e.isRecurring).length > 0 && (
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">One-Time Expenses by Year</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Planning view for the next 5 years and beyond
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            {(() => {
+              const { years, categories, tableData } = getOneTimeExpensesByYear();
+              const hasAnyExpenses = years.some(year => getYearTotal(year) > 0);
+
+              if (!hasAnyExpenses) {
+                return (
+                  <div className="p-8 text-center text-gray-500">
+                    No one-time expenses planned yet
+                  </div>
+                );
+              }
+
+              return (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                        Category
+                      </th>
+                      {years.map(year => (
+                        <th key={year} scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {year}
+                        </th>
+                      ))}
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-100">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {categories.map(category => {
+                      const categoryTotal = getCategoryTotal(category);
+                      if (categoryTotal === 0) return null;
+
+                      return (
+                        <tr key={category} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
+                            {category}
+                          </td>
+                          {years.map(year => {
+                            const amount = tableData[year]?.[category] || 0;
+                            return (
+                              <td key={`${category}-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                                {amount > 0 ? (
+                                  <span className="font-medium">
+                                    ${amount.toLocaleString()}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-300">—</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900 bg-gray-50">
+                            ${categoryTotal.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {/* Year Totals Row */}
+                    <tr className="bg-blue-50 font-bold">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-50">
+                        Year Total
+                      </td>
+                      {years.map(year => {
+                        const yearTotal = getYearTotal(year);
+                        return (
+                          <td key={`total-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                            {yearTotal > 0 ? (
+                              <span className="font-bold text-blue-900">
+                                ${yearTotal.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-900 bg-blue-100">
+                        ${expenses.filter(e => !e.isRecurring).reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              );
+            })()}
+          </div>
         </div>
       )}
 
