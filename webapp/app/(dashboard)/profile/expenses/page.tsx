@@ -595,9 +595,6 @@ export default function ExpensesPage() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
                         Category
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 pl-12">
-                        Type
-                      </th>
                       {years.map(year => (
                         <th key={year} scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {year}
@@ -609,83 +606,45 @@ export default function ExpensesPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
+                    {/* Essential Section Header */}
+                    <tr className="bg-red-200 border-t-2 border-red-400">
+                      <td colSpan={years.length + 2} className="px-6 py-3 text-sm font-bold text-red-900 uppercase tracking-wider">
+                        Essential Expenses
+                      </td>
+                    </tr>
+                    {/* Essential Expenses */}
                     {categories.map(category => {
                       const categoryTotalEssential = getCategoryTotal(category, years, 'essential');
-                      const categoryTotalDiscretionary = getCategoryTotal(category, years, 'discretionary');
-                      const categoryTotal = categoryTotalEssential + categoryTotalDiscretionary;
-
-                      if (categoryTotal === 0) return null;
+                      if (categoryTotalEssential === 0) return null;
 
                       return (
-                        <>
-                          {/* Essential Row */}
-                          {categoryTotalEssential > 0 && (
-                            <tr key={`${category}-essential`} className="hover:bg-red-50">
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white" rowSpan={categoryTotalDiscretionary > 0 ? 2 : 1}>
-                                {category}
+                        <tr key={`${category}-essential`} className="hover:bg-red-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
+                            {category}
+                          </td>
+                          {years.map(year => {
+                            const amount = tableData[year]?.[category]?.essential || 0;
+                            return (
+                              <td key={`${category}-essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                                {amount > 0 ? (
+                                  <span className="font-medium text-red-700">
+                                    ${amount.toLocaleString()}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-300">—</span>
+                                )}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm sticky left-0 bg-white pl-12">
-                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                                  Essential
-                                </span>
-                              </td>
-                              {years.map(year => {
-                                const amount = tableData[year]?.[category]?.essential || 0;
-                                return (
-                                  <td key={`${category}-essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                                    {amount > 0 ? (
-                                      <span className="font-medium text-red-700">
-                                        ${amount.toLocaleString()}
-                                      </span>
-                                    ) : (
-                                      <span className="text-gray-300">—</span>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-700 bg-red-50">
-                                ${categoryTotalEssential.toLocaleString()}
-                              </td>
-                            </tr>
-                          )}
-                          {/* Discretionary Row */}
-                          {categoryTotalDiscretionary > 0 && (
-                            <tr key={`${category}-discretionary`} className="hover:bg-green-50">
-                              {categoryTotalEssential === 0 && (
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
-                                  {category}
-                                </td>
-                              )}
-                              <td className="px-6 py-4 whitespace-nowrap text-sm sticky left-0 bg-white pl-12">
-                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                  Discretionary
-                                </span>
-                              </td>
-                              {years.map(year => {
-                                const amount = tableData[year]?.[category]?.discretionary || 0;
-                                return (
-                                  <td key={`${category}-discretionary-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                                    {amount > 0 ? (
-                                      <span className="font-medium text-green-700">
-                                        ${amount.toLocaleString()}
-                                      </span>
-                                    ) : (
-                                      <span className="text-gray-300">—</span>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-700 bg-green-50">
-                                ${categoryTotalDiscretionary.toLocaleString()}
-                              </td>
-                            </tr>
-                          )}
-                        </>
+                            );
+                          })}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-700 bg-red-50">
+                            ${categoryTotalEssential.toLocaleString()}
+                          </td>
+                        </tr>
                       );
                     })}
                     {/* Essential Subtotal Row */}
                     <tr className="bg-red-100 font-bold border-t-2 border-red-300">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-red-100" colSpan={2}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-red-100">
                         Essential Subtotal
                       </td>
                       {years.map(year => {
@@ -706,9 +665,45 @@ export default function ExpensesPage() {
                         ${years.reduce((sum, year) => sum + getYearTotal(year, 'essential'), 0).toLocaleString()}
                       </td>
                     </tr>
+                    {/* Discretionary Section Header */}
+                    <tr className="bg-green-200 border-t-2 border-green-400">
+                      <td colSpan={years.length + 2} className="px-6 py-3 text-sm font-bold text-green-900 uppercase tracking-wider">
+                        Discretionary Expenses
+                      </td>
+                    </tr>
+                    {/* Discretionary Expenses */}
+                    {categories.map(category => {
+                      const categoryTotalDiscretionary = getCategoryTotal(category, years, 'discretionary');
+                      if (categoryTotalDiscretionary === 0) return null;
+
+                      return (
+                        <tr key={`${category}-discretionary`} className="hover:bg-green-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
+                            {category}
+                          </td>
+                          {years.map(year => {
+                            const amount = tableData[year]?.[category]?.discretionary || 0;
+                            return (
+                              <td key={`${category}-discretionary-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                                {amount > 0 ? (
+                                  <span className="font-medium text-green-700">
+                                    ${amount.toLocaleString()}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-300">—</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-700 bg-green-50">
+                            ${categoryTotalDiscretionary.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {/* Discretionary Subtotal Row */}
-                    <tr className="bg-green-100 font-bold">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-green-100" colSpan={2}>
+                    <tr className="bg-green-100 font-bold border-t-2 border-green-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-green-100">
                         Discretionary Subtotal
                       </td>
                       {years.map(year => {
@@ -731,7 +726,7 @@ export default function ExpensesPage() {
                     </tr>
                     {/* Grand Total Row */}
                     <tr className="bg-blue-50 font-bold border-t-2 border-blue-300">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-50" colSpan={2}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-50">
                         Grand Total
                       </td>
                       {years.map(year => {
