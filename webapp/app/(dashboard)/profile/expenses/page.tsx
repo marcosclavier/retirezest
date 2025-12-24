@@ -607,8 +607,8 @@ export default function ExpensesPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {/* Essential Section Header */}
-                    <tr className="bg-red-200 border-t-2 border-red-400">
-                      <td colSpan={years.length + 2} className="px-6 py-3 text-sm font-bold text-red-900 uppercase tracking-wider">
+                    <tr className="bg-blue-200 border-t-2 border-blue-400">
+                      <td colSpan={years.length + 2} className="px-6 py-3 text-sm font-bold text-blue-900 uppercase tracking-wider">
                         Essential Expenses
                       </td>
                     </tr>
@@ -618,7 +618,7 @@ export default function ExpensesPage() {
                       if (categoryTotalEssential === 0) return null;
 
                       return (
-                        <tr key={`${category}-essential`} className="hover:bg-red-50">
+                        <tr key={`${category}-essential`} className="hover:bg-blue-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
                             {category}
                           </td>
@@ -627,7 +627,7 @@ export default function ExpensesPage() {
                             return (
                               <td key={`${category}-essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                                 {amount > 0 ? (
-                                  <span className="font-medium text-red-700">
+                                  <span className="font-medium text-blue-700">
                                     ${amount.toLocaleString()}
                                   </span>
                                 ) : (
@@ -636,15 +636,15 @@ export default function ExpensesPage() {
                               </td>
                             );
                           })}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-700 bg-red-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-700 bg-blue-50">
                             ${categoryTotalEssential.toLocaleString()}
                           </td>
                         </tr>
                       );
                     })}
                     {/* Essential Subtotal Row */}
-                    <tr className="bg-red-100 font-bold border-t-2 border-red-300">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-red-100">
+                    <tr className="bg-blue-100 font-bold border-t-2 border-blue-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-100">
                         Essential Subtotal
                       </td>
                       {years.map(year => {
@@ -652,7 +652,7 @@ export default function ExpensesPage() {
                         return (
                           <td key={`essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                             {yearEssential > 0 ? (
-                              <span className="font-bold text-red-900">
+                              <span className="font-bold text-blue-900">
                                 ${yearEssential.toLocaleString()}
                               </span>
                             ) : (
@@ -661,7 +661,7 @@ export default function ExpensesPage() {
                           </td>
                         );
                       })}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-900 bg-red-200">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-900 bg-blue-200">
                         ${years.reduce((sum, year) => sum + getYearTotal(year, 'essential'), 0).toLocaleString()}
                       </td>
                     </tr>
@@ -725,8 +725,8 @@ export default function ExpensesPage() {
                       </td>
                     </tr>
                     {/* Grand Total Row */}
-                    <tr className="bg-blue-50 font-bold border-t-2 border-blue-300">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-50">
+                    <tr className="bg-gray-200 font-bold border-t-2 border-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-gray-200">
                         Grand Total
                       </td>
                       {years.map(year => {
@@ -734,7 +734,7 @@ export default function ExpensesPage() {
                         return (
                           <td key={`total-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                             {yearTotal > 0 ? (
-                              <span className="font-bold text-blue-900">
+                              <span className="font-bold text-gray-900">
                                 ${yearTotal.toLocaleString()}
                               </span>
                             ) : (
@@ -743,7 +743,7 @@ export default function ExpensesPage() {
                           </td>
                         );
                       })}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-900 bg-blue-100">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900 bg-gray-300">
                         ${years.reduce((sum, year) => sum + getYearTotal(year), 0).toLocaleString()}
                       </td>
                     </tr>
