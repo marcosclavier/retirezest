@@ -191,7 +191,7 @@ export default function ExpensesPage() {
     return { essential, discretionary };
   };
 
-  // Helper function to organize ALL expenses by year and category
+  // Helper function to organize ALL expenses by year and category, split by essential/discretionary
   const getExpensesByYear = () => {
     const oneTimeExpenses = expenses.filter(e => !e.isRecurring && e.plannedYear);
 
@@ -208,28 +208,51 @@ export default function ExpensesPage() {
     // Get all unique categories from all expenses
     const categories = [...new Set(expenses.map(e => e.category))];
 
-    // Build table data
-    const tableData: { [year: number]: { [category: string]: number } } = {};
+    // Build table data - separate essential and discretionary
+    const tableData: {
+      [year: number]: {
+        [category: string]: {
+          essential: number;
+          discretionary: number;
+        }
+      }
+    } = {};
 
     allYears.forEach(year => {
       tableData[year] = {};
       categories.forEach(category => {
         // Get one-time expenses for this year and category
-        const oneTimeAmount = oneTimeExpenses
-          .filter(e => e.plannedYear === year && e.category === category)
+        const oneTimeEssential = oneTimeExpenses
+          .filter(e => e.plannedYear === year && e.category === category && (e.essential || e.isEssential))
+          .reduce((sum, e) => sum + e.amount, 0);
+
+        const oneTimeDiscretionary = oneTimeExpenses
+          .filter(e => e.plannedYear === year && e.category === category && !(e.essential || e.isEssential))
           .reduce((sum, e) => sum + e.amount, 0);
 
         // Get recurring expenses for this category (annualized)
-        const recurringAmount = expenses
-          .filter(e => e.isRecurring && e.category === category)
+        const recurringEssential = expenses
+          .filter(e => e.isRecurring && e.category === category && (e.essential || e.isEssential))
           .reduce((sum, e) => {
             const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
             return sum + annualAmount;
           }, 0);
 
-        const total = oneTimeAmount + recurringAmount;
-        if (total > 0) {
-          tableData[year][category] = total;
+        const recurringDiscretionary = expenses
+          .filter(e => e.isRecurring && e.category === category && !(e.essential || e.isEssential))
+          .reduce((sum, e) => {
+            const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+            return sum + annualAmount;
+          }, 0);
+
+        const essentialTotal = oneTimeEssential + recurringEssential;
+        const discretionaryTotal = oneTimeDiscretionary + recurringDiscretionary;
+
+        if (essentialTotal > 0 || discretionaryTotal > 0) {
+          tableData[year][category] = {
+            essential: essentialTotal,
+            discretionary: discretionaryTotal
+          };
         }
       });
     });
@@ -237,40 +260,72 @@ export default function ExpensesPage() {
     return { years: allYears, categories, tableData };
   };
 
-  // Calculate totals by year (recurring annual + one-time for that year)
-  const getYearTotal = (year: number) => {
-    // One-time expenses for this year
-    const oneTimeTotal = expenses
-      .filter(e => !e.isRecurring && e.plannedYear === year)
-      .reduce((sum, e) => sum + e.amount, 0);
+  // Calculate totals by year (recurring annual + one-time for that year), split by essential/discretionary
+  const getYearTotal = (year: number, type?: 'essential' | 'discretionary'): number => {
+    if (type === 'essential') {
+      const oneTimeEssential = expenses
+        .filter(e => !e.isRecurring && e.plannedYear === year && (e.essential || e.isEssential))
+        .reduce((sum, e) => sum + e.amount, 0);
 
-    // Recurring expenses (annualized) - same for every year
-    const recurringTotal = expenses
-      .filter(e => e.isRecurring)
-      .reduce((sum, e) => {
-        const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-        return sum + annualAmount;
-      }, 0);
+      const recurringEssential = expenses
+        .filter(e => e.isRecurring && (e.essential || e.isEssential))
+        .reduce((sum, e) => {
+          const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+          return sum + annualAmount;
+        }, 0);
 
-    return oneTimeTotal + recurringTotal;
+      return oneTimeEssential + recurringEssential;
+    } else if (type === 'discretionary') {
+      const oneTimeDiscretionary = expenses
+        .filter(e => !e.isRecurring && e.plannedYear === year && !(e.essential || e.isEssential))
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const recurringDiscretionary = expenses
+        .filter(e => e.isRecurring && !(e.essential || e.isEssential))
+        .reduce((sum, e) => {
+          const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+          return sum + annualAmount;
+        }, 0);
+
+      return oneTimeDiscretionary + recurringDiscretionary;
+    } else {
+      // Total (essential + discretionary)
+      return getYearTotal(year, 'essential') + getYearTotal(year, 'discretionary');
+    }
   };
 
-  // Calculate totals by category (recurring annual + all one-time)
-  const getCategoryTotal = (category: string, years: number[]) => {
-    // Recurring expenses for this category (annualized, multiplied by number of years)
-    const recurringTotal = expenses
-      .filter(e => e.isRecurring && e.category === category)
-      .reduce((sum, e) => {
-        const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-        return sum + (annualAmount * years.length);
-      }, 0);
+  // Calculate totals by category (recurring annual + all one-time), split by essential/discretionary
+  const getCategoryTotal = (category: string, years: number[], type?: 'essential' | 'discretionary'): number => {
+    if (type === 'essential') {
+      const recurringEssential = expenses
+        .filter(e => e.isRecurring && e.category === category && (e.essential || e.isEssential))
+        .reduce((sum, e) => {
+          const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+          return sum + (annualAmount * years.length);
+        }, 0);
 
-    // One-time expenses for this category (all years)
-    const oneTimeTotal = expenses
-      .filter(e => !e.isRecurring && e.category === category)
-      .reduce((sum, e) => sum + e.amount, 0);
+      const oneTimeEssential = expenses
+        .filter(e => !e.isRecurring && e.category === category && (e.essential || e.isEssential))
+        .reduce((sum, e) => sum + e.amount, 0);
 
-    return recurringTotal + oneTimeTotal;
+      return recurringEssential + oneTimeEssential;
+    } else if (type === 'discretionary') {
+      const recurringDiscretionary = expenses
+        .filter(e => e.isRecurring && e.category === category && !(e.essential || e.isEssential))
+        .reduce((sum, e) => {
+          const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
+          return sum + (annualAmount * years.length);
+        }, 0);
+
+      const oneTimeDiscretionary = expenses
+        .filter(e => !e.isRecurring && e.category === category && !(e.essential || e.isEssential))
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      return recurringDiscretionary + oneTimeDiscretionary;
+    } else {
+      // Total (essential + discretionary)
+      return getCategoryTotal(category, years, 'essential') + getCategoryTotal(category, years, 'discretionary');
+    }
   };
 
   if (loading) {
@@ -540,6 +595,9 @@ export default function ExpensesPage() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
                         Category
                       </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 pl-12">
+                        Type
+                      </th>
                       {years.map(year => (
                         <th key={year} scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {year}
@@ -552,38 +610,129 @@ export default function ExpensesPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {categories.map(category => {
-                      const categoryTotal = getCategoryTotal(category, years);
+                      const categoryTotalEssential = getCategoryTotal(category, years, 'essential');
+                      const categoryTotalDiscretionary = getCategoryTotal(category, years, 'discretionary');
+                      const categoryTotal = categoryTotalEssential + categoryTotalDiscretionary;
+
                       if (categoryTotal === 0) return null;
 
                       return (
-                        <tr key={category} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
-                            {category}
-                          </td>
-                          {years.map(year => {
-                            const amount = tableData[year]?.[category] || 0;
-                            return (
-                              <td key={`${category}-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                                {amount > 0 ? (
-                                  <span className="font-medium">
-                                    ${amount.toLocaleString()}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-300">—</span>
-                                )}
+                        <>
+                          {/* Essential Row */}
+                          {categoryTotalEssential > 0 && (
+                            <tr key={`${category}-essential`} className="hover:bg-red-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white" rowSpan={categoryTotalDiscretionary > 0 ? 2 : 1}>
+                                {category}
                               </td>
-                            );
-                          })}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900 bg-gray-50">
-                            ${categoryTotal.toLocaleString()}
-                          </td>
-                        </tr>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm sticky left-0 bg-white pl-12">
+                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                  Essential
+                                </span>
+                              </td>
+                              {years.map(year => {
+                                const amount = tableData[year]?.[category]?.essential || 0;
+                                return (
+                                  <td key={`${category}-essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                                    {amount > 0 ? (
+                                      <span className="font-medium text-red-700">
+                                        ${amount.toLocaleString()}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-300">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-700 bg-red-50">
+                                ${categoryTotalEssential.toLocaleString()}
+                              </td>
+                            </tr>
+                          )}
+                          {/* Discretionary Row */}
+                          {categoryTotalDiscretionary > 0 && (
+                            <tr key={`${category}-discretionary`} className="hover:bg-green-50">
+                              {categoryTotalEssential === 0 && (
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 capitalize sticky left-0 bg-white">
+                                  {category}
+                                </td>
+                              )}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm sticky left-0 bg-white pl-12">
+                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                  Discretionary
+                                </span>
+                              </td>
+                              {years.map(year => {
+                                const amount = tableData[year]?.[category]?.discretionary || 0;
+                                return (
+                                  <td key={`${category}-discretionary-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                                    {amount > 0 ? (
+                                      <span className="font-medium text-green-700">
+                                        ${amount.toLocaleString()}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-300">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-700 bg-green-50">
+                                ${categoryTotalDiscretionary.toLocaleString()}
+                              </td>
+                            </tr>
+                          )}
+                        </>
                       );
                     })}
-                    {/* Year Totals Row */}
-                    <tr className="bg-blue-50 font-bold">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-50">
-                        Year Total
+                    {/* Essential Subtotal Row */}
+                    <tr className="bg-red-100 font-bold border-t-2 border-red-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-red-100" colSpan={2}>
+                        Essential Subtotal
+                      </td>
+                      {years.map(year => {
+                        const yearEssential = getYearTotal(year, 'essential');
+                        return (
+                          <td key={`essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                            {yearEssential > 0 ? (
+                              <span className="font-bold text-red-900">
+                                ${yearEssential.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-900 bg-red-200">
+                        ${years.reduce((sum, year) => sum + getYearTotal(year, 'essential'), 0).toLocaleString()}
+                      </td>
+                    </tr>
+                    {/* Discretionary Subtotal Row */}
+                    <tr className="bg-green-100 font-bold">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-green-100" colSpan={2}>
+                        Discretionary Subtotal
+                      </td>
+                      {years.map(year => {
+                        const yearDiscretionary = getYearTotal(year, 'discretionary');
+                        return (
+                          <td key={`discretionary-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
+                            {yearDiscretionary > 0 ? (
+                              <span className="font-bold text-green-900">
+                                ${yearDiscretionary.toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-900 bg-green-200">
+                        ${years.reduce((sum, year) => sum + getYearTotal(year, 'discretionary'), 0).toLocaleString()}
+                      </td>
+                    </tr>
+                    {/* Grand Total Row */}
+                    <tr className="bg-blue-50 font-bold border-t-2 border-blue-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 sticky left-0 bg-blue-50" colSpan={2}>
+                        Grand Total
                       </td>
                       {years.map(year => {
                         const yearTotal = getYearTotal(year);
