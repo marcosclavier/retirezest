@@ -437,8 +437,8 @@ export default function ExpensesPage() {
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Essential</div>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-sm text-gray-500">Expense Total This Year</div>
+            <div className="text-2xl font-bold text-blue-600">
               ${essential.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
             <div className="text-xs text-gray-500">
@@ -672,7 +672,7 @@ export default function ExpensesPage() {
                               <td key={`${category}-essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                                 {amount > 0 ? (
                                   <span className="font-medium text-blue-700">
-                                    ${amount.toLocaleString()}
+                                    ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                   </span>
                                 ) : (
                                   <span className="text-gray-300">—</span>
@@ -681,7 +681,7 @@ export default function ExpensesPage() {
                             );
                           })}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-700 bg-blue-50">
-                            ${categoryTotalEssential.toLocaleString()}
+                            ${categoryTotalEssential.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </td>
                         </tr>
                       );
@@ -697,7 +697,7 @@ export default function ExpensesPage() {
                           <td key={`essential-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                             {yearEssential > 0 ? (
                               <span className="font-bold text-blue-900">
-                                ${yearEssential.toLocaleString()}
+                                ${yearEssential.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             ) : (
                               <span className="text-gray-300">—</span>
@@ -706,7 +706,7 @@ export default function ExpensesPage() {
                         );
                       })}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-900 bg-blue-200">
-                        ${years.reduce((sum, year) => sum + getYearTotal(year, 'essential'), 0).toLocaleString()}
+                        ${years.reduce((sum, year) => sum + getYearTotal(year, 'essential'), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                     {/* Discretionary Section Header */}
@@ -731,7 +731,7 @@ export default function ExpensesPage() {
                               <td key={`${category}-discretionary-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                                 {amount > 0 ? (
                                   <span className="font-medium text-green-700">
-                                    ${amount.toLocaleString()}
+                                    ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                   </span>
                                 ) : (
                                   <span className="text-gray-300">—</span>
@@ -740,7 +740,7 @@ export default function ExpensesPage() {
                             );
                           })}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-700 bg-green-50">
-                            ${categoryTotalDiscretionary.toLocaleString()}
+                            ${categoryTotalDiscretionary.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </td>
                         </tr>
                       );
@@ -756,7 +756,7 @@ export default function ExpensesPage() {
                           <td key={`discretionary-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                             {yearDiscretionary > 0 ? (
                               <span className="font-bold text-green-900">
-                                ${yearDiscretionary.toLocaleString()}
+                                ${yearDiscretionary.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             ) : (
                               <span className="text-gray-300">—</span>
@@ -765,7 +765,7 @@ export default function ExpensesPage() {
                         );
                       })}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-900 bg-green-200">
-                        ${years.reduce((sum, year) => sum + getYearTotal(year, 'discretionary'), 0).toLocaleString()}
+                        ${years.reduce((sum, year) => sum + getYearTotal(year, 'discretionary'), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                     {/* Grand Total Row */}
@@ -779,7 +779,7 @@ export default function ExpensesPage() {
                           <td key={`total-${year}`} className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
                             {yearTotal > 0 ? (
                               <span className="font-bold text-gray-900">
-                                ${yearTotal.toLocaleString()}
+                                ${yearTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </span>
                             ) : (
                               <span className="text-gray-300">—</span>
@@ -788,7 +788,7 @@ export default function ExpensesPage() {
                         );
                       })}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900 bg-gray-300">
-                        ${years.reduce((sum, year) => sum + getYearTotal(year), 0).toLocaleString()}
+                        ${years.reduce((sum, year) => sum + getYearTotal(year), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                   </tbody>
