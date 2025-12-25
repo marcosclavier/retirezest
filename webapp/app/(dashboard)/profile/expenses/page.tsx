@@ -23,6 +23,7 @@ export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [inflationRate, setInflationRate] = useState<number>(2.0); // Default 2% inflation
   const [formData, setFormData] = useState({
     category: 'housing',
     description: '',
@@ -37,6 +38,7 @@ export default function ExpensesPage() {
   useEffect(() => {
     fetchExpenses();
     fetchCsrfToken();
+    fetchInflationRate();
   }, []);
 
   const fetchCsrfToken = async () => {
@@ -48,6 +50,23 @@ export default function ExpensesPage() {
       }
     } catch (error) {
       console.error('Error fetching CSRF token:', error);
+    }
+  };
+
+  const fetchInflationRate = async () => {
+    try {
+      const res = await fetch('/api/scenarios');
+      if (res.ok) {
+        const data = await res.json();
+        // Get the baseline scenario or first scenario
+        const baseline = data.scenarios?.find((s: any) => s.isBaseline) || data.scenarios?.[0];
+        if (baseline?.expenseInflationRate) {
+          setInflationRate(baseline.expenseInflationRate);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching inflation rate:', error);
+      // Keep default 2.0% if fetch fails
     }
   };
 
@@ -192,6 +211,17 @@ export default function ExpensesPage() {
   };
 
   // Helper function to organize ALL expenses by year and category, split by essential/discretionary
+  // Helper function to calculate inflation-adjusted amount
+  const applyInflation = (baseAmount: number, targetYear: number): number => {
+    const currentYear = new Date().getFullYear();
+    const yearsFromNow = targetYear - currentYear;
+    if (yearsFromNow <= 0) return baseAmount;
+
+    // Apply compound inflation: amount * (1 + rate)^years
+    const inflationMultiplier = Math.pow(1 + (inflationRate / 100), yearsFromNow);
+    return baseAmount * inflationMultiplier;
+  };
+
   const getExpensesByYear = () => {
     const oneTimeExpenses = expenses.filter(e => !e.isRecurring && e.plannedYear);
 
@@ -221,28 +251,30 @@ export default function ExpensesPage() {
     allYears.forEach(year => {
       tableData[year] = {};
       categories.forEach(category => {
-        // Get one-time expenses for this year and category
+        // Get one-time expenses for this year and category (inflation-adjusted to planned year)
         const oneTimeEssential = oneTimeExpenses
           .filter(e => e.plannedYear === year && e.category === category && (e.essential || e.isEssential))
-          .reduce((sum, e) => sum + e.amount, 0);
+          .reduce((sum, e) => sum + applyInflation(e.amount, e.plannedYear!), 0);
 
         const oneTimeDiscretionary = oneTimeExpenses
           .filter(e => e.plannedYear === year && e.category === category && !(e.essential || e.isEssential))
-          .reduce((sum, e) => sum + e.amount, 0);
+          .reduce((sum, e) => sum + applyInflation(e.amount, e.plannedYear!), 0);
 
-        // Get recurring expenses for this category (annualized)
+        // Get recurring expenses for this category (annualized and inflation-adjusted)
         const recurringEssential = expenses
           .filter(e => e.isRecurring && e.category === category && (e.essential || e.isEssential))
           .reduce((sum, e) => {
             const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-            return sum + annualAmount;
+            const inflatedAmount = applyInflation(annualAmount, year);
+            return sum + inflatedAmount;
           }, 0);
 
         const recurringDiscretionary = expenses
           .filter(e => e.isRecurring && e.category === category && !(e.essential || e.isEssential))
           .reduce((sum, e) => {
             const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-            return sum + annualAmount;
+            const inflatedAmount = applyInflation(annualAmount, year);
+            return sum + inflatedAmount;
           }, 0);
 
         const essentialTotal = oneTimeEssential + recurringEssential;
@@ -261,30 +293,33 @@ export default function ExpensesPage() {
   };
 
   // Calculate totals by year (recurring annual + one-time for that year), split by essential/discretionary
+  // Applies inflation to both recurring and one-time expenses
   const getYearTotal = (year: number, type?: 'essential' | 'discretionary'): number => {
     if (type === 'essential') {
       const oneTimeEssential = expenses
         .filter(e => !e.isRecurring && e.plannedYear === year && (e.essential || e.isEssential))
-        .reduce((sum, e) => sum + e.amount, 0);
+        .reduce((sum, e) => sum + applyInflation(e.amount, e.plannedYear!), 0);
 
       const recurringEssential = expenses
         .filter(e => e.isRecurring && (e.essential || e.isEssential))
         .reduce((sum, e) => {
           const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-          return sum + annualAmount;
+          const inflatedAmount = applyInflation(annualAmount, year);
+          return sum + inflatedAmount;
         }, 0);
 
       return oneTimeEssential + recurringEssential;
     } else if (type === 'discretionary') {
       const oneTimeDiscretionary = expenses
         .filter(e => !e.isRecurring && e.plannedYear === year && !(e.essential || e.isEssential))
-        .reduce((sum, e) => sum + e.amount, 0);
+        .reduce((sum, e) => sum + applyInflation(e.amount, e.plannedYear!), 0);
 
       const recurringDiscretionary = expenses
         .filter(e => e.isRecurring && !(e.essential || e.isEssential))
         .reduce((sum, e) => {
           const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-          return sum + annualAmount;
+          const inflatedAmount = applyInflation(annualAmount, year);
+          return sum + inflatedAmount;
         }, 0);
 
       return oneTimeDiscretionary + recurringDiscretionary;
@@ -295,18 +330,23 @@ export default function ExpensesPage() {
   };
 
   // Calculate totals by category (recurring annual + all one-time), split by essential/discretionary
+  // Applies inflation to both recurring and one-time expenses
   const getCategoryTotal = (category: string, years: number[], type?: 'essential' | 'discretionary'): number => {
     if (type === 'essential') {
       const recurringEssential = expenses
         .filter(e => e.isRecurring && e.category === category && (e.essential || e.isEssential))
         .reduce((sum, e) => {
           const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-          return sum + (annualAmount * years.length);
+          // Sum inflated amounts for each year
+          const totalInflated = years.reduce((yearSum, year) => {
+            return yearSum + applyInflation(annualAmount, year);
+          }, 0);
+          return sum + totalInflated;
         }, 0);
 
       const oneTimeEssential = expenses
         .filter(e => !e.isRecurring && e.category === category && (e.essential || e.isEssential))
-        .reduce((sum, e) => sum + e.amount, 0);
+        .reduce((sum, e) => sum + applyInflation(e.amount, e.plannedYear!), 0);
 
       return recurringEssential + oneTimeEssential;
     } else if (type === 'discretionary') {
@@ -314,12 +354,16 @@ export default function ExpensesPage() {
         .filter(e => e.isRecurring && e.category === category && !(e.essential || e.isEssential))
         .reduce((sum, e) => {
           const annualAmount = e.frequency === 'monthly' ? e.amount * 12 : e.amount;
-          return sum + (annualAmount * years.length);
+          // Sum inflated amounts for each year
+          const totalInflated = years.reduce((yearSum, year) => {
+            return yearSum + applyInflation(annualAmount, year);
+          }, 0);
+          return sum + totalInflated;
         }, 0);
 
       const oneTimeDiscretionary = expenses
         .filter(e => !e.isRecurring && e.category === category && !(e.essential || e.isEssential))
-        .reduce((sum, e) => sum + e.amount, 0);
+        .reduce((sum, e) => sum + applyInflation(e.amount, e.plannedYear!), 0);
 
       return recurringDiscretionary + oneTimeDiscretionary;
     } else {
