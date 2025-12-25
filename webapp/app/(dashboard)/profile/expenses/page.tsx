@@ -422,7 +422,7 @@ export default function ExpensesPage() {
 
       {/* Summary Card */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Expenses Summary</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Expense Summary This Year</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <div className="text-sm text-gray-500">Monthly Total</div>
@@ -437,7 +437,7 @@ export default function ExpensesPage() {
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Expense Total This Year</div>
+            <div className="text-sm text-gray-500">Essential</div>
             <div className="text-2xl font-bold text-blue-600">
               ${essential.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
