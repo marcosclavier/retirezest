@@ -39,11 +39,12 @@ function getSecurityHeaders() {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-eval/inline
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com", // Next.js requires unsafe-eval/inline, Google reCAPTCHA requires google.com/gstatic.com
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.sentry.io", // Add your API domains
+    "connect-src 'self' https://api.sentry.io https://www.google.com", // Add your API domains + Google reCAPTCHA
+    "frame-src https://www.google.com", // Required for reCAPTCHA iframe
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

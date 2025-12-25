@@ -1,26 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginPage() {
   const router = useRouter();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
+  useEffect(() => {
+    if (!recaptchaSiteKey) {
+      console.error('reCAPTCHA site key is not configured');
+      setError('reCAPTCHA is not properly configured. Please contact support.');
+    }
+  }, [recaptchaSiteKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Verify reCAPTCHA
+    if (!recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          recaptchaToken
+        }),
       });
 
       const data = await res.json();
@@ -29,9 +52,15 @@ export default function LoginPage() {
         router.push('/dashboard');
       } else {
         setError(data.error || 'Login failed');
+        // Reset reCAPTCHA on error
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
+      // Reset reCAPTCHA on error
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -92,9 +121,25 @@ export default function LoginPage() {
             />
           </div>
 
+          <div className="flex justify-center my-4">
+            {recaptchaSiteKey ? (
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={recaptchaSiteKey}
+                onChange={(token) => setRecaptchaToken(token)}
+                onExpired={() => setRecaptchaToken(null)}
+                onErrored={() => setRecaptchaToken(null)}
+              />
+            ) : (
+              <div className="text-sm text-red-600">
+                reCAPTCHA configuration missing. Please refresh the page.
+              </div>
+            )}
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !recaptchaToken}
             className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-indigo-400 disabled:cursor-not-allowed"
           >
             {loading ? 'Logging in...' : 'Login'}

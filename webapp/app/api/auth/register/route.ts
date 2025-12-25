@@ -5,6 +5,7 @@ import { registerRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { sendAdminNewUserNotification } from '@/lib/email';
+import { verifyRecaptcha, getClientIp } from '@/lib/recaptcha';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -38,7 +39,24 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName } = body;
+    const { email, password, firstName, lastName, recaptchaToken } = body;
+
+    // Validate reCAPTCHA FIRST - before any database queries
+    if (!recaptchaToken || typeof recaptchaToken !== 'string') {
+      throw new ValidationError('reCAPTCHA verification is required', 'recaptcha');
+    }
+
+    const clientIp = getClientIp(request);
+    const recaptchaResult = await verifyRecaptcha(recaptchaToken, clientIp);
+
+    if (!recaptchaResult.success) {
+      logger.warn('reCAPTCHA verification failed for registration', {
+        errorCodes: recaptchaResult.errorCodes,
+        email: email || 'unknown',
+        ip: clientIp,
+      });
+      throw new ValidationError('reCAPTCHA verification failed. Please try again.', 'recaptcha');
+    }
 
     // Validate input
     if (!email || typeof email !== 'string') {
