@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { SimulationResponse } from '@/lib/types/simulation';
 import { SectionHeader } from './shared/SectionHeader';
 import { MetricCard } from './shared/MetricCard';
@@ -81,7 +82,14 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
           </div>
           {companyLogo && (
             <div className="ml-4">
-              <img src={companyLogo} alt={companyName || 'Company Logo'} className="h-16 w-auto" />
+              <Image
+                src={companyLogo}
+                alt={companyName || 'Company Logo'}
+                width={128}
+                height={64}
+                className="h-16 w-auto"
+                unoptimized
+              />
             </div>
           )}
         </div>

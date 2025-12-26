@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useDebouncedCallback } from '@/lib/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -90,21 +91,30 @@ export default function SimulationPage() {
     setIsInitialized(true);
   }, []);
 
+  // Debounced localStorage save functions (500ms delay to reduce writes)
+  const debouncedSaveHousehold = useDebouncedCallback((householdData: HouseholdInput) => {
+    console.log('💾 Saving household to localStorage (debounced)');
+    localStorage.setItem('simulation_household', JSON.stringify(householdData));
+  }, 500);
+
+  const debouncedSaveIncludePartner = useDebouncedCallback((value: boolean) => {
+    console.log('💾 Saving includePartner to localStorage (debounced)');
+    localStorage.setItem('simulation_includePartner', value.toString());
+  }, 500);
+
   // Save household data to localStorage whenever it changes (but not during initial load)
   useEffect(() => {
     if (isInitialized && prefillAttempted) {
-      console.log('💾 Saving household to localStorage');
-      localStorage.setItem('simulation_household', JSON.stringify(household));
+      debouncedSaveHousehold(household);
     }
-  }, [household, isInitialized, prefillAttempted]);
+  }, [household, isInitialized, prefillAttempted, debouncedSaveHousehold]);
 
   // Save includePartner to localStorage whenever it changes (but not during initial load)
   useEffect(() => {
     if (isInitialized && prefillAttempted) {
-      console.log('💾 Saving includePartner to localStorage');
-      localStorage.setItem('simulation_includePartner', includePartner.toString());
+      debouncedSaveIncludePartner(includePartner);
     }
-  }, [includePartner, isInitialized, prefillAttempted]);
+  }, [includePartner, isInitialized, prefillAttempted, debouncedSaveIncludePartner]);
 
   // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
