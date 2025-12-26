@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 // Optimized font loading with next/font
@@ -30,7 +33,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased font-sans">
+        <GoogleAnalytics ga_id={process.env.NEXT_PUBLIC_GA_ID || ''} />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
