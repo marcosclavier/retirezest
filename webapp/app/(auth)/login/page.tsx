@@ -1,35 +1,34 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function LoginPage() {
   const router = useRouter();
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
   useEffect(() => {
-    if (!recaptchaSiteKey) {
-      console.error('reCAPTCHA site key is not configured');
-      setError('reCAPTCHA is not properly configured. Please contact support.');
+    if (!turnstileSiteKey) {
+      console.error('Turnstile site key is not configured');
+      setError('Security verification is not properly configured. Please contact support.');
     }
-  }, [recaptchaSiteKey]);
+  }, [turnstileSiteKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Verify reCAPTCHA
-    if (!recaptchaToken) {
-      setError('Please complete the reCAPTCHA verification');
+    // Verify Turnstile
+    if (!turnstileToken) {
+      setError('Please wait for security verification to complete');
       return;
     }
 
@@ -42,7 +41,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           email,
           password,
-          recaptchaToken
+          turnstileToken
         }),
       });
 
@@ -52,15 +51,13 @@ export default function LoginPage() {
         router.push('/dashboard');
       } else {
         setError(data.error || 'Login failed');
-        // Reset reCAPTCHA on error
-        recaptchaRef.current?.reset();
-        setRecaptchaToken(null);
+        // Reset Turnstile on error
+        setTurnstileToken(null);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
-      // Reset reCAPTCHA on error
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
+      // Reset Turnstile on error
+      setTurnstileToken(null);
     } finally {
       setLoading(false);
     }
@@ -122,24 +119,27 @@ export default function LoginPage() {
           </div>
 
           <div className="flex justify-center my-4">
-            {recaptchaSiteKey ? (
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={recaptchaSiteKey}
-                onChange={(token) => setRecaptchaToken(token)}
-                onExpired={() => setRecaptchaToken(null)}
-                onErrored={() => setRecaptchaToken(null)}
+            {turnstileSiteKey ? (
+              <Turnstile
+                siteKey={turnstileSiteKey}
+                onSuccess={(token) => setTurnstileToken(token)}
+                onError={() => setTurnstileToken(null)}
+                onExpire={() => setTurnstileToken(null)}
+                options={{
+                  theme: 'light',
+                  size: 'normal',
+                }}
               />
             ) : (
               <div className="text-sm text-red-600">
-                reCAPTCHA configuration missing. Please refresh the page.
+                Security verification configuration missing. Please refresh the page.
               </div>
             )}
           </div>
 
           <button
             type="submit"
-            disabled={loading || !recaptchaToken}
+            disabled={loading || !turnstileToken}
             className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-indigo-400 disabled:cursor-not-allowed"
           >
             {loading ? 'Logging in...' : 'Login'}

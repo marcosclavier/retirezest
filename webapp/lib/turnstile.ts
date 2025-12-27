@@ -1,13 +1,16 @@
 /**
- * Google reCAPTCHA v2 Verification Utility
+ * Cloudflare Turnstile Verification Utility
  *
- * Provides server-side verification of reCAPTCHA tokens
+ * Provides server-side verification of Turnstile tokens
  * to protect authentication endpoints from bot attacks.
+ *
+ * Turnstile is a privacy-friendly alternative to reCAPTCHA
+ * that doesn't track users and provides a better UX.
  */
 
 import { logger } from './logger';
 
-export interface RecaptchaVerificationResult {
+export interface TurnstileVerificationResult {
   success: boolean;
   errorCodes?: string[];
   challengeTimestamp?: string;
@@ -15,23 +18,23 @@ export interface RecaptchaVerificationResult {
 }
 
 /**
- * Verifies a reCAPTCHA token with Google's verification API
+ * Verifies a Turnstile token with Cloudflare's verification API
  *
- * @param token - The reCAPTCHA token from the client
+ * @param token - The Turnstile token from the client
  * @param remoteIp - Optional: The user's IP address
- * @returns Promise<RecaptchaVerificationResult>
+ * @returns Promise<TurnstileVerificationResult>
  */
-export async function verifyRecaptcha(
+export async function verifyTurnstile(
   token: string,
   remoteIp?: string
-): Promise<RecaptchaVerificationResult> {
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+): Promise<TurnstileVerificationResult> {
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secretKey) {
-    logger.error('RECAPTCHA_SECRET_KEY is not configured', null, {
-      endpoint: 'verifyRecaptcha',
+    logger.error('TURNSTILE_SECRET_KEY is not configured', null, {
+      endpoint: 'verifyTurnstile',
     });
-    throw new Error('reCAPTCHA is not properly configured');
+    throw new Error('Turnstile is not properly configured');
   }
 
   if (!token || typeof token !== 'string') {
@@ -43,38 +46,34 @@ export async function verifyRecaptcha(
 
   try {
     // Build the verification request body
-    const params = new URLSearchParams({
-      secret: secretKey,
-      response: token,
-    });
+    const formData = new FormData();
+    formData.append('secret', secretKey);
+    formData.append('response', token);
 
     // Add remote IP if provided (optional but recommended)
     if (remoteIp) {
-      params.append('remoteip', remoteIp);
+      formData.append('remoteip', remoteIp);
     }
 
-    // Call Google's reCAPTCHA verification API
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    // Call Cloudflare's Turnstile verification API
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
+      body: formData,
     });
 
     if (!response.ok) {
-      logger.error('reCAPTCHA verification API returned error', null, {
+      logger.error('Turnstile verification API returned error', null, {
         status: response.status,
         statusText: response.statusText,
       });
-      throw new Error('reCAPTCHA verification service unavailable');
+      throw new Error('Turnstile verification service unavailable');
     }
 
     const data = await response.json();
 
     // Log verification results for security monitoring
     if (!data.success) {
-      logger.warn('reCAPTCHA verification failed', {
+      logger.warn('Turnstile verification failed', {
         errorCodes: data['error-codes'] || [],
         hostname: data.hostname,
       });
@@ -87,8 +86,8 @@ export async function verifyRecaptcha(
       hostname: data.hostname,
     };
   } catch (error) {
-    logger.error('reCAPTCHA verification failed', error, {
-      endpoint: 'verifyRecaptcha',
+    logger.error('Turnstile verification failed', error, {
+      endpoint: 'verifyTurnstile',
     });
 
     // Return failure but don't expose internal error details

@@ -5,7 +5,7 @@ import { registerRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { sendAdminNewUserNotification } from '@/lib/email';
-import { verifyRecaptcha, getClientIp } from '@/lib/recaptcha';
+import { verifyTurnstile, getClientIp } from '@/lib/turnstile';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -39,23 +39,23 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { email, password, firstName, lastName, recaptchaToken } = body;
+    const { email, password, firstName, lastName, turnstileToken } = body;
 
-    // Validate reCAPTCHA FIRST - before any database queries
-    if (!recaptchaToken || typeof recaptchaToken !== 'string') {
-      throw new ValidationError('reCAPTCHA verification is required', 'recaptcha');
+    // Validate Turnstile FIRST - before any database queries
+    if (!turnstileToken || typeof turnstileToken !== 'string') {
+      throw new ValidationError('Security verification is required', 'turnstile');
     }
 
     const clientIp = getClientIp(request);
-    const recaptchaResult = await verifyRecaptcha(recaptchaToken, clientIp);
+    const turnstileResult = await verifyTurnstile(turnstileToken, clientIp);
 
-    if (!recaptchaResult.success) {
-      logger.warn('reCAPTCHA verification failed for registration', {
-        errorCodes: recaptchaResult.errorCodes,
+    if (!turnstileResult.success) {
+      logger.warn('Turnstile verification failed for registration', {
+        errorCodes: turnstileResult.errorCodes,
         email: email || 'unknown',
         ip: clientIp,
       });
-      throw new ValidationError('reCAPTCHA verification failed. Please try again.', 'recaptcha');
+      throw new ValidationError('Security verification failed. Please try again.', 'turnstile');
     }
 
     // Validate input

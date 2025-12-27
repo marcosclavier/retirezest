@@ -79,28 +79,31 @@ export default function OnboardingWizard() {
         }
 
         // Load assets
-        const assetsResponse = await fetch('/api/user/assets');
+        const assetsResponse = await fetch('/api/profile/assets');
         let assetsData: any = {};
         if (assetsResponse.ok) {
-          const assets = await assetsResponse.json();
+          const data = await assetsResponse.json();
+          const assets = data.assets || [];
           assetsData.hasAssets = assets.length > 0;
           assetsData.assets = assets;
         }
 
         // Load income
-        const incomeResponse = await fetch('/api/user/income');
+        const incomeResponse = await fetch('/api/profile/income');
         let incomeData: any = {};
         if (incomeResponse.ok) {
-          const incomes = await incomeResponse.json();
+          const data = await incomeResponse.json();
+          const incomes = data.income || [];
           incomeData.hasIncome = incomes.length > 0;
           incomeData.incomes = incomes;
         }
 
         // Load expenses
-        const expensesResponse = await fetch('/api/user/expenses');
+        const expensesResponse = await fetch('/api/profile/expenses');
         let expensesData: any = {};
         if (expensesResponse.ok) {
-          const expenses = await expensesResponse.json();
+          const data = await expensesResponse.json();
+          const expenses = data.expenses || [];
           expensesData.hasExpenses = expenses.length > 0;
           expensesData.expenses = expenses;
         }

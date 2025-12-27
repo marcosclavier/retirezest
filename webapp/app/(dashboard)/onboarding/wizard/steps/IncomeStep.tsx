@@ -106,7 +106,7 @@ export default function IncomeStep({
       }
 
       for (const income of incomes) {
-        const response = await fetch('/api/user/income', {
+        const response = await fetch('/api/profile/income', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

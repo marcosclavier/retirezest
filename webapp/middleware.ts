@@ -39,12 +39,12 @@ function getSecurityHeaders() {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com", // Next.js requires unsafe-eval/inline, Google reCAPTCHA requires google.com/gstatic.com
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com https://va.vercel-scripts.com https://www.googletagmanager.com", // Next.js, Cloudflare Turnstile, Vercel Analytics, Google Analytics
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.sentry.io https://www.google.com", // Add your API domains + Google reCAPTCHA
-    "frame-src https://www.google.com", // Required for reCAPTCHA iframe
+    "connect-src 'self' https://api.sentry.io https://challenges.cloudflare.com https://vitals.vercel-insights.com https://www.google-analytics.com https://www.googletagmanager.com", // API domains, Turnstile, Vercel, Google Analytics
+    "frame-src https://challenges.cloudflare.com", // Required for Cloudflare Turnstile iframe
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

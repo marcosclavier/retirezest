@@ -134,7 +134,7 @@ export default function PartnerAssetsStep({
 
       // Save assets to database
       for (const asset of assets) {
-        const response = await fetch('/api/user/assets', {
+        const response = await fetch('/api/profile/assets', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

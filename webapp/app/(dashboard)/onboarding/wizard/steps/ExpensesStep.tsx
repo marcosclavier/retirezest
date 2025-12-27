@@ -55,7 +55,7 @@ export default function ExpensesStep({
 
     try {
       if (monthlyExpenses && parseFloat(monthlyExpenses) > 0) {
-        const response = await fetch('/api/user/expenses', {
+        const response = await fetch('/api/profile/expenses', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
