@@ -129,10 +129,10 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       {/* PDF Export Button */}
       {result.summary && result.year_by_year && result.household_input && (
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="flex items-center justify-between p-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Professional Retirement Report</h3>
-              <p className="text-sm text-gray-700 mt-1">
+          <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6">
+            <div className="flex-1">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Professional Retirement Report</h3>
+              <p className="text-xs sm:text-sm text-gray-700 mt-1">
                 Download a comprehensive PDF report with detailed analysis, tax breakdown, estate planning, and
                 year-by-year projections.
               </p>
@@ -141,17 +141,19 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               onClick={handleExportPDF}
               disabled={isGeneratingPDF}
               size="lg"
-              className="ml-4 bg-blue-600 hover:bg-blue-700"
+              className="w-full sm:w-auto sm:ml-4 bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
             >
               {isGeneratingPDF ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Generating...
+                  <span className="hidden sm:inline">Generating...</span>
+                  <span className="sm:hidden">Generating PDF...</span>
                 </>
               ) : (
                 <>
                   <FileDown className="h-5 w-5 mr-2" />
-                  Download PDF Report
+                  <span className="hidden sm:inline">Download PDF Report</span>
+                  <span className="sm:hidden">Download PDF</span>
                 </>
               )}
             </Button>

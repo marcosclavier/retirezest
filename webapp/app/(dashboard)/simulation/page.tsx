@@ -683,17 +683,18 @@ export default function SimulationPage() {
       )}
 
       {/* Run Simulation Button */}
-      <div className="flex justify-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
         <Button
           onClick={handleRunSimulation}
           disabled={isLoading || apiHealthy === false}
           size="lg"
-          className="min-w-[200px]"
+          className="w-full sm:w-auto sm:min-w-[200px]"
         >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Running Simulation...
+              <span className="hidden sm:inline">Running Simulation...</span>
+              <span className="sm:hidden">Running...</span>
             </>
           ) : (
             <>
@@ -707,10 +708,11 @@ export default function SimulationPage() {
           disabled={isLoading || prefillLoading}
           size="lg"
           variant="outline"
-          className="text-gray-700 hover:text-gray-900"
+          className="w-full sm:w-auto text-gray-700 hover:text-gray-900"
         >
           <RefreshCw className="mr-2 h-5 w-5" />
-          Reload from Profile
+          <span className="hidden sm:inline">Reload from Profile</span>
+          <span className="sm:hidden">Reload</span>
         </Button>
       </div>
 
