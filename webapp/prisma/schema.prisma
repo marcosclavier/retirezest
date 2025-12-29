@@ -30,6 +30,12 @@ model User {
   resetToken          String?   @unique
   resetTokenExpiry    DateTime?
 
+  // Email verification
+  emailVerified              Boolean   @default(false)
+  emailVerificationToken     String?   @unique
+  emailVerificationExpiry    DateTime?
+  verificationEmailSentAt    DateTime?
+
   // Retirement planning
   targetRetirementAge Int?
   lifeExpectancy      Int?      @default(95)
@@ -62,6 +68,7 @@ model User {
   @@index([email])
   @@index([createdAt])
   @@index([resetToken])
+  @@index([emailVerificationToken])
 }
 
 model Income {

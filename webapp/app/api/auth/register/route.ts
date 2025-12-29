@@ -5,7 +5,9 @@ import { registerRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { handleApiError, ValidationError } from '@/lib/errors';
 import { sendAdminNewUserNotification } from '@/lib/email';
+import { sendVerificationEmail } from '@/lib/email-verification';
 import { verifyTurnstile, getClientIp } from '@/lib/turnstile';
+import crypto from 'crypto';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -82,6 +84,10 @@ export async function POST(request: Request) {
     // Hash password
     const passwordHash = await hashPassword(password);
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
     // Create user
     const user = await prisma.user.create({
       data: {
@@ -89,6 +95,10 @@ export async function POST(request: Request) {
         passwordHash,
         firstName: firstName || null,
         lastName: lastName || null,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
+        verificationEmailSentAt: new Date(),
       },
     });
 
@@ -101,12 +111,27 @@ export async function POST(request: Request) {
     // Set session cookie
     await setSession(token);
 
+    // Send verification email (non-blocking - don't wait for it)
+    const userName = [user.firstName, user.lastName].filter(Boolean).join(' ');
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
+
+    sendVerificationEmail({
+      to: user.email,
+      verificationUrl,
+      userName,
+    }).catch((error) => {
+      // Log error but don't fail the registration
+      logger.error('Failed to send verification email', error, {
+        userId: user.id,
+        userEmail: user.email,
+      });
+    });
+
     // Send admin notification email (non-blocking - don't wait for it)
     // This runs in the background and won't affect the user's registration experience
-    const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'No name provided';
     sendAdminNewUserNotification({
       userEmail: user.email,
-      userName: userName,
+      userName: userName || 'No name provided',
       registrationDate: user.createdAt,
     }).catch((error) => {
       // Log error but don't fail the registration

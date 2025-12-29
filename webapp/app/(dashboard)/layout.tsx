@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LogoutButton } from '@/components/LogoutButton';
 import { MobileNav } from '@/components/MobileNav';
+import { VerificationBanner } from '@/components/VerificationBanner';
+import { prisma } from '@/lib/prisma';
 
 export default async function DashboardLayout({
   children,
@@ -16,8 +18,19 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  // Fetch user to check email verification status
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { email: true, emailVerified: true },
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Email Verification Banner */}
+      {user && !user.emailVerified && (
+        <VerificationBanner userEmail={user.email} />
+      )}
+
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
