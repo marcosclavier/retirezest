@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import DeleteAccountModal from '@/components/account/DeleteAccountModal';
+import ExportDataButton from '@/components/account/ExportDataButton';
 
 interface ProfileSettings {
   includePartner: boolean;
@@ -25,6 +27,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [settings, setSettings] = useState<ProfileSettings>({
     includePartner: false,
     firstName: '',
@@ -433,7 +436,58 @@ export default function SettingsPage() {
             </li>
           </ul>
         </div>
+
+        {/* Danger Zone */}
+        <Card className="mt-6 border-red-200">
+          <CardHeader className="bg-red-50">
+            <CardTitle className="text-red-800">Danger Zone</CardTitle>
+            <CardDescription className="text-red-700">
+              Irreversible and destructive actions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6">
+            {/* Export Data */}
+            <div className="flex items-start justify-between pb-6 border-b border-gray-200">
+              <div className="flex-1 pr-6">
+                <h4 className="font-semibold text-gray-900 mb-1">Export Your Data</h4>
+                <p className="text-sm text-gray-600">
+                  Download a complete copy of all your data in JSON format. This includes your profile, financial data, scenarios, and projections.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <ExportDataButton />
+              </div>
+            </div>
+
+            {/* Delete Account */}
+            <div className="flex items-start justify-between">
+              <div className="flex-1 pr-6">
+                <h4 className="font-semibold text-gray-900 mb-1">Delete Account</h4>
+                <p className="text-sm text-gray-600 mb-2">
+                  Permanently delete your account and all associated data. This action marks your account for deletion with a 30-day recovery period.
+                </p>
+                <p className="text-sm text-red-600 font-medium">
+                  Warning: After 30 days, all data will be permanently deleted and cannot be recovered.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }

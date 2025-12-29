@@ -55,6 +55,11 @@ model User {
   companyName          String?   // Optional company name for report branding
   companyLogo          String?   // Optional company logo URL for report branding
 
+  // Account deletion (soft delete with 30-day grace period)
+  deletedAt            DateTime? // When account was marked for deletion
+  scheduledDeletionAt  DateTime? // When permanent deletion will occur (deletedAt + 30 days)
+  deletionReason       String?   // Optional reason provided by user
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -69,6 +74,8 @@ model User {
   @@index([createdAt])
   @@index([resetToken])
   @@index([emailVerificationToken])
+  @@index([deletedAt])
+  @@index([scheduledDeletionAt])
 }
 
 model Income {
