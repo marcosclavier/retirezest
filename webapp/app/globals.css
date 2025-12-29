@@ -113,6 +113,21 @@ body {
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     break-after: avoid;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+  }
+
+  /* Section headers - larger font for readability */
+  h2 {
+    font-size: 18px !important;
+    word-break: normal !important;
+    white-space: normal !important;
+  }
+
+  h3 {
+    font-size: 14px !important;
+    word-break: normal !important;
+    white-space: normal !important;
   }
 
   table, figure, img {
