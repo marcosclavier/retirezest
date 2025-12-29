@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0); // Key to force Turnstile re-render
 
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
@@ -51,13 +52,15 @@ export default function LoginPage() {
         router.push('/dashboard');
       } else {
         setError(data.error || 'Login failed');
-        // Reset Turnstile on error
+        // Reset Turnstile on error - force re-render with new key
         setTurnstileToken(null);
+        setTurnstileKey(prev => prev + 1);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
-      // Reset Turnstile on error
+      // Reset Turnstile on error - force re-render with new key
       setTurnstileToken(null);
+      setTurnstileKey(prev => prev + 1);
     } finally {
       setLoading(false);
     }
@@ -121,6 +124,7 @@ export default function LoginPage() {
           <div className="flex justify-center my-4">
             {turnstileSiteKey ? (
               <Turnstile
+                key={turnstileKey}
                 siteKey={turnstileSiteKey}
                 onSuccess={(token) => setTurnstileToken(token)}
                 onError={() => setTurnstileToken(null)}
