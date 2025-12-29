@@ -42,8 +42,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
     return provinceNames[code.toUpperCase()] || code;
   };
 
-  // Check if user's province was mapped to a different province
+  // Supported provinces for tax calculations
+  const supportedProvinces = ['AB', 'BC', 'ON', 'QC'];
+
+  // Check if user's profile province is unsupported and was mapped to a different province
   const showProvinceWarning = userProfileProvince &&
+    !supportedProvinces.includes(userProfileProvince.toUpperCase()) &&
     userProfileProvince.toUpperCase() !== household.province;
 
   return (
