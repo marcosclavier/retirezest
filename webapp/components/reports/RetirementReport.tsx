@@ -12,6 +12,7 @@ import { ComprehensiveYearByYearSection } from './sections/ComprehensiveYearByYe
 import { PortfolioChart } from '../simulation/PortfolioChart';
 import { TaxChart } from '../simulation/TaxChart';
 import { WithdrawalsBySourceChart } from '../simulation/WithdrawalsBySourceChart';
+import { withNonBreakingSpaces } from './shared/utils';
 
 interface RetirementReportProps {
   result: SimulationResponse;
@@ -211,7 +212,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
         <div className="grid grid-cols-2 gap-6" style={{ pageBreakInside: 'avoid' }}>
           {/* Assets Breakdown */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-3">Current Assets</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{withNonBreakingSpaces('Current Assets')}</h3>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-700">RRSP/RRIF:</span>
@@ -240,7 +241,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
 
           {/* Planning Assumptions */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-3">Planning Assumptions</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{withNonBreakingSpaces('Planning Assumptions')}</h3>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-700">Starting Age ({personOneName}):</span>
@@ -278,7 +279,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
 
         {/* Spending Phases */}
         <div className="mt-6 bg-blue-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-gray-700 mb-3">Retirement Spending Phases</h3>
+          <h3 className="font-semibold text-gray-700 mb-3">{withNonBreakingSpaces('Retirement Spending Phases')}</h3>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-gray-600 font-medium">Go-Go Phase</p>
@@ -374,7 +375,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
 
       {/* Important Disclaimers */}
       <section className="mb-0 border-t-2 border-gray-300 pt-8 mt-12" style={{ pageBreakBefore: 'always', pageBreakInside: 'avoid' }}>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Important Disclaimers</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Important Disclaimers')}</h2>
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 space-y-2 text-sm text-gray-700" style={{ pageBreakInside: 'avoid' }}>
           <p>
             <strong>Not Financial Advice:</strong> This report is for informational purposes only and does not

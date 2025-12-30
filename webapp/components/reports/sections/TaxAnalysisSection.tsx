@@ -1,6 +1,7 @@
 import { SimulationSummary, YearResult } from '@/lib/types/simulation';
 import { SectionHeader } from '../shared/SectionHeader';
 import { MetricCard } from '../shared/MetricCard';
+import { withNonBreakingSpaces } from '../shared/utils';
 
 interface TaxAnalysisSectionProps {
   summary: SimulationSummary;
@@ -34,7 +35,7 @@ export function TaxAnalysisSection({ summary, yearByYear }: TaxAnalysisSectionPr
 
       {/* Tax Metrics */}
       <div className="bg-gray-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Tax Metrics</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Tax Metrics')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard
             label="Total Cumulative Tax (Lifetime)"
@@ -78,7 +79,7 @@ export function TaxAnalysisSection({ summary, yearByYear }: TaxAnalysisSectionPr
 
       {/* Key Observations */}
       <div className="bg-blue-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Key Tax Observations</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('Key Tax Observations')}</h3>
         <ul className="space-y-2 text-sm text-gray-700">
           <li className="flex items-start">
             <span className="text-blue-600 mr-2">•</span>
@@ -125,7 +126,7 @@ export function TaxAnalysisSection({ summary, yearByYear }: TaxAnalysisSectionPr
 
       {/* OAS Clawback Explanation */}
       <div className="border-l-4 border-yellow-400 bg-yellow-50 p-6 rounded-r mb-8 page-break" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">OAS Clawback (Recovery Tax)</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('OAS Clawback (Recovery Tax)')}</h3>
 
         <div className="grid grid-cols-3 gap-4 mb-4">
           <MetricCard

@@ -2,6 +2,7 @@ import { EstateSummary } from '@/lib/types/simulation';
 import { SectionHeader } from '../shared/SectionHeader';
 import { MetricCard } from '../shared/MetricCard';
 import { ReportTable } from '../shared/ReportTable';
+import { withNonBreakingSpaces } from '../shared/utils';
 
 interface EstateAnalysisSectionProps {
   estate: EstateSummary;
@@ -49,7 +50,7 @@ export function EstateAnalysisSection({ estate }: EstateAnalysisSectionProps) {
 
       {/* Estate Tax Summary */}
       <div className="bg-gray-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Estate Tax Summary</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Estate Tax Summary')}</h3>
         <div className="grid grid-cols-4 gap-4">
           <MetricCard
             label="Gross Estate Value"
@@ -76,7 +77,7 @@ export function EstateAnalysisSection({ estate }: EstateAnalysisSectionProps) {
 
       {/* Taxable Components at Death */}
       <div className="mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Taxable Components at Death</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Taxable Components at Death')}</h3>
         <ReportTable columns={columns} data={componentRows} />
 
         {/* Descriptions */}
@@ -92,7 +93,7 @@ export function EstateAnalysisSection({ estate }: EstateAnalysisSectionProps) {
 
       {/* Key Observations */}
       <div className="bg-blue-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Key Estate Observations</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('Key Estate Observations')}</h3>
         <ul className="space-y-2 text-sm text-gray-700">
           <li className="flex items-start">
             <span className="text-blue-600 mr-2">•</span>
@@ -154,7 +155,7 @@ export function EstateAnalysisSection({ estate }: EstateAnalysisSectionProps) {
       {/* Estate Planning Tips */}
       {estate.estate_planning_tips.length > 0 && (
         <div className="border-l-4 border-green-500 bg-green-50 p-6 rounded-r mb-8" style={{ pageBreakInside: 'avoid' }}>
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Estate Planning Tips</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('Estate Planning Tips')}</h3>
           <ul className="space-y-2 text-sm text-gray-700">
             {estate.estate_planning_tips.map((tip, index) => (
               <li key={index} className="flex items-start">

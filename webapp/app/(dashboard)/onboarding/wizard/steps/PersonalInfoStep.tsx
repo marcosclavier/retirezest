@@ -15,9 +15,6 @@ export default function PersonalInfoStep({
   onNext,
   onPrevious,
 }: PersonalInfoStepProps) {
-  const [firstName, setFirstName] = useState(formData.firstName || '');
-  const [lastName, setLastName] = useState(formData.lastName || '');
-  const [dateOfBirth, setDateOfBirth] = useState(formData.dateOfBirth || '');
   const [province, setProvince] = useState(formData.province || 'ON');
   const [maritalStatus, setMaritalStatus] = useState(formData.maritalStatus || 'single');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,9 +55,6 @@ export default function PersonalInfoStep({
     setIsLoading(true);
 
     const data = {
-      firstName,
-      lastName,
-      dateOfBirth,
       province,
       maritalStatus,
     };
@@ -78,15 +72,15 @@ export default function PersonalInfoStep({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('API Error Response:', errorData);
-        const errorMessage = errorData.error || errorData.message || 'Failed to save personal information';
+        const errorMessage = errorData.error || errorData.message || 'Failed to save information';
         throw new Error(errorMessage);
       }
 
       updateFormData(data);
       onNext();
     } catch (error) {
-      console.error('Error saving personal information:', error);
-      const message = error instanceof Error ? error.message : 'Failed to save personal information. Please try again.';
+      console.error('Error saving information:', error);
+      const message = error instanceof Error ? error.message : 'Failed to save information. Please try again.';
       alert(message);
     } finally {
       setIsLoading(false);
@@ -96,80 +90,17 @@ export default function PersonalInfoStep({
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Personal Information</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Let's Get Started</h2>
         <p className="text-gray-600">
-          Let's start with your basic information to personalize your retirement plan.
+          Just two quick questions to personalize your retirement plan.
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* First Name */}
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-            First Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Enter your first name"
-            required
-          />
-        </div>
-
-        {/* Last Name */}
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Enter your last name"
-            required
-          />
-        </div>
-
-        {/* Date of Birth */}
-        <div>
-          <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
-            Date of Birth <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              type="date"
-              id="dateOfBirth"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              min="1900-01-01"
-              max={new Date().toISOString().split('T')[0]}
-              placeholder="YYYY-MM-DD"
-              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              required
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-xs text-blue-600 font-medium mt-1">
-            Safari users: Click the calendar icon above to select the date. Do not type the year directly.
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            Or type the complete date at once: YYYY-MM-DD (e.g., 1959-12-20)
-          </p>
-        </div>
-
         {/* Province */}
         <div>
           <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-2">
-            Province <span className="text-red-500">*</span>
+            Which province do you live in?
           </label>
           <select
             id="province"
@@ -185,14 +116,14 @@ export default function PersonalInfoStep({
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Your province affects tax calculations and some benefit amounts
+            This helps us calculate accurate tax and benefit amounts for your region
           </p>
         </div>
 
         {/* Marital Status */}
         <div>
           <label htmlFor="maritalStatus" className="block text-sm font-medium text-gray-700 mb-2">
-            Marital Status <span className="text-red-500">*</span>
+            What's your marital status?
           </label>
           <select
             id="maritalStatus"
@@ -208,7 +139,7 @@ export default function PersonalInfoStep({
             <option value="widowed">Widowed</option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            This helps us provide accurate tax and benefit calculations
+            This affects your tax calculations and certain benefits
           </p>
         </div>
       </div>
@@ -224,10 +155,10 @@ export default function PersonalInfoStep({
         </button>
         <button
           onClick={handleSave}
-          disabled={isLoading || !firstName || !lastName || !dateOfBirth}
+          disabled={isLoading}
           className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
         >
-          {isLoading ? 'Saving...' : 'Save and Continue'}
+          {isLoading ? 'Saving...' : 'Continue'}
         </button>
       </div>
     </div>

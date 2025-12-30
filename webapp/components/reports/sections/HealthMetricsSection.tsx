@@ -3,6 +3,7 @@ import { SectionHeader } from '../shared/SectionHeader';
 import { MetricCard } from '../shared/MetricCard';
 import { ReportTable } from '../shared/ReportTable';
 import { formatCurrency } from '@/lib/utils';
+import { withNonBreakingSpaces } from '../shared/utils';
 
 interface HealthMetricsSectionProps {
   summary: SimulationSummary;
@@ -79,7 +80,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTota
       {/* Health Check Summary */}
       {criteriaArray.length > 0 && (
         <div className="border border-gray-300 rounded-lg p-3 mb-2">
-          <h3 className="text-sm font-bold text-gray-900 mb-1">Health Check Summary</h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-1">{withNonBreakingSpaces('Health Check Summary')}</h3>
           <p className="text-xs mb-2 text-gray-900 font-semibold">
             <span className="font-semibold">Rating:</span> {summary.health_rating} (Score:{' '}
             {summary.health_score}/100)
@@ -126,7 +127,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTota
 
       {/* Plan Sustainability */}
       <div className="bg-blue-50 p-2 rounded-lg mb-2">
-        <h3 className="text-sm font-bold text-gray-900 mb-2">Plan Sustainability</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-2">{withNonBreakingSpaces('Plan Sustainability')}</h3>
         <div className="grid grid-cols-3 gap-2">
           <MetricCard
             label="Initial Net Worth"
@@ -154,7 +155,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTota
 
       {/* Government Benefits Summary */}
       <div className="bg-gray-50 p-2 rounded-lg mb-2">
-        <h3 className="text-sm font-bold text-gray-900 mb-2">Government Benefits Summary (Lifetime)</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-2">{withNonBreakingSpaces('Government Benefits Summary (Lifetime)')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <MetricCard
             label="Total CPP"
@@ -180,7 +181,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTota
       {/* Withdrawal & Spending Analysis */}
       {spendingAnalysis && (
         <div className="bg-gray-50 p-2 rounded-lg mb-2">
-          <h3 className="text-sm font-bold text-gray-900 mb-2">Withdrawal & Spending Analysis</h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-2">{withNonBreakingSpaces('Withdrawal & Spending Analysis')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <MetricCard
               label="Portfolio Withdrawals"
@@ -215,7 +216,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTota
 
       {/* Tax Efficiency & OAS Clawback */}
       <div className="bg-gray-50 p-2 rounded-lg mb-2">
-        <h3 className="text-sm font-bold text-gray-900 mb-2">Tax Efficiency & OAS Clawback</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-2">{withNonBreakingSpaces('Tax Efficiency & OAS Clawback')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <MetricCard
             label="Total Taxes (Lifetime)"

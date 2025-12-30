@@ -2,6 +2,7 @@ import { SimulationSummary, KeyAssumptions } from '@/lib/types/simulation';
 import { SectionHeader } from '../shared/SectionHeader';
 import { MetricCard } from '../shared/MetricCard';
 import { ReportTable } from '../shared/ReportTable';
+import { withNonBreakingSpaces } from '../shared/utils';
 
 interface WithdrawalAnalysisSectionProps {
   summary: SimulationSummary;
@@ -72,7 +73,7 @@ export function WithdrawalAnalysisSection({ summary, keyAssumptions }: Withdrawa
 
       {/* Withdrawal Summary */}
       <div className="bg-gray-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Total Withdrawals by Source</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Total Withdrawals by Source')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <MetricCard
             label="Total Withdrawals"
@@ -105,7 +106,7 @@ export function WithdrawalAnalysisSection({ summary, keyAssumptions }: Withdrawa
       {/* Withdrawal Breakdown Table */}
       {withdrawalData.length > 0 && (
         <div className="mb-8" style={{ pageBreakInside: 'avoid' }}>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Withdrawal Breakdown</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Withdrawal Breakdown')}</h3>
           <ReportTable columns={columns} data={withdrawalData} />
 
           {/* Visual percentage bars */}
@@ -139,7 +140,7 @@ export function WithdrawalAnalysisSection({ summary, keyAssumptions }: Withdrawa
       {/* Withdrawal Strategy Used */}
       {keyAssumptions && (
         <div className="bg-blue-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Withdrawal Strategy Used</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('Withdrawal Strategy Used')}</h3>
           <p className="text-gray-700 mb-2">
             <strong>Strategy:</strong> {keyAssumptions.withdrawal_strategy}
           </p>
@@ -161,7 +162,7 @@ export function WithdrawalAnalysisSection({ summary, keyAssumptions }: Withdrawa
 
       {/* Tax Treatment by Source */}
       <div className="border border-gray-300 rounded-lg p-6 mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Tax Treatment by Withdrawal Source</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{withNonBreakingSpaces('Tax Treatment by Withdrawal Source')}</h3>
         <div className="space-y-4">
           <div className="flex items-start">
             <div className="w-40 font-semibold text-gray-900">RRIF:</div>

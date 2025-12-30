@@ -1,5 +1,6 @@
 import { FiveYearPlanYear } from '@/lib/types/simulation';
 import { SectionHeader } from '../shared/SectionHeader';
+import { withNonBreakingSpaces } from '../shared/utils';
 
 interface FiveYearPlanSectionProps {
   fiveYearPlan: FiveYearPlanYear[];
@@ -238,7 +239,7 @@ export function FiveYearPlanSection({
 
       {/* Key Observations */}
       <div className="mt-6 bg-blue-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Key Observations (First 5 Years)</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('Key Observations (First 5 Years)')}</h3>
         <ul className="space-y-2 text-sm text-gray-700">
           {get5YearObservations(fiveYearPlan, personOneName, personTwoName, isSinglePerson).map(
             (observation, index) => (

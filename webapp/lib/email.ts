@@ -15,6 +15,12 @@ interface SendAdminNotificationParams {
   registrationDate: Date;
 }
 
+interface SendVerificationEmailParams {
+  to: string;
+  verificationUrl: string;
+  userName?: string;
+}
+
 /**
  * Send a password reset email to a user
  */

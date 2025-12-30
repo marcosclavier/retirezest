@@ -1,5 +1,6 @@
 import { YearResult } from '@/lib/types/simulation';
 import { SectionHeader } from '../shared/SectionHeader';
+import { withNonBreakingSpaces } from '../shared/utils';
 
 interface ComprehensiveYearByYearSectionProps {
   yearByYear: YearResult[];
@@ -354,7 +355,7 @@ export function ComprehensiveYearByYearSection({
 
       {/* Important Notes */}
       <div className="mt-6 bg-blue-50 p-6 rounded-lg mb-8" style={{ pageBreakInside: 'avoid' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Understanding This Data</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">{withNonBreakingSpaces('Understanding This Data')}</h3>
         <ul className="space-y-2 text-sm text-gray-700">
           <li className="flex items-start">
             <span className="text-blue-600 mr-2">•</span>
