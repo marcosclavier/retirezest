@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         partnerFirstName: true,
         partnerLastName: true,
         partnerDateOfBirth: true,
+        lifeExpectancy: true,
       },
     });
 
@@ -328,6 +329,7 @@ export async function GET(request: NextRequest) {
       hasAssets: assets.length > 0,
       hasPartnerAssets,
       totalNetWorth,
+      lifeExpectancy: user?.lifeExpectancy || 95, // Planning horizon from profile
     });
   } catch (error) {
     logger.error('Error fetching simulation prefill data', error, {

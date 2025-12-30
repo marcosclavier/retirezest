@@ -116,7 +116,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end-age">End Age</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="end-age">End Age (Planning Horizon)</Label>
+                {isPrefilled && (
+                  <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
+                )}
+              </div>
               <Input
                 id="end-age"
                 type="number"
@@ -125,7 +130,11 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                 value={household.end_age}
                 onChange={(e) => onChange('end_age', parseInt(e.target.value) || 95)}
                 readOnly={false}
+                className={isPrefilled ? "bg-blue-50 border-blue-200" : ""}
               />
+              <p className="text-xs text-gray-600 mt-1">
+                How long should we plan for? Set in the wizard's "Planning Horizon (Life Expectancy)" step.
+              </p>
             </div>
           </div>
 

@@ -272,6 +272,7 @@ export default function SimulationPage() {
         setHousehold(prev => ({
           ...prev,
           province: data.province || prev.province,
+          end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
           p1: mergedP1,
           p2: partnerData,
         }));
@@ -333,6 +334,7 @@ export default function SimulationPage() {
           setHousehold(prev => ({
             ...prev,
             province: data.province || prev.province,
+            end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
             p1: {
               ...prev.p1,
               ...data.person1Input,
