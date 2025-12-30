@@ -103,7 +103,7 @@ export default function WelcomeChoicePage() {
             </button>
 
             <p className="text-xs text-gray-500 text-center mt-3">
-              Takes about 5-10 minutes
+              Takes less than 15 minutes
             </p>
           </div>
 
