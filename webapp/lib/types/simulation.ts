@@ -14,6 +14,11 @@ export interface PersonInput {
   oas_start_age: number;
   oas_annual_at_start: number;
 
+  // Other income sources
+  employer_pension_annual: number;
+  rental_income_annual: number;
+  other_income_annual: number;
+
   // Account balances
   tfsa_balance: number;
   rrif_balance: number;
@@ -386,6 +391,10 @@ export const defaultPersonInput: PersonInput = {
   cpp_annual_at_start: 15000,
   oas_start_age: 65,
   oas_annual_at_start: 8500,
+
+  employer_pension_annual: 0,
+  rental_income_annual: 0,
+  other_income_annual: 0,
 
   tfsa_balance: 0,
   rrif_balance: 0,

@@ -162,6 +162,55 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           </div>
         </Collapsible>
 
+        {/* Other Income Sources */}
+        <Collapsible
+          title="Other Income Sources"
+          description="Pension, rental income, and other regular income"
+          defaultOpen={false}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-pension`}
+                tooltip="Annual employer pension income from defined benefit or defined contribution plans"
+              >
+                Employer Pension ($ per year)
+              </LabelWithTooltip>
+              <CurrencyInput
+                id={`${personNumber}-pension`}
+                value={person.employer_pension_annual ?? 0}
+                onChange={(value) => onChange('employer_pension_annual', value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-rental`}
+                tooltip="Annual rental income from investment properties (net after expenses)"
+              >
+                Rental Income ($ per year)
+              </LabelWithTooltip>
+              <CurrencyInput
+                id={`${personNumber}-rental`}
+                value={person.rental_income_annual ?? 0}
+                onChange={(value) => onChange('rental_income_annual', value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-other`}
+                tooltip="Other regular income sources such as employment, business, or investment income"
+              >
+                Other Income ($ per year)
+              </LabelWithTooltip>
+              <CurrencyInput
+                id={`${personNumber}-other`}
+                value={person.other_income_annual ?? 0}
+                onChange={(value) => onChange('other_income_annual', value)}
+              />
+            </div>
+          </div>
+        </Collapsible>
+
         {/* Non-Registered Details */}
         <Collapsible
           title="Non-Registered Account Details"

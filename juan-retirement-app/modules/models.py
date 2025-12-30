@@ -74,6 +74,10 @@ class Person:
     oas_start_age: int = 70
     employer_pension_annual: float = 0.0  # Annual employer pension (DB/DC pension income)
 
+    # Other income sources
+    rental_income_annual: float = 0.0  # Annual rental income (net after expenses)
+    other_income_annual: float = 0.0  # Other regular income (employment, business, investment)
+
     # Registered accounts
     rrsp_balance: float = 0.0
     rrif_balance: float = 0.0

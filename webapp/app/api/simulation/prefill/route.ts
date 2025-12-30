@@ -50,17 +50,18 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Fetch CPP and OAS income sources
+    // Fetch all income sources (CPP, OAS, pension, rental, other)
     const incomeSources = await prisma.income.findMany({
       where: {
         userId: session.userId,
-        type: { in: ['cpp', 'oas'] },
+        type: { in: ['cpp', 'oas', 'pension', 'rental', 'employment', 'business', 'investment', 'other'] },
       },
       select: {
         type: true,
         amount: true,
         startAge: true,
         owner: true,
+        frequency: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -102,8 +103,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Extract CPP and OAS data by owner
-    const govBenefits = incomeSources.reduce((acc, income) => {
+    // Extract all income data by owner
+    const incomeByOwner = incomeSources.reduce((acc, income) => {
       const owner = income.owner || 'person1';
       const type = income.type.toLowerCase();
 
@@ -113,15 +114,46 @@ export async function GET(request: NextRequest) {
           cpp_annual_at_start: null,
           oas_start_age: null,
           oas_annual_at_start: null,
+          employer_pension_annual: 0,
+          rental_income_annual: 0,
+          other_income_annual: 0,
         };
+      }
+
+      // Convert income amount to annual based on frequency
+      const frequency = (income.frequency || 'annual').toLowerCase();
+      let annualAmount = income.amount;
+
+      switch (frequency) {
+        case 'monthly':
+          annualAmount = income.amount * 12;
+          break;
+        case 'quarterly':
+          annualAmount = income.amount * 4;
+          break;
+        case 'weekly':
+          annualAmount = income.amount * 52;
+          break;
+        case 'biweekly':
+          annualAmount = income.amount * 26;
+          break;
+        default:
+          annualAmount = income.amount;
       }
 
       if (type === 'cpp') {
         acc[owner].cpp_start_age = income.startAge;
-        acc[owner].cpp_annual_at_start = income.amount;
+        acc[owner].cpp_annual_at_start = annualAmount;
       } else if (type === 'oas') {
         acc[owner].oas_start_age = income.startAge;
-        acc[owner].oas_annual_at_start = income.amount;
+        acc[owner].oas_annual_at_start = annualAmount;
+      } else if (type === 'pension') {
+        acc[owner].employer_pension_annual += annualAmount;
+      } else if (type === 'rental') {
+        acc[owner].rental_income_annual += annualAmount;
+      } else if (['employment', 'business', 'investment', 'other'].includes(type)) {
+        // Combine all other income types into other_income_annual
+        acc[owner].other_income_annual += annualAmount;
       }
 
       return acc;
@@ -130,6 +162,9 @@ export async function GET(request: NextRequest) {
       cpp_annual_at_start: number | null;
       oas_start_age: number | null;
       oas_annual_at_start: number | null;
+      employer_pension_annual: number;
+      rental_income_annual: number;
+      other_income_annual: number;
     }>);
 
     // Aggregate assets by type and owner
@@ -213,8 +248,8 @@ export async function GET(request: NextRequest) {
       tfsa_room: 0,
     };
 
-    // Get government benefits for person1 (use database values if available, otherwise defaults)
-    const person1Benefits = govBenefits.person1 || {};
+    // Get income data for person1 (use database values if available, otherwise defaults)
+    const person1Income = incomeByOwner.person1 || {};
 
     // Build person 1 input with profile and asset data
     const person1Input: PersonInput = {
@@ -223,10 +258,15 @@ export async function GET(request: NextRequest) {
       start_age: age,
 
       // Government benefits from database (or sensible defaults)
-      cpp_start_age: person1Benefits.cpp_start_age ?? Math.max(age, 65),
-      cpp_annual_at_start: person1Benefits.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
-      oas_start_age: person1Benefits.oas_start_age ?? Math.max(age, 65),
-      oas_annual_at_start: person1Benefits.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
+      cpp_start_age: person1Income.cpp_start_age ?? Math.max(age, 65),
+      cpp_annual_at_start: person1Income.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
+      oas_start_age: person1Income.oas_start_age ?? Math.max(age, 65),
+      oas_annual_at_start: person1Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
+
+      // Other income sources from database
+      employer_pension_annual: person1Income.employer_pension_annual ?? 0,
+      rental_income_annual: person1Income.rental_income_annual ?? 0,
+      other_income_annual: person1Income.other_income_annual ?? 0,
 
       // Account balances from assets (person 1's share)
       tfsa_balance: person1Totals.tfsa_balance,
@@ -258,8 +298,8 @@ export async function GET(request: NextRequest) {
     let person2Input: PersonInput | null = null;
 
     if (shouldIncludePartner) {
-      // Get government benefits for person2 (use database values if available, otherwise defaults)
-      const person2Benefits = govBenefits.person2 || {};
+      // Get income data for person2 (use database values if available, otherwise defaults)
+      const person2Income = incomeByOwner.person2 || {};
 
       person2Input = {
         ...defaultPersonInput,
@@ -267,10 +307,15 @@ export async function GET(request: NextRequest) {
         start_age: partnerAge,
 
         // Government benefits from database (or sensible defaults)
-        cpp_start_age: person2Benefits.cpp_start_age ?? Math.max(partnerAge, 65),
-        cpp_annual_at_start: person2Benefits.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
-        oas_start_age: person2Benefits.oas_start_age ?? Math.max(partnerAge, 65),
-        oas_annual_at_start: person2Benefits.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
+        cpp_start_age: person2Income.cpp_start_age ?? Math.max(partnerAge, 65),
+        cpp_annual_at_start: person2Income.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
+        oas_start_age: person2Income.oas_start_age ?? Math.max(partnerAge, 65),
+        oas_annual_at_start: person2Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
+
+        // Other income sources from database
+        employer_pension_annual: person2Income.employer_pension_annual ?? 0,
+        rental_income_annual: person2Income.rental_income_annual ?? 0,
+        other_income_annual: person2Income.other_income_annual ?? 0,
 
         // Account balances from assets (person 2's share)
         tfsa_balance: person2Totals.tfsa_balance,

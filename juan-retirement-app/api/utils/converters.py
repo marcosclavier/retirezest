@@ -82,6 +82,10 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         oas_annual_at_start=api_person.oas_annual_at_start,
         employer_pension_annual=api_person.employer_pension_annual,
 
+        # Other income sources
+        rental_income_annual=api_person.rental_income_annual,
+        other_income_annual=api_person.other_income_annual,
+
         # Account balances
         tfsa_balance=api_person.tfsa_balance,
         rrif_balance=api_person.rrif_balance,
