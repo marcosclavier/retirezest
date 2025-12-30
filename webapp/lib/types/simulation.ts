@@ -129,6 +129,12 @@ export interface YearResult {
   oas_clawback_p2?: number;
   gis_p1?: number;
   gis_p2?: number;
+  employer_pension_p1?: number;
+  employer_pension_p2?: number;
+  rental_income_p1?: number;
+  rental_income_p2?: number;
+  other_income_p1?: number;
+  other_income_p2?: number;
 
   // NonReg passive distributions (dividends, interest, capital gains)
   nonreg_distributions?: number;
@@ -312,6 +318,12 @@ export interface FiveYearPlanYear {
   cpp_p2: number;
   oas_p1: number;
   oas_p2: number;
+  employer_pension_p1: number;
+  employer_pension_p2: number;
+  rental_income_p1: number;
+  rental_income_p2: number;
+  other_income_p1: number;
+  other_income_p2: number;
   rrif_withdrawal_p1: number;
   rrif_withdrawal_p2: number;
   nonreg_withdrawal_p1: number;
@@ -345,6 +357,9 @@ export interface ChartDataPoint {
   oas_total: number;
   gis_total: number;
   government_benefits_total: number;
+  employer_pension_total: number;
+  rental_income_total: number;
+  other_income_total: number;
   nonreg_distributions: number; // Passive income from NonReg accounts
   total_tax: number;
   effective_tax_rate: number;

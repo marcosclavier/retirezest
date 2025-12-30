@@ -218,6 +218,10 @@ class YearResult:
     gis_p2: float
     employer_pension_p1: float
     employer_pension_p2: float
+    rental_income_p1: float
+    rental_income_p2: float
+    other_income_p1: float
+    other_income_p2: float
 
     # RRIF withdrawals
     withdraw_rrif_p1: float

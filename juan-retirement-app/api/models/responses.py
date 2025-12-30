@@ -177,6 +177,14 @@ class FiveYearPlanYear(BaseModel):
     oas_p1: float = Field(default=0.0, description="Person 1 OAS income")
     oas_p2: float = Field(default=0.0, description="Person 2 OAS income")
 
+    # Other income sources
+    employer_pension_p1: float = Field(default=0.0, description="Person 1 employer pension income")
+    employer_pension_p2: float = Field(default=0.0, description="Person 2 employer pension income")
+    rental_income_p1: float = Field(default=0.0, description="Person 1 rental income (net)")
+    rental_income_p2: float = Field(default=0.0, description="Person 2 rental income (net)")
+    other_income_p1: float = Field(default=0.0, description="Person 1 other income (employment/business)")
+    other_income_p2: float = Field(default=0.0, description="Person 2 other income (employment/business)")
+
     # Withdrawals by person and source
     rrif_withdrawal_p1: float = Field(default=0.0)
     rrif_withdrawal_p2: float = Field(default=0.0)

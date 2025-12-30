@@ -29,6 +29,9 @@ export function FiveYearPlanSection({
     { header: 'Spending Target', accessor: 'spending_target', align: 'right' as const, format: fmt },
     { header: 'CPP', accessor: 'cpp_p1', align: 'right' as const, format: fmt },
     { header: 'OAS', accessor: 'oas_p1', align: 'right' as const, format: fmt },
+    { header: 'Pension', accessor: 'employer_pension_p1', align: 'right' as const, format: fmt },
+    { header: 'Rental', accessor: 'rental_income_p1', align: 'right' as const, format: fmt },
+    { header: 'Other', accessor: 'other_income_p1', align: 'right' as const, format: fmt },
     { header: 'RRIF', accessor: 'rrif_withdrawal_p1', align: 'right' as const, format: fmt },
     { header: 'NonReg', accessor: 'nonreg_withdrawal_p1', align: 'right' as const, format: fmt },
     { header: 'TFSA', accessor: 'tfsa_withdrawal_p1', align: 'right' as const, format: fmt },
@@ -101,6 +104,42 @@ export function FiveYearPlanSection({
     {
       header: `OAS-${p2Short}`,
       accessor: 'oas_p2',
+      align: 'right' as const,
+      format: fmt,
+    },
+    {
+      header: `Pens-${p1Short}`,
+      accessor: 'employer_pension_p1',
+      align: 'right' as const,
+      format: fmt,
+    },
+    {
+      header: `Pens-${p2Short}`,
+      accessor: 'employer_pension_p2',
+      align: 'right' as const,
+      format: fmt,
+    },
+    {
+      header: `Rent-${p1Short}`,
+      accessor: 'rental_income_p1',
+      align: 'right' as const,
+      format: fmt,
+    },
+    {
+      header: `Rent-${p2Short}`,
+      accessor: 'rental_income_p2',
+      align: 'right' as const,
+      format: fmt,
+    },
+    {
+      header: `Othr-${p1Short}`,
+      accessor: 'other_income_p1',
+      align: 'right' as const,
+      format: fmt,
+    },
+    {
+      header: `Othr-${p2Short}`,
+      accessor: 'other_income_p2',
       align: 'right' as const,
       format: fmt,
     },
@@ -180,9 +219,10 @@ export function FiveYearPlanSection({
       <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200" style={{ pageBreakInside: 'avoid' }}>
         <p className="text-sm text-gray-700">
           This table shows a detailed breakdown of your retirement income and withdrawals for the first 5
-          years. It includes government benefits (CPP, OAS), account withdrawals (RRIF, TFSA, NonReg,
-          Corporate), and your projected net worth at the end of each year. The "Household Total" column shows
-          the total amount withdrawn from all sources to fund your spending.
+          years. It includes government benefits (CPP, OAS), employer pensions, rental income (net after expenses),
+          other income (employment/business), account withdrawals (RRIF, TFSA, NonReg, Corporate), and your
+          projected net worth at the end of each year. The "Total" column shows the total amount from all sources
+          to fund your spending.
         </p>
       </div>
 
@@ -286,6 +326,36 @@ function get5YearObservations(
         undefined,
         { maximumFractionDigits: 0 }
       )}/year on average`
+    );
+  }
+
+  // Employer pensions
+  const totalPension = plan.reduce((sum, y) => sum + (y.employer_pension_p1 || 0) + (y.employer_pension_p2 || 0), 0);
+  if (totalPension > 0) {
+    observations.push(
+      `Employer pension income averages $${((totalPension / plan.length) || 0).toLocaleString(undefined, {
+        maximumFractionDigits: 0,
+      })}/year`
+    );
+  }
+
+  // Rental income
+  const totalRental = plan.reduce((sum, y) => sum + (y.rental_income_p1 || 0) + (y.rental_income_p2 || 0), 0);
+  if (totalRental > 0) {
+    observations.push(
+      `Rental income (net) averages $${((totalRental / plan.length) || 0).toLocaleString(undefined, {
+        maximumFractionDigits: 0,
+      })}/year`
+    );
+  }
+
+  // Other income
+  const totalOther = plan.reduce((sum, y) => sum + (y.other_income_p1 || 0) + (y.other_income_p2 || 0), 0);
+  if (totalOther > 0) {
+    observations.push(
+      `Other income (employment/business) averages $${((totalOther / plan.length) || 0).toLocaleString(undefined, {
+        maximumFractionDigits: 0,
+      })}/year`
     );
   }
 

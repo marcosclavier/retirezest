@@ -554,6 +554,9 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '75px' }}>Target</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>CPP</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>OAS</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '70px' }}>Pension</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>Rental</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>Other</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '65px' }}>RRIF</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '70px' }}>NonReg</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '55px' }}>TFSA</TableHead>
@@ -572,6 +575,15 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                       </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.oas_p1 + year.oas_p2)}
+                      </TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency((year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0))}
+                      </TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency((year.rental_income_p1 || 0) + (year.rental_income_p2 || 0))}
+                      </TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency((year.other_income_p1 || 0) + (year.other_income_p2 || 0))}
                       </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.rrif_withdrawal_p1 + year.rrif_withdrawal_p2)}
@@ -593,6 +605,9 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                         {formatCurrency(
                           year.cpp_p1 + year.cpp_p2 +
                           year.oas_p1 + year.oas_p2 +
+                          (year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0) +
+                          (year.rental_income_p1 || 0) + (year.rental_income_p2 || 0) +
+                          (year.other_income_p1 || 0) + (year.other_income_p2 || 0) +
                           year.total_withdrawn +
                           year.nonreg_distributions_total
                         )}

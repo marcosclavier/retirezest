@@ -1703,7 +1703,9 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         logger.debug(f"    nr_interest={nr_interest:.2f}, nr_elig_div={nr_elig_div:.2f}, nr_nonelig_div={nr_nonelig_div:.2f}")
         logger.debug(f"    withdrawals: rrif={withdrawals['rrif']:.2f}, nonreg={withdrawals['nonreg']:.2f}, corp={withdrawals['corp']:.2f}")
 
-    tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "employer_pension": employer_pension, "gis": gis_benefit,
+    tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "employer_pension": employer_pension,
+                  "rental_income": rental_income, "other_income": other_income,
+                  "gis": gis_benefit,
                   "oas_clawback": base_oas_clawback,  # NEW: OAS clawback amount
                   "taxable_income": taxable_income,  # NEW: Taxable income for this person
                   "breakdown": {"nr_interest": nr_interest, "nr_elig_div": nr_elig_div, "nr_nonelig_div": nr_nonelig_div,
@@ -1734,6 +1736,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         "cpp": cpp,  # CPP income
         "oas": oas,  # OAS income
         "employer_pension": employer_pension,  # Employer pension (DB/DC) income
+        "rental_income": rental_income,  # Rental income (NET)
+        "other_income": other_income,  # Other income (employment/business)
         "oas_clawback": base_oas_clawback,  # NEW: OAS clawback for this person
     }
     return withdrawals, tax_detail, info
@@ -2465,6 +2469,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             oas_p1=t1["oas"], oas_p2=t2["oas"], cpp_p1=t1["cpp"], cpp_p2=t2["cpp"],
             gis_p1=t1["gis"], gis_p2=t2["gis"],
             employer_pension_p1=t1["employer_pension"], employer_pension_p2=t2["employer_pension"],
+            rental_income_p1=t1["rental_income"], rental_income_p2=t2["rental_income"],
+            other_income_p1=t1["other_income"], other_income_p2=t2["other_income"],
             #OAS Clawback
             oas_clawback_p1=float(t1.get("oas_clawback", 0.0)), oas_clawback_p2=float(t2.get("oas_clawback", 0.0)),
             #Taxable income per person

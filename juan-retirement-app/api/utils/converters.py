@@ -854,6 +854,14 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         oas_p1 = float(row.get('oas_p1', 0))
         oas_p2 = float(row.get('oas_p2', 0))
 
+        # Get other income sources
+        employer_pension_p1 = float(row.get('employer_pension_p1', 0))
+        employer_pension_p2 = float(row.get('employer_pension_p2', 0))
+        rental_income_p1 = float(row.get('rental_income_p1', 0))
+        rental_income_p2 = float(row.get('rental_income_p2', 0))
+        other_income_p1 = float(row.get('other_income_p1', 0))
+        other_income_p2 = float(row.get('other_income_p2', 0))
+
         plan.append(FiveYearPlanYear(
             year=int(row.get('year', 0)),
             age_p1=int(row.get('age_p1', 0)),
@@ -865,6 +873,12 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             cpp_p2=cpp_p2,
             oas_p1=oas_p1,
             oas_p2=oas_p2,
+            employer_pension_p1=employer_pension_p1,
+            employer_pension_p2=employer_pension_p2,
+            rental_income_p1=rental_income_p1,
+            rental_income_p2=rental_income_p2,
+            other_income_p1=other_income_p1,
+            other_income_p2=other_income_p2,
             rrif_withdrawal_p1=rrif_p1,
             rrif_withdrawal_p2=rrif_p2,
             nonreg_withdrawal_p1=nonreg_p1,
