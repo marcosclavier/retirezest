@@ -103,11 +103,16 @@ export default function LandingFooter() {
                 </a>
               </li>
               <li>
+                <Link href="/contact" className="hover:text-white transition-colors">
+                  Contact Support
+                </Link>
+              </li>
+              <li>
                 <a
                   href="mailto:jrcb@hotmail.com"
                   className="hover:text-white transition-colors"
                 >
-                  Contact Support
+                  Email Us
                 </a>
               </li>
             </ul>

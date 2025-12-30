@@ -115,12 +115,21 @@ export default function FAQSection() {
           <p className="text-gray-600 mb-4">
             Have more questions?
           </p>
-          <a
-            href="mailto:jrcb@hotmail.com"
-            className="text-blue-600 hover:text-blue-700 font-semibold"
-          >
-            Contact our support team →
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a
+              href="/contact"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              Contact our support team →
+            </a>
+            <span className="text-gray-400">or</span>
+            <a
+              href="mailto:jrcb@hotmail.com"
+              className="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              Email us directly
+            </a>
+          </div>
         </div>
 
       </div>
