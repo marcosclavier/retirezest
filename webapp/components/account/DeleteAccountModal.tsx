@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -55,8 +54,8 @@ export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountMod
         return;
       }
 
-      // Sign out and redirect to confirmation page
-      await signOut({ redirect: false });
+      // Log out and redirect to confirmation page
+      await fetch('/api/auth/logout', { method: 'POST' });
       router.push('/account-deleted');
 
     } catch (err) {

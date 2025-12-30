@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+
+// Force dynamic rendering - do not pre-render during build
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /**
  * POST /api/account/recover
@@ -16,9 +19,9 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: NextRequest) {
   try {
     // 1. Verify authentication
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
 
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -27,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Get user from database
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.userId },
     });
 
     if (!user) {
