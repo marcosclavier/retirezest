@@ -104,7 +104,7 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  href="mailto:support@retirezest.ca"
+                  href="mailto:jrcb@hotmail.com"
                   className="hover:text-white transition-colors"
                 >
                   Contact Support

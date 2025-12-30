@@ -116,7 +116,7 @@ export default function FAQSection() {
             Have more questions?
           </p>
           <a
-            href="mailto:support@retirezest.ca"
+            href="mailto:jrcb@hotmail.com"
             className="text-blue-600 hover:text-blue-700 font-semibold"
           >
             Contact our support team →
