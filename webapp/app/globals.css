@@ -113,8 +113,8 @@ body {
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     break-after: avoid;
-    word-spacing: 0.25em !important;
-    letter-spacing: 0.02em !important;
+    word-spacing: 0.5em !important;
+    letter-spacing: 0.03em !important;
     word-break: normal !important;
     overflow-wrap: normal !important;
     white-space: normal !important;
@@ -124,26 +124,26 @@ body {
   /* Section headers - larger font for readability */
   h1 {
     font-size: 24px !important;
-    word-spacing: 0.25em !important;
-    letter-spacing: normal !important;
+    word-spacing: 0.5em !important;
+    letter-spacing: 0.03em !important;
   }
 
   h2 {
     font-size: 18px !important;
-    word-spacing: 0.25em !important;
-    letter-spacing: normal !important;
+    word-spacing: 0.5em !important;
+    letter-spacing: 0.03em !important;
   }
 
   h3 {
     font-size: 14px !important;
-    word-spacing: 0.25em !important;
-    letter-spacing: normal !important;
+    word-spacing: 0.5em !important;
+    letter-spacing: 0.03em !important;
   }
 
   h4 {
     font-size: 12px !important;
-    word-spacing: 0.25em !important;
-    letter-spacing: normal !important;
+    word-spacing: 0.5em !important;
+    letter-spacing: 0.03em !important;
   }
 
   table, figure, img {
