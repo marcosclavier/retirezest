@@ -114,9 +114,11 @@ body {
     page-break-after: avoid;
     break-after: avoid;
     word-spacing: 0.25em !important;
-    letter-spacing: normal !important;
-    word-break: keep-all !important;
+    letter-spacing: 0.02em !important;
+    word-break: normal !important;
     overflow-wrap: normal !important;
+    white-space: normal !important;
+    hyphens: none !important;
   }
 
   /* Section headers - larger font for readability */
