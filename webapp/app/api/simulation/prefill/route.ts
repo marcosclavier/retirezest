@@ -65,6 +65,19 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Fetch expenses to calculate total spending
+    const expenses = await prisma.expense.findMany({
+      where: {
+        userId: session.userId,
+        isRecurring: true, // Only recurring expenses
+      },
+      select: {
+        amount: true,
+        frequency: true,
+        essential: true,
+      },
+    });
+
     // Calculate age from date of birth
     let age = 65; // default
     if (user?.dateOfBirth) {
@@ -320,6 +333,38 @@ export async function GET(request: NextRequest) {
       person2Totals.tfsa_balance + person2Totals.rrsp_balance + person2Totals.rrif_balance +
       person2Totals.nonreg_balance + person2Totals.corporate_balance;
 
+    // Calculate total annual spending from expenses
+    let totalAnnualSpending = 0;
+    expenses.forEach(expense => {
+      const amount = expense.amount;
+      const frequency = expense.frequency.toLowerCase();
+
+      // Convert to annual amount based on frequency
+      let annualAmount = 0;
+      switch (frequency) {
+        case 'monthly':
+          annualAmount = amount * 12;
+          break;
+        case 'annual':
+        case 'yearly':
+          annualAmount = amount;
+          break;
+        case 'quarterly':
+          annualAmount = amount * 4;
+          break;
+        case 'weekly':
+          annualAmount = amount * 52;
+          break;
+        case 'biweekly':
+          annualAmount = amount * 26;
+          break;
+        default:
+          annualAmount = amount; // Default to treating as annual
+      }
+
+      totalAnnualSpending += annualAmount;
+    });
+
     return NextResponse.json({
       person1Input,
       person2Input,
@@ -330,6 +375,8 @@ export async function GET(request: NextRequest) {
       hasPartnerAssets,
       totalNetWorth,
       lifeExpectancy: user?.lifeExpectancy || 95, // Planning horizon from profile
+      totalAnnualSpending, // Total annual spending from expenses
+      hasExpenses: expenses.length > 0,
     });
   } catch (error) {
     logger.error('Error fetching simulation prefill data', error, {

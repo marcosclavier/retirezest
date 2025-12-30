@@ -310,7 +310,7 @@ export default function SimulationPage() {
         console.log('🔍 includePartner:', data.includePartner);
         console.log('🔍 person2Input:', data.person2Input);
 
-        if (data.hasAssets || data.person1Input.start_age !== 65) {
+        if (data.hasAssets || data.person1Input.start_age !== 65 || data.hasExpenses) {
           console.log('🔍 Applying prefill data to household state...');
           // Determine partner data first
           let partnerData = { ...defaultPersonInput, name: '' };
@@ -330,11 +330,29 @@ export default function SimulationPage() {
             partnerData = { ...defaultPersonInput, name: 'Partner' };
           }
 
+          // Calculate spending phases from total annual spending
+          // If user has expense data, use it to populate spending phases
+          const hasExpenseData = data.totalAnnualSpending && data.totalAnnualSpending > 0;
+          let spendingUpdate = {};
+
+          if (hasExpenseData) {
+            console.log('🔍 Using expense data from profile:', data.totalAnnualSpending);
+            // Use current spending as go-go phase
+            // Reduce by 20% for slow-go phase (common retirement planning assumption)
+            // Reduce by 40% for no-go phase (common retirement planning assumption)
+            spendingUpdate = {
+              spending_go_go: Math.round(data.totalAnnualSpending),
+              spending_slow_go: Math.round(data.totalAnnualSpending * 0.8),
+              spending_no_go: Math.round(data.totalAnnualSpending * 0.6),
+            };
+          }
+
           // Update household with all prefilled data in a single setState call
           setHousehold(prev => ({
             ...prev,
             province: data.province || prev.province,
             end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
+            ...spendingUpdate, // Apply spending data if available
             p1: {
               ...prev.p1,
               ...data.person1Input,
@@ -350,7 +368,7 @@ export default function SimulationPage() {
           setPrefillAvailable(true);
           console.log('🔍 Prefill data applied successfully');
         } else {
-          console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65)');
+          console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65 AND hasExpenses=false)');
         }
       }
     } catch (error) {
