@@ -124,17 +124,7 @@ export default function LandingFooter() {
               </li>
               <li>
                 <Link href="/terms" className="hover:text-white transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/security" className="hover:text-white transition-colors">
-                  Security
-                </Link>
-              </li>
-              <li>
-                <Link href="/accessibility" className="hover:text-white transition-colors">
-                  Accessibility
+                  Terms & Conditions
                 </Link>
               </li>
             </ul>
