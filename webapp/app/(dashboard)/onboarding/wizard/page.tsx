@@ -302,7 +302,7 @@ export default function OnboardingWizard() {
   // Show loading state while fetching user data
   if (!dataLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
+      <div className="min-h-[100dvh] bg-gradient-to-br from-blue-50 to-indigo-100 py-6 sm:py-12">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -314,28 +314,28 @@ export default function OnboardingWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-blue-50 to-indigo-100 py-6 sm:py-12">
       <div className="flex max-w-7xl mx-auto px-4 gap-6">
         <div className="flex-1 max-w-4xl">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">
+          <div className="text-center mb-4 sm:mb-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Welcome to RetireZest
               </h1>
               {saveIndicatorVisible && (
-                <span className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full animate-fade-in">
+                <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full animate-fade-in">
                   Progress saved
                 </span>
               )}
             </div>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Let's set up your retirement plan in just a few steps
             </p>
           </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-8">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-gray-700">
               Step {currentStep} of {TOTAL_STEPS}
@@ -401,41 +401,43 @@ export default function OnboardingWizard() {
         </div>
 
         {/* Step Content */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-8 mb-4 sm:mb-6">
           {renderStep()}
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center pb-4 sm:pb-0 gap-2">
           <button
             onClick={handlePrevious}
             disabled={currentStep === 1}
-            className="flex items-center px-6 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="flex items-center px-3 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-md text-sm sm:text-base text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            <ArrowLeftIcon className="w-5 h-5 mr-2" />
-            Previous
+            <ArrowLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Prev</span>
           </button>
 
-          <div className="text-sm text-gray-500">
+          <div className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
             {currentStep} / {TOTAL_STEPS}
           </div>
 
           {currentStep < TOTAL_STEPS ? (
             <button
               onClick={handleNext}
-              className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+              className="flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-md text-sm sm:text-base hover:bg-indigo-700 transition"
             >
               Next
-              <ArrowRightIcon className="w-5 h-5 ml-2" />
+              <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2" />
             </button>
           ) : (
             <button
               onClick={handleComplete}
               disabled={isLoading}
-              className="flex items-center px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition"
+              className="flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-md text-sm sm:text-base hover:bg-green-700 disabled:opacity-50 transition"
             >
-              {isLoading ? 'Completing...' : 'Complete Setup'}
-              <CheckCircleIcon className="w-5 h-5 ml-2" />
+              <span className="hidden sm:inline">{isLoading ? 'Completing...' : 'Complete Setup'}</span>
+              <span className="sm:hidden">Complete</span>
+              <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2" />
             </button>
           )}
         </div>
