@@ -13,6 +13,16 @@ export default function TrustSection() {
       ],
     },
     {
+      icon: '✅',
+      title: 'Verified Users Only',
+      features: [
+        'Email verification required',
+        'Secure account registration',
+        'Protected user data',
+        'No anonymous access',
+      ],
+    },
+    {
       icon: '🇨🇦',
       title: 'Canadian-Specific',
       features: [
@@ -57,7 +67,7 @@ export default function TrustSection() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 lg:gap-8">
           {trustPillars.map((pillar, index) => (
             <div
               key={index}
