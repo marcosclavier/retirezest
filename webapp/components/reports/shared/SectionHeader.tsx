@@ -6,9 +6,9 @@ interface SectionHeaderProps {
 export function SectionHeader({ title, subtitle }: SectionHeaderProps) {
   return (
     <div className="border-b-2 border-gray-200 pb-2 mb-4">
-      <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <h2 className="text-2xl font-bold text-gray-900 whitespace-normal">{title}</h2>
       {subtitle && (
-        <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+        <p className="text-sm text-gray-600 mt-1 whitespace-normal">{subtitle}</p>
       )}
     </div>
   );
