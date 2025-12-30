@@ -120,8 +120,11 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
               <Input
                 id="end-age"
                 type="number"
+                min="65"
+                max="120"
                 value={household.end_age}
                 onChange={(e) => onChange('end_age', parseInt(e.target.value) || 95)}
+                readOnly={false}
               />
             </div>
           </div>
