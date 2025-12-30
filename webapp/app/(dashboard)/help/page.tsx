@@ -523,6 +523,19 @@ export default function HelpPage() {
           </div>
         </div>
       </div>
+
+      {/* Need More Help */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+        <p className="text-gray-700 text-base">
+          Need more help?{' '}
+          <a
+            href="mailto:jrcb@hotmail.com"
+            className="text-blue-600 hover:text-blue-700 font-semibold underline"
+          >
+            Contact us at jrcb@hotmail.com
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
