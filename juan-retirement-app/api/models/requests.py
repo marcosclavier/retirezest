@@ -28,8 +28,18 @@ class PersonInput(BaseModel):
     employer_pension_annual: float = Field(default=0, ge=0, le=200000, description="Annual employer pension (DB/DC)")
 
     # Other income sources
-    rental_income_annual: float = Field(default=0, ge=0, le=500000, description="Annual rental income (net)")
-    other_income_annual: float = Field(default=0, ge=0, le=500000, description="Other annual income (employment, business, investment)")
+    rental_income_annual: float = Field(
+        default=0,
+        ge=0,
+        le=500000,
+        description="Annual NET rental income after expenses (property tax, insurance, mortgage interest, repairs). Amount from T776 line 8230."
+    )
+    other_income_annual: float = Field(
+        default=0,
+        ge=0,
+        le=500000,
+        description="Annual employment or business income (salary, consulting, freelance). Excludes investment income (handled via non-registered accounts)."
+    )
 
     # Account balances
     tfsa_balance: float = Field(default=0, ge=0, description="TFSA balance")

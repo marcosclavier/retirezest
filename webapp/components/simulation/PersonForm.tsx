@@ -185,9 +185,9 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             <div className="space-y-2">
               <LabelWithTooltip
                 htmlFor={`${personNumber}-rental`}
-                tooltip="Annual rental income from investment properties (net after expenses)"
+                tooltip="Annual NET rental income after deducting property tax, insurance, mortgage interest, repairs, and other eligible expenses. Enter the amount you report on your T776 tax form (line 8230 - Total rental income)."
               >
-                Rental Income ($ per year)
+                Rental Income - NET ($ per year)
               </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-rental`}
@@ -198,9 +198,9 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             <div className="space-y-2">
               <LabelWithTooltip
                 htmlFor={`${personNumber}-other`}
-                tooltip="Other regular income sources such as employment, business, or investment income"
+                tooltip="Annual employment or business income (e.g., part-time salary, consulting, freelance work). Do NOT include investment income (interest, dividends, capital gains) - those are automatically calculated from your non-registered account holdings and receive proper tax treatment."
               >
-                Other Income ($ per year)
+                Other Income - Employment/Business ($ per year)
               </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-other`}

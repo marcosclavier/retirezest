@@ -330,6 +330,8 @@ def tax_for_detailed(
     cpp_income: float,
     oas_income: float,
     employer_pension: float,
+    rental_income: float = 0.0,
+    other_income: float = 0.0,
     age: int,
     fed_params,
     prov_params,
@@ -362,8 +364,8 @@ def tax_for_detailed(
 
     # Pension-type income for progressive_tax:
     #   RRIF is pension_income once you're in RRIF-land
-    #   Also includes CPP and employer pension (DB/DC)
-    pension_income = float(withdrawals_rrif_base) + float(add_rrif) + float(cpp_income) + float(employer_pension)
+    #   Also includes CPP, employer pension (DB/DC), rental income, and other income
+    pension_income = float(withdrawals_rrif_base) + float(add_rrif) + float(cpp_income) + float(employer_pension) + float(rental_income) + float(other_income)
 
     oas_received = float(oas_income)
 
@@ -422,6 +424,8 @@ def tax_for(
     cpp_income: float,
     oas_income: float,
     employer_pension: float,
+    rental_income: float = 0.0,
+    other_income: float = 0.0,
     age: int,
     fed_params,
     prov_params,
@@ -460,6 +464,8 @@ def tax_for(
         cpp_income=cpp_income,
         oas_income=oas_income,
         employer_pension=employer_pension,
+        rental_income=rental_income,
+        other_income=other_income,
         age=age,
         fed_params=fed_params,
         prov_params=prov_params,
@@ -1025,6 +1031,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     if hasattr(person, 'employer_pension_annual') and person.employer_pension_annual > 0:
         employer_pension = person.employer_pension_annual * ((1 + hh.general_inflation) ** years_since_start)
 
+    # Rental income - starts immediately, grows with inflation
+    rental_income = 0.0
+    if hasattr(person, 'rental_income_annual') and person.rental_income_annual > 0:
+        rental_income = person.rental_income_annual * ((1 + hh.general_inflation) ** years_since_start)
+
+    # Other income (employment, business, investment) - starts immediately, grows with inflation
+    other_income = 0.0
+    if hasattr(person, 'other_income_annual') and person.other_income_annual > 0:
+        other_income = person.other_income_annual * ((1 + hh.general_inflation) ** years_since_start)
+
     # Convert  RRSP to RRIF if needed (this may be zero RRSP and add RRIF)
     if rrsp_to_rrif and person.rrsp_balance > 0:
         person.rrif_balance += person.rrsp_balance
@@ -1085,8 +1101,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             rrif_frontload_target_standard = person.rrif_balance * 0.08
 
             # Calculate current taxable income components (before RRIF withdrawal)
-            # Taxable income includes: CPP + OAS + Employer Pension + NonReg distributions + planned RRIF
-            base_taxable_income = cpp + oas + employer_pension + (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist)
+            # Taxable income includes: CPP + OAS + Employer Pension + Rental + Other Income + NonReg distributions + planned RRIF
+            base_taxable_income = cpp + oas + employer_pension + rental_income + other_income + (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist)
             projected_taxable_income_rrif_only = base_taxable_income + rrif_frontload_target_standard
 
             # Check if we're approaching OAS clawback threshold
@@ -1174,7 +1190,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # Normal mode: distributions are available for spending
         dist_for_cash = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
-    pre_tax_cash = (cpp + oas + employer_pension + dist_for_cash + withdrawals["rrif"])
+    pre_tax_cash = (cpp + oas + employer_pension + rental_income + other_income + dist_for_cash + withdrawals["rrif"])
 
     # Compute that person's tax bill on the *base* withdrawal mix
     # NOTE: Distributions are ALWAYS passed to tax_for() for taxation,
@@ -1198,6 +1214,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         cpp_income          = cpp,
         oas_income          = oas,
         employer_pension    = employer_pension,
+        rental_income       = rental_income,
+        other_income        = other_income,
         age                 = age,
 
         fed_params          = fed,
@@ -1233,7 +1251,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             person=person,
             after_tax_target=shortfall,
             age=age,
-            net_income_before_withdrawal=(cpp + oas + nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist + withdrawals["rrif"]),
+            net_income_before_withdrawal=(cpp + oas + employer_pension + rental_income + other_income + nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist + withdrawals["rrif"]),
             gis_config=gis_config,
             oas_amount=oas,
             is_couple=False,
@@ -1435,7 +1453,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # --- For taxable sources (nonreg / rrif / corp), compute tax-aware sizing ---
         def person_tax_for(candidate_nonreg, candidate_rrif, candidate_corp,
                         *, person, age, fed_params, prov_params,
-                        cpp_income, oas_income, employer_pension,
+                        cpp_income, oas_income, employer_pension, rental_income, other_income,
                         nr_interest, nr_elig_div, nr_nonelig_div, nr_capg_dist,
                         rrif_base_already_taken):
             return tax_for(
@@ -1456,6 +1474,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 cpp_income          = float(cpp_income),
                 oas_income          = float(oas_income),
                 employer_pension    = float(employer_pension),
+                rental_income       = float(rental_income),
+                other_income        = float(other_income),
                 age                 = int(age),
 
                 fed_params          = fed_params,
@@ -1474,6 +1494,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals["corp"]   + extra["corp"]   + (mid if k == "corp"   else 0.0),
                 person=person, age=age_cur, fed_params=fed, prov_params=prov,
                 cpp_income=cpp_cur, oas_income=oas_cur, employer_pension=employer_pension,
+                rental_income=rental_income, other_income=other_income,
                 nr_interest=nr_interest, nr_elig_div=nr_elig_div,
                 nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
                 rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
@@ -1502,6 +1523,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals["corp"] + extra["corp"],
                 person=person, age=age_cur, fed_params=fed, prov_params=prov,
                 cpp_income=cpp_cur, oas_income=oas_cur, employer_pension=employer_pension,
+                rental_income=rental_income, other_income=other_income,
                 nr_interest=nr_interest, nr_elig_div=nr_elig_div,
                 nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
                 rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
@@ -1578,6 +1600,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         cpp_income          = cpp,
         oas_income          = oas,
         employer_pension    = employer_pension,
+        rental_income       = rental_income,
+        other_income        = other_income,
         age                 = age,
 
         fed_params          = fed,
@@ -1622,7 +1646,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # CRITICAL: GIS requires receiving OAS (oas > 0) but OAS is EXCLUDED from income test
     # This fix complies with official CRA guidelines
     gis_net_income = (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist * 0.5 +  # Capital gains 50% inclusion
-                      withdrawals["rrif"] + withdrawals["corp"] + cpp)  # NOTE: OAS is EXCLUDED per CRA
+                      withdrawals["rrif"] + withdrawals["corp"] + cpp + employer_pension + rental_income + other_income)  # NOTE: OAS is EXCLUDED per CRA
 
     # IMPORTANT: Inside simulate_year(), we don't have access to the other person's data.
     # For couples, GIS will be recalculated at the household level (in simulate() function)
@@ -1658,7 +1682,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # When not reinvesting: distributions are paid out and available for spending
         total_available_distributions = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
-    total_after_tax_cash = (cpp + oas + gis_benefit +  # Government benefits (all calculated by now)
+    total_after_tax_cash = (cpp + oas + gis_benefit + employer_pension + rental_income + other_income +  # Government benefits & other income (all calculated by now)
                            total_withdrawals + total_available_distributions - base_tax)  # Account withdrawals + distributions (if not reinvested) minus taxes
 
     # Calculate surplus: how much exceeds the spending target
