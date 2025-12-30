@@ -211,7 +211,7 @@ export default function PartnerAssetsStep({
                   id="partner-rrsp"
                   value={rrspBalance}
                   onChange={(e) => setRrspBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -234,7 +234,7 @@ export default function PartnerAssetsStep({
                   id="partner-tfsa"
                   value={tfsaBalance}
                   onChange={(e) => setTfsaBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -257,7 +257,7 @@ export default function PartnerAssetsStep({
                   id="partner-nonreg"
                   value={nonRegBalance}
                   onChange={(e) => setNonRegBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -280,7 +280,7 @@ export default function PartnerAssetsStep({
                   id="partner-savings"
                   value={savingsBalance}
                   onChange={(e) => setSavingsBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="500"
@@ -303,7 +303,7 @@ export default function PartnerAssetsStep({
                   id="partner-rrif"
                   value={rrifBalance}
                   onChange={(e) => setRrifBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -326,7 +326,7 @@ export default function PartnerAssetsStep({
                   id="partner-lira"
                   value={liraBalance}
                   onChange={(e) => setLiraBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -355,7 +355,7 @@ export default function PartnerAssetsStep({
                   id="partner-corporate"
                   value={corporateBalance}
                   onChange={(e) => setCorporateBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"

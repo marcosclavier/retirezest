@@ -29,6 +29,22 @@ export default function PartnerIncomeStep({
   const [rentalIncome, setRentalIncome] = useState(() => getPartnerIncomeAmount('rental'));
   const [otherIncome, setOtherIncome] = useState(() => getPartnerIncomeAmount('other'));
   const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
+  // Initialize CSRF token on mount
+  useEffect(() => {
+    const initCsrf = async () => {
+      try {
+        const response = await fetch('/api/csrf');
+        const data = await response.json();
+        setCsrfToken(data.token);
+        console.log('[CSRF] Token initialized');
+      } catch (error) {
+        console.error('[CSRF] Failed to initialize token:', error);
+      }
+    };
+    initCsrf();
+  }, []);
 
   // Update state when formData changes
   useEffect(() => {
@@ -110,12 +126,16 @@ export default function PartnerIncomeStep({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
           },
           body: JSON.stringify(income),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to save partner income');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('API Error Response:', errorData);
+          const errorMessage = errorData.error || errorData.message || 'Failed to save partner income';
+          throw new Error(errorMessage);
         }
       }
 
@@ -185,7 +205,7 @@ export default function PartnerIncomeStep({
                   id="partner-employment"
                   value={employmentIncome}
                   onChange={(e) => setEmploymentIncome(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -208,7 +228,7 @@ export default function PartnerIncomeStep({
                   id="partner-pension"
                   value={pensionIncome}
                   onChange={(e) => setPensionIncome(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -231,7 +251,7 @@ export default function PartnerIncomeStep({
                   id="partner-rental"
                   value={rentalIncome}
                   onChange={(e) => setRentalIncome(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="500"
@@ -254,7 +274,7 @@ export default function PartnerIncomeStep({
                   id="partner-other"
                   value={otherIncome}
                   onChange={(e) => setOtherIncome(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="500"

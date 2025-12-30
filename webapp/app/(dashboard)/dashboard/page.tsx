@@ -23,9 +23,9 @@ export default async function DashboardPage() {
     // targetRetirementAge, lifeExpectancy, cppCalculatorUsedAt, oasCalculatorUsedAt
   });
 
-  // Auto-start quick setup for first-time users
+  // Show welcome choice page for first-time users
   if (user && !user.hasSeenWelcome) {
-    redirect('/quick-start');
+    redirect('/welcome-choice');
   }
 
   // Calculate total assets (use balance as primary, currentValue as fallback for legacy data)

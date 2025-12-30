@@ -15,6 +15,11 @@ import ExpensesStep from './steps/ExpensesStep';
 import RetirementGoalsStep from './steps/RetirementGoalsStep';
 import ReviewStep from './steps/ReviewStep';
 
+// Phase 2 components
+import { useAutoSave, restoreProgress, clearProgress } from '@/hooks/useAutoSave';
+import { OnboardingProgressSidebar } from './components/OnboardingProgressSidebar';
+import { WelcomeModal } from './components/WelcomeModal';
+
 export default function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +27,9 @@ export default function OnboardingWizard() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [saveIndicatorVisible, setSaveIndicatorVisible] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   // Determine if user is planning with partner (dynamic steps)
   const includePartner = formData.includePartner || false;
@@ -32,27 +40,35 @@ export default function OnboardingWizard() {
   const steps = useMemo(() => {
     if (includePartner) {
       return [
-        { id: 1, name: 'Personal Info', description: 'Your basic information' },
-        { id: 2, name: 'Partner Info', description: 'Partner information' },
-        { id: 3, name: 'Your Assets', description: 'Your accounts and savings' },
-        { id: 4, name: 'Partner Assets', description: 'Partner accounts' },
-        { id: 5, name: 'Your Income', description: 'Your income sources' },
-        { id: 6, name: 'Partner Income', description: 'Partner income' },
-        { id: 7, name: 'Expenses', description: 'Household expenses' },
-        { id: 8, name: 'Retirement Goals', description: 'CPP, OAS, and targets' },
-        { id: 9, name: 'Review', description: 'Review and finish setup' },
+        { id: 'personal', name: 'Personal Info', description: 'Your basic information', completed: currentStep > 1 },
+        { id: 'partner', name: 'Partner Info', description: 'Partner information', completed: currentStep > 2 },
+        { id: 'assets', name: 'Your Assets', description: 'Your accounts and savings', completed: currentStep > 3 },
+        { id: 'partner-assets', name: 'Partner Assets', description: 'Partner accounts', completed: currentStep > 4 },
+        { id: 'income', name: 'Your Income', description: 'Your income sources', completed: currentStep > 5 },
+        { id: 'partner-income', name: 'Partner Income', description: 'Partner income', completed: currentStep > 6 },
+        { id: 'expenses', name: 'Expenses', description: 'Household expenses', completed: currentStep > 7 },
+        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 8 },
+        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 9 },
       ];
     } else {
       return [
-        { id: 1, name: 'Personal Info', description: 'Your basic information' },
-        { id: 2, name: 'Assets', description: 'Your accounts and savings' },
-        { id: 3, name: 'Income', description: 'Current and future income' },
-        { id: 4, name: 'Expenses', description: 'Monthly and annual expenses' },
-        { id: 5, name: 'Retirement Goals', description: 'CPP, OAS, and targets' },
-        { id: 6, name: 'Review', description: 'Review and finish setup' },
+        { id: 'personal', name: 'Personal Info', description: 'Your basic information', completed: currentStep > 1 },
+        { id: 'assets', name: 'Assets', description: 'Your accounts and savings', completed: currentStep > 2 },
+        { id: 'income', name: 'Income', description: 'Current and future income', completed: currentStep > 3 },
+        { id: 'expenses', name: 'Expenses', description: 'Monthly and annual expenses', completed: currentStep > 4 },
+        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 5 },
+        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 6 },
       ];
     }
-  }, [includePartner]);
+  }, [includePartner, currentStep]);
+
+  // Auto-save progress to localStorage
+  useAutoSave(formData, currentStep, userId, {
+    onSave: () => {
+      setSaveIndicatorVisible(true);
+      setTimeout(() => setSaveIndicatorVisible(false), 2000);
+    }
+  });
 
   // Load existing user data on mount
   useEffect(() => {
@@ -61,8 +77,11 @@ export default function OnboardingWizard() {
         // Load profile data
         const profileResponse = await fetch('/api/profile');
         let profileData: any = {};
+        let userIdFromProfile: string | undefined;
         if (profileResponse.ok) {
           const userData = await profileResponse.json();
+          userIdFromProfile = userData.id;
+          setUserId(userData.id);
           profileData = {
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
@@ -109,12 +128,24 @@ export default function OnboardingWizard() {
         }
 
         // Combine all data
-        setFormData({
+        const combinedData = {
           ...profileData,
           ...assetsData,
           ...incomeData,
           ...expensesData,
-        });
+        };
+
+        // Check for saved progress in localStorage
+        const savedProgress = restoreProgress(userIdFromProfile);
+        if (savedProgress && savedProgress.data) {
+          // Use saved progress if available and more recent
+          setFormData({ ...combinedData, ...savedProgress.data });
+          if (savedProgress.step) {
+            setCurrentStep(savedProgress.step);
+          }
+        } else {
+          setFormData(combinedData);
+        }
       } catch (error) {
         console.error('Failed to load user data:', error);
       } finally {
@@ -202,7 +233,13 @@ export default function OnboardingWizard() {
           onboardingCompleted: true,
         }),
       });
-      router.push('/dashboard');
+
+      // Clear saved progress from localStorage
+      clearProgress(userId);
+
+      // Show welcome modal
+      setShowWelcomeModal(true);
+      setIsLoading(false);
     } catch (error) {
       console.error('Failed to complete wizard:', error);
       setIsLoading(false);
@@ -278,16 +315,24 @@ export default function OnboardingWizard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to RetireZest
-          </h1>
-          <p className="text-gray-600">
-            Let's set up your retirement plan in just a few steps
-          </p>
-        </div>
+      <div className="flex max-w-7xl mx-auto px-4 gap-6">
+        <div className="flex-1 max-w-4xl">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome to RetireZest
+              </h1>
+              {saveIndicatorVisible && (
+                <span className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full animate-fade-in">
+                  Progress saved
+                </span>
+              )}
+            </div>
+            <p className="text-gray-600">
+              Let's set up your retirement plan in just a few steps
+            </p>
+          </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
@@ -315,40 +360,43 @@ export default function OnboardingWizard() {
           </div>
 
           {/* Step indicators */}
-          <div className="hidden md:flex justify-between">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`flex flex-col items-center ${
-                  step.id <= currentStep ? 'text-indigo-600' : 'text-gray-400'
-                }`}
-              >
+          <div className="hidden lg:flex justify-between">
+            {steps.map((step, index) => {
+              const stepNumber = index + 1;
+              return (
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center border-2 mb-1 ${
-                    step.id < currentStep
-                      ? 'bg-indigo-600 border-indigo-600'
-                      : step.id === currentStep
-                      ? 'bg-white border-indigo-600'
-                      : 'bg-white border-gray-300'
+                  key={step.id}
+                  className={`flex flex-col items-center ${
+                    stepNumber <= currentStep ? 'text-indigo-600' : 'text-gray-400'
                   }`}
                 >
-                  {step.id < currentStep ? (
-                    <CheckCircleIcon className="w-5 h-5 text-white" />
-                  ) : (
-                    <span
-                      className={`text-sm font-semibold ${
-                        step.id === currentStep ? 'text-indigo-600' : 'text-gray-400'
-                      }`}
-                    >
-                      {step.id}
-                    </span>
-                  )}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center border-2 mb-1 ${
+                      stepNumber < currentStep
+                        ? 'bg-indigo-600 border-indigo-600'
+                        : stepNumber === currentStep
+                        ? 'bg-white border-indigo-600'
+                        : 'bg-white border-gray-300'
+                    }`}
+                  >
+                    {stepNumber < currentStep ? (
+                      <CheckCircleIcon className="w-5 h-5 text-white" />
+                    ) : (
+                      <span
+                        className={`text-sm font-semibold ${
+                          stepNumber === currentStep ? 'text-indigo-600' : 'text-gray-400'
+                        }`}
+                      >
+                        {stepNumber}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs font-medium text-center max-w-[80px]">
+                    {step.name}
+                  </span>
                 </div>
-                <span className="text-xs font-medium text-center max-w-[80px]">
-                  {step.name}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -391,7 +439,32 @@ export default function OnboardingWizard() {
             </button>
           )}
         </div>
+        </div>
+
+        {/* Progress Sidebar - hidden on mobile, shown on desktop */}
+        <div className="hidden xl:block w-80 flex-shrink-0">
+          <OnboardingProgressSidebar
+            steps={steps}
+            currentStep={currentStep - 1}
+            formData={formData}
+            onNavigate={(index) => {
+              const newStep = index + 1;
+              setCurrentStep(newStep);
+              router.push(`/onboarding/wizard?step=${newStep}`);
+            }}
+          />
+        </div>
       </div>
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        open={showWelcomeModal}
+        onClose={() => {
+          setShowWelcomeModal(false);
+          router.push('/dashboard');
+        }}
+        userName={formData.firstName}
+      />
     </div>
   );
 }

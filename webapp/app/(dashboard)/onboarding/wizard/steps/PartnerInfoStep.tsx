@@ -131,7 +131,7 @@ export default function PartnerInfoStep({
                 id="partnerFirstName"
                 value={partnerFirstName}
                 onChange={(e) => setPartnerFirstName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                 placeholder="Enter partner's first name"
                 required={includePartner}
               />
@@ -147,7 +147,7 @@ export default function PartnerInfoStep({
                 id="partnerLastName"
                 value={partnerLastName}
                 onChange={(e) => setPartnerLastName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                 placeholder="Enter partner's last name"
                 required={includePartner}
               />
@@ -167,7 +167,7 @@ export default function PartnerInfoStep({
                   min="1900-01-01"
                   max={new Date().toISOString().split('T')[0]}
                   placeholder="YYYY-MM-DD"
-                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   required={includePartner}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

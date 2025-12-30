@@ -144,14 +144,14 @@ export default function ReviewStep({
                 Run Your First Retirement Simulation
               </h4>
               <p className="text-sm text-gray-600 mb-3">
-                Create your personalized retirement scenario to see year-by-year projections of your income,
-                expenses, taxes, and account balances. Try different strategies to optimize your retirement plan.
+                See year-by-year projections of your income, expenses, taxes, and account balances.
+                Your data from the wizard will be automatically loaded so you can run your first simulation.
               </p>
               <a
-                href="/scenarios"
+                href="/simulation"
                 className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition"
               >
-                Create Scenario →
+                Run Your First Simulation →
               </a>
             </div>
           </div>

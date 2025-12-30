@@ -579,7 +579,14 @@ export default function SimulationPage() {
               <ul className="list-disc list-inside mt-2 text-sm space-y-1">
                 <li>Asset allocation (cash/GIC/investments) based on typical distributions</li>
                 <li>Adjusted Cost Base (ACB) estimated at 80% of non-registered balance</li>
-                <li>CPP and OAS amounts use default values</li>
+                <li>
+                  CPP and OAS amounts use default values ($15,000/year and $8,500/year)
+                  {(household.p1.cpp_annual_at_start === 15000 || household.p1.oas_annual_at_start === 8500) && (
+                    <span className="ml-1">
+                      — <a href="/benefits" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-orange-700">Calculate your actual benefits →</a>
+                    </span>
+                  )}
+                </li>
               </ul>
               <p className="mt-2 text-sm font-medium">
                 Please review and adjust these values in the expandable sections below for more accurate results.
@@ -597,6 +604,38 @@ export default function SimulationPage() {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Warning for incomplete financial data */}
+        {prefillAvailable && !prefillLoading && (() => {
+          const totalAssets = (household.p1.tfsa_balance || 0) +
+            (household.p1.rrsp_balance || 0) +
+            (household.p1.rrif_balance || 0) +
+            (household.p1.nr_cash || 0) +
+            (household.p1.nr_gic || 0) +
+            (household.p1.nr_invest || 0) +
+            (household.p1.corp_cash_bucket || 0) +
+            (household.p1.corp_gic_bucket || 0) +
+            (household.p1.corp_invest_bucket || 0);
+
+          if (totalAssets === 0) {
+            return (
+              <Alert className="border-yellow-300 bg-yellow-50">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-900">
+                  <strong>Limited Financial Data:</strong> No asset balances detected.
+                  <span className="ml-1">
+                    To get meaningful projections, please{' '}
+                    <a href="/profile" className="underline font-semibold hover:text-yellow-700">
+                      add your financial information
+                    </a>
+                    {' '}or enter values in the form below.
+                  </span>
+                </AlertDescription>
+              </Alert>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* Review Auto-Populated Values */}

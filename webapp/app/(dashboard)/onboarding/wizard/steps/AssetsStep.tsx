@@ -32,6 +32,22 @@ export default function AssetsStep({
   const [liraBalance, setLiraBalance] = useState(() => getAssetBalance('lira'));
   const [corporateBalance, setCorporateBalance] = useState(() => getAssetBalance('corporate'));
   const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
+  // Initialize CSRF token on mount
+  useEffect(() => {
+    const initCsrf = async () => {
+      try {
+        const response = await fetch('/api/csrf');
+        const data = await response.json();
+        setCsrfToken(data.token);
+        console.log('[CSRF] Token initialized');
+      } catch (error) {
+        console.error('[CSRF] Failed to initialize token:', error);
+      }
+    };
+    initCsrf();
+  }, []);
 
   // Update state when formData changes
   useEffect(() => {
@@ -138,12 +154,16 @@ export default function AssetsStep({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
           },
           body: JSON.stringify(asset),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to save asset');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('API Error Response:', errorData);
+          const errorMessage = errorData.error || errorData.message || 'Failed to save asset';
+          throw new Error(errorMessage);
         }
       }
 
@@ -209,7 +229,7 @@ export default function AssetsStep({
                   id="rrsp"
                   value={rrspBalance}
                   onChange={(e) => setRrspBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -232,7 +252,7 @@ export default function AssetsStep({
                   id="tfsa"
                   value={tfsaBalance}
                   onChange={(e) => setTfsaBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -255,7 +275,7 @@ export default function AssetsStep({
                   id="nonreg"
                   value={nonRegBalance}
                   onChange={(e) => setNonRegBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -278,7 +298,7 @@ export default function AssetsStep({
                   id="savings"
                   value={savingsBalance}
                   onChange={(e) => setSavingsBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="500"
@@ -301,7 +321,7 @@ export default function AssetsStep({
                   id="rrif"
                   value={rrifBalance}
                   onChange={(e) => setRrifBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -324,7 +344,7 @@ export default function AssetsStep({
                   id="lira"
                   value={liraBalance}
                   onChange={(e) => setLiraBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"
@@ -353,7 +373,7 @@ export default function AssetsStep({
                   id="corporate"
                   value={corporateBalance}
                   onChange={(e) => setCorporateBalance(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="1000"

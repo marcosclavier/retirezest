@@ -59,9 +59,10 @@ export default function ScenariosPage() {
     fetchCsrfToken();
   }, []);
 
-  // Load baseline scenario from localStorage
-  const loadBaselineFromSimulation = () => {
+  // Load baseline scenario from localStorage or prefill API
+  const loadBaselineFromSimulation = async () => {
     try {
+      // Try localStorage first
       const savedHousehold = localStorage.getItem('simulation_household');
       if (savedHousehold) {
         const household: HouseholdInput = JSON.parse(savedHousehold);
@@ -80,9 +81,34 @@ export default function ScenariosPage() {
 
         // Auto-run baseline scenario
         runScenarioSimulation(baselineScenario.id, household);
+        return;
+      }
+
+      // Fallback: Try loading from prefill API
+      const prefillResponse = await fetch('/api/simulation/prefill');
+      if (prefillResponse.ok) {
+        const household: HouseholdInput = await prefillResponse.json();
+
+        // Create baseline scenario from prefill
+        const baselineScenario: Scenario = {
+          id: `baseline-${Date.now()}`,
+          name: 'Current Plan (Baseline)',
+          description: 'Your current retirement plan loaded from your profile',
+          inputs: household,
+          isRunning: false,
+        };
+
+        setScenarios([baselineScenario]);
+        setBaselineLoaded(true);
+
+        // Auto-run baseline scenario
+        runScenarioSimulation(baselineScenario.id, household);
+      } else {
+        alert('No baseline data found. Please run a simulation first from the Simulation page.');
       }
     } catch (error) {
       console.error('Failed to load baseline:', error);
+      alert('Failed to load baseline data. Please run a simulation first.');
     }
   };
 

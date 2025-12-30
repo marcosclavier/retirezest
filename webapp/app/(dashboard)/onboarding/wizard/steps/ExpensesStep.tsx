@@ -29,6 +29,22 @@ export default function ExpensesStep({
   const [skipForNow, setSkipForNow] = useState(false);
   const [monthlyExpenses, setMonthlyExpenses] = useState(() => getMonthlyExpenses());
   const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
+  // Initialize CSRF token on mount
+  useEffect(() => {
+    const initCsrf = async () => {
+      try {
+        const response = await fetch('/api/csrf');
+        const data = await response.json();
+        setCsrfToken(data.token);
+        console.log('[CSRF] Token initialized');
+      } catch (error) {
+        console.error('[CSRF] Failed to initialize token:', error);
+      }
+    };
+    initCsrf();
+  }, []);
 
   // Update state when formData changes
   useEffect(() => {
@@ -59,6 +75,7 @@ export default function ExpensesStep({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
           },
           body: JSON.stringify({
             category: 'other',
@@ -70,7 +87,10 @@ export default function ExpensesStep({
         });
 
         if (!response.ok) {
-          throw new Error('Failed to save expenses');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('API Error Response:', errorData);
+          const errorMessage = errorData.error || errorData.message || 'Failed to save expenses';
+          throw new Error(errorMessage);
         }
       }
 
@@ -146,7 +166,7 @@ export default function ExpensesStep({
                   id="monthlyExpenses"
                   value={monthlyExpenses}
                   onChange={(e) => setMonthlyExpenses(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg"
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg font-bold text-gray-900"
                   placeholder="0.00"
                   min="0"
                   step="100"

@@ -92,7 +92,7 @@ export default function RetirementGoalsStep({
             id="retirementAge"
             value={targetRetirementAge}
             onChange={(e) => setTargetRetirementAge(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
             required
           >
             {Array.from({ length: 21 }, (_, i) => i + 55).map((age) => (
@@ -115,7 +115,7 @@ export default function RetirementGoalsStep({
             id="lifeExpectancy"
             value={lifeExpectancy}
             onChange={(e) => setLifeExpectancy(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
             required
           >
             {Array.from({ length: 26 }, (_, i) => i + 80).map((age) => (
@@ -161,12 +161,14 @@ export default function RetirementGoalsStep({
           <div className="space-y-2">
             <a
               href="/benefits"
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-full px-4 py-3 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700 transition font-medium"
             >
-              Calculate Government Benefits (Optional)
+              Calculate Government Benefits (Optional) →
             </a>
             <p className="text-xs text-blue-700 text-center">
-              You can skip this for now and calculate benefits later from the Benefits page
+              Opens in a new tab. You can skip this for now and calculate benefits later from the Benefits page
             </p>
           </div>
         </div>
