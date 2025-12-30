@@ -109,41 +109,46 @@ body {
     padding-bottom: 0 !important;
   }
 
-  /* Better page breaks */
+  /* Better page breaks and force proper spacing */
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     break-after: avoid;
-    word-spacing: 0.5em !important;
-    letter-spacing: 0.03em !important;
+    word-spacing: 0.35em !important;
+    letter-spacing: 0.05em !important;
     word-break: normal !important;
     overflow-wrap: normal !important;
-    white-space: normal !important;
+    white-space: pre-wrap !important;
     hyphens: none !important;
+    font-variant-ligatures: none !important;
   }
 
   /* Section headers - larger font for readability */
   h1 {
     font-size: 24px !important;
-    word-spacing: 0.5em !important;
-    letter-spacing: 0.03em !important;
+    word-spacing: 0.35em !important;
+    letter-spacing: 0.05em !important;
+    white-space: pre-wrap !important;
   }
 
   h2 {
     font-size: 18px !important;
-    word-spacing: 0.5em !important;
-    letter-spacing: 0.03em !important;
+    word-spacing: 0.35em !important;
+    letter-spacing: 0.05em !important;
+    white-space: pre-wrap !important;
   }
 
   h3 {
     font-size: 14px !important;
-    word-spacing: 0.5em !important;
-    letter-spacing: 0.03em !important;
+    word-spacing: 0.35em !important;
+    letter-spacing: 0.05em !important;
+    white-space: pre-wrap !important;
   }
 
   h4 {
     font-size: 12px !important;
-    word-spacing: 0.5em !important;
-    letter-spacing: 0.03em !important;
+    word-spacing: 0.35em !important;
+    letter-spacing: 0.05em !important;
+    white-space: pre-wrap !important;
   }
 
   table, figure, img {
