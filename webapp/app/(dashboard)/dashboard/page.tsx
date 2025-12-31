@@ -18,6 +18,10 @@ export default async function DashboardPage() {
       assets: true,
       expenses: true,
       debts: true,
+      simulationRuns: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
     },
     // Note: include already brings all user fields, including the new ones:
     // targetRetirementAge, lifeExpectancy, cppCalculatorUsedAt, oasCalculatorUsedAt
@@ -68,6 +72,30 @@ export default async function DashboardPage() {
   const completionLevel = getCompletionLevel(completion.percentage);
   const nextAction = getNextAction(completion.missingSections);
 
+  // Check if user is ready for simulation
+  const hasAssets = (user?.assets.length || 0) > 0;
+  const hasIncome = (user?.incomeSources.length || 0) > 0;
+  const hasExpenses = (user?.expenses.length || 0) > 0;
+  const isReadyForSimulation = hasAssets && (hasIncome || hasExpenses);
+
+  // Get last simulation
+  const lastSimulation = user?.simulationRuns?.[0];
+
+  // Format time ago for last simulation
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) !== 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) !== 1 ? 's' : ''} ago`;
+  };
+
   return (
     <div>
       <div className="mb-8">
@@ -78,6 +106,88 @@ export default async function DashboardPage() {
           Here's an overview of your retirement planning progress
         </p>
       </div>
+
+      {/* Simulation Ready CTA - Show when user has data but hasn't run simulation */}
+      {isReadyForSimulation && !lastSimulation && (
+        <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <h2 className="text-2xl font-bold">You're Ready for Your Retirement Simulation!</h2>
+              </div>
+              <p className="text-white/90 mb-4">
+                Great progress! You have {user?.assets.length || 0} asset{(user?.assets.length || 0) !== 1 ? 's' : ''} and {user?.incomeSources.length || 0} income source{(user?.incomeSources.length || 0) !== 1 ? 's' : ''}.
+                Run a comprehensive projection to see your personalized retirement outlook with tax optimization.
+              </p>
+              <div className="flex gap-3">
+                <Link
+                  href="/simulation"
+                  className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Run Your First Simulation
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Last Simulation Summary - Show when user has run simulation before */}
+      {lastSimulation && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                </svg>
+                <h2 className="text-lg font-semibold text-blue-900">Last Retirement Simulation</h2>
+              </div>
+              <p className="text-sm text-blue-700 mb-3">
+                Run {getTimeAgo(lastSimulation.createdAt)} • Strategy: {lastSimulation.strategy.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="bg-white rounded-lg p-3 border border-blue-100">
+                  <p className="text-xs text-gray-600 mb-1">Health Score</p>
+                  <p className="text-2xl font-bold text-gray-900">{lastSimulation.healthScore?.toFixed(0) || 'N/A'}/100</p>
+                  <p className="text-xs text-blue-600 font-medium">{lastSimulation.healthRating || 'N/A'}</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-blue-100">
+                  <p className="text-xs text-gray-600 mb-1">Success Rate</p>
+                  <p className="text-2xl font-bold text-gray-900">{lastSimulation.successRate?.toFixed(0) || 'N/A'}%</p>
+                  <p className="text-xs text-gray-600">{lastSimulation.yearsFunded || 0}/{lastSimulation.yearsSimulated || 0} years</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-blue-100">
+                  <p className="text-xs text-gray-600 mb-1">Est. Total Tax</p>
+                  <p className="text-xl font-bold text-gray-900">${((lastSimulation.totalTaxPaid || 0) / 1000).toFixed(0)}K</p>
+                  <p className="text-xs text-gray-600">{lastSimulation.avgTaxRate?.toFixed(1) || 'N/A'}% avg rate</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-blue-100">
+                  <p className="text-xs text-gray-600 mb-1">Final Estate</p>
+                  <p className="text-xl font-bold text-gray-900">${((lastSimulation.finalEstate || 0) / 1000).toFixed(0)}K</p>
+                  <p className="text-xs text-gray-600">After-tax value</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <Link
+            href="/simulation"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold text-sm"
+          >
+            View Details or Run New Simulation
+            <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+          </Link>
+        </div>
+      )}
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

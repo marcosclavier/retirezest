@@ -69,6 +69,7 @@ model User {
   debts             Debt[]
   scenarios         Scenario[]
   projections       Projection[]
+  simulationRuns    SimulationRun[]
 
   @@index([email])
   @@index([createdAt])
@@ -249,4 +250,68 @@ model Projection {
   @@index([userId, scenarioId])
   @@index([createdAt])
   @@index([calculationDate])
+}
+
+model SimulationRun {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Input parameters snapshot
+  strategy          String    // Withdrawal strategy used
+  province          String    // Province for tax calculations
+  startAge          Int       // Starting age of person 1
+  endAge            Int       // Life expectancy used
+  includePartner    Boolean   @default(false)
+  partnerStartAge   Int?      // Starting age of person 2 (if applicable)
+
+  // Spending parameters
+  spendingGoGo      Float?    // Annual spending in go-go phase
+  spendingSlowGo    Float?    // Annual spending in slow-go phase
+  spendingNoGo      Float?    // Annual spending in no-go phase
+
+  // Key output metrics
+  healthScore       Float?    // Overall health score (0-100)
+  healthRating      String?   // Rating: Excellent, Good, Fair, Poor
+  successRate       Float?    // Percentage of years fully funded
+  yearsFunded       Int?      // Number of years fully funded
+  yearsSimulated    Int?      // Total years in simulation
+
+  // Financial outcomes
+  totalTaxPaid      Float?    // Total tax paid over lifetime
+  avgTaxRate        Float?    // Average effective tax rate
+  finalEstate       Float?    // Final estate value (after tax)
+  finalEstateGross  Float?    // Final estate value (before tax)
+
+  // Government benefits
+  totalCPP          Float?    // Total CPP received
+  totalOAS          Float?    // Total OAS received
+  totalGIS          Float?    // Total GIS received
+  totalBenefits     Float?    // Total government benefits
+
+  // Withdrawals by source
+  totalRRIFWithdrawn    Float?
+  totalNonRegWithdrawn  Float?
+  totalTFSAWithdrawn    Float?
+  totalCorpWithdrawn    Float?
+
+  // Asset balances (initial)
+  initialTFSA       Float?
+  initialRRSP       Float?
+  initialRRIF       Float?
+  initialNonReg     Float?
+  initialCorp       Float?
+  initialNetWorth   Float?
+
+  // Full results (optional - for "view last simulation" feature)
+  inputData         String?   // JSON of complete HouseholdInput
+  fullResults       String?   // JSON of complete SimulationResponse (can be large)
+
+  createdAt         DateTime  @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([strategy])
+  @@index([healthScore])
 }
