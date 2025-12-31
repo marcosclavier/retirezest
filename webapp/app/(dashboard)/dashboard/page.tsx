@@ -122,15 +122,24 @@ export default async function DashboardPage() {
                 Great progress! You have {user?.assets.length || 0} asset{(user?.assets.length || 0) !== 1 ? 's' : ''} and {user?.incomeSources.length || 0} income source{(user?.incomeSources.length || 0) !== 1 ? 's' : ''}.
                 Run a comprehensive projection to see your personalized retirement outlook with tax optimization.
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/simulation?mode=quick"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                  </svg>
+                  Quick Estimate (30 sec)
+                </Link>
                 <Link
                   href="/simulation"
-                  className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition shadow-md"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition border-2 border-white/30"
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
-                  Run Your First Simulation
+                  Detailed Simulation
                 </Link>
               </div>
             </div>

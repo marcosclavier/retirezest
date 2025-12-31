@@ -70,6 +70,8 @@ export default function SimulationPage() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [prefillAttempted, setPrefillAttempted] = useState(false);
   const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
+  const [isQuickStart, setIsQuickStart] = useState(false);
+  const [quickStartAttempted, setQuickStartAttempted] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -169,6 +171,61 @@ export default function SimulationPage() {
 
     initializeData();
   }, []);
+
+  // Quick-start mode detection: Auto-run simulation with smart defaults
+  useEffect(() => {
+    const checkQuickStart = async () => {
+      // Only run once, after initialization and prefill
+      if (!isInitialized || !prefillAttempted || quickStartAttempted) {
+        return;
+      }
+
+      // Check for ?mode=quick parameter
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode');
+
+      if (mode === 'quick') {
+        console.log('🚀 Quick-start mode detected, running quick simulation...');
+        setQuickStartAttempted(true);
+        setIsQuickStart(true);
+        setIsLoading(true);
+
+        try {
+          const response = await fetch('/api/simulation/quick-start', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            console.log('✅ Quick simulation completed:', data);
+            setResult(data);
+            setActiveTab('results');
+
+            // Update household input with the values used
+            if (data.household_input) {
+              setHousehold(data.household_input);
+              setIncludePartner(!!data.household_input.p2?.name);
+            }
+          } else {
+            console.error('❌ Quick simulation failed:', data);
+            // Show error but stay on input tab so user can try manual simulation
+            alert(data.message || 'Quick simulation failed. Please try entering your details manually.');
+          }
+        } catch (error) {
+          console.error('❌ Quick simulation error:', error);
+          alert('Failed to run quick simulation. Please try entering your details manually.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    checkQuickStart();
+  }, [isInitialized, prefillAttempted, quickStartAttempted]);
 
   const loadPrefillDataWithMerge = async (
     token: string | null = csrfToken,
@@ -842,6 +899,17 @@ export default function SimulationPage() {
 
         {/* Results Tab */}
         <TabsContent value="results" className="space-y-6">
+          {/* Quick Start Disclaimer */}
+          {isQuickStart && result && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-900">
+                <strong>Quick Estimate:</strong> This simulation uses your actual data combined with smart defaults.
+                For a more accurate projection, switch to the <strong>Input</strong> tab to review and customize all assumptions.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {result ? (
             <>
               {/* Health Score Card - Prominent Position */}

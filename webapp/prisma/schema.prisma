@@ -310,6 +310,9 @@ model SimulationRun {
   inputData         String?   // JSON of complete HouseholdInput
   fullResults       String?   // JSON of complete SimulationResponse (can be large)
 
+  // Quick-start tracking
+  isQuickStart      Boolean   @default(false) // Whether this was a quick-start simulation
+
   createdAt         DateTime  @default(now())
 
   @@index([userId])
