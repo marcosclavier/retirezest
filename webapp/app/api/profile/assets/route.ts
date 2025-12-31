@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { handleApiError, AuthenticationError, NotFoundError, ValidationError } from '@/lib/errors';
+import { checkAndNotifySimulationReady } from '@/lib/simulation-ready-check';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -72,6 +73,12 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
       },
     });
+
+    // Check if user just became simulation-ready and send email notification
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    checkAndNotifySimulationReady(session.userId, appUrl).catch(err =>
+      console.error('Failed to check simulation readiness:', err)
+    );
 
     return NextResponse.json(asset, { status: 201 });
   } catch (error) {

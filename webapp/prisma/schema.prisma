@@ -44,6 +44,9 @@ model User {
   cppCalculatorUsedAt DateTime?
   oasCalculatorUsedAt DateTime?
 
+  // Simulation feature engagement
+  simulationReadyEmailSentAt DateTime? // When we sent "you're ready" email
+
   // Onboarding and user journey
   hasSeenWelcome       Boolean   @default(false)
   userPath             String?   // 'guided' or 'experienced'
