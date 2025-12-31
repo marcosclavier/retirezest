@@ -22,10 +22,10 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
   };
 
   const getScoreBackground = (score: number) => {
-    if (score >= 90) return 'bg-blue-600 dark:bg-blue-700';      // Excellent: Dark blue
-    if (score >= 70) return 'bg-green-600 dark:bg-green-700';    // Good: Dark green
-    if (score >= 50) return 'bg-yellow-100 dark:bg-yellow-200';  // Fair: Light yellow
-    return 'bg-red-100 dark:bg-red-200';                         // Poor: Light red
+    if (score >= 90) return '!bg-blue-600';      // Excellent: Dark blue
+    if (score >= 70) return '!bg-green-600';     // Good: Dark green
+    if (score >= 50) return '!bg-yellow-100';    // Fair: Light yellow
+    return '!bg-red-100';                        // Poor: Light red
   };
 
   // Determine text color for optimal contrast
@@ -47,8 +47,10 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
   };
 
   const getBadgeColor = (score: number) => {
-    if (score >= 70) return 'bg-white/20 border-white/30 text-white';
-    return 'bg-gray-900/10 border-gray-900/20 text-gray-900';
+    // Ensure badge has border and proper contrast on colored backgrounds
+    // Using solid colors for better visibility
+    if (score >= 70) return 'bg-white border-2 border-white text-gray-900 shadow-md';
+    return 'bg-gray-900 border-2 border-gray-900 text-white shadow-md';
   };
 
   const getIconColor = (score: number) => {
@@ -59,21 +61,6 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
   const getBorderColor = (score: number) => {
     if (score >= 70) return 'border-white/20';
     return 'border-gray-900/20 dark:border-gray-800/30';
-  };
-
-  const getRatingBadgeVariant = (rating: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (rating?.toLowerCase()) {
-      case 'excellent':
-        return 'default';
-      case 'good':
-        return 'secondary';
-      case 'fair':
-        return 'outline';
-      case 'at risk':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
   };
 
   const getCriterionIcon = (status: string) => {
@@ -134,9 +121,9 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
             <Activity className={`h-5 w-5 ${getIconColor(health_score)}`} />
             <CardTitle className={getTextColor(health_score)}>Plan Health Score</CardTitle>
           </div>
-          <Badge variant={getRatingBadgeVariant(health_rating)} className={getBadgeColor(health_score)}>
+          <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold transition-colors ${getBadgeColor(health_score)}`}>
             {health_rating || 'Not Calculated'}
-          </Badge>
+          </div>
         </div>
         <CardDescription className={getTextColorSecondary(health_score)}>Overall assessment of your retirement plan</CardDescription>
       </CardHeader>
