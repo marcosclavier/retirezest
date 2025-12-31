@@ -170,7 +170,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
                   <p className="text-xs text-gray-600 mb-1">Success Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">{lastSimulation.successRate?.toFixed(0) || 'N/A'}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{lastSimulation.successRate ? (lastSimulation.successRate * 100).toFixed(0) : 'N/A'}%</p>
                   <p className="text-xs text-gray-600">{lastSimulation.yearsFunded || 0}/{lastSimulation.yearsSimulated || 0} years</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
