@@ -176,7 +176,7 @@ export default async function DashboardPage() {
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
                   <p className="text-xs text-gray-600 mb-1">Est. Total Tax</p>
                   <p className="text-xl font-bold text-gray-900">${((lastSimulation.totalTaxPaid || 0) / 1000).toFixed(0)}K</p>
-                  <p className="text-xs text-gray-600">{lastSimulation.avgTaxRate?.toFixed(1) || 'N/A'}% avg rate</p>
+                  <p className="text-xs text-gray-600">{lastSimulation.avgTaxRate ? (lastSimulation.avgTaxRate * 100).toFixed(1) : 'N/A'}% avg rate</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
                   <p className="text-xs text-gray-600 mb-1">Final Estate</p>
