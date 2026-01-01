@@ -491,17 +491,35 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         else 0.0
     )
 
-    # Find first failure
-    failure_col = 'plan_success' if 'plan_success' in df.columns else 'success'
-    if failure_col in df.columns:
-        failure_rows = df[df[failure_col] == False]
+    # Find first failure - check for underfunded years
+    # Note: The DataFrame has 'is_underfunded', not 'plan_success'
+    # plan_success is only computed during YearResult conversion
+    if 'is_underfunded' in df.columns:
+        # is_underfunded=True means the plan FAILED that year
+        failure_rows = df[df['is_underfunded'] == True]
+        first_failure_year = (
+            int(failure_rows.iloc[0]['year'])
+            if len(failure_rows) > 0
+            else None
+        )
+    elif 'plan_success' in df.columns:
+        # Fallback for older data that might have plan_success directly
+        failure_rows = df[~df['plan_success']]
+        first_failure_year = (
+            int(failure_rows.iloc[0]['year'])
+            if len(failure_rows) > 0
+            else None
+        )
+    elif 'success' in df.columns:
+        # Another fallback
+        failure_rows = df[~df['success']]
         first_failure_year = (
             int(failure_rows.iloc[0]['year'])
             if len(failure_rows) > 0
             else None
         )
     elif 'net_worth_end' in df.columns:
-        # Fallback: use net_worth_end to detect first failure
+        # Last resort: use net_worth_end to detect first failure
         failure_rows = df[df['net_worth_end'] <= 0]
         first_failure_year = (
             int(failure_rows.iloc[0]['year'])
@@ -523,6 +541,28 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         else:
             total_underfunded_years = 0
             total_underfunding = 0
+
+    # === Correct Final Estate for Failed Plans ===
+    # IMPORTANT: If plan failed before end_age, use net worth at first failure year
+    # This prevents showing misleading final estate when simulation continues after failure
+    if first_failure_year is not None:
+        # Find the row for the first failure year
+        failure_year_row = df[df['year'] == first_failure_year]
+        if len(failure_year_row) > 0:
+            # Use net worth at failure year, not at end of simulation
+            final_net_worth = float(failure_year_row.iloc[0].get('net_worth_end', 0))
+            final_estate_gross = final_net_worth
+            # Recalculate after-tax estate for failure year
+            final_estate_after_tax = float(failure_year_row.iloc[0].get('after_tax_legacy', final_estate_gross * 0.75))
+            # Recalculate net worth change based on failure year, not end year
+            if initial_net_worth > 0:
+                net_worth_change_pct = ((final_net_worth - initial_net_worth) / initial_net_worth) * 100
+                if net_worth_change_pct > 5:
+                    net_worth_trend = "Growing"
+                elif net_worth_change_pct < -5:
+                    net_worth_trend = "Declining"
+                else:
+                    net_worth_trend = "Stable"
 
     # === Health Score Calculation ===
     health_score, health_rating, health_criteria = calculate_health_score(

@@ -647,31 +647,6 @@ export default function SimulationPage() {
           </Alert>
         )}
 
-        {/* Warning about assumed values */}
-        {prefillAvailable && !prefillLoading && (
-          <Alert className="border-orange-200 bg-orange-50">
-            <AlertCircle className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-900">
-              <strong>Important:</strong> Some values have been estimated and may affect accuracy:
-              <ul className="list-disc list-inside mt-2 text-sm space-y-1">
-                <li>Asset allocation (cash/GIC/investments) based on typical distributions</li>
-                <li>Adjusted Cost Base (ACB) estimated at 80% of non-registered balance</li>
-                <li>
-                  CPP and OAS amounts use default values ($15,000/year and $8,500/year)
-                  {(household.p1.cpp_annual_at_start === 15000 || household.p1.oas_annual_at_start === 8500) && (
-                    <span className="ml-1">
-                      — <a href="/benefits" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-orange-700">Calculate your actual benefits →</a>
-                    </span>
-                  )}
-                </li>
-              </ul>
-              <p className="mt-2 text-sm font-medium">
-                Please review and adjust these values in the expandable sections below for more accurate results.
-              </p>
-            </AlertDescription>
-          </Alert>
-        )}
-
         {/* API Health Warning */}
         {apiHealthy === false && (
           <Alert variant="destructive">
@@ -723,52 +698,133 @@ export default function SimulationPage() {
           defaultOpen={false}
         >
           <div className="space-y-4">
-            {/* Profile Information */}
+            {/* Household Information */}
             <div>
-              <Label className="text-sm font-semibold">Profile Information</Label>
+              <Label className="text-sm font-semibold">Household Information</Label>
               <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Name:</span>
-                  <span>{household.p1.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Start Age:</span>
-                  <span>{household.p1.start_age}</span>
-                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Province:</span>
                   <span>{household.province}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Planning Type:</span>
+                  <span>{includePartner ? 'Couple' : 'Individual'}</span>
                 </div>
               </div>
             </div>
 
             <div className="border-t my-4" />
 
-            {/* Account Balances */}
+            {/* Profile Information - Side by Side for Couples */}
+            <div>
+              <Label className="text-sm font-semibold">Profile Information</Label>
+              <div className={`mt-2 gap-6 ${includePartner ? 'grid grid-cols-1 md:grid-cols-2' : ''}`}>
+                {/* Person 1 */}
+                <div className="text-sm">
+                  {includePartner && <p className="font-medium text-gray-700 mb-2">{household.p1.name || 'You'}</p>}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">{includePartner ? 'Age:' : 'Name:'}</span>
+                    <span>{includePartner ? household.p1.start_age : household.p1.name}</span>
+                  </div>
+                  {!includePartner && (
+                    <div className="flex justify-between mt-1">
+                      <span className="text-gray-600">Age:</span>
+                      <span>{household.p1.start_age}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Person 2 - Only if couple */}
+                {includePartner && household.p2.name && (
+                  <div className="text-sm">
+                    <p className="font-medium text-gray-700 mb-2">{household.p2.name}</p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Age:</span>
+                      <span>{household.p2.start_age}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t my-4" />
+
+            {/* Account Balances - Side by Side for Couples */}
             <div>
               <Label className="text-sm font-semibold">Account Balances</Label>
-              <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">TFSA:</span>
-                  <span>${(household.p1.tfsa_balance || 0).toLocaleString()}</span>
+              <div className={`mt-2 gap-6 ${includePartner ? 'grid grid-cols-1 md:grid-cols-2' : ''}`}>
+                {/* Person 1 Balances */}
+                <div className="space-y-1 text-sm">
+                  {includePartner && <p className="font-medium text-gray-700 mb-2">{household.p1.name || 'You'}</p>}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">TFSA:</span>
+                    <span>${(household.p1.tfsa_balance || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">RRSP:</span>
+                    <span>${(household.p1.rrsp_balance || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">RRIF:</span>
+                    <span>${(household.p1.rrif_balance || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Non-Registered:</span>
+                    <span>${((household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0)).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Corporate:</span>
+                    <span>${((household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1 mt-1 font-medium">
+                    <span className="text-gray-700">Total:</span>
+                    <span>${((household.p1.tfsa_balance || 0) + (household.p1.rrsp_balance || 0) + (household.p1.rrif_balance || 0) + (household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0) + (household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">RRSP:</span>
-                  <span>${(household.p1.rrsp_balance || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">RRIF:</span>
-                  <span>${(household.p1.rrif_balance || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Non-Registered:</span>
-                  <span>${((household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0)).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Corporate:</span>
-                  <span>${((household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
-                </div>
+
+                {/* Person 2 Balances - Only if couple */}
+                {includePartner && household.p2.name && (
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium text-gray-700 mb-2">{household.p2.name}</p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">TFSA:</span>
+                      <span>${(household.p2.tfsa_balance || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">RRSP:</span>
+                      <span>${(household.p2.rrsp_balance || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">RRIF:</span>
+                      <span>${(household.p2.rrif_balance || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Non-Registered:</span>
+                      <span>${((household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0)).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Corporate:</span>
+                      <span>${((household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-1 mt-1 font-medium">
+                      <span className="text-gray-700">Total:</span>
+                      <span>${((household.p2.tfsa_balance || 0) + (household.p2.rrsp_balance || 0) + (household.p2.rrif_balance || 0) + (household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0) + (household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Combined Total for Couples */}
+              {includePartner && household.p2.name && (
+                <div className="mt-3 pt-3 border-t-2 border-gray-300">
+                  <div className="flex justify-between text-sm font-semibold">
+                    <span className="text-gray-800">Combined Total:</span>
+                    <span className="text-blue-600">
+                      ${((household.p1.tfsa_balance || 0) + (household.p1.rrsp_balance || 0) + (household.p1.rrif_balance || 0) + (household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0) + (household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0) + (household.p2.tfsa_balance || 0) + (household.p2.rrsp_balance || 0) + (household.p2.rrif_balance || 0) + (household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0) + (household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="border-t my-4" />
@@ -796,6 +852,31 @@ export default function SimulationPage() {
             </p>
           </div>
         </Collapsible>
+      )}
+
+      {/* Warning about assumed values */}
+      {prefillAvailable && !prefillLoading && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-900">
+            <strong>Important:</strong> Some values have been estimated and may affect accuracy:
+            <ul className="list-disc list-inside mt-2 text-sm space-y-1">
+              <li>Asset allocation (cash/GIC/investments) based on typical distributions</li>
+              <li>Adjusted Cost Base (ACB) estimated at 80% of non-registered balance</li>
+              <li>
+                CPP and OAS amounts use default values ($15,000/year and $8,500/year)
+                {(household.p1.cpp_annual_at_start === 15000 || household.p1.oas_annual_at_start === 8500) && (
+                  <span className="ml-1">
+                    — <a href="/benefits" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-orange-700">Calculate your actual benefits →</a>
+                  </span>
+                )}
+              </li>
+            </ul>
+            <p className="mt-2 text-sm font-medium">
+              Please review and adjust these values in the expandable sections below for more accurate results.
+            </p>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Run Simulation Button */}
