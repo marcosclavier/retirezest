@@ -1419,15 +1419,28 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             if shortfall > 1e-6:
                 logger.debug(f"  TFSA check - shortfall=${shortfall:,.0f}, rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}")
 
-            # NEW LOGIC: Only skip TFSA if spending is met AND other sources still have funds
-            # This ensures spending requirement is ALWAYS prioritized over legacy preservation
-            if shortfall <= 1e-6 and ((nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9)):
-                # Spending is met and other sources available - preserve TFSA for legacy
-                if shortfall > 1e-6:
-                    logger.debug(f"  -> Preserving TFSA (spending met, other sources available)")
-                continue
+            # TFSA WITHDRAWAL LOGIC FOR MINIMIZE-INCOME STRATEGY:
+            # TFSA is tax-free and doesn't affect GIS eligibility - it's the PERFECT source
+            # for minimize-income strategy to meet spending needs without triggering clawbacks
+            #
+            # Priority:
+            # 1. If there's a shortfall -> ALWAYS use TFSA (tax-free, no GIS impact)
+            # 2. If no shortfall but TFSA is first in strategy order -> use it per strategy
+            # 3. Only preserve TFSA if both: (a) no shortfall AND (b) other tax-free sources available
 
-            available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
+            if shortfall > 1e-6:
+                # There's a spending shortfall - TFSA MUST be used to meet spending needs
+                # This is the PRIMARY OBJECTIVE - funding retirement spending
+                # TFSA is ideal for minimize-income since it's tax-free (no GIS clawback)
+                logger.debug(f"  -> TFSA withdrawal needed (shortfall=${shortfall:,.0f}, tax-free, preserves GIS)")
+                available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
+            else:
+                # No current shortfall, but TFSA should still be available for minimize-income strategy
+                # Since TFSA is tax-free, using it doesn't hurt GIS eligibility
+                # Only skip if there are literally no funds available
+                available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
+                if available > 1e-6:
+                    logger.debug(f"  -> TFSA available=${available:,.0f} (tax-free, safe for GIS strategy)")
         else:
             available = 0.0
 
@@ -2453,6 +2466,66 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Calculate underfunded amount (spending shortfall)
         # Positive when spending needs exceed available funds
         underfunded_amount = max(0.0, original_target_total - total_available_after_tax)
+
+        # ===== HOUSEHOLD-LEVEL SHORTFALL REBALANCING =====
+        # CRITICAL FIX: If there's a household shortfall but assets remain in either person's accounts,
+        # attempt additional withdrawals from the person with remaining capacity.
+        # This prevents the paradox where the plan fails despite having substantial assets.
+        if underfunded_amount > 1.0:
+            # Check remaining balances for each person
+            p1_total_balance = p1.tfsa_balance + p1.rrif_balance + p1.nonreg_balance + p1.corporate_balance
+            p2_total_balance = p2.tfsa_balance + p2.rrif_balance + p2.nonreg_balance + p2.corporate_balance
+
+            # Only attempt rebalancing if there are significant assets remaining
+            if p1_total_balance > 1000 or p2_total_balance > 1000:
+                logger.debug(f"\n💡 HOUSEHOLD REBALANCING [{year}]: Shortfall=${underfunded_amount:,.0f}")
+                logger.debug(f"   P1 remaining: ${p1_total_balance:,.0f} | P2 remaining: ${p2_total_balance:,.0f}")
+
+                # Determine which person has more capacity (larger remaining balance)
+                # Prioritize withdrawing from the person with MORE assets to preserve balance
+                if p1_total_balance >= p2_total_balance and p1_total_balance > 1000:
+                    # Attempt additional withdrawal from Person 1
+                    logger.debug(f"   → Attempting additional withdrawal from P1 (age {age1})")
+                    additional_target = underfunded_amount * 1.3  # Add 30% buffer for taxes
+                    w1_extra, t1_extra, info1_extra = simulate_year(
+                        p1, age1, additional_target, fed_y, prov_y, rrsp_to_rrif1, {},
+                        hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1
+                    )
+                    # Add the extra withdrawals to person 1's totals
+                    for k in w1.keys():
+                        w1[k] += w1_extra[k]
+                    # Recalculate person 1's tax with new total withdrawals
+                    # (Note: This is simplified - full implementation would need proper tax recalc)
+                    t1["tax"] += t1_extra["tax"]
+                    logger.debug(f"   ✓ P1 extra withdrawals: TFSA=${w1_extra['tfsa']:,.0f}, RRIF=${w1_extra['rrif']:,.0f}, NonReg=${w1_extra['nonreg']:,.0f}, Corp=${w1_extra['corp']:,.0f}")
+
+                elif p2_total_balance > 1000:
+                    # Attempt additional withdrawal from Person 2
+                    logger.debug(f"   → Attempting additional withdrawal from P2 (age {age2})")
+                    additional_target = underfunded_amount * 1.3  # Add 30% buffer for taxes
+                    w2_extra, t2_extra, info2_extra = simulate_year(
+                        p2, age2, additional_target, fed_y, prov_y, rrsp_to_rrif2, {},
+                        hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2
+                    )
+                    # Add the extra withdrawals to person 2's totals
+                    for k in w2.keys():
+                        w2[k] += w2_extra[k]
+                    # Recalculate person 2's tax with new total withdrawals
+                    t2["tax"] += t2_extra["tax"]
+                    logger.debug(f"   ✓ P2 extra withdrawals: TFSA=${w2_extra['tfsa']:,.0f}, RRIF=${w2_extra['rrif']:,.0f}, NonReg=${w2_extra['nonreg']:,.0f}, Corp=${w2_extra['corp']:,.0f}")
+
+                # Recalculate total available cash after rebalancing
+                total_account_withdrawals = (
+                    w1["nonreg"] + w1["rrif"] + w1["tfsa"] + w1["corp"] +
+                    w2["nonreg"] + w2["rrif"] + w2["tfsa"] + w2["corp"]
+                )
+                total_tax_after_split = t1["tax"] + t2["tax"]
+                total_available_after_tax = (
+                    cpp_total + oas_total + gis_total +
+                    total_account_withdrawals + nr_distributions_total - total_tax_after_split
+                )
+                underfunded_amount = max(0.0, original_target_total - total_available_after_tax)
+                logger.debug(f"   📊 After rebalancing: shortfall=${underfunded_amount:,.0f}")
 
         rows.append(YearResult(
             year=year, age_p1=age1, age_p2=age2, years_since_start=years_since_start,

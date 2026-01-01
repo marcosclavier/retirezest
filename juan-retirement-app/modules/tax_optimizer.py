@@ -508,8 +508,15 @@ class TaxOptimizer:
         Returns:
             True if person likely eligible for GIS
         """
-        age = getattr(person, 'start_age', 0)
-        if age < 65:
+        # CRITICAL FIX: Calculate CURRENT age based on year, not start_age
+        # start_age is the age at the beginning of the simulation (household.start_year)
+        # For GIS eligibility in a future year, we need to calculate the current age
+        start_age = getattr(person, 'start_age', 0)
+        start_year = getattr(household, 'start_year', year)
+        years_elapsed = year - start_year
+        current_age = start_age + years_elapsed
+
+        if current_age < 65:
             return False
 
         # Rough income estimate
@@ -602,8 +609,11 @@ class TaxOptimizer:
         Returns:
             True if person is within 3 years of age 71
         """
-        age = getattr(person, 'start_age', 0)
-        current_year_age = age + (year - 2025)  # Rough estimate
+        # CRITICAL FIX: Calculate CURRENT age based on year, not hardcoded 2025
+        start_age = getattr(person, 'start_age', 0)
+        start_year = getattr(household, 'start_year', year)
+        years_elapsed = year - start_year
+        current_year_age = start_age + years_elapsed
 
         # Flag if approaching age 71 (within next 3 years)
         return 68 <= current_year_age < 71
@@ -620,8 +630,11 @@ class TaxOptimizer:
         Returns:
             Estimated effective tax rate for RRIF at age 71+ (including GIS impact)
         """
-        age = getattr(person, 'start_age', 0)
-        current_year_age = age + (year - 2025)
+        # CRITICAL FIX: Calculate CURRENT age based on year, not hardcoded 2025
+        start_age = getattr(person, 'start_age', 0)
+        start_year = getattr(household, 'start_year', year)
+        years_elapsed = year - start_year
+        current_year_age = start_age + years_elapsed
 
         if current_year_age < 71:
             # Not yet at mandatory minimums
@@ -662,8 +675,11 @@ class TaxOptimizer:
         Returns:
             True if should accelerate RRIF drawdown now vs. deferring to age 71+
         """
-        age = getattr(person, 'start_age', 0)
-        current_year_age = age + (year - 2025)
+        # CRITICAL FIX: Calculate CURRENT age based on year, not hardcoded 2025
+        start_age = getattr(person, 'start_age', 0)
+        start_year = getattr(household, 'start_year', year)
+        years_elapsed = year - start_year
+        current_year_age = start_age + years_elapsed
 
         # Only relevant if approaching age 71
         if not (65 <= current_year_age < 71):

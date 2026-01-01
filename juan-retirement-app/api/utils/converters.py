@@ -543,26 +543,33 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
             total_underfunding = 0
 
     # === Correct Final Estate for Failed Plans ===
-    # IMPORTANT: If plan failed before end_age, use net worth at first failure year
-    # This prevents showing misleading final estate when simulation continues after failure
+    # IMPORTANT: If plan failed before end_age, we need to understand WHY
+    # The simulation continues after failure - two scenarios:
+    # 1. Assets depleted - net worth declining to 0
+    # 2. Withdrawal constraints - assets remain/grow but can't be accessed efficiently
     if first_failure_year is not None:
-        # Find the row for the first failure year
-        failure_year_row = df[df['year'] == first_failure_year]
-        if len(failure_year_row) > 0:
-            # Use net worth at failure year, not at end of simulation
-            final_net_worth = float(failure_year_row.iloc[0].get('net_worth_end', 0))
-            final_estate_gross = final_net_worth
-            # Recalculate after-tax estate for failure year
-            final_estate_after_tax = float(failure_year_row.iloc[0].get('after_tax_legacy', final_estate_gross * 0.75))
-            # Recalculate net worth change based on failure year, not end year
-            if initial_net_worth > 0:
-                net_worth_change_pct = ((final_net_worth - initial_net_worth) / initial_net_worth) * 100
-                if net_worth_change_pct > 5:
-                    net_worth_trend = "Growing"
-                elif net_worth_change_pct < -5:
-                    net_worth_trend = "Declining"
-                else:
-                    net_worth_trend = "Stable"
+        # Find the LAST row (end of simulation) to get actual final balances
+        final_row = df.iloc[-1]
+        final_net_worth = float(final_row.get('net_worth_end', 0))
+        final_estate_gross = final_net_worth
+        final_estate_after_tax = float(final_row.get('after_tax_legacy', final_estate_gross * 0.75))
+
+        # For failed plans, recalculate net worth trend
+        # If net worth is GROWING despite failure, this indicates a withdrawal strategy problem
+        # (assets exist but can't be accessed efficiently to meet spending needs)
+        if initial_net_worth > 0:
+            net_worth_change_pct = ((final_net_worth - initial_net_worth) / initial_net_worth) * 100
+
+            # For failed plans, categorize the trend to help identify the issue
+            if net_worth_change_pct > 5:
+                # Growing net worth + failed plan = withdrawal strategy problem
+                net_worth_trend = "Growing (Withdrawal Issue)"
+            elif net_worth_change_pct < -5:
+                # Declining net worth + failed plan = asset depletion (expected)
+                net_worth_trend = "Declining (Asset Depletion)"
+            else:
+                # Stable net worth + failed plan = withdrawal constraints
+                net_worth_trend = "Stable (Access Limited)"
 
     # === Health Score Calculation ===
     health_score, health_rating, health_criteria = calculate_health_score(
@@ -689,7 +696,15 @@ def calculate_health_score(
     score += criterion_score
 
     # Criterion 5: Growing or stable net worth
-    growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+    # IMPORTANT: If plan failed (success_rate < 1.0), net worth cannot be "growing"
+    # because the primary objective (funding retirement) was not met
+    if success_rate < 1.0:
+        # Plan failed - automatically score 0 for this criterion
+        growing_net_worth = False
+    else:
+        # Plan succeeded - check if net worth maintained or grew
+        growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+
     criterion_score = 20 if growing_net_worth else 0
     criteria['growing_net_worth'] = {
         'score': criterion_score,
