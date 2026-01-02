@@ -1485,16 +1485,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 logger.debug(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)")
             continue
 
-        # DEBUG: Log withdrawal source being processed
-        if shortfall > 1e-6:
-            logger.debug(f"  {k.upper()}: available=${available:,.0f}, shortfall=${shortfall:,.0f}")
-
         # TFSA is tax-free: just take what you need and continue
         if k == "tfsa":
             take = min(shortfall, available)
             extra["tfsa"] += take
             shortfall -= take
-            # DEBUG: Log TFSA withdrawal
             if take > 1e-6:
                 logger.debug(f"  -> TFSA withdrawal: ${take:,.0f}")
             continue
@@ -2535,58 +2530,60 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
             # Only attempt rebalancing if there are significant assets remaining
             if p1_total_balance > 1000 or p2_total_balance > 1000:
-                logger.debug(f"\n💡 HOUSEHOLD REBALANCING [{year}]: Shortfall=${underfunded_amount:,.0f}")
-                logger.debug(f"   P1 remaining: ${p1_total_balance:,.0f} | P2 remaining: ${p2_total_balance:,.0f}")
+                logger.info(f"\n💡 HOUSEHOLD REBALANCING [{year}]: Shortfall=${underfunded_amount:,.0f}")
+                logger.info(f"   P1 remaining: ${p1_total_balance:,.0f} | P2 remaining: ${p2_total_balance:,.0f}")
 
-                # Determine which person has more capacity (larger remaining balance)
-                # Prioritize withdrawing from the person with MORE assets to preserve balance
-                if p1_total_balance >= p2_total_balance and p1_total_balance > 1000:
-                    # Attempt additional withdrawal from Person 1
-                    logger.debug(f"   → Attempting additional withdrawal from P1 (age {age1})")
-                    # CRITICAL FIX: The after_tax_target must account for government benefits that were
-                    # already received in the first simulate_year() call. If we just pass underfunded_amount,
-                    # simulate_year() will add CPP/OAS again, making the shortfall disappear.
-                    # So we need to pass a target LARGE ENOUGH to force account withdrawals.
-                    p1_income_already_received = cpp_p1 + oas_p1 + gis_p1 + employer_pension_p1 + rental_p1 + other_p1
-                    additional_target = p1_income_already_received + (underfunded_amount * 1.3)
-                    w1_extra, t1_extra, info1_extra = simulate_year(
-                        p1, age1, additional_target, fed_y, prov_y, rrsp_to_rrif1, {},
-                        hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1
-                    )
-                    # Add the extra withdrawals to person 1's totals
-                    for k in w1.keys():
-                        w1[k] += w1_extra[k]
-                    # CRITICAL FIX: Replace (not add) person 1's tax with the recalculated total
-                    # The second simulate_year() call already calculated tax on ALL income/withdrawals,
-                    # so we need to REPLACE the old tax, not ADD to it (which would double-count)
-                    t1["tax"] = t1_extra["tax"]
-                    t1["fed_tax"] = t1_extra.get("fed_tax", 0.0)
-                    t1["prov_tax"] = t1_extra.get("prov_tax", 0.0)
-                    logger.debug(f"   ✓ P1 extra withdrawals: TFSA=${w1_extra['tfsa']:,.0f}, RRIF=${w1_extra['rrif']:,.0f}, NonReg=${w1_extra['nonreg']:,.0f}, Corp=${w1_extra['corp']:,.0f}")
+                # NEW APPROACH: For TFSA-First strategy, directly withdraw from household TFSA balances
+                # This is simpler and more correct than trying to manipulate simulate_year()
+                # TFSA is tax-free, so we can withdraw the exact shortfall amount without tax calculations
+                shortfall_remaining = underfunded_amount
 
-                elif p2_total_balance > 1000:
-                    # Attempt additional withdrawal from Person 2
-                    logger.debug(f"   → Attempting additional withdrawal from P2 (age {age2})")
-                    # CRITICAL FIX: The after_tax_target must account for government benefits that were
-                    # already received in the first simulate_year() call. If we just pass underfunded_amount,
-                    # simulate_year() will add CPP/OAS again, making the shortfall disappear.
-                    # So we need to pass a target LARGE ENOUGH to force account withdrawals.
-                    p2_income_already_received = cpp_p2 + oas_p2 + gis_p2 + employer_pension_p2 + rental_p2 + other_p2
-                    additional_target = p2_income_already_received + (underfunded_amount * 1.3)
-                    w2_extra, t2_extra, info2_extra = simulate_year(
-                        p2, age2, additional_target, fed_y, prov_y, rrsp_to_rrif2, {},
-                        hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2
-                    )
-                    # Add the extra withdrawals to person 2's totals
-                    for k in w2.keys():
-                        w2[k] += w2_extra[k]
-                    # CRITICAL FIX: Replace (not add) person 2's tax with the recalculated total
-                    # The second simulate_year() call already calculated tax on ALL income/withdrawals,
-                    # so we need to REPLACE the old tax, not ADD to it (which would double-count)
-                    t2["tax"] = t2_extra["tax"]
-                    t2["fed_tax"] = t2_extra.get("fed_tax", 0.0)
-                    t2["prov_tax"] = t2_extra.get("prov_tax", 0.0)
-                    logger.debug(f"   ✓ P2 extra withdrawals: TFSA=${w2_extra['tfsa']:,.0f}, RRIF=${w2_extra['rrif']:,.0f}, NonReg=${w2_extra['nonreg']:,.0f}, Corp=${w2_extra['corp']:,.0f}")
+                # Try TFSA first (tax-free, ideal for household rebalancing)
+                p1_tfsa_available = p1.tfsa_balance
+                p2_tfsa_available = p2.tfsa_balance
+                total_tfsa_available = p1_tfsa_available + p2_tfsa_available
+
+                if total_tfsa_available > 1e-6 and shortfall_remaining > 1e-6:
+                    tfsa_withdrawal_needed = min(shortfall_remaining, total_tfsa_available)
+                    logger.info(f"   💰 TFSA available for rebalancing: P1=${p1_tfsa_available:,.0f}, P2=${p2_tfsa_available:,.0f}")
+
+                    # Withdraw from person with larger TFSA balance first
+                    if p1_tfsa_available >= p2_tfsa_available:
+                        # Withdraw from P1 first
+                        p1_tfsa_withdrawal = min(tfsa_withdrawal_needed, p1_tfsa_available)
+                        p1.tfsa_balance -= p1_tfsa_withdrawal
+                        w1["tfsa"] += p1_tfsa_withdrawal
+                        shortfall_remaining -= p1_tfsa_withdrawal
+                        logger.info(f"   ✓ Withdrew ${p1_tfsa_withdrawal:,.0f} from P1 TFSA (tax-free)")
+
+                        # If still short and P2 has TFSA, withdraw from P2
+                        if shortfall_remaining > 1e-6 and p2_tfsa_available > 1e-6:
+                            p2_tfsa_withdrawal = min(shortfall_remaining, p2_tfsa_available)
+                            p2.tfsa_balance -= p2_tfsa_withdrawal
+                            w2["tfsa"] += p2_tfsa_withdrawal
+                            shortfall_remaining -= p2_tfsa_withdrawal
+                            logger.info(f"   ✓ Withdrew ${p2_tfsa_withdrawal:,.0f} from P2 TFSA (tax-free)")
+                    else:
+                        # Withdraw from P2 first
+                        p2_tfsa_withdrawal = min(tfsa_withdrawal_needed, p2_tfsa_available)
+                        p2.tfsa_balance -= p2_tfsa_withdrawal
+                        w2["tfsa"] += p2_tfsa_withdrawal
+                        shortfall_remaining -= p2_tfsa_withdrawal
+                        logger.info(f"   ✓ Withdrew ${p2_tfsa_withdrawal:,.0f} from P2 TFSA (tax-free)")
+
+                        # If still short and P1 has TFSA, withdraw from P1
+                        if shortfall_remaining > 1e-6 and p1_tfsa_available > 1e-6:
+                            p1_tfsa_withdrawal = min(shortfall_remaining, p1_tfsa_available)
+                            p1.tfsa_balance -= p1_tfsa_withdrawal
+                            w1["tfsa"] += p1_tfsa_withdrawal
+                            shortfall_remaining -= p1_tfsa_withdrawal
+                            logger.info(f"   ✓ Withdrew ${p1_tfsa_withdrawal:,.0f} from P1 TFSA (tax-free)")
+
+                # If TFSA didn't cover everything, try other accounts
+                # For now, skip complex taxable withdrawal logic - TFSA should handle most cases
+                if shortfall_remaining > 1e-6:
+                    logger.info(f"   ⚠️  Shortfall still remaining after TFSA: ${shortfall_remaining:,.0f}")
+                    logger.info(f"   ℹ️  Complex taxable rebalancing not yet implemented")
 
                 # Recalculate total available cash after rebalancing
                 total_account_withdrawals = (
@@ -2607,7 +2604,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     total_account_withdrawals + nr_distributions_total - total_tax_after_split
                 )
                 underfunded_amount = max(0.0, original_target_total - total_available_after_tax)
-                logger.debug(f"   📊 After rebalancing: shortfall=${underfunded_amount:,.0f}")
+                if underfunded_amount > 1e-6:
+                    logger.info(f"   📊 After rebalancing: shortfall still ${underfunded_amount:,.0f}")
 
         rows.append(YearResult(
             year=year, age_p1=age1, age_p2=age2, years_since_start=years_since_start,
