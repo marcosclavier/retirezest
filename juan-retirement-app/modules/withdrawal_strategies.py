@@ -521,6 +521,10 @@ def get_strategy(strategy_name: str) -> WithdrawalStrategy:
         return TFSAFirstStrategy()
     elif "GIS" in normalized_name.upper() or "GIS-Optimized" in normalized_name:
         return GISOptimizedStrategy()
+    elif "minimize-income" in normalized_name.lower() or "minimize_income" in normalized_name.lower():
+        # minimize-income strategy should use GIS-optimized withdrawal order
+        # to minimize taxable income and preserve government benefits
+        return GISOptimizedStrategy()
     elif "RRIF-Frontload" in normalized_name or "rrif-frontload" in normalized_name.lower():
         # RRIF Frontload: Tax-efficient withdrawal order to avoid OAS clawback
         # Front-loads RRIF withdrawals (15% before OAS, 8% after), then uses NonReg → RRIF → TFSA → Corp
