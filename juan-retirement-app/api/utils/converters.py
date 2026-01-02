@@ -39,7 +39,7 @@ def map_api_strategy_to_internal(api_strategy: str) -> str:
     """
     strategy_mapping = {
         "corporate-optimized": "Corp->RRIF->NonReg->TFSA",
-        "minimize-income": "RRIF->Corp->NonReg->TFSA",
+        "minimize-income": "GIS-Optimized (NonReg->Corp->TFSA->RRIF)",  # FIX: Use GIS-optimized order to minimize taxable income
         "rrif-splitting": "RRIF->Corp->NonReg->TFSA",
         "capital-gains-optimized": "NonReg->RRIF->Corp->TFSA",
         "tfsa-first": "TFSA->Corp->RRIF->NonReg",
