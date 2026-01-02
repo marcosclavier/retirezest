@@ -12,6 +12,8 @@ This API provides endpoints for:
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from contextlib import asynccontextmanager
 import logging
 import sys
@@ -77,6 +79,50 @@ app.add_middleware(
     allow_headers=["*"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
+
+# Validation error handler
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Custom handler for Pydantic validation errors with user-friendly messages."""
+    errors = exc.errors()
+    user_friendly_errors = []
+
+    for error in errors:
+        field_path = " → ".join(str(loc) for loc in error["loc"])
+        error_type = error["type"]
+
+        # Create user-friendly messages for common validation errors
+        if error_type == "less_than_equal":
+            max_val = error["ctx"].get("le", "")
+            input_val = error.get("input", "")
+            message = f"{field_path}: Must be {max_val} or less (you entered {input_val})"
+        elif error_type == "greater_than_equal":
+            min_val = error["ctx"].get("ge", "")
+            input_val = error.get("input", "")
+            message = f"{field_path}: Must be {min_val} or greater (you entered {input_val})"
+        elif error_type == "missing":
+            message = f"{field_path}: This field is required"
+        else:
+            message = f"{field_path}: {error.get('msg', 'Invalid value')}"
+
+        user_friendly_errors.append({
+            "field": field_path,
+            "message": message,
+            "type": error_type,
+            "input": error.get("input")
+        })
+
+    logger.warning(f"Validation error: {user_friendly_errors}")
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error": "Validation failed",
+            "message": "Please check your input values and try again.",
+            "errors": user_friendly_errors
+        }
+    )
 
 # Global exception handler
 @app.exception_handler(Exception)
