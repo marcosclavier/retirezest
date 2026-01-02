@@ -375,6 +375,13 @@ export interface ChartData {
   data_points: ChartDataPoint[];
 }
 
+export interface ValidationError {
+  field: string;
+  message: string;
+  type: string;
+  input?: any;
+}
+
 export interface SimulationResponse {
   success: boolean;
   message: string;
@@ -395,6 +402,7 @@ export interface SimulationResponse {
   warnings: string[];
   error?: string;
   error_details?: string;
+  errors?: ValidationError[];  // Validation errors from backend
 }
 
 // Default values for new person

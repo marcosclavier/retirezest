@@ -9,6 +9,7 @@ import type {
   SimulationResponse,
   CompositionAnalysis,
 } from '@/lib/types/simulation';
+import { validateHouseholdInput, getValidationErrorMessage } from '@/lib/validation/simulation-validation';
 
 /**
  * Convert new frontend structure to backend-compatible structure
@@ -42,6 +43,25 @@ export async function runSimulation(
   csrfToken: string | null = null
 ): Promise<SimulationResponse> {
   try {
+    // Validate input before sending to API
+    const validationResult = validateHouseholdInput(householdInput);
+    if (!validationResult.isValid) {
+      const errorMessage = getValidationErrorMessage(validationResult);
+      console.warn('⚠️ Validation errors detected:', validationResult.errors);
+      return {
+        success: false,
+        message: errorMessage,
+        warnings: [],
+        error: 'Validation failed',
+        errors: validationResult.errors.map(e => ({
+          field: e.field,
+          message: e.message,
+          type: 'validation_error',
+          input: undefined
+        }))
+      };
+    }
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -83,9 +103,19 @@ export async function runSimulation(
     if (!response.ok) {
       console.error('❌ Simulation API error:', data);
       console.error('Response status:', response.status, response.statusText);
+
+      // Format validation errors from the new backend format
+      let errorMessage = data.message || 'Failed to run simulation';
+      if (data.errors && Array.isArray(data.errors)) {
+        const validationMessages = data.errors
+          .map((err: any) => err.message || err.field)
+          .join('; ');
+        errorMessage = `${errorMessage}\n\nValidation errors:\n${validationMessages}`;
+      }
+
       return {
         success: false,
-        message: data.message || 'Failed to run simulation',
+        message: errorMessage,
         warnings: data.warnings || [],
         error: data.error || `HTTP ${response.status}`,
         error_details: data.error_details || response.statusText,

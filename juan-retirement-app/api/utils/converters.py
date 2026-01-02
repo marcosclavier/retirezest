@@ -158,6 +158,15 @@ def api_household_to_internal(
         Household dataclass for simulation engine
     """
 
+    # FIX: GIS-Optimized strategy REQUIRES nonreg distributions to be available for spending
+    # Override reinvest_nonreg_dist to False when using minimize-income strategy
+    # This ensures the ~$40-50k/year in nonreg distributions can be used to cover spending
+    # without creating gaps in the plan
+    reinvest_setting = api_household.reinvest_nonreg_dist
+    if api_household.strategy == "minimize-income":
+        reinvest_setting = False
+        logger.info(f"🔧 GIS-Optimized strategy: Forcing reinvest_nonreg_dist=False to make distributions available for spending")
+
     household = Household(
         p1=api_person_to_internal(api_household.p1),
         p2=api_person_to_internal(api_household.p2),
@@ -179,7 +188,7 @@ def api_household_to_internal(
 
         gap_tolerance=api_household.gap_tolerance,
         tfsa_contribution_each=api_household.tfsa_contribution_each,
-        reinvest_nonreg_dist=api_household.reinvest_nonreg_dist,
+        reinvest_nonreg_dist=reinvest_setting,  # FIX: Use overridden setting for GIS strategy
         income_split_rrif_fraction=api_household.income_split_rrif_fraction,
         hybrid_rrif_topup_per_person=api_household.hybrid_rrif_topup_per_person,
         stop_on_fail=api_household.stop_on_fail,

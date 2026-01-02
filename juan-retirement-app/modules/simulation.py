@@ -839,7 +839,32 @@ def calculate_gis_optimization_withdrawal(
 
     # Step 6: Calculate final GIS benefit after all withdrawals
     total_withdrawal = sum(withdrawals.values())
-    final_net_income = net_income_before_withdrawal + total_withdrawal
+
+    # CRITICAL FIX: Calculate taxable income additions properly
+    # TFSA withdrawals do NOT count toward GIS income calculation
+    # Only count the taxable portion of each withdrawal type
+    taxable_income_from_withdrawals = 0.0
+
+    # TFSA: $0 taxable income (tax-free withdrawal)
+    # Already correctly set to 0.0
+
+    # NonReg: Only capital gains portion counts (50% inclusion rate)
+    if withdrawals["nonreg"] > 0:
+        acb_ratio = person.nonreg_acb / max(person.nonreg_balance, 1.0)
+        gain_ratio = max(0.0, 1.0 - acb_ratio)
+        nonreg_taxable = withdrawals["nonreg"] * gain_ratio * 0.50
+        taxable_income_from_withdrawals += nonreg_taxable
+
+    # RRIF: 100% taxable income
+    # CRITICAL: net_income_before_withdrawal already includes RRIF minimum (passed at line 1276)
+    # So we only add the ADDITIONAL RRIF withdrawal beyond the minimum that was already enforced
+    rrif_additional = max(0.0, withdrawals["rrif"] - rrif_min)
+    taxable_income_from_withdrawals += rrif_additional
+
+    # Corp: 100% taxable (dividend income)
+    taxable_income_from_withdrawals += withdrawals["corp"]
+
+    final_net_income = net_income_before_withdrawal + taxable_income_from_withdrawals
     final_gis = calculate_gis(
         final_net_income, age, gis_config, oas_amount, is_couple, other_person_gis_income
     )
@@ -1285,9 +1310,9 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # The optimizer will return a withdrawal order that minimizes lifetime taxes
     # (retirement + death), taking into account GIS/OAS clawback, TFSA strategic placement, etc.
     #
-    # IMPORTANT: For RRIF-Frontload strategy, SKIP the optimizer and use the explicit
-    # strategy-defined order (corp → nonreg → tfsa). The RRIF frontload strategy has
-    # a specific tax smoothing goal that requires corporate dividends before NonReg.
+    # IMPORTANT: For RRIF-Frontload and TFSA-First strategies, SKIP the optimizer
+    # and use the explicit strategy-defined order. These strategies have specific
+    # user-requested withdrawal orders that should not be overridden.
     #
     # ENHANCED: When OAS clawback is detected, switch to clawback-aware order
     # (tfsa → nonreg → corp) to avoid triggering additional taxable income.
@@ -1313,6 +1338,17 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             if shortfall > 1e-6:
                 logger.debug(f"  RRIF-Frontload (Standard): using order {order}")
                 logger.debug(f"    Corporate preferred to deplete, TFSA preserved for legacy")
+    elif "TFSA" in strategy_name and strategy_name.startswith("TFSA"):
+        # TFSA-First strategy: User explicitly requested TFSA withdrawals first
+        # Don't let TaxOptimizer override this - respect user's strategy choice
+        # Order: TFSA → Corp → RRIF → NonReg
+        if corporate_balance_start > 1e-9:
+            order = ["tfsa", "corp", "rrif", "nonreg"]
+        else:
+            order = ["tfsa", "rrif", "nonreg"]
+        if shortfall > 1e-6:
+            logger.info(f"  TFSA-First: using user-requested order {order}")
+            logger.info(f"    Respecting explicit TFSA-first strategy (no optimizer override)")
     else:
         # For all other strategies, use TaxOptimizer
         try:
@@ -1699,7 +1735,18 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                            total_withdrawals + total_available_distributions - base_tax)  # Account withdrawals + distributions (if not reinvested) minus taxes
 
     # Calculate surplus: how much exceeds the spending target
-    surplus = max(total_after_tax_cash - after_tax_target, 0.0)
+    # CRITICAL FIX: When NonReg distributions are NOT reinvested (reinvest_nonreg_dist=False),
+    # they should be used for spending only and NOT create surplus for TFSA reinvestment.
+    # Only withdrawals beyond spending needs should create surplus for reinvestment.
+    if hh.reinvest_nonreg_dist:
+        # When reinvesting distributions: all surplus can be reinvested
+        surplus = max(total_after_tax_cash - after_tax_target, 0.0)
+    else:
+        # When distributions are for spending: exclude them from surplus calculation
+        # Only withdrawals in excess of spending needs should be reinvested
+        total_after_tax_cash_excluding_dist = (cpp + oas + gis_benefit + employer_pension + rental_income + other_income +
+                                                total_withdrawals - base_tax)
+        surplus = max(total_after_tax_cash_excluding_dist - after_tax_target, 0.0)
 
     # NOTE: Surplus reinvestment happens AFTER all withdrawals and growth are applied
     # (see lines ~1863-1985 below) to avoid double-applying growth to reinvested amounts.
@@ -1873,7 +1920,18 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     # Negative: deficit that needs to be made up
     cash_buffer = 0.0
 
-    year = hh.start_year; age1 = hh.p1.start_age; age2 = hh.p2.start_age
+    # FIX: Calculate birth years so ages are consistent across different start years
+    # If Rafael is 72 in 2026, his birth year is 1954, so he's 82 in 2036 regardless of start_year
+    # Assume start_age represents current age in year 2026 (current year)
+    CURRENT_YEAR = 2026
+    birth_year_p1 = CURRENT_YEAR - hh.p1.start_age
+    birth_year_p2 = CURRENT_YEAR - hh.p2.start_age
+
+    # Calculate actual ages in the simulation start year
+    year = hh.start_year
+    age1 = year - birth_year_p1
+    age2 = year - birth_year_p2
+
     p1 = hh.p1; p2 = hh.p2
     rows = []
     tfsa_room1 = p1.tfsa_room_start
@@ -1968,11 +2026,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # ===== ADD TFSA CONTRIBUTIONS TO WITHDRAWAL TARGETS =====
         # CRITICAL: TFSA contributions must be IN ADDITION to spending targets
         # We need to withdraw: spending target + TFSA contribution amount
-        # Estimate contributions based on current TFSA room and NonReg balance
+        # Estimate contributions based on configured amount, TFSA room, and NonReg balance
         if hh.tfsa_contribution_each > 0:
-            # Maximize TFSA contributions up to available room
-            estimated_tfsa_contrib_p1 = min(max(p1.nonreg_balance, 0.0), tfsa_room1)
-            estimated_tfsa_contrib_p2 = min(max(p2.nonreg_balance, 0.0), tfsa_room2)
+            # Contribute the configured amount, up to available room and NonReg balance
+            estimated_tfsa_contrib_p1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance, 0.0), tfsa_room1)
+            estimated_tfsa_contrib_p2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance, 0.0), tfsa_room2)
         else:
             estimated_tfsa_contrib_p1 = 0.0
             estimated_tfsa_contrib_p2 = 0.0
@@ -2317,13 +2375,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # We need to recalculate as: (start - withdrawal) * (1 + growth) + contributions + surplus
 
         # First, calculate contributions needed
-        # MAXIMIZE TFSA: Use ALL available contribution room (not just the configured amount)
-        # TFSA is the best account (tax-free), so we should fill it completely
-        # Only limited by: (1) available NonReg balance and (2) available TFSA room
+        # Contribute the configured amount (hh.tfsa_contribution_each) per person
+        # Limited by: (1) configured contribution amount, (2) available NonReg balance, (3) available TFSA room
         if hh.tfsa_contribution_each > 0:
-            # If contributions enabled, maximize room usage (up to available room and NonReg balance)
-            c1 = min(max(p1.nonreg_balance, 0.0), tfsa_room1)
-            c2 = min(max(p2.nonreg_balance, 0.0), tfsa_room2)
+            # Contribute the configured amount, up to available room and NonReg balance
+            c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance, 0.0), tfsa_room1)
+            c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance, 0.0), tfsa_room2)
         else:
             # If contributions disabled (set to $0), don't contribute
             c1 = 0.0
@@ -2494,9 +2551,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     # Add the extra withdrawals to person 1's totals
                     for k in w1.keys():
                         w1[k] += w1_extra[k]
-                    # Recalculate person 1's tax with new total withdrawals
-                    # (Note: This is simplified - full implementation would need proper tax recalc)
-                    t1["tax"] += t1_extra["tax"]
+                    # CRITICAL FIX: Replace (not add) person 1's tax with the recalculated total
+                    # The second simulate_year() call already calculated tax on ALL income/withdrawals,
+                    # so we need to REPLACE the old tax, not ADD to it (which would double-count)
+                    t1["tax"] = t1_extra["tax"]
+                    t1["fed_tax"] = t1_extra.get("fed_tax", 0.0)
+                    t1["prov_tax"] = t1_extra.get("prov_tax", 0.0)
                     logger.debug(f"   ✓ P1 extra withdrawals: TFSA=${w1_extra['tfsa']:,.0f}, RRIF=${w1_extra['rrif']:,.0f}, NonReg=${w1_extra['nonreg']:,.0f}, Corp=${w1_extra['corp']:,.0f}")
 
                 elif p2_total_balance > 1000:
@@ -2510,8 +2570,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     # Add the extra withdrawals to person 2's totals
                     for k in w2.keys():
                         w2[k] += w2_extra[k]
-                    # Recalculate person 2's tax with new total withdrawals
-                    t2["tax"] += t2_extra["tax"]
+                    # CRITICAL FIX: Replace (not add) person 2's tax with the recalculated total
+                    # The second simulate_year() call already calculated tax on ALL income/withdrawals,
+                    # so we need to REPLACE the old tax, not ADD to it (which would double-count)
+                    t2["tax"] = t2_extra["tax"]
+                    t2["fed_tax"] = t2_extra.get("fed_tax", 0.0)
+                    t2["prov_tax"] = t2_extra.get("prov_tax", 0.0)
                     logger.debug(f"   ✓ P2 extra withdrawals: TFSA=${w2_extra['tfsa']:,.0f}, RRIF=${w2_extra['rrif']:,.0f}, NonReg=${w2_extra['nonreg']:,.0f}, Corp=${w2_extra['corp']:,.0f}")
 
                 # Recalculate total available cash after rebalancing
@@ -2520,6 +2584,14 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     w2["nonreg"] + w2["rrif"] + w2["tfsa"] + w2["corp"]
                 )
                 total_tax_after_split = t1["tax"] + t2["tax"]
+
+                # CRITICAL FIX: Recalculate per-person tax values after rebalancing
+                # The tax values were updated at lines 2520/2535, but the split values were not
+                tax1_after = t1["tax"]
+                tax2_after = t2["tax"]
+                tax_fed_total = t1.get("fed_tax", 0.0) + t2.get("fed_tax", 0.0)
+                tax_prov_total = t1.get("prov_tax", 0.0) + t2.get("prov_tax", 0.0)
+
                 total_available_after_tax = (
                     cpp_total + oas_total + gis_total +
                     total_account_withdrawals + nr_distributions_total - total_tax_after_split
@@ -2629,8 +2701,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Stop if underfunded and stop_on_fail is set
         if hh.stop_on_fail and is_fail:
             break
-         
-        year += 1; age1 += 1; age2 += 1
+
+        # FIX: Recalculate ages from birth year instead of incrementing
+        # This ensures ages are consistent regardless of start_year
+        year += 1
+        age1 = year - birth_year_p1
+        age2 = year - birth_year_p2
         if age1 > hh.end_age and age2 > hh.end_age:
             break
 

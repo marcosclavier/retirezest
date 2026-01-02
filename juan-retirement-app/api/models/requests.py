@@ -19,9 +19,9 @@ class PersonInput(BaseModel):
     start_age: int = Field(default=65, ge=50, le=90, description="Starting age for simulation")
 
     # Government benefits
-    cpp_start_age: int = Field(default=65, ge=60, le=70, description="Age to start CPP")
+    cpp_start_age: int = Field(default=65, ge=60, le=70, description="Age to start CPP (must be between 60 and 70)")
     cpp_annual_at_start: float = Field(default=0, ge=0, le=20000, description="Annual CPP at start age")
-    oas_start_age: int = Field(default=65, ge=65, le=70, description="Age to start OAS")
+    oas_start_age: int = Field(default=65, ge=65, le=70, description="Age to start OAS (must be between 65 and 70)")
     oas_annual_at_start: float = Field(default=0, ge=0, le=15000, description="Annual OAS at start age")
 
     # Employer pension
