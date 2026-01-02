@@ -2543,7 +2543,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 if p1_total_balance >= p2_total_balance and p1_total_balance > 1000:
                     # Attempt additional withdrawal from Person 1
                     logger.debug(f"   → Attempting additional withdrawal from P1 (age {age1})")
-                    additional_target = underfunded_amount * 1.3  # Add 30% buffer for taxes
+                    # CRITICAL FIX: The after_tax_target must account for government benefits that were
+                    # already received in the first simulate_year() call. If we just pass underfunded_amount,
+                    # simulate_year() will add CPP/OAS again, making the shortfall disappear.
+                    # So we need to pass a target LARGE ENOUGH to force account withdrawals.
+                    p1_income_already_received = cpp_p1 + oas_p1 + gis_p1 + employer_pension_p1 + rental_p1 + other_p1
+                    additional_target = p1_income_already_received + (underfunded_amount * 1.3)
                     w1_extra, t1_extra, info1_extra = simulate_year(
                         p1, age1, additional_target, fed_y, prov_y, rrsp_to_rrif1, {},
                         hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1
@@ -2562,7 +2567,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 elif p2_total_balance > 1000:
                     # Attempt additional withdrawal from Person 2
                     logger.debug(f"   → Attempting additional withdrawal from P2 (age {age2})")
-                    additional_target = underfunded_amount * 1.3  # Add 30% buffer for taxes
+                    # CRITICAL FIX: The after_tax_target must account for government benefits that were
+                    # already received in the first simulate_year() call. If we just pass underfunded_amount,
+                    # simulate_year() will add CPP/OAS again, making the shortfall disappear.
+                    # So we need to pass a target LARGE ENOUGH to force account withdrawals.
+                    p2_income_already_received = cpp_p2 + oas_p2 + gis_p2 + employer_pension_p2 + rental_p2 + other_p2
+                    additional_target = p2_income_already_received + (underfunded_amount * 1.3)
                     w2_extra, t2_extra, info2_extra = simulate_year(
                         p2, age2, additional_target, fed_y, prov_y, rrsp_to_rrif2, {},
                         hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2
