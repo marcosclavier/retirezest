@@ -51,7 +51,7 @@ Time: ${new Date().toISOString()}
     });
 
     // Create a mailto link that could be used
-    const mailtoLink = `mailto:jrcb@hotmail.com?subject=${encodeURIComponent(
+    const mailtoLink = `mailto:contact@retirezest.com?subject=${encodeURIComponent(
       `RetireZest Contact: ${subject}`
     )}&body=${encodeURIComponent(emailBody)}`;
 

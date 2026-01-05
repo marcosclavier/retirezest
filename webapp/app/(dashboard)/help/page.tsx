@@ -529,10 +529,10 @@ export default function HelpPage() {
         <p className="text-gray-700 text-base">
           Need more help?{' '}
           <a
-            href="mailto:jrcb@hotmail.com"
+            href="mailto:contact@retirezest.com"
             className="text-blue-600 hover:text-blue-700 font-semibold underline"
           >
-            Contact us at jrcb@hotmail.com
+            Contact us at contact@retirezest.com
           </a>
         </p>
       </div>

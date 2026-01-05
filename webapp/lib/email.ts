@@ -185,7 +185,7 @@ export async function sendAdminNewUserNotification({
     }
 
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const adminEmail = 'jrcb@hotmail.com';
+    const adminEmail = 'contact@retirezest.com';
 
     const response = await resend.emails.send({
       from: FROM_EMAIL,

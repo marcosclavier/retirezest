@@ -84,8 +84,8 @@ export default function ContactPage() {
                 <Alert variant="destructive" className="mb-6">
                   <AlertDescription>
                     There was an error sending your message. Please try again or email us directly at{' '}
-                    <a href="mailto:jrcb@hotmail.com" className="underline font-medium">
-                      jrcb@hotmail.com
+                    <a href="mailto:contact@retirezest.com" className="underline font-medium">
+                      contact@retirezest.com
                     </a>
                   </AlertDescription>
                 </Alert>
@@ -211,11 +211,11 @@ export default function ContactPage() {
                 Prefer to email directly?
               </p>
               <a
-                href="mailto:jrcb@hotmail.com"
+                href="mailto:contact@retirezest.com"
                 className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
               >
                 <Mail className="h-4 w-4" />
-                jrcb@hotmail.com
+                contact@retirezest.com
               </a>
             </CardContent>
           </Card>

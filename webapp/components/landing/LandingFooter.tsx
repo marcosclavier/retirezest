@@ -109,7 +109,7 @@ export default function LandingFooter() {
               </li>
               <li>
                 <a
-                  href="mailto:jrcb@hotmail.com"
+                  href="mailto:contact@retirezest.com"
                   className="hover:text-white transition-colors"
                 >
                   Email Us

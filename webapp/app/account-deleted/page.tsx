@@ -60,10 +60,10 @@ export default function AccountDeletedPage() {
             If you have any feedback about why you're leaving or how we could improve, please email us at:
           </p>
           <a
-            href="mailto:jrcb@hotmail.com"
+            href="mailto:contact@retirezest.com"
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
-            jrcb@hotmail.com
+            contact@retirezest.com
           </a>
         </div>
 

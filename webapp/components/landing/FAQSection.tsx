@@ -124,7 +124,7 @@ export default function FAQSection() {
             </a>
             <span className="text-gray-400">or</span>
             <a
-              href="mailto:jrcb@hotmail.com"
+              href="mailto:contact@retirezest.com"
               className="text-blue-600 hover:text-blue-700 font-semibold"
             >
               Email us directly
