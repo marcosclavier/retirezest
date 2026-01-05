@@ -163,9 +163,9 @@ export function FloatingCTA({ household, includePartner, onRunSimulation, isLoad
           <div className="flex gap-2">
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={scrollToTop}
-              className="h-12 w-12 rounded-full shadow-lg border-2 border-gray-300 bg-white"
+              className="h-12 w-12 rounded-full shadow-lg border-2 border-gray-300 bg-white p-0"
             >
               <ChevronUp className="h-5 w-5" />
             </Button>
