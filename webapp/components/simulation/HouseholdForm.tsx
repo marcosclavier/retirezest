@@ -79,9 +79,9 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
           <CardDescription>Configure province, time horizon, and withdrawal strategy</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between min-h-[20px]">
                 <Label htmlFor="province">Province</Label>
                 {isPrefilled && (
                   <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
@@ -102,21 +102,24 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-gray-600 mt-1 min-h-[32px]">
                 Tax calculations currently supported for AB, BC, ON, and QC only
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="start-year">Start Year</Label>
+              <div className="min-h-[20px]">
+                <Label htmlFor="start-year">Start Year</Label>
+              </div>
               <Input
                 id="start-year"
                 type="number"
                 value={household.start_year}
                 onChange={(e) => onChange('start_year', parseInt(e.target.value) || 2025)}
               />
+              <div className="min-h-[32px]"></div>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between min-h-[20px]">
                 <Label htmlFor="end-age">End Age (Planning Horizon)</Label>
                 {isPrefilled && (
                   <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
@@ -128,11 +131,20 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                 min="65"
                 max="120"
                 value={household.end_age}
-                onChange={(e) => onChange('end_age', parseInt(e.target.value) || 95)}
-                readOnly={false}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '') {
+                    onChange('end_age', 95);
+                  } else {
+                    const numValue = parseInt(value);
+                    if (!isNaN(numValue)) {
+                      onChange('end_age', Math.min(Math.max(numValue, 65), 120));
+                    }
+                  }
+                }}
                 className={isPrefilled ? "bg-blue-50 border-blue-200" : ""}
               />
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-gray-600 mt-1 min-h-[32px]">
                 How long should we plan for? Set in the wizard's "Planning Horizon (Life Expectancy)" step.
               </p>
             </div>

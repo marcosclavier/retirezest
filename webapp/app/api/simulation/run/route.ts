@@ -27,6 +27,31 @@ export async function POST(request: NextRequest) {
       throw new AuthenticationError('You must be logged in to run simulations');
     }
 
+    // Email verification check
+    const { prisma } = await import('@/lib/prisma');
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { emailVerified: true },
+    });
+
+    if (!user?.emailVerified) {
+      logger.info('Simulation blocked - email not verified', {
+        user: session.email,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Please verify your email to run simulations',
+          error: 'Email verification required',
+          error_details: 'You must verify your email address before running retirement simulations. Check your inbox for the verification link or request a new one from your dashboard.',
+          requiresVerification: true,
+          warnings: [],
+        },
+        { status: 403 }
+      );
+    }
+
     // Parse request body
     const body = await request.json();
 

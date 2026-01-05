@@ -27,8 +27,9 @@ export async function sendVerificationEmail({
     const response = await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: 'Welcome to RetireZest! Verify your email',
+      subject: 'Unlock your retirement plan - verify your email',
       html: getVerificationEmailTemplate({ verificationUrl, userName }),
+      text: getVerificationEmailPlainText({ verificationUrl, userName }),
     });
 
     if (response.error) {
@@ -80,11 +81,20 @@ function getVerificationEmailTemplate({
           <tr>
             <td style="padding: 40px;">
               <h2 style="margin: 0 0 20px; color: #111827; font-size: 24px; font-weight: 600;">
-                Welcome to RetireZest!
+                You're Almost Ready!
               </h2>
               ${userName ? `<p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">Hi ${userName},</p>` : ''}
               <p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">
-                Thank you for signing up! We're excited to help you plan your retirement journey. To get started, please verify your email address by clicking the button below:
+                Welcome to RetireZest! Verify your email to unlock your personalized retirement planning tools:
+              </p>
+              <ul style="margin: 0 0 20px 20px; color: #374151; font-size: 16px; line-height: 1.8;">
+                <li><strong>Run unlimited retirement simulations</strong></li>
+                <li><strong>Save multiple scenarios</strong></li>
+                <li><strong>Get personalized insights</strong></li>
+                <li><strong>Secure your account</strong></li>
+              </ul>
+              <p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">
+                Click the button below to verify your email in 30 seconds:
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                 <tr>
@@ -96,7 +106,7 @@ function getVerificationEmailTemplate({
                 </tr>
               </table>
               <p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">
-                This link will expire in <strong>7 days</strong> for security reasons.
+                This link will expire in <strong>48 hours</strong> for security reasons.
               </p>
               <p style="margin: 0 0 20px; color: #374151; font-size: 16px; line-height: 1.6;">
                 If the button doesn't work, you can copy and paste this link into your browser:
@@ -135,5 +145,42 @@ function getVerificationEmailTemplate({
   </table>
 </body>
 </html>
+  `.trim();
+}
+
+/**
+ * Plain text version for email verification (improves deliverability)
+ */
+function getVerificationEmailPlainText({
+  verificationUrl,
+  userName,
+}: {
+  verificationUrl: string;
+  userName?: string;
+}): string {
+  return `
+You're Almost Ready!
+
+${userName ? `Hi ${userName},\n\n` : ''}Welcome to RetireZest! Verify your email to unlock your personalized retirement planning tools:
+
+• Run unlimited retirement simulations
+• Save multiple scenarios
+• Get personalized insights
+• Secure your account
+
+Click the link below to verify your email in 30 seconds:
+
+${verificationUrl}
+
+This link will expire in 48 hours for security reasons.
+
+If you didn't create an account with RetireZest, you can safely ignore this email.
+
+---
+
+This email was sent by RetireZest
+If you have any questions, please contact our support team.
+
+© ${new Date().getFullYear()} RetireZest. All rights reserved.
   `.trim();
 }

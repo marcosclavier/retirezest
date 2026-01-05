@@ -43,7 +43,7 @@ export function VerificationBanner({ userEmail }: VerificationBannerProps) {
           </svg>
           <div className="flex-1">
             <p className="text-sm text-yellow-800">
-              <strong>Please verify your email address ({userEmail})</strong> to ensure full access to all features.
+              <strong>Verify your email to unlock retirement simulations.</strong> We sent a verification link to <strong>{userEmail}</strong>. Can&apos;t find it?
             </p>
             {message && <p className="text-sm text-yellow-700 mt-1">{message}</p>}
           </div>
@@ -52,7 +52,7 @@ export function VerificationBanner({ userEmail }: VerificationBannerProps) {
           <button
             onClick={handleResend}
             disabled={resending}
-            className="text-sm font-semibold text-yellow-800 hover:text-yellow-900 disabled:opacity-50"
+            className="text-sm font-semibold text-yellow-800 hover:text-yellow-900 disabled:opacity-50 whitespace-nowrap"
           >
             {resending ? 'Sending...' : 'Resend Email'}
           </button>

@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const verificationExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
 
     // Create user
     const user = await prisma.user.create({
