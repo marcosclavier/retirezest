@@ -138,6 +138,17 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                   } else {
                     const numValue = parseInt(value);
                     if (!isNaN(numValue)) {
+                      onChange('end_age', numValue);
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  if (value === '') {
+                    onChange('end_age', 95);
+                  } else {
+                    const numValue = parseInt(value);
+                    if (!isNaN(numValue)) {
                       onChange('end_age', Math.min(Math.max(numValue, 65), 120));
                     }
                   }
