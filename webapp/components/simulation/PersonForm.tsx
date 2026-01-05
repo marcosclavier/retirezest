@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Collapsible } from '@/components/ui/collapsible';
 import { HelpTooltip } from '@/components/ui/HelpTooltip';
+import { simulationTooltips } from '@/lib/help-text/simulation-tooltips';
 
 // Helper component for labels with optional tooltips
 function LabelWithTooltip({ htmlFor, children, tooltip }: { htmlFor: string; children: React.ReactNode; tooltip?: string }) {
@@ -34,6 +35,40 @@ interface PersonFormProps {
 }
 
 export function PersonForm({ person, personLabel, personNumber, onChange, isPrefilled = false }: PersonFormProps) {
+  // Helper functions to determine section completion
+  const isAccountBalancesComplete = (): boolean => {
+    return (person.tfsa_balance ?? 0) > 0 ||
+           (person.rrsp_balance ?? 0) > 0 ||
+           (person.rrif_balance ?? 0) > 0 ||
+           (person.nonreg_balance ?? 0) > 0 ||
+           (person.corporate_balance ?? 0) > 0;
+  };
+
+  const isGovernmentBenefitsComplete = (): boolean => {
+    return person.cpp_start_age >= 60 && person.cpp_annual_at_start > 0 &&
+           person.oas_start_age >= 65 && person.oas_annual_at_start > 0;
+  };
+
+  const isOtherIncomeComplete = (): boolean => {
+    return (person.employer_pension_annual ?? 0) > 0 ||
+           (person.rental_income_annual ?? 0) > 0 ||
+           (person.other_income_annual ?? 0) > 0;
+  };
+
+  const isNonregDetailsComplete = (): boolean => {
+    return (person.nonreg_balance ?? 0) > 0 && person.nonreg_acb > 0;
+  };
+
+  const isCorporateDetailsComplete = (): boolean => {
+    return (person.corp_cash_bucket ?? 0) > 0 ||
+           (person.corp_gic_bucket ?? 0) > 0 ||
+           (person.corp_invest_bucket ?? 0) > 0;
+  };
+
+  const isTfsaStrategyComplete = (): boolean => {
+    return (person.tfsa_balance ?? 0) > 0 && person.tfsa_contribution_annual >= 0;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -48,7 +83,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
         <div className="space-y-4 pb-4 border-b">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-name`}>Name</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-name`}
+                tooltip={simulationTooltips.person.name}
+              >
+                Name
+              </LabelWithTooltip>
               <Input
                 id={`${personNumber}-name`}
                 value={person.name}
@@ -57,7 +97,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-start-age`}>Current Age</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-start-age`}
+                tooltip={simulationTooltips.person.startAge}
+              >
+                Current Age
+              </LabelWithTooltip>
               <Input
                 id={`${personNumber}-start-age`}
                 type="number"
@@ -73,10 +118,16 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           title="Account Balances"
           description="Registered and non-registered account balances"
           defaultOpen={true}
+          isComplete={isAccountBalancesComplete()}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-tfsa`}>TFSA Balance ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-tfsa`}
+                tooltip={simulationTooltips.person.tfsaBalance}
+              >
+                TFSA Balance ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-tfsa`}
                 value={person.tfsa_balance ?? 0}
@@ -84,7 +135,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-rrif`}>RRIF Balance ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-rrif`}
+                tooltip={simulationTooltips.person.rrifBalance}
+              >
+                RRIF Balance ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-rrif`}
                 value={person.rrif_balance ?? 0}
@@ -92,7 +148,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-rrsp`}>RRSP Balance ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-rrsp`}
+                tooltip={simulationTooltips.person.rrspBalance}
+              >
+                RRSP Balance ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-rrsp`}
                 value={person.rrsp_balance ?? 0}
@@ -100,7 +161,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-nonreg`}>Non-Registered Balance ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-nonreg`}
+                tooltip={simulationTooltips.person.nonregBalance}
+              >
+                Non-Registered Balance ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-nonreg`}
                 value={person.nonreg_balance ?? 0}
@@ -108,7 +174,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-corporate`}>Corporate Balance ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-corporate`}
+                tooltip={simulationTooltips.person.corporateBalance}
+              >
+                Corporate Balance ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-corporate`}
                 value={person.corporate_balance ?? 0}
@@ -123,10 +194,16 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           title="Government Benefits"
           description="CPP and OAS start ages and annual amounts"
           defaultOpen={false}
+          isComplete={isGovernmentBenefitsComplete()}
         >
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-cpp-start`}>CPP Start Age</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-cpp-start`}
+                tooltip={simulationTooltips.person.cppStartAge}
+              >
+                CPP Start Age
+              </LabelWithTooltip>
               <Input
                 id={`${personNumber}-cpp-start`}
                 type="number"
@@ -135,7 +212,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-cpp-amount`}>CPP Annual Amount ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-cpp-amount`}
+                tooltip={simulationTooltips.person.cppAnnualAmount}
+              >
+                CPP Annual Amount ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-cpp-amount`}
                 value={person.cpp_annual_at_start}
@@ -143,7 +225,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-oas-start`}>OAS Start Age</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-oas-start`}
+                tooltip={simulationTooltips.person.oasStartAge}
+              >
+                OAS Start Age
+              </LabelWithTooltip>
               <Input
                 id={`${personNumber}-oas-start`}
                 type="number"
@@ -152,7 +239,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${personNumber}-oas-amount`}>OAS Annual Amount ($)</Label>
+              <LabelWithTooltip
+                htmlFor={`${personNumber}-oas-amount`}
+                tooltip={simulationTooltips.person.oasAnnualAmount}
+              >
+                OAS Annual Amount ($)
+              </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-oas-amount`}
                 value={person.oas_annual_at_start}
@@ -167,6 +259,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           title="Other Income Sources"
           description="Pension, rental income, and other regular income"
           defaultOpen={false}
+          isComplete={isOtherIncomeComplete()}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -216,6 +309,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           title="Non-Registered Account Details"
           description="Asset allocation and tax basis for non-registered accounts"
           defaultOpen={false}
+          isComplete={isNonregDetailsComplete()}
         >
           <div className="space-y-6">
             <div>
@@ -224,7 +318,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 <div className="space-y-2">
                   <LabelWithTooltip
                     htmlFor={`${personNumber}-nonreg-acb`}
-                    tooltip="The original cost of your investments for tax purposes. Used to calculate capital gains when you sell."
+                    tooltip={simulationTooltips.person.nonregACB}
                   >
                     Adjusted Cost Base ($)
                   </LabelWithTooltip>
@@ -265,7 +359,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <h4 className="text-xs font-semibold text-blue-600 mb-3">Investment Yields (%)</h4>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-nr-cash`}>Cash Interest (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-nr-cash`}
+                    tooltip={simulationTooltips.person.cashInterest}
+                  >
+                    Cash Interest (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-nr-cash`}
                     type="number"
@@ -275,7 +374,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-nr-gic`}>GIC Interest (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-nr-gic`}
+                    tooltip={simulationTooltips.person.gicInterest}
+                  >
+                    GIC Interest (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-nr-gic`}
                     type="number"
@@ -287,7 +391,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 <div className="space-y-2">
                   <LabelWithTooltip
                     htmlFor={`${personNumber}-y-nr-total`}
-                    tooltip="Expected annual return including dividends, capital gains, and interest. This is the sum of all income components."
+                    tooltip={simulationTooltips.person.invTotalReturn}
                   >
                     Total Return (%)
                   </LabelWithTooltip>
@@ -302,7 +406,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 <div className="space-y-2">
                   <LabelWithTooltip
                     htmlFor={`${personNumber}-y-nr-eligdiv`}
-                    tooltip="Portion of return from eligible dividends (from Canadian public corporations). Taxed at preferential rates."
+                    tooltip={simulationTooltips.person.invEligDiv}
                   >
                     Eligible Dividend (%)
                   </LabelWithTooltip>
@@ -317,7 +421,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 <div className="space-y-2">
                   <LabelWithTooltip
                     htmlFor={`${personNumber}-y-nr-noneligdiv`}
-                    tooltip="Portion of return from non-eligible dividends (typically from small Canadian corporations)."
+                    tooltip={simulationTooltips.person.invNonEligDiv}
                   >
                     Non-Eligible Dividend (%)
                   </LabelWithTooltip>
@@ -332,7 +436,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 <div className="space-y-2">
                   <LabelWithTooltip
                     htmlFor={`${personNumber}-y-nr-capg`}
-                    tooltip="Portion of return from capital appreciation. Only 50% of capital gains are taxable in Canada."
+                    tooltip={simulationTooltips.person.invCapGains}
                   >
                     Capital Gains (%)
                   </LabelWithTooltip>
@@ -347,7 +451,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 <div className="space-y-2">
                   <LabelWithTooltip
                     htmlFor={`${personNumber}-y-nr-roc`}
-                    tooltip="Return of Capital - tax-deferred distributions that reduce your adjusted cost base."
+                    tooltip={simulationTooltips.person.invROC}
                   >
                     Return of Capital (%)
                   </LabelWithTooltip>
@@ -405,6 +509,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           title="Corporate Account Details"
           description="Corporate investment buckets and tax settings"
           defaultOpen={false}
+          isComplete={isCorporateDetailsComplete()}
         >
           <div className="space-y-6">
             <div>
@@ -454,7 +559,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               <h4 className="text-xs font-semibold text-blue-600 mb-3">Investment Yields (%)</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-corp-cash`}>Cash Interest (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-corp-cash`}
+                    tooltip={simulationTooltips.person.corpCashInterest}
+                  >
+                    Cash Interest (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-corp-cash`}
                     type="number"
@@ -464,7 +574,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-corp-gic`}>GIC Interest (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-corp-gic`}
+                    tooltip={simulationTooltips.person.corpGICInterest}
+                  >
+                    GIC Interest (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-corp-gic`}
                     type="number"
@@ -474,7 +589,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-corp-total`}>Total Return (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-corp-total`}
+                    tooltip={simulationTooltips.person.corpInvTotalReturn}
+                  >
+                    Total Return (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-corp-total`}
                     type="number"
@@ -484,7 +604,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-corp-eligdiv`}>Eligible Dividend (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-corp-eligdiv`}
+                    tooltip={simulationTooltips.person.corpInvEligDiv}
+                  >
+                    Eligible Dividend (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-corp-eligdiv`}
                     type="number"
@@ -494,7 +619,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`${personNumber}-y-corp-capg`}>Capital Gains (%)</Label>
+                  <LabelWithTooltip
+                    htmlFor={`${personNumber}-y-corp-capg`}
+                    tooltip={simulationTooltips.person.corpInvCapGains}
+                  >
+                    Capital Gains (%)
+                  </LabelWithTooltip>
                   <Input
                     id={`${personNumber}-y-corp-capg`}
                     type="number"
@@ -564,6 +694,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           title="TFSA Strategy"
           description="TFSA contribution room and annual contribution plan"
           defaultOpen={false}
+          isComplete={isTfsaStrategyComplete()}
         >
           <div className="space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
@@ -580,7 +711,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             <div className="space-y-2">
               <LabelWithTooltip
                 htmlFor={`${personNumber}-tfsa-contribution`}
-                tooltip="Amount to contribute to TFSA each year during retirement. This transfers money from non-registered accounts to TFSA and must not exceed available contribution room."
+                tooltip={simulationTooltips.person.tfsaRoom}
               >
                 Annual TFSA Contribution ($)
               </LabelWithTooltip>

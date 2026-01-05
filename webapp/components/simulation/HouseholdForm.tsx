@@ -13,6 +13,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { HelpTooltip } from '@/components/ui/HelpTooltip';
+import { simulationTooltips } from '@/lib/help-text/simulation-tooltips';
+
+// Helper component for labels with optional tooltips
+function LabelWithTooltip({ htmlFor, children, tooltip }: { htmlFor: string; children: React.ReactNode; tooltip?: string }) {
+  return (
+    <div className="flex items-center gap-1">
+      <Label htmlFor={htmlFor}>{children}</Label>
+      {tooltip && <HelpTooltip content={tooltip} />}
+    </div>
+  );
+}
 
 interface HouseholdFormProps {
   household: HouseholdInput;
@@ -82,7 +94,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <div className="space-y-2">
               <div className="flex items-center justify-between min-h-[20px]">
-                <Label htmlFor="province">Province</Label>
+                <LabelWithTooltip
+                  htmlFor="province"
+                  tooltip={simulationTooltips.household.province}
+                >
+                  Province
+                </LabelWithTooltip>
                 {isPrefilled && (
                   <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
                 )}
@@ -120,7 +137,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between min-h-[20px]">
-                <Label htmlFor="end-age">End Age (Planning Horizon)</Label>
+                <LabelWithTooltip
+                  htmlFor="end-age"
+                  tooltip={simulationTooltips.household.endAge}
+                >
+                  End Age (Planning Horizon)
+                </LabelWithTooltip>
                 {isPrefilled && (
                   <span className="text-xs text-blue-600 font-medium">✓ From profile</span>
                 )}
@@ -162,7 +184,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="strategy">Withdrawal Strategy</Label>
+            <LabelWithTooltip
+              htmlFor="strategy"
+              tooltip={simulationTooltips.household.strategy.description}
+            >
+              {simulationTooltips.household.strategy.label}
+            </LabelWithTooltip>
             <Select
               value={household.strategy}
               onValueChange={(value: WithdrawalStrategy) => onChange('strategy', value)}
@@ -196,7 +223,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             <h3 className="text-sm font-semibold text-blue-600">Go-Go Years (Active retirement)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="spending-go-go">Annual Spending ($)</Label>
+                <LabelWithTooltip
+                  htmlFor="spending-go-go"
+                  tooltip={simulationTooltips.household.spendingGoGo}
+                >
+                  Annual Spending ($)
+                </LabelWithTooltip>
                 <CurrencyInput
                   id="spending-go-go"
                   value={household.spending_go_go}
@@ -204,7 +236,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="go-go-end-age">End Age</Label>
+                <LabelWithTooltip
+                  htmlFor="go-go-end-age"
+                  tooltip={simulationTooltips.household.goGoEndAge}
+                >
+                  End Age
+                </LabelWithTooltip>
                 <Input
                   id="go-go-end-age"
                   type="number"
@@ -219,7 +256,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             <h3 className="text-sm font-semibold text-blue-600">Slow-Go Years (Reduced activity)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="spending-slow-go">Annual Spending ($)</Label>
+                <LabelWithTooltip
+                  htmlFor="spending-slow-go"
+                  tooltip={simulationTooltips.household.spendingSlowGo}
+                >
+                  Annual Spending ($)
+                </LabelWithTooltip>
                 <CurrencyInput
                   id="spending-slow-go"
                   value={household.spending_slow_go}
@@ -227,7 +269,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="slow-go-end-age">End Age</Label>
+                <LabelWithTooltip
+                  htmlFor="slow-go-end-age"
+                  tooltip={simulationTooltips.household.slowGoEndAge}
+                >
+                  End Age
+                </LabelWithTooltip>
                 <Input
                   id="slow-go-end-age"
                   type="number"
@@ -242,7 +289,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             <h3 className="text-sm font-semibold text-blue-600">No-Go Years (Limited mobility)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="spending-no-go">Annual Spending ($)</Label>
+                <LabelWithTooltip
+                  htmlFor="spending-no-go"
+                  tooltip={simulationTooltips.household.spendingNoGo}
+                >
+                  Annual Spending ($)
+                </LabelWithTooltip>
                 <CurrencyInput
                   id="spending-no-go"
                   value={household.spending_no_go}
@@ -263,7 +315,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="spending-inflation">Spending Inflation (%)</Label>
+              <LabelWithTooltip
+                htmlFor="spending-inflation"
+                tooltip={simulationTooltips.household.spendingInflation}
+              >
+                Spending Inflation (%)
+              </LabelWithTooltip>
               <Input
                 id="spending-inflation"
                 type="number"
@@ -273,7 +330,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="general-inflation">General Inflation (%)</Label>
+              <LabelWithTooltip
+                htmlFor="general-inflation"
+                tooltip={simulationTooltips.household.generalInflation}
+              >
+                General Inflation (%)
+              </LabelWithTooltip>
               <Input
                 id="general-inflation"
                 type="number"
@@ -330,7 +392,12 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="reinvest-nonreg">Reinvest Non-Registered Distributions</Label>
+                <LabelWithTooltip
+                  htmlFor="reinvest-nonreg"
+                  tooltip={simulationTooltips.household.reinvestNonregDist}
+                >
+                  Reinvest Non-Registered Distributions
+                </LabelWithTooltip>
                 <p className="text-xs text-gray-600">
                   Automatically reinvest dividends and distributions
                 </p>

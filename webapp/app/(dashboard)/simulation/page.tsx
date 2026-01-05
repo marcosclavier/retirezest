@@ -22,6 +22,9 @@ import { Collapsible } from '@/components/ui/collapsible';
 import { ResultsDashboard } from '@/components/simulation/ResultsDashboard';
 import { HealthScoreCard } from '@/components/simulation/HealthScoreCard';
 import { YearByYearTable } from '@/components/simulation/YearByYearTable';
+import { SmartStartCard } from '@/components/simulation/SmartStartCard';
+import { PlanSnapshotCard } from '@/components/simulation/PlanSnapshotCard';
+import { FloatingCTA } from '@/components/simulation/FloatingCTA';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -72,6 +75,8 @@ export default function SimulationPage() {
   const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
+  const [showSmartStart, setShowSmartStart] = useState(true);
+  const [showDetailedInputs, setShowDetailedInputs] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -638,6 +643,24 @@ export default function SimulationPage() {
           </div>
         </div>
 
+        {/* Smart Start Card - Shown on first visit or when no results */}
+        {showSmartStart && !result && !prefillLoading && (
+          <SmartStartCard
+            onQuickStart={async () => {
+              setShowSmartStart(false);
+              await handleRunSimulation();
+            }}
+            onCustomize={() => {
+              setShowSmartStart(false);
+              setShowDetailedInputs(true);
+            }}
+            household={household}
+            includePartner={includePartner}
+            prefillAvailable={prefillAvailable}
+            isLoading={isLoading}
+          />
+        )}
+
         {/* Prefill Success Message */}
         {prefillAvailable && !prefillLoading && (
           <Alert className="border-blue-200 bg-blue-50">
@@ -924,8 +947,11 @@ export default function SimulationPage() {
 
         {/* Input Tab */}
         <TabsContent value="input" className="space-y-6">
-          {/* Person 1 Form */}
-          <PersonForm
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Form Area */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Person 1 Form */}
+              <PersonForm
             person={household.p1}
             personLabel={household.p1.name || 'You'}
             personNumber="p1"
@@ -969,13 +995,23 @@ export default function SimulationPage() {
             </>
           )}
 
-          {/* Household Settings */}
-          <HouseholdForm
-            household={household}
-            onChange={updateHousehold}
-            isPrefilled={prefillAvailable}
-            userProfileProvince={userProfileProvince}
-          />
+              {/* Household Settings */}
+              <HouseholdForm
+                household={household}
+                onChange={updateHousehold}
+                isPrefilled={prefillAvailable}
+                userProfileProvince={userProfileProvince}
+              />
+            </div>
+
+            {/* Sidebar - Plan Snapshot */}
+            <div className="lg:col-span-1">
+              <PlanSnapshotCard
+                household={household}
+                includePartner={includePartner}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         {/* Results Tab */}
@@ -1057,6 +1093,16 @@ export default function SimulationPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Floating CTA - only show on input tab */}
+      {activeTab === 'input' && (
+        <FloatingCTA
+          household={household}
+          includePartner={includePartner}
+          onRunSimulation={handleRunSimulation}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }
