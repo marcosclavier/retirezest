@@ -17,6 +17,7 @@ import {
 import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2, FileDown, Loader2 } from 'lucide-react';
 import { RetirementReport } from '@/components/reports/RetirementReport';
 import { generatePDF } from '@/lib/reports/generatePDF';
+import { KeyInsightsCard } from '@/components/simulation/KeyInsightsCard';
 
 interface ResultsDashboardProps {
   result: SimulationResponse;
@@ -230,6 +231,9 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
           </Card>
         </div>
       )}
+
+      {/* Key Insights & Recommendations */}
+      <KeyInsightsCard result={result} />
 
       {/* Portfolio Composition */}
       {result.composition_analysis && result.household_input && (() => {
@@ -619,25 +623,6 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* Underfunding Summary */}
-      {result.summary && result.summary.total_underfunded_years > 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Underfunding Detected</AlertTitle>
-          <AlertDescription>
-            <div className="space-y-1">
-              <p>
-                The plan is underfunded for {result.summary.total_underfunded_years} years with a total
-                shortfall of {formatCurrency(result.summary.total_underfunding)}.
-              </p>
-              <p className="text-xs">
-                Consider adjusting spending goals, retirement age, or asset allocation.
-              </p>
-            </div>
-          </AlertDescription>
-        </Alert>
       )}
 
       {/* Year-by-Year Results Table */}
