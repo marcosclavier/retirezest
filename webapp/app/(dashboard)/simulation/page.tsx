@@ -952,48 +952,48 @@ export default function SimulationPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Person 1 Form */}
               <PersonForm
-            person={household.p1}
-            personLabel={household.p1.name || 'You'}
-            personNumber="p1"
-            onChange={(field, value) => updatePerson('p1', field, value)}
-            isPrefilled={prefillAvailable}
-          />
+                person={household.p1}
+                personLabel={household.p1.name || 'You'}
+                personNumber="p1"
+                onChange={(field, value) => updatePerson('p1', field, value)}
+                isPrefilled={prefillAvailable}
+              />
 
-          {/* Add/Remove Partner Button */}
-          {!includePartner ? (
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={handleAddPartner}
-                className="gap-2"
-              >
-                <UserPlus className="h-4 w-4" />
-                Add Spouse/Partner
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Person 2 Form */}
-              <div className="relative">
-                <PersonForm
-                  person={household.p2}
-                  personLabel={household.p2.name || 'Partner'}
-                  personNumber="p2"
-                  onChange={(field, value) => updatePerson('p2', field, value)}
-                  isPrefilled={prefillAvailable}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemovePartner}
-                  className="absolute top-4 right-4 text-muted-foreground hover:text-destructive gap-1"
-                >
-                  <UserMinus className="h-4 w-4" />
-                  Remove
-                </Button>
-              </div>
-            </>
-          )}
+              {/* Add/Remove Partner Button */}
+              {!includePartner ? (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={handleAddPartner}
+                    className="gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add Spouse/Partner
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Person 2 Form */}
+                  <div className="relative">
+                    <PersonForm
+                      person={household.p2}
+                      personLabel={household.p2.name || 'Partner'}
+                      personNumber="p2"
+                      onChange={(field, value) => updatePerson('p2', field, value)}
+                      isPrefilled={prefillAvailable}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemovePartner}
+                      className="absolute top-4 right-4 text-muted-foreground hover:text-destructive gap-1"
+                    >
+                      <UserMinus className="h-4 w-4" />
+                      Remove
+                    </Button>
+                  </div>
+                </>
+              )}
 
               {/* Household Settings */}
               <HouseholdForm
