@@ -103,7 +103,7 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Total Assets</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">
-              ${totalAssets.toLocaleString()}
+              ${totalAssets.toLocaleString('en-CA')}
             </p>
             {includePartner && (
               <p className="text-xs text-gray-500 mt-0.5">Combined household</p>
@@ -120,7 +120,7 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
             <div className="flex-1 min-w-0">
               <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Est. Annual Income</p>
               <p className="text-xl font-bold text-gray-900 mt-0.5">
-                ${estimatedIncome.toLocaleString()}
+                ${estimatedIncome.toLocaleString('en-CA')}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">In retirement</p>
             </div>

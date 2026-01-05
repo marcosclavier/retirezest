@@ -167,7 +167,7 @@ export function SmartStartCard({
                 <div>
                   <p className="text-gray-600 text-xs uppercase tracking-wide">Total Assets</p>
                   <p className="font-semibold text-gray-900 mt-1">
-                    ${totalAssets.toLocaleString()}
+                    ${totalAssets.toLocaleString('en-CA')}
                   </p>
                 </div>
               )}
