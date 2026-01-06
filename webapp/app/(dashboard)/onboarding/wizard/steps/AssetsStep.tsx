@@ -14,23 +14,14 @@ export default function AssetsStep({
   updateFormData,
   onNext,
 }: AssetsStepProps) {
-  // Initialize state from formData.assets if available
-  const getAssetBalance = (type: string) => {
-    if (formData.assets && Array.isArray(formData.assets)) {
-      const asset = formData.assets.find((a: any) => a.type === type);
-      return asset ? String(asset.balance) : '';
-    }
-    return '';
-  };
-
   const [skipForNow, setSkipForNow] = useState(false);
-  const [rrspBalance, setRrspBalance] = useState(() => getAssetBalance('rrsp'));
-  const [tfsaBalance, setTfsaBalance] = useState(() => getAssetBalance('tfsa'));
-  const [nonRegBalance, setNonRegBalance] = useState(() => getAssetBalance('nonreg'));
-  const [savingsBalance, setSavingsBalance] = useState(() => getAssetBalance('savings'));
-  const [rrifBalance, setRrifBalance] = useState(() => getAssetBalance('rrif'));
-  const [liraBalance, setLiraBalance] = useState(() => getAssetBalance('lira'));
-  const [corporateBalance, setCorporateBalance] = useState(() => getAssetBalance('corporate'));
+  const [rrspBalance, setRrspBalance] = useState('');
+  const [tfsaBalance, setTfsaBalance] = useState('');
+  const [nonRegBalance, setNonRegBalance] = useState('');
+  const [savingsBalance, setSavingsBalance] = useState('');
+  const [rrifBalance, setRrifBalance] = useState('');
+  const [liraBalance, setLiraBalance] = useState('');
+  const [corporateBalance, setCorporateBalance] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
 
@@ -52,13 +43,19 @@ export default function AssetsStep({
   // Update state when formData changes
   useEffect(() => {
     if (formData.assets && Array.isArray(formData.assets)) {
-      setRrspBalance(getAssetBalance('rrsp'));
-      setTfsaBalance(getAssetBalance('tfsa'));
-      setNonRegBalance(getAssetBalance('nonreg'));
-      setSavingsBalance(getAssetBalance('savings'));
-      setRrifBalance(getAssetBalance('rrif'));
-      setLiraBalance(getAssetBalance('lira'));
-      setCorporateBalance(getAssetBalance('corporate'));
+      // Helper function to get balance for a specific asset type
+      const getBalance = (type: string) => {
+        const asset = formData.assets.find((a: any) => a.type === type);
+        return asset ? String(asset.balance) : '';
+      };
+
+      setRrspBalance(getBalance('rrsp'));
+      setTfsaBalance(getBalance('tfsa'));
+      setNonRegBalance(getBalance('nonreg'));
+      setSavingsBalance(getBalance('savings'));
+      setRrifBalance(getBalance('rrif'));
+      setLiraBalance(getBalance('lira'));
+      setCorporateBalance(getBalance('corporate'));
     }
   }, [formData.assets]);
 

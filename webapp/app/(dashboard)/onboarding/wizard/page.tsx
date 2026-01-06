@@ -159,11 +159,12 @@ export default function OnboardingWizard() {
     const stepParam = searchParams.get('step');
     if (stepParam) {
       const step = parseInt(stepParam, 10);
-      if (step >= 1 && step <= TOTAL_STEPS) {
+      const totalSteps = includePartner ? 9 : 6;
+      if (step >= 1 && step <= totalSteps) {
         setCurrentStep(step);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, includePartner]);
 
   const updateFormData = (stepData: any) => {
     setFormData((prev: any) => ({ ...prev, ...stepData }));
