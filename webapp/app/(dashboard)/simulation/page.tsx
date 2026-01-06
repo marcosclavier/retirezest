@@ -76,16 +76,10 @@ export default function SimulationPage() {
   const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Initialize showSmartStart by checking localStorage synchronously BEFORE first render
-  const [showSmartStart, setShowSmartStart] = useState(() => {
-    // This runs synchronously during initial render, preventing flicker
-    if (typeof window !== 'undefined') {
-      const dismissed = localStorage.getItem('simulation_smart_start_dismissed');
-      return dismissed !== 'true';
-    }
-    return false;
-  });
+  // Initialize showSmartStart - will be set correctly after mount
+  const [showSmartStart, setShowSmartStart] = useState(false);
 
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
 
@@ -93,6 +87,7 @@ export default function SimulationPage() {
   useEffect(() => {
     const savedHousehold = localStorage.getItem('simulation_household');
     const savedIncludePartner = localStorage.getItem('simulation_includePartner');
+    const smartStartDismissed = localStorage.getItem('simulation_smart_start_dismissed');
 
     if (savedHousehold) {
       try {
@@ -106,7 +101,11 @@ export default function SimulationPage() {
       setIncludePartner(savedIncludePartner === 'true');
     }
 
+    // Set Smart Start visibility based on localStorage
+    setShowSmartStart(smartStartDismissed !== 'true');
+
     setIsInitialized(true);
+    setIsMounted(true);
   }, []);
 
   // Debounced localStorage save functions (500ms delay to reduce writes)
@@ -656,7 +655,7 @@ export default function SimulationPage() {
         </div>
 
         {/* Loading indicator while prefill data loads OR component is initializing */}
-        {(prefillLoading || !isInitialized) && (
+        {(prefillLoading || !isInitialized || !isMounted) && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-3 text-gray-600">Loading your data...</p>
@@ -664,7 +663,7 @@ export default function SimulationPage() {
         )}
 
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {!prefillLoading && isInitialized && showSmartStart && !result && (
+        {isMounted && !prefillLoading && isInitialized && showSmartStart && !result && (
           <SmartStartCard
             onQuickStart={async () => {
               localStorage.setItem('simulation_smart_start_dismissed', 'true');
@@ -684,7 +683,7 @@ export default function SimulationPage() {
         )}
 
         {/* Prefill Success Message */}
-        {prefillAvailable && !prefillLoading && isInitialized && (() => {
+        {isMounted && prefillAvailable && !prefillLoading && isInitialized && (() => {
           const totalAssets = (household.p1.tfsa_balance || 0) +
             (household.p1.rrsp_balance || 0) +
             (household.p1.rrif_balance || 0) +
@@ -735,7 +734,7 @@ export default function SimulationPage() {
         )}
 
         {/* Warning for incomplete financial data */}
-        {prefillAvailable && !prefillLoading && isInitialized && (() => {
+        {isMounted && prefillAvailable && !prefillLoading && isInitialized && (() => {
           const totalAssets = (household.p1.tfsa_balance || 0) +
             (household.p1.rrsp_balance || 0) +
             (household.p1.rrif_balance || 0) +
@@ -768,7 +767,7 @@ export default function SimulationPage() {
       </div>
 
       {/* Review Auto-Populated Values */}
-      {prefillAvailable && !prefillLoading && isInitialized && (
+      {isMounted && prefillAvailable && !prefillLoading && isInitialized && (
         <Collapsible
           title="Review Auto-Populated Values"
           description="Verify the data loaded from your profile before running the simulation"
@@ -932,7 +931,7 @@ export default function SimulationPage() {
       )}
 
       {/* Warning about assumed values */}
-      {prefillAvailable && !prefillLoading && isInitialized && (
+      {isMounted && prefillAvailable && !prefillLoading && isInitialized && (
         <Alert className="border-orange-200 bg-orange-50">
           <AlertCircle className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-900">
@@ -957,7 +956,7 @@ export default function SimulationPage() {
       )}
 
       {/* Run Simulation Button - Only show when Smart Start is dismissed */}
-      {!showSmartStart && !prefillLoading && isInitialized && (
+      {isMounted && !showSmartStart && !prefillLoading && isInitialized && (
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Button
             onClick={handleRunSimulation}
