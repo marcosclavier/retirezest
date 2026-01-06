@@ -949,7 +949,7 @@ export default function SimulationPage() {
       )}
 
       {/* Run Simulation Button - Only show when Smart Start is dismissed */}
-      {!showSmartStart && (
+      {!showSmartStart && !prefillLoading && (
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Button
             onClick={handleRunSimulation}
