@@ -228,7 +228,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Lightbulb className="h-6 w-6 text-blue-600" />
-          <CardTitle className="text-xl">Key Insights & Recommendations</CardTitle>
+          <CardTitle className="text-xl font-bold text-gray-900">Key Insights & Recommendations</CardTitle>
         </div>
         <CardDescription>
           AI-generated observations about your retirement plan
