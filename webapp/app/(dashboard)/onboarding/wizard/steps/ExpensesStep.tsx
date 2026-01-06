@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface ExpensesStepProps {
   formData: any;
@@ -14,8 +14,13 @@ export default function ExpensesStep({
   updateFormData,
   onNext,
 }: ExpensesStepProps) {
+  const [skipForNow, setSkipForNow] = useState(false);
+  const [monthlyExpenses, setMonthlyExpenses] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
   // Initialize state from formData.expenses if available
-  const getMonthlyExpenses = () => {
+  const getMonthlyExpenses = useCallback(() => {
     if (formData.expenses && Array.isArray(formData.expenses)) {
       // Find the "Total Monthly Expenses" entry
       const totalExpense = formData.expenses.find(
@@ -24,12 +29,7 @@ export default function ExpensesStep({
       return totalExpense ? String(totalExpense.amount) : '';
     }
     return '';
-  };
-
-  const [skipForNow, setSkipForNow] = useState(false);
-  const [monthlyExpenses, setMonthlyExpenses] = useState(() => getMonthlyExpenses());
-  const [isLoading, setIsLoading] = useState(false);
-  const [csrfToken, setCsrfToken] = useState<string>('');
+  }, [formData.expenses]);
 
   // Initialize CSRF token on mount
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function ExpensesStep({
     if (formData.expenses && Array.isArray(formData.expenses)) {
       setMonthlyExpenses(getMonthlyExpenses());
     }
-  }, [formData.expenses]);
+  }, [formData.expenses, getMonthlyExpenses]);
 
   const handleSave = async () => {
     // Validation: Either skip is checked OR monthly expenses has a value

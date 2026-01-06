@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface PartnerAssetsStepProps {
   formData: any;
@@ -14,24 +14,24 @@ export default function PartnerAssetsStep({
   updateFormData,
   onNext,
 }: PartnerAssetsStepProps) {
+  const [skipForNow, setSkipForNow] = useState(false);
+  const [rrspBalance, setRrspBalance] = useState('');
+  const [tfsaBalance, setTfsaBalance] = useState('');
+  const [nonRegBalance, setNonRegBalance] = useState('');
+  const [savingsBalance, setSavingsBalance] = useState('');
+  const [rrifBalance, setRrifBalance] = useState('');
+  const [liraBalance, setLiraBalance] = useState('');
+  const [corporateBalance, setCorporateBalance] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   // Initialize state from formData.assets if available (filter for person2/partner)
-  const getPartnerAssetBalance = (type: string) => {
+  const getPartnerAssetBalance = useCallback((type: string) => {
     if (formData.assets && Array.isArray(formData.assets)) {
       const asset = formData.assets.find((a: any) => a.type === type && a.owner === 'person2');
       return asset ? String(asset.balance) : '';
     }
     return '';
-  };
-
-  const [skipForNow, setSkipForNow] = useState(false);
-  const [rrspBalance, setRrspBalance] = useState(() => getPartnerAssetBalance('rrsp'));
-  const [tfsaBalance, setTfsaBalance] = useState(() => getPartnerAssetBalance('tfsa'));
-  const [nonRegBalance, setNonRegBalance] = useState(() => getPartnerAssetBalance('nonreg'));
-  const [savingsBalance, setSavingsBalance] = useState(() => getPartnerAssetBalance('savings'));
-  const [rrifBalance, setRrifBalance] = useState(() => getPartnerAssetBalance('rrif'));
-  const [liraBalance, setLiraBalance] = useState(() => getPartnerAssetBalance('lira'));
-  const [corporateBalance, setCorporateBalance] = useState(() => getPartnerAssetBalance('corporate'));
-  const [isLoading, setIsLoading] = useState(false);
+  }, [formData.assets]);
 
   // Update state when formData changes
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function PartnerAssetsStep({
       setLiraBalance(getPartnerAssetBalance('lira'));
       setCorporateBalance(getPartnerAssetBalance('corporate'));
     }
-  }, [formData.assets]);
+  }, [formData.assets, getPartnerAssetBalance]);
 
   const handleSave = async () => {
     // Validation: Either skip is checked OR at least one field has a value

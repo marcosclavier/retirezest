@@ -39,7 +39,8 @@
       "Bash(find:*)",
       "Bash(node -e:*)",
       "Bash(DATABASE_URL=\"postgresql://retirement:retirementpass@127.0.0.1:5433/retirement_app\" npx prisma db push:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

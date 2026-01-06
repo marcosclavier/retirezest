@@ -27,6 +27,9 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
   const summary = result.summary;
   const yearByYear = result.year_by_year;
 
+  // Get end age from last year of simulation
+  const endAge = yearByYear.length > 0 ? yearByYear[yearByYear.length - 1].age_p1 : 95;
+
   // Insight 1: Success Rate Analysis
   // Check for underfunded years FIRST - this takes priority over estate value
   if (summary.total_underfunded_years > 0) {
@@ -52,7 +55,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
         type: 'success',
         icon: <CheckCircle2 className="h-5 w-5" />,
         title: 'Strong Financial Position',
-        description: `Your plan is fully funded with $${(finalEstate / 1000).toFixed(0)}K remaining at age ${summary.end_age}. You may have room to increase your retirement spending.`,
+        description: `Your plan is fully funded with $${(finalEstate / 1000).toFixed(0)}K remaining at age ${endAge}. You may have room to increase your retirement spending.`,
         impact: 'Potential to enhance lifestyle'
       });
     } else if (finalEstate > 100000) {
@@ -60,14 +63,14 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
         type: 'success',
         icon: <CheckCircle2 className="h-5 w-5" />,
         title: 'Plan Successfully Funded',
-        description: `Your assets will last throughout retirement with $${(finalEstate / 1000).toFixed(0)}K remaining at age ${summary.end_age}.`,
+        description: `Your assets will last throughout retirement with $${(finalEstate / 1000).toFixed(0)}K remaining at age ${endAge}.`,
       });
     } else {
       insights.push({
         type: 'info',
         icon: <TrendingUp className="h-5 w-5" />,
         title: 'Plan on Track',
-        description: `Your plan is funded, ending with $${(finalEstate / 1000).toFixed(0)}K at age ${summary.end_age}. Consider building more buffer for unexpected expenses.`,
+        description: `Your plan is funded, ending with $${(finalEstate / 1000).toFixed(0)}K at age ${endAge}. Consider building more buffer for unexpected expenses.`,
       });
     }
   } else if (summary.success_rate > 0.8) {
@@ -117,7 +120,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
       const yearsToDelay = 70 - p1CppStart;
       const potentialIncrease = yearsToDelay * 0.084; // 8.4% per year after 65
       const cppAnnual = result.household_input.p1.cpp_annual_at_start || 0;
-      const lifetimeBenefit = cppAnnual * potentialIncrease * (summary.end_age - 70);
+      const lifetimeBenefit = cppAnnual * potentialIncrease * (endAge - 70);
 
       if (lifetimeBenefit > 20000) {
         insights.push({
@@ -148,7 +151,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
   // Insight 5: Asset Depletion Timing
   // Only show this if we DON'T have underfunding insight (avoid duplication)
   if (summary.first_failure_year && summary.total_underfunded_years === 0) {
-    const yearsShort = summary.end_age - summary.first_failure_year;
+    const yearsShort = endAge - summary.first_failure_year;
     const additionalNeeded = Math.abs(summary.final_estate_after_tax);
 
     // Only show if yearsShort is positive (valid calculation)

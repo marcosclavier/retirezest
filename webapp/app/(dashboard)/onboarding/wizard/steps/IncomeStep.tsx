@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface IncomeStepProps {
   formData: any;
@@ -14,22 +14,22 @@ export default function IncomeStep({
   updateFormData,
   onNext,
 }: IncomeStepProps) {
+  const [skipForNow, setSkipForNow] = useState(false);
+  const [employmentIncome, setEmploymentIncome] = useState('');
+  const [pensionIncome, setPensionIncome] = useState('');
+  const [rentalIncome, setRentalIncome] = useState('');
+  const [otherIncome, setOtherIncome] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
   // Initialize state from formData.incomes if available
-  const getIncomeAmount = (type: string) => {
+  const getIncomeAmount = useCallback((type: string) => {
     if (formData.incomes && Array.isArray(formData.incomes)) {
       const income = formData.incomes.find((i: any) => i.type === type);
       return income ? String(income.amount) : '';
     }
     return '';
-  };
-
-  const [skipForNow, setSkipForNow] = useState(false);
-  const [employmentIncome, setEmploymentIncome] = useState(() => getIncomeAmount('employment'));
-  const [pensionIncome, setPensionIncome] = useState(() => getIncomeAmount('pension'));
-  const [rentalIncome, setRentalIncome] = useState(() => getIncomeAmount('rental'));
-  const [otherIncome, setOtherIncome] = useState(() => getIncomeAmount('other'));
-  const [isLoading, setIsLoading] = useState(false);
-  const [csrfToken, setCsrfToken] = useState<string>('');
+  }, [formData.incomes]);
 
   // Initialize CSRF token on mount
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function IncomeStep({
       setRentalIncome(getIncomeAmount('rental'));
       setOtherIncome(getIncomeAmount('other'));
     }
-  }, [formData.incomes]);
+  }, [formData.incomes, getIncomeAmount]);
 
   const handleSave = async () => {
     // Validation: Either skip is checked OR at least one field has a value
