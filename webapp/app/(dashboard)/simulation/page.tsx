@@ -948,39 +948,41 @@ export default function SimulationPage() {
         </Alert>
       )}
 
-      {/* Run Simulation Button */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-        <Button
-          onClick={handleRunSimulation}
-          disabled={isLoading || apiHealthy === false}
-          size="lg"
-          className="w-full sm:w-auto sm:min-w-[200px]"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              <span className="hidden sm:inline">Running Simulation...</span>
-              <span className="sm:hidden">Running...</span>
-            </>
-          ) : (
-            <>
-              <Play className="mr-2 h-5 w-5" />
-              Run Simulation
-            </>
-          )}
-        </Button>
-        <Button
-          onClick={handleReloadFromProfile}
-          disabled={isLoading || prefillLoading}
-          size="lg"
-          variant="outline"
-          className="w-full sm:w-auto text-gray-700 hover:text-gray-900"
-        >
-          <RefreshCw className="mr-2 h-5 w-5" />
-          <span className="hidden sm:inline">Reload from Profile</span>
-          <span className="sm:hidden">Reload</span>
-        </Button>
-      </div>
+      {/* Run Simulation Button - Only show when Smart Start is dismissed */}
+      {!showSmartStart && (
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+          <Button
+            onClick={handleRunSimulation}
+            disabled={isLoading || apiHealthy === false}
+            size="lg"
+            className="w-full sm:w-auto sm:min-w-[200px]"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <span className="hidden sm:inline">Running Simulation...</span>
+                <span className="sm:hidden">Running...</span>
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-5 w-5" />
+                Run Simulation
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleReloadFromProfile}
+            disabled={isLoading || prefillLoading}
+            size="lg"
+            variant="outline"
+            className="w-full sm:w-auto text-gray-700 hover:text-gray-900"
+          >
+            <RefreshCw className="mr-2 h-5 w-5" />
+            <span className="hidden sm:inline">Reload from Profile</span>
+            <span className="sm:hidden">Reload</span>
+          </Button>
+        </div>
+      )}
 
       {/* Tabs for Input and Results */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
