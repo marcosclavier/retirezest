@@ -76,15 +76,23 @@ export default function SimulationPage() {
   const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
-  const [showSmartStart, setShowSmartStart] = useState(false);
+
+  // Initialize showSmartStart by checking localStorage synchronously BEFORE first render
+  const [showSmartStart, setShowSmartStart] = useState(() => {
+    // This runs synchronously during initial render, preventing flicker
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('simulation_smart_start_dismissed');
+      return dismissed !== 'true';
+    }
+    return false;
+  });
+
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
-  const [smartStartChecked, setSmartStartChecked] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedHousehold = localStorage.getItem('simulation_household');
     const savedIncludePartner = localStorage.getItem('simulation_includePartner');
-    const savedSmartStartDismissed = localStorage.getItem('simulation_smart_start_dismissed');
 
     if (savedHousehold) {
       try {
@@ -98,13 +106,6 @@ export default function SimulationPage() {
       setIncludePartner(savedIncludePartner === 'true');
     }
 
-    // Show Smart Start card only if user hasn't dismissed it before
-    if (savedSmartStartDismissed !== 'true') {
-      setShowSmartStart(true);
-    }
-
-    // Mark that we've checked localStorage
-    setSmartStartChecked(true);
     setIsInitialized(true);
   }, []);
 
@@ -655,7 +656,7 @@ export default function SimulationPage() {
         </div>
 
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {smartStartChecked && showSmartStart && !result && !prefillLoading && (
+        {showSmartStart && !result && !prefillLoading && (
           <SmartStartCard
             onQuickStart={async () => {
               localStorage.setItem('simulation_smart_start_dismissed', 'true');
