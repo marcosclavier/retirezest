@@ -655,8 +655,16 @@ export default function SimulationPage() {
           </div>
         </div>
 
+        {/* Loading indicator while prefill data loads */}
+        {prefillLoading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-3 text-gray-600">Loading your data...</p>
+          </div>
+        )}
+
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {showSmartStart && !result && !prefillLoading && (
+        {!prefillLoading && showSmartStart && !result && (
           <SmartStartCard
             onQuickStart={async () => {
               localStorage.setItem('simulation_smart_start_dismissed', 'true');
