@@ -25,7 +25,6 @@ import { YearByYearTable } from '@/components/simulation/YearByYearTable';
 import { SmartStartCard } from '@/components/simulation/SmartStartCard';
 import { PlanSnapshotCard } from '@/components/simulation/PlanSnapshotCard';
 import { FloatingCTA } from '@/components/simulation/FloatingCTA';
-import { PrefillStatusBanner } from '@/components/simulation/PrefillStatusBanner';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -663,45 +662,13 @@ export default function SimulationPage() {
         )}
 
         {/* Prefill Success Message */}
-        {prefillAvailable && !prefillLoading && (() => {
-          const totalAssets = (household.p1.tfsa_balance || 0) +
-            (household.p1.rrsp_balance || 0) +
-            (household.p1.rrif_balance || 0) +
-            (household.p1.nr_cash || 0) +
-            (household.p1.nr_gic || 0) +
-            (household.p1.nr_invest || 0) +
-            (household.p1.corp_cash_bucket || 0) +
-            (household.p1.corp_gic_bucket || 0) +
-            (household.p1.corp_invest_bucket || 0) +
-            (household.p2.tfsa_balance || 0) +
-            (household.p2.rrsp_balance || 0) +
-            (household.p2.rrif_balance || 0) +
-            (household.p2.nr_cash || 0) +
-            (household.p2.nr_gic || 0) +
-            (household.p2.nr_invest || 0) +
-            (household.p2.corp_cash_bucket || 0) +
-            (household.p2.corp_gic_bucket || 0) +
-            (household.p2.corp_invest_bucket || 0);
-
-          let accountCount = 0;
-          [household.p1, household.p2].forEach(person => {
-            if (person.tfsa_balance) accountCount++;
-            if (person.rrsp_balance) accountCount++;
-            if (person.rrif_balance) accountCount++;
-            if (person.nr_cash || person.nr_gic || person.nr_invest) accountCount++;
-            if (person.corp_cash_bucket || person.corp_gic_bucket || person.corp_invest_bucket) accountCount++;
-          });
-
-          return (
-            <PrefillStatusBanner
-              isPrefilled={true}
-              totalAssets={totalAssets}
-              itemsLoaded={accountCount}
-              onRefresh={async () => await loadPrefillData()}
-              lastUpdated={new Date()}
-            />
-          );
-        })()}
+        {prefillAvailable && !prefillLoading && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertDescription className="text-blue-900">
+              ✓ Your financial profile and assets have been automatically loaded. Review and adjust the values below before running your simulation.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* API Health Warning */}
         {apiHealthy === false && (
