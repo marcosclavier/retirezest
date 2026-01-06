@@ -76,18 +76,13 @@ export default function SimulationPage() {
   const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Initialize showSmartStart - will be set correctly after mount
-  const [showSmartStart, setShowSmartStart] = useState(false);
-
+  const [showSmartStart, setShowSmartStart] = useState(true);
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedHousehold = localStorage.getItem('simulation_household');
     const savedIncludePartner = localStorage.getItem('simulation_includePartner');
-    const smartStartDismissed = localStorage.getItem('simulation_smart_start_dismissed');
 
     if (savedHousehold) {
       try {
@@ -101,11 +96,7 @@ export default function SimulationPage() {
       setIncludePartner(savedIncludePartner === 'true');
     }
 
-    // Set Smart Start visibility based on localStorage
-    setShowSmartStart(smartStartDismissed !== 'true');
-
     setIsInitialized(true);
-    setIsMounted(true);
   }, []);
 
   // Debounced localStorage save functions (500ms delay to reduce writes)
@@ -133,97 +124,116 @@ export default function SimulationPage() {
     }
   }, [includePartner, isInitialized, prefillAttempted, debouncedSaveIncludePartner]);
 
-  // Prefill data loading functions - declared before the useEffect that uses them
-  const loadPrefillData = useCallback(async (token: string | null = csrfToken) => {
-    try {
-      setPrefillLoading(true);
+  // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
+  useEffect(() => {
+    healthCheck().then(setApiHealthy);
 
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['x-csrf-token'] = token;
+    // Fetch CSRF token first, then load prefill data
+    const initializeData = async () => {
+      try {
+        // Fetch CSRF token
+        const csrfRes = await fetch('/api/csrf');
+        const csrfData = await csrfRes.json();
+        const token = csrfData.token || null;
+        setCsrfToken(token);
+
+        // Fetch profile settings to get couples planning preference
+        const hasSavedIncludePartner = localStorage.getItem('simulation_includePartner');
+        if (!hasSavedIncludePartner) {
+          try {
+            const settingsRes = await fetch('/api/profile/settings');
+            if (settingsRes.ok) {
+              const settingsData = await settingsRes.json();
+              if (settingsData?.includePartner !== undefined) {
+                setIncludePartner(settingsData.includePartner);
+              }
+            }
+          } catch (err) {
+            console.error('Failed to fetch profile settings:', err);
+          }
+        }
+
+        // Always check prefill data to detect profile changes (like deleted assets)
+        const hasSavedData = localStorage.getItem('simulation_household');
+        console.log('🔍 localStorage simulation_household:', hasSavedData ? 'EXISTS' : 'EMPTY');
+
+        if (hasSavedData) {
+          console.log('🔍 Loading prefill to check for profile updates...');
+          // Load prefill data, which will intelligently merge with localStorage
+          // This ensures asset balances are always current from the database
+          await loadPrefillDataWithMerge(token, JSON.parse(hasSavedData));
+        } else {
+          console.log('🔍 Loading prefill data because localStorage is empty...');
+          await loadPrefillData(token);
+        }
+
+        // Mark that we've attempted prefill (whether we loaded it or skipped it)
+        setPrefillAttempted(true);
+      } catch (err) {
+        console.error('Failed to initialize data:', err);
+        setPrefillLoading(false);
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  // Quick-start mode detection: Auto-run simulation with smart defaults
+  useEffect(() => {
+    const checkQuickStart = async () => {
+      // Only run once, after initialization and prefill
+      if (!isInitialized || !prefillAttempted || quickStartAttempted) {
+        return;
       }
 
-      const response = await fetch('/api/simulation/prefill', { headers });
+      // Check for ?mode=quick parameter
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode');
 
-      console.log('🔍 PREFILL API Response Status:', response.status);
+      if (mode === 'quick') {
+        console.log('🚀 Quick-start mode detected, running quick simulation...');
+        setQuickStartAttempted(true);
+        setIsQuickStart(true);
+        setIsLoading(true);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 PREFILL DATA RECEIVED:', JSON.stringify(data, null, 2));
-        console.log('🔍 hasAssets:', data.hasAssets);
-        console.log('🔍 person1Input.start_age:', data.person1Input?.start_age);
-        console.log('🔍 includePartner:', data.includePartner);
-        console.log('🔍 person2Input:', data.person2Input);
-
-        if (data.hasAssets || data.person1Input.start_age !== 65 || data.hasExpenses) {
-          console.log('🔍 Applying prefill data to household state...');
-          // Determine partner data first
-          let partnerData = { ...defaultPersonInput, name: '' };
-          let shouldIncludePartner = false;
-
-          if (data.includePartner && data.person2Input) {
-            console.log('🔍 Including partner with data:', data.person2Input.name);
-            shouldIncludePartner = true;
-            partnerData = {
-              ...defaultPersonInput,
-              ...data.person2Input,
-            };
-          } else if (data.includePartner) {
-            // Married but no partner assets yet
-            console.log('🔍 Including partner without assets');
-            shouldIncludePartner = true;
-            partnerData = { ...defaultPersonInput, name: 'Partner' };
-          }
-
-          // Calculate spending phases from total annual spending
-          // If user has expense data, use it to populate spending phases
-          const hasExpenseData = data.totalAnnualSpending && data.totalAnnualSpending > 0;
-          let spendingUpdate = {};
-
-          if (hasExpenseData) {
-            console.log('🔍 Using expense data from profile:', data.totalAnnualSpending);
-            // Use current spending as go-go phase
-            // Reduce by 20% for slow-go phase (common retirement planning assumption)
-            // Reduce by 40% for no-go phase (common retirement planning assumption)
-            spendingUpdate = {
-              spending_go_go: Math.round(data.totalAnnualSpending),
-              spending_slow_go: Math.round(data.totalAnnualSpending * 0.8),
-              spending_no_go: Math.round(data.totalAnnualSpending * 0.6),
-            };
-          }
-
-          // Update household with all prefilled data in a single setState call
-          setHousehold(prev => ({
-            ...prev,
-            province: data.province || prev.province,
-            end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
-            ...spendingUpdate, // Apply spending data if available
-            p1: {
-              ...prev.p1,
-              ...data.person1Input,
+        try {
+          const response = await fetch('/api/simulation/quick-start', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-            p2: {
-              ...prev.p2,
-              ...partnerData,
-            },
-          }));
+          });
 
-          setIncludePartner(shouldIncludePartner);
-          setUserProfileProvince(data.userProfileProvince || null);
-          setPrefillAvailable(true);
-          console.log('🔍 Prefill data applied successfully');
-        } else {
-          console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65 AND hasExpenses=false)');
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            console.log('✅ Quick simulation completed:', data);
+            setResult(data);
+            setActiveTab('results');
+
+            // Update household input with the values used
+            if (data.household_input) {
+              setHousehold(data.household_input);
+              setIncludePartner(!!data.household_input.p2?.name);
+            }
+          } else {
+            console.error('❌ Quick simulation failed:', data);
+            // Show error but stay on input tab so user can try manual simulation
+            alert(data.message || 'Quick simulation failed. Please try entering your details manually.');
+          }
+        } catch (error) {
+          console.error('❌ Quick simulation error:', error);
+          alert('Failed to run quick simulation. Please try entering your details manually.');
+        } finally {
+          setIsLoading(false);
         }
       }
-    } catch (error) {
-      console.error('Failed to load prefill data:', error);
-    } finally {
-      setPrefillLoading(false);
-    }
-  }, [csrfToken]);
+    };
 
-  const loadPrefillDataWithMerge = useCallback(async (
+    checkQuickStart();
+  }, [isInitialized, prefillAttempted, quickStartAttempted]);
+
+  const loadPrefillDataWithMerge = async (
     token: string | null = csrfToken,
     savedHousehold: HouseholdInput
   ) => {
@@ -340,117 +350,96 @@ export default function SimulationPage() {
     } finally {
       setPrefillLoading(false);
     }
-  }, [csrfToken]);
+  };
 
-  // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
-  useEffect(() => {
-    healthCheck().then(setApiHealthy);
+  const loadPrefillData = async (token: string | null = csrfToken) => {
+    try {
+      setPrefillLoading(true);
 
-    // Fetch CSRF token first, then load prefill data
-    const initializeData = async () => {
-      try {
-        // Fetch CSRF token
-        const csrfRes = await fetch('/api/csrf');
-        const csrfData = await csrfRes.json();
-        const token = csrfData.token || null;
-        setCsrfToken(token);
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['x-csrf-token'] = token;
+      }
 
-        // Fetch profile settings to get couples planning preference
-        const hasSavedIncludePartner = localStorage.getItem('simulation_includePartner');
-        if (!hasSavedIncludePartner) {
-          try {
-            const settingsRes = await fetch('/api/profile/settings');
-            if (settingsRes.ok) {
-              const settingsData = await settingsRes.json();
-              if (settingsData?.includePartner !== undefined) {
-                setIncludePartner(settingsData.includePartner);
-              }
-            }
-          } catch (err) {
-            console.error('Failed to fetch profile settings:', err);
+      const response = await fetch('/api/simulation/prefill', { headers });
+
+      console.log('🔍 PREFILL API Response Status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 PREFILL DATA RECEIVED:', JSON.stringify(data, null, 2));
+        console.log('🔍 hasAssets:', data.hasAssets);
+        console.log('🔍 person1Input.start_age:', data.person1Input?.start_age);
+        console.log('🔍 includePartner:', data.includePartner);
+        console.log('🔍 person2Input:', data.person2Input);
+
+        if (data.hasAssets || data.person1Input.start_age !== 65 || data.hasExpenses) {
+          console.log('🔍 Applying prefill data to household state...');
+          // Determine partner data first
+          let partnerData = { ...defaultPersonInput, name: '' };
+          let shouldIncludePartner = false;
+
+          if (data.includePartner && data.person2Input) {
+            console.log('🔍 Including partner with data:', data.person2Input.name);
+            shouldIncludePartner = true;
+            partnerData = {
+              ...defaultPersonInput,
+              ...data.person2Input,
+            };
+          } else if (data.includePartner) {
+            // Married but no partner assets yet
+            console.log('🔍 Including partner without assets');
+            shouldIncludePartner = true;
+            partnerData = { ...defaultPersonInput, name: 'Partner' };
           }
-        }
 
-        // Always check prefill data to detect profile changes (like deleted assets)
-        const hasSavedData = localStorage.getItem('simulation_household');
-        console.log('🔍 localStorage simulation_household:', hasSavedData ? 'EXISTS' : 'EMPTY');
+          // Calculate spending phases from total annual spending
+          // If user has expense data, use it to populate spending phases
+          const hasExpenseData = data.totalAnnualSpending && data.totalAnnualSpending > 0;
+          let spendingUpdate = {};
 
-        if (hasSavedData) {
-          console.log('🔍 Loading prefill to check for profile updates...');
-          // Load prefill data, which will intelligently merge with localStorage
-          // This ensures asset balances are always current from the database
-          await loadPrefillDataWithMerge(token, JSON.parse(hasSavedData));
-        } else {
-          console.log('🔍 Loading prefill data because localStorage is empty...');
-          await loadPrefillData(token);
-        }
+          if (hasExpenseData) {
+            console.log('🔍 Using expense data from profile:', data.totalAnnualSpending);
+            // Use current spending as go-go phase
+            // Reduce by 20% for slow-go phase (common retirement planning assumption)
+            // Reduce by 40% for no-go phase (common retirement planning assumption)
+            spendingUpdate = {
+              spending_go_go: Math.round(data.totalAnnualSpending),
+              spending_slow_go: Math.round(data.totalAnnualSpending * 0.8),
+              spending_no_go: Math.round(data.totalAnnualSpending * 0.6),
+            };
+          }
 
-        // Mark that we've attempted prefill (whether we loaded it or skipped it)
-        setPrefillAttempted(true);
-      } catch (err) {
-        console.error('Failed to initialize data:', err);
-        setPrefillLoading(false);
-      }
-    };
-
-    initializeData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
-
-  // Quick-start mode detection: Auto-run simulation with smart defaults
-  useEffect(() => {
-    const checkQuickStart = async () => {
-      // Only run once, after initialization and prefill
-      if (!isInitialized || !prefillAttempted || quickStartAttempted) {
-        return;
-      }
-
-      // Check for ?mode=quick parameter
-      const params = new URLSearchParams(window.location.search);
-      const mode = params.get('mode');
-
-      if (mode === 'quick') {
-        console.log('🚀 Quick-start mode detected, running quick simulation...');
-        setQuickStartAttempted(true);
-        setIsQuickStart(true);
-        setIsLoading(true);
-
-        try {
-          const response = await fetch('/api/simulation/quick-start', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          // Update household with all prefilled data in a single setState call
+          setHousehold(prev => ({
+            ...prev,
+            province: data.province || prev.province,
+            end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
+            ...spendingUpdate, // Apply spending data if available
+            p1: {
+              ...prev.p1,
+              ...data.person1Input,
             },
-          });
+            p2: {
+              ...prev.p2,
+              ...partnerData,
+            },
+          }));
 
-          const data = await response.json();
-
-          if (response.ok && data.success) {
-            console.log('✅ Quick simulation completed:', data);
-            setResult(data);
-            setActiveTab('results');
-
-            // Update household input with the values used
-            if (data.household_input) {
-              setHousehold(data.household_input);
-              setIncludePartner(!!data.household_input.p2?.name);
-            }
-          } else {
-            console.error('❌ Quick simulation failed:', data);
-            // Show error but stay on input tab so user can try manual simulation
-            alert(data.message || 'Quick simulation failed. Please try entering your details manually.');
-          }
-        } catch (error) {
-          console.error('❌ Quick simulation error:', error);
-          alert('Failed to run quick simulation. Please try entering your details manually.');
-        } finally {
-          setIsLoading(false);
+          setIncludePartner(shouldIncludePartner);
+          setUserProfileProvince(data.userProfileProvince || null);
+          setPrefillAvailable(true);
+          console.log('🔍 Prefill data applied successfully');
+        } else {
+          console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65 AND hasExpenses=false)');
         }
       }
-    };
-
-    checkQuickStart();
-  }, [isInitialized, prefillAttempted, quickStartAttempted]);
+    } catch (error) {
+      console.error('Failed to load prefill data:', error);
+    } finally {
+      setPrefillLoading(false);
+    }
+  };
 
   const updatePerson = (person: 'p1' | 'p2', field: keyof PersonInput, value: any) => {
     setHousehold((prev) => ({
@@ -655,24 +644,14 @@ export default function SimulationPage() {
           </div>
         </div>
 
-        {/* Loading indicator while prefill data loads OR component is initializing */}
-        {(prefillLoading || !isInitialized || !isMounted) && (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-3 text-gray-600">Loading your data...</p>
-          </div>
-        )}
-
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {isMounted && !prefillLoading && isInitialized && showSmartStart && !result && (
+        {showSmartStart && !result && !prefillLoading && (
           <SmartStartCard
             onQuickStart={async () => {
-              localStorage.setItem('simulation_smart_start_dismissed', 'true');
               setShowSmartStart(false);
               await handleRunSimulation();
             }}
             onCustomize={() => {
-              localStorage.setItem('simulation_smart_start_dismissed', 'true');
               setShowSmartStart(false);
               setShowDetailedInputs(true);
             }}
@@ -684,7 +663,7 @@ export default function SimulationPage() {
         )}
 
         {/* Prefill Success Message */}
-        {isMounted && prefillAvailable && !prefillLoading && isInitialized && (() => {
+        {prefillAvailable && !prefillLoading && (() => {
           const totalAssets = (household.p1.tfsa_balance || 0) +
             (household.p1.rrsp_balance || 0) +
             (household.p1.rrif_balance || 0) +
@@ -735,7 +714,7 @@ export default function SimulationPage() {
         )}
 
         {/* Warning for incomplete financial data */}
-        {isMounted && prefillAvailable && !prefillLoading && isInitialized && (() => {
+        {prefillAvailable && !prefillLoading && (() => {
           const totalAssets = (household.p1.tfsa_balance || 0) +
             (household.p1.rrsp_balance || 0) +
             (household.p1.rrif_balance || 0) +
@@ -768,7 +747,7 @@ export default function SimulationPage() {
       </div>
 
       {/* Review Auto-Populated Values */}
-      {isMounted && prefillAvailable && !prefillLoading && isInitialized && (
+      {prefillAvailable && !prefillLoading && (
         <Collapsible
           title="Review Auto-Populated Values"
           description="Verify the data loaded from your profile before running the simulation"
@@ -932,7 +911,7 @@ export default function SimulationPage() {
       )}
 
       {/* Warning about assumed values */}
-      {isMounted && prefillAvailable && !prefillLoading && isInitialized && (
+      {prefillAvailable && !prefillLoading && (
         <Alert className="border-orange-200 bg-orange-50">
           <AlertCircle className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-900">
@@ -956,41 +935,39 @@ export default function SimulationPage() {
         </Alert>
       )}
 
-      {/* Run Simulation Button - Only show when Smart Start is dismissed */}
-      {isMounted && !showSmartStart && !prefillLoading && isInitialized && (
-        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-          <Button
-            onClick={handleRunSimulation}
-            disabled={isLoading || apiHealthy === false}
-            size="lg"
-            className="w-full sm:w-auto sm:min-w-[200px]"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                <span className="hidden sm:inline">Running Simulation...</span>
-                <span className="sm:hidden">Running...</span>
-              </>
-            ) : (
-              <>
-                <Play className="mr-2 h-5 w-5" />
-                Run Simulation
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={handleReloadFromProfile}
-            disabled={isLoading || prefillLoading}
-            size="lg"
-            variant="outline"
-            className="w-full sm:w-auto text-gray-700 hover:text-gray-900"
-          >
-            <RefreshCw className="mr-2 h-5 w-5" />
-            <span className="hidden sm:inline">Reload from Profile</span>
-            <span className="sm:hidden">Reload</span>
-          </Button>
-        </div>
-      )}
+      {/* Run Simulation Button */}
+      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+        <Button
+          onClick={handleRunSimulation}
+          disabled={isLoading || apiHealthy === false}
+          size="lg"
+          className="w-full sm:w-auto sm:min-w-[200px]"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <span className="hidden sm:inline">Running Simulation...</span>
+              <span className="sm:hidden">Running...</span>
+            </>
+          ) : (
+            <>
+              <Play className="mr-2 h-5 w-5" />
+              Run Simulation
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={handleReloadFromProfile}
+          disabled={isLoading || prefillLoading}
+          size="lg"
+          variant="outline"
+          className="w-full sm:w-auto text-gray-700 hover:text-gray-900"
+        >
+          <RefreshCw className="mr-2 h-5 w-5" />
+          <span className="hidden sm:inline">Reload from Profile</span>
+          <span className="sm:hidden">Reload</span>
+        </Button>
+      </div>
 
       {/* Tabs for Input and Results */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
