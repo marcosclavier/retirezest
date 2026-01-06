@@ -76,13 +76,14 @@ export default function SimulationPage() {
   const [userProfileProvince, setUserProfileProvince] = useState<string | null>(null);
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
-  const [showSmartStart, setShowSmartStart] = useState(true);
+  const [showSmartStart, setShowSmartStart] = useState(false);
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
     const savedHousehold = localStorage.getItem('simulation_household');
     const savedIncludePartner = localStorage.getItem('simulation_includePartner');
+    const savedSmartStartDismissed = localStorage.getItem('simulation_smart_start_dismissed');
 
     if (savedHousehold) {
       try {
@@ -94,6 +95,11 @@ export default function SimulationPage() {
 
     if (savedIncludePartner) {
       setIncludePartner(savedIncludePartner === 'true');
+    }
+
+    // Show Smart Start card only if user hasn't dismissed it before
+    if (savedSmartStartDismissed !== 'true') {
+      setShowSmartStart(true);
     }
 
     setIsInitialized(true);
@@ -649,10 +655,12 @@ export default function SimulationPage() {
         {showSmartStart && !result && !prefillLoading && (
           <SmartStartCard
             onQuickStart={async () => {
+              localStorage.setItem('simulation_smart_start_dismissed', 'true');
               setShowSmartStart(false);
               await handleRunSimulation();
             }}
             onCustomize={() => {
+              localStorage.setItem('simulation_smart_start_dismissed', 'true');
               setShowSmartStart(false);
               setShowDetailedInputs(true);
             }}
