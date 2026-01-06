@@ -344,6 +344,11 @@ export default function SimulationPage() {
 
   // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
+    // Only initialize if component is mounted (prevents race condition)
+    if (!isMounted) {
+      return;
+    }
+
     healthCheck().then(setApiHealthy);
 
     // Fetch CSRF token first, then load prefill data
@@ -395,7 +400,7 @@ export default function SimulationPage() {
 
     initializeData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [isMounted]); // Run when component is mounted
 
   // Quick-start mode detection: Auto-run simulation with smart defaults
   useEffect(() => {
