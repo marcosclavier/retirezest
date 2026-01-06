@@ -655,8 +655,8 @@ export default function SimulationPage() {
           </div>
         </div>
 
-        {/* Loading indicator while prefill data loads */}
-        {prefillLoading && (
+        {/* Loading indicator while prefill data loads OR component is initializing */}
+        {(prefillLoading || !isInitialized) && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-3 text-gray-600">Loading your data...</p>
@@ -664,7 +664,7 @@ export default function SimulationPage() {
         )}
 
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {!prefillLoading && showSmartStart && !result && (
+        {!prefillLoading && isInitialized && showSmartStart && !result && (
           <SmartStartCard
             onQuickStart={async () => {
               localStorage.setItem('simulation_smart_start_dismissed', 'true');
@@ -684,7 +684,7 @@ export default function SimulationPage() {
         )}
 
         {/* Prefill Success Message */}
-        {prefillAvailable && !prefillLoading && (() => {
+        {prefillAvailable && !prefillLoading && isInitialized && (() => {
           const totalAssets = (household.p1.tfsa_balance || 0) +
             (household.p1.rrsp_balance || 0) +
             (household.p1.rrif_balance || 0) +
@@ -735,7 +735,7 @@ export default function SimulationPage() {
         )}
 
         {/* Warning for incomplete financial data */}
-        {prefillAvailable && !prefillLoading && (() => {
+        {prefillAvailable && !prefillLoading && isInitialized && (() => {
           const totalAssets = (household.p1.tfsa_balance || 0) +
             (household.p1.rrsp_balance || 0) +
             (household.p1.rrif_balance || 0) +
@@ -768,7 +768,7 @@ export default function SimulationPage() {
       </div>
 
       {/* Review Auto-Populated Values */}
-      {prefillAvailable && !prefillLoading && (
+      {prefillAvailable && !prefillLoading && isInitialized && (
         <Collapsible
           title="Review Auto-Populated Values"
           description="Verify the data loaded from your profile before running the simulation"
@@ -932,7 +932,7 @@ export default function SimulationPage() {
       )}
 
       {/* Warning about assumed values */}
-      {prefillAvailable && !prefillLoading && (
+      {prefillAvailable && !prefillLoading && isInitialized && (
         <Alert className="border-orange-200 bg-orange-50">
           <AlertCircle className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-900">
@@ -957,7 +957,7 @@ export default function SimulationPage() {
       )}
 
       {/* Run Simulation Button - Only show when Smart Start is dismissed */}
-      {!showSmartStart && !prefillLoading && (
+      {!showSmartStart && !prefillLoading && isInitialized && (
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Button
             onClick={handleRunSimulation}
