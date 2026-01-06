@@ -135,8 +135,8 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
   }
 
   // Insight 4: Spending Pattern Analysis
-  const firstYearSpending = yearByYear[0]?.spending || 0;
-  const lastYearSpending = yearByYear[yearByYear.length - 1]?.spending || 0;
+  const firstYearSpending = yearByYear[0]?.spending_met || 0;
+  const lastYearSpending = yearByYear[yearByYear.length - 1]?.spending_met || 0;
   const spendingDecline = (firstYearSpending - lastYearSpending) / firstYearSpending;
 
   if (spendingDecline > 0.4) {

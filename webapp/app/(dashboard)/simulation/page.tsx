@@ -176,7 +176,7 @@ export default function SimulationPage() {
     };
 
     initializeData();
-  }, []);
+  }, [loadPrefillData, loadPrefillDataWithMerge]);
 
   // Quick-start mode detection: Auto-run simulation with smart defaults
   useEffect(() => {
@@ -233,7 +233,7 @@ export default function SimulationPage() {
     checkQuickStart();
   }, [isInitialized, prefillAttempted, quickStartAttempted]);
 
-  const loadPrefillDataWithMerge = async (
+  const loadPrefillDataWithMerge = useCallback(async (
     token: string | null = csrfToken,
     savedHousehold: HouseholdInput
   ) => {
@@ -350,9 +350,9 @@ export default function SimulationPage() {
     } finally {
       setPrefillLoading(false);
     }
-  };
+  }, [csrfToken]);
 
-  const loadPrefillData = async (token: string | null = csrfToken) => {
+  const loadPrefillData = useCallback(async (token: string | null = csrfToken) => {
     try {
       setPrefillLoading(true);
 
@@ -439,7 +439,7 @@ export default function SimulationPage() {
     } finally {
       setPrefillLoading(false);
     }
-  };
+  }, [csrfToken]);
 
   const updatePerson = (person: 'p1' | 'p2', field: keyof PersonInput, value: any) => {
     setHousehold((prev) => ({

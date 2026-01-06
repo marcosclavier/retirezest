@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface PartnerIncomeStepProps {
   formData: any;
@@ -14,22 +14,22 @@ export default function PartnerIncomeStep({
   updateFormData,
   onNext,
 }: PartnerIncomeStepProps) {
+  const [skipForNow, setSkipForNow] = useState(false);
+  const [employmentIncome, setEmploymentIncome] = useState('');
+  const [pensionIncome, setPensionIncome] = useState('');
+  const [rentalIncome, setRentalIncome] = useState('');
+  const [otherIncome, setOtherIncome] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
   // Initialize state from formData.incomes if available (filter for person2/partner)
-  const getPartnerIncomeAmount = (type: string) => {
+  const getPartnerIncomeAmount = useCallback((type: string) => {
     if (formData.incomes && Array.isArray(formData.incomes)) {
       const income = formData.incomes.find((i: any) => i.type === type && i.owner === 'person2');
       return income ? String(income.amount) : '';
     }
     return '';
-  };
-
-  const [skipForNow, setSkipForNow] = useState(false);
-  const [employmentIncome, setEmploymentIncome] = useState(() => getPartnerIncomeAmount('employment'));
-  const [pensionIncome, setPensionIncome] = useState(() => getPartnerIncomeAmount('pension'));
-  const [rentalIncome, setRentalIncome] = useState(() => getPartnerIncomeAmount('rental'));
-  const [otherIncome, setOtherIncome] = useState(() => getPartnerIncomeAmount('other'));
-  const [isLoading, setIsLoading] = useState(false);
-  const [csrfToken, setCsrfToken] = useState<string>('');
+  }, [formData.incomes]);
 
   // Initialize CSRF token on mount
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function PartnerIncomeStep({
       setRentalIncome(getPartnerIncomeAmount('rental'));
       setOtherIncome(getPartnerIncomeAmount('other'));
     }
-  }, [formData.incomes]);
+  }, [formData.incomes, getPartnerIncomeAmount]);
 
   const handleSave = async () => {
     // Validation: Either skip is checked OR at least one field has a value
