@@ -394,7 +394,8 @@ export default function SimulationPage() {
     };
 
     initializeData();
-  }, [loadPrefillData, loadPrefillDataWithMerge]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   // Quick-start mode detection: Auto-run simulation with smart defaults
   useEffect(() => {
