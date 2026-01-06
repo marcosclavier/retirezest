@@ -78,6 +78,7 @@ export default function SimulationPage() {
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
   const [showSmartStart, setShowSmartStart] = useState(false);
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
+  const [smartStartChecked, setSmartStartChecked] = useState(false);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -102,6 +103,8 @@ export default function SimulationPage() {
       setShowSmartStart(true);
     }
 
+    // Mark that we've checked localStorage
+    setSmartStartChecked(true);
     setIsInitialized(true);
   }, []);
 
@@ -652,7 +655,7 @@ export default function SimulationPage() {
         </div>
 
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {showSmartStart && !result && !prefillLoading && (
+        {smartStartChecked && showSmartStart && !result && !prefillLoading && (
           <SmartStartCard
             onQuickStart={async () => {
               localStorage.setItem('simulation_smart_start_dismissed', 'true');
