@@ -53,12 +53,13 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
     return Math.round(assetIncome + govBenefits + p2GovBenefits);
   };
 
-  // Determine retirement age (earliest CPP start age)
+  // Determine retirement age (current age, since simulation starts from now)
   const getRetirementAge = (): number => {
-    if (includePartner) {
-      return Math.min(household.p1.cpp_start_age || 65, household.p2.cpp_start_age || 65);
+    // If both people exist, use the younger person's age (earlier retirement)
+    if (includePartner && household.p2.start_age) {
+      return Math.min(household.p1.start_age, household.p2.start_age);
     }
-    return household.p1.cpp_start_age || 65;
+    return household.p1.start_age;
   };
 
   const totalAssets = getTotalAssets();
@@ -66,9 +67,9 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
   const retirementAge = getRetirementAge();
   const planningHorizon = household.end_age;
 
-  // Calculate years to retirement
+  // Calculate years to retirement - since retirement age is the start age, this should be 0
   const currentAge = household.p1.start_age;
-  const yearsToRetirement = Math.max(0, retirementAge - currentAge);
+  const yearsToRetirement = 0; // Simulation starts at retirement age
 
   return (
     <Card className="shadow-md border-blue-100 sticky top-6">

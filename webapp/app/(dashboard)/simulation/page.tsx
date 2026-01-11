@@ -78,23 +78,10 @@ export default function SimulationPage() {
   const [showSmartStart, setShowSmartStart] = useState(true);
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
 
-  // Load saved data from localStorage on mount
+  // Initialize component - localStorage will be merged with database data in the prefill logic below
+  // DO NOT load localStorage here - it should not override fresh database data
   useEffect(() => {
-    const savedHousehold = localStorage.getItem('simulation_household');
-    const savedIncludePartner = localStorage.getItem('simulation_includePartner');
-
-    if (savedHousehold) {
-      try {
-        setHousehold(JSON.parse(savedHousehold));
-      } catch (error) {
-        console.error('Failed to parse saved household data:', error);
-      }
-    }
-
-    if (savedIncludePartner) {
-      setIncludePartner(savedIncludePartner === 'true');
-    }
-
+    console.log('🔧 Simulation page initialized - database data will load first');
     setIsInitialized(true);
   }, []);
 
@@ -108,6 +95,37 @@ export default function SimulationPage() {
     console.log('💾 Saving includePartner to localStorage (debounced)');
     localStorage.setItem('simulation_includePartner', value.toString());
   }, 500);
+
+  // Debounced function to save inflation rates to baseline scenario (1000ms delay)
+  const debouncedSaveInflationRates = useDebouncedCallback(
+    async (spendingInflation: number, generalInflation: number) => {
+      if (!csrfToken) return;
+
+      try {
+        console.log('💾 Saving inflation rates to baseline scenario:', { spendingInflation, generalInflation });
+        const response = await fetch('/api/scenarios/inflation', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
+          },
+          body: JSON.stringify({
+            expenseInflationRate: spendingInflation,
+            inflationRate: generalInflation,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to save inflation rates:', await response.text());
+        } else {
+          console.log('✅ Inflation rates saved successfully');
+        }
+      } catch (error) {
+        console.error('Error saving inflation rates:', error);
+      }
+    },
+    1000
+  );
 
   // Save household data to localStorage whenever it changes (but not during initial load)
   useEffect(() => {
@@ -123,6 +141,13 @@ export default function SimulationPage() {
     }
   }, [includePartner, isInitialized, prefillAttempted, debouncedSaveIncludePartner]);
 
+  // Save inflation rates to baseline scenario whenever they change (but not during initial load)
+  useEffect(() => {
+    if (isInitialized && prefillAttempted && csrfToken) {
+      debouncedSaveInflationRates(household.spending_inflation, household.general_inflation);
+    }
+  }, [household.spending_inflation, household.general_inflation, isInitialized, prefillAttempted, csrfToken, debouncedSaveInflationRates]);
+
   // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
     healthCheck().then(setApiHealthy);
@@ -137,19 +162,18 @@ export default function SimulationPage() {
         setCsrfToken(token);
 
         // Fetch profile settings to get couples planning preference
-        const hasSavedIncludePartner = localStorage.getItem('simulation_includePartner');
-        if (!hasSavedIncludePartner) {
-          try {
-            const settingsRes = await fetch('/api/profile/settings');
-            if (settingsRes.ok) {
-              const settingsData = await settingsRes.json();
-              if (settingsData?.includePartner !== undefined) {
-                setIncludePartner(settingsData.includePartner);
-              }
+        // Always use database value, not localStorage (database is source of truth)
+        try {
+          const settingsRes = await fetch('/api/profile/settings');
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            if (settingsData?.includePartner !== undefined) {
+              console.log('🔧 Using includePartner from database:', settingsData.includePartner);
+              setIncludePartner(settingsData.includePartner);
             }
-          } catch (err) {
-            console.error('Failed to fetch profile settings:', err);
           }
+        } catch (err) {
+          console.error('Failed to fetch profile settings:', err);
         }
 
         // Always check prefill data to detect profile changes (like deleted assets)
@@ -196,14 +220,36 @@ export default function SimulationPage() {
         setIsLoading(true);
 
         try {
+          console.log('🚀 Sending quick-start request to API...');
+
+          // Prepare headers with CSRF token if available
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+
+          if (csrfToken) {
+            headers['x-csrf-token'] = csrfToken;
+            console.log('🔐 Including CSRF token in request');
+          } else {
+            console.warn('⚠️ No CSRF token available');
+          }
+
           const response = await fetch('/api/simulation/quick-start', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
           });
 
+          console.log('📡 Quick-start API response status:', response.status, response.statusText);
+
+          // Check if response is JSON
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('❌ Response is not JSON:', contentType);
+            throw new Error('Server returned non-JSON response');
+          }
+
           const data = await response.json();
+          console.log('📦 Quick-start API response data:', data);
 
           if (response.ok && data.success) {
             console.log('✅ Quick simulation completed:', data);
@@ -218,11 +264,12 @@ export default function SimulationPage() {
           } else {
             console.error('❌ Quick simulation failed:', data);
             // Show error but stay on input tab so user can try manual simulation
-            alert(data.message || 'Quick simulation failed. Please try entering your details manually.');
+            const errorMessage = data.message || data.error || 'Quick simulation failed. Please try entering your details manually.';
+            alert(errorMessage);
           }
         } catch (error) {
           console.error('❌ Quick simulation error:', error);
-          alert('Failed to run quick simulation. Please try entering your details manually.');
+          alert(`Failed to run quick simulation: ${error instanceof Error ? error.message : 'Unknown error'}. Please try entering your details manually.`);
         } finally {
           setIsLoading(false);
         }
@@ -230,7 +277,7 @@ export default function SimulationPage() {
     };
 
     checkQuickStart();
-  }, [isInitialized, prefillAttempted, quickStartAttempted]);
+  }, [isInitialized, prefillAttempted, quickStartAttempted, csrfToken]);
 
   const loadPrefillDataWithMerge = async (
     token: string | null = csrfToken,
@@ -330,11 +377,31 @@ export default function SimulationPage() {
         // Merge person 1 data
         const mergedP1 = mergePerson(savedHousehold.p1, data.person1Input);
 
+        // Calculate spending phases from total annual spending (always use fresh data from expenses)
+        const hasExpenseData = data.totalAnnualSpending && data.totalAnnualSpending > 0;
+        let spendingUpdate = {};
+
+        if (hasExpenseData) {
+          console.log('🔍 Using expense data from profile (merge mode):', data.totalAnnualSpending);
+          // Use current spending as go-go phase
+          // Reduce by 20% for slow-go phase (common retirement planning assumption)
+          // Reduce by 30% for no-go phase (common retirement planning assumption)
+          spendingUpdate = {
+            spending_go_go: Math.round(data.totalAnnualSpending),
+            spending_slow_go: Math.round(data.totalAnnualSpending * 0.8),
+            spending_no_go: Math.round(data.totalAnnualSpending * 0.7),
+          };
+        }
+
         // Update household with merged data
         setHousehold(prev => ({
           ...prev,
           province: data.province || prev.province,
           end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
+          strategy: data.recommendedStrategy || prev.strategy, // Use smart recommended strategy
+          spending_inflation: data.spendingInflation !== undefined ? data.spendingInflation : prev.spending_inflation, // From scenario
+          general_inflation: data.generalInflation !== undefined ? data.generalInflation : prev.general_inflation, // From scenario
+          ...spendingUpdate, // Always update spending from fresh expense data
           p1: mergedP1,
           p2: partnerData,
         }));
@@ -343,6 +410,9 @@ export default function SimulationPage() {
         setUserProfileProvince(data.userProfileProvince || null);
         setPrefillAvailable(true);
         console.log('✅ Profile data merged successfully - asset balances updated, custom settings preserved');
+        if (data.recommendedStrategy) {
+          console.log('✨ Using smart recommended strategy:', data.recommendedStrategy);
+        }
       }
     } catch (error) {
       console.error('Failed to load and merge prefill data:', error);
@@ -401,11 +471,11 @@ export default function SimulationPage() {
             console.log('🔍 Using expense data from profile:', data.totalAnnualSpending);
             // Use current spending as go-go phase
             // Reduce by 20% for slow-go phase (common retirement planning assumption)
-            // Reduce by 40% for no-go phase (common retirement planning assumption)
+            // Reduce by 30% for no-go phase (common retirement planning assumption)
             spendingUpdate = {
               spending_go_go: Math.round(data.totalAnnualSpending),
               spending_slow_go: Math.round(data.totalAnnualSpending * 0.8),
-              spending_no_go: Math.round(data.totalAnnualSpending * 0.6),
+              spending_no_go: Math.round(data.totalAnnualSpending * 0.7),
             };
           }
 
@@ -414,6 +484,9 @@ export default function SimulationPage() {
             ...prev,
             province: data.province || prev.province,
             end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
+            strategy: data.recommendedStrategy || prev.strategy, // Use smart recommended strategy
+            spending_inflation: data.spendingInflation !== undefined ? data.spendingInflation : prev.spending_inflation, // From scenario
+            general_inflation: data.generalInflation !== undefined ? data.generalInflation : prev.general_inflation, // From scenario
             ...spendingUpdate, // Apply spending data if available
             p1: {
               ...prev.p1,
@@ -429,6 +502,9 @@ export default function SimulationPage() {
           setUserProfileProvince(data.userProfileProvince || null);
           setPrefillAvailable(true);
           console.log('🔍 Prefill data applied successfully');
+          if (data.recommendedStrategy) {
+            console.log('✨ Using smart recommended strategy:', data.recommendedStrategy);
+          }
         } else {
           console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65 AND hasExpenses=false)');
         }
@@ -643,8 +719,58 @@ export default function SimulationPage() {
           </div>
         </div>
 
+        {/* Hero CTA - Prominent call-to-action when user has data but no results */}
+        {!result && !prefillLoading && prefillAvailable && (
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-8 text-white shadow-lg">
+            <h2 className="text-2xl font-bold mb-3">Ready to See Your Retirement Plan?</h2>
+            <p className="text-blue-100 mb-6">
+              We've loaded your financial profile with $
+              {((household.p1.tfsa_balance || 0) + (household.p1.rrsp_balance || 0) + (household.p1.rrif_balance || 0) +
+                (household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0) +
+                (household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0) +
+                (household.p2.tfsa_balance || 0) + (household.p2.rrsp_balance || 0) + (household.p2.rrif_balance || 0) +
+                (household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0) +
+                (household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)
+              ).toLocaleString()} in assets.
+              {' '}Click below to generate your personalized retirement projection with our smart {household.strategy} strategy.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                size="lg"
+                onClick={handleRunSimulation}
+                disabled={isLoading}
+                className="text-lg font-semibold !bg-white !text-blue-600 hover:!bg-blue-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Running...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-5 w-5" />
+                    Generate My Retirement Plan
+                  </>
+                )}
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  setShowSmartStart(false);
+                  setShowDetailedInputs(true);
+                }}
+                disabled={isLoading}
+                className="bg-white/10 hover:bg-white/20 text-white border-white/30"
+              >
+                Customize Settings First
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Smart Start Card - Shown on first visit or when no results */}
-        {showSmartStart && !result && !prefillLoading && (
+        {showSmartStart && !result && !prefillLoading && !prefillAvailable && (
           <SmartStartCard
             onQuickStart={async () => {
               setShowSmartStart(false);

@@ -79,6 +79,18 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Fetch baseline scenario for inflation rates
+    const baselineScenario = await prisma.scenario.findFirst({
+      where: {
+        userId: session.userId,
+        isBaseline: true,
+      },
+      select: {
+        expenseInflationRate: true,
+        inflationRate: true,
+      },
+    });
+
     // Calculate age from date of birth
     let age = 65; // default
     if (user?.dateOfBirth) {
@@ -410,6 +422,67 @@ export async function GET(request: NextRequest) {
       totalAnnualSpending += annualAmount;
     });
 
+    // Calculate smart default withdrawal strategy based on asset mix and profile
+    let recommendedStrategy = 'balanced'; // Default fallback
+
+    if (totalNetWorth > 0) {
+      const totalRRIF = person1Totals.rrif_balance + person2Totals.rrif_balance;
+      const totalTFSA = person1Totals.tfsa_balance + person2Totals.tfsa_balance;
+      const totalRRSP = person1Totals.rrsp_balance + person2Totals.rrsp_balance;
+      const totalNonReg = person1Totals.nonreg_balance + person2Totals.nonreg_balance;
+      const totalCorporate = person1Totals.corporate_balance + person2Totals.corporate_balance;
+
+      // Calculate percentages
+      const rrifPct = totalRRIF / totalNetWorth;
+      const tfsaPct = totalTFSA / totalNetWorth;
+      const nonregPct = totalNonReg / totalNetWorth;
+      const corporatePct = totalCorporate / totalNetWorth;
+
+      // Get total other income (pension, rental, employment, etc.)
+      const person1OtherIncome = (person1Income?.employer_pension_annual || 0) +
+                                  (person1Income?.rental_income_annual || 0) +
+                                  (person1Income?.other_income_annual || 0);
+      const person2OtherIncome = (incomeByOwner.person2?.employer_pension_annual || 0) +
+                                  (incomeByOwner.person2?.rental_income_annual || 0) +
+                                  (incomeByOwner.person2?.other_income_annual || 0);
+      const totalOtherIncome = person1OtherIncome + person2OtherIncome;
+
+      // Smart strategy selection logic
+      if (rrifPct > 0.4) {
+        // Large RRIF balance (>40%) - front-load withdrawals to minimize tax over lifetime
+        recommendedStrategy = 'rrif-frontload';
+      } else if (tfsaPct > 0.3 && totalRRIF > 0) {
+        // Large TFSA (>30%) with some RRIF - use TFSA first to preserve tax-deferred growth
+        recommendedStrategy = 'tfsa-first';
+      } else if (corporatePct > 0.3) {
+        // Significant corporate holdings (>30%) - use balanced approach for corporate optimization
+        recommendedStrategy = 'corporate-optimized';
+      } else if (totalOtherIncome > 50000) {
+        // High ongoing income (>$50k/year from pension/rental/etc) - minimize additional taxable income
+        recommendedStrategy = 'minimize-income';
+      } else if (nonregPct > 0.5) {
+        // Large non-registered balance (>50%) - optimize for capital gains
+        recommendedStrategy = 'capital-gains-optimized';
+      } else if (age < 65) {
+        // Under 65 - balanced approach for flexibility
+        recommendedStrategy = 'balanced';
+      } else {
+        // Default for typical retiree with mixed assets
+        recommendedStrategy = 'balanced';
+      }
+
+      logger.info('Smart strategy recommendation', {
+        totalNetWorth,
+        rrifPct: `${(rrifPct * 100).toFixed(1)}%`,
+        tfsaPct: `${(tfsaPct * 100).toFixed(1)}%`,
+        nonregPct: `${(nonregPct * 100).toFixed(1)}%`,
+        corporatePct: `${(corporatePct * 100).toFixed(1)}%`,
+        totalOtherIncome,
+        age,
+        recommendedStrategy,
+      });
+    }
+
     return NextResponse.json({
       person1Input,
       person2Input,
@@ -422,6 +495,9 @@ export async function GET(request: NextRequest) {
       lifeExpectancy: user?.lifeExpectancy || 95, // Planning horizon from profile
       totalAnnualSpending, // Total annual spending from expenses
       hasExpenses: expenses.length > 0,
+      recommendedStrategy, // Smart default strategy based on user's profile
+      spendingInflation: baselineScenario?.expenseInflationRate || 2.0, // Default 2%
+      generalInflation: baselineScenario?.inflationRate || 2.0, // Default 2%
     });
   } catch (error) {
     logger.error('Error fetching simulation prefill data', error, {
