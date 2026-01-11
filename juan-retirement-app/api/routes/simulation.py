@@ -181,7 +181,8 @@ async def run_simulation(
                 f"⚠️ Plan underfunded for {summary.total_underfunded_years} years. "
                 f"Total shortfall: ${summary.total_underfunding:,.0f}"
             )
-        if composition.recommended_strategy.value != household.strategy:
+        # Only warn if strategies are truly different (case-insensitive comparison)
+        if composition.recommended_strategy.value.lower() != household.strategy.lower():
             warnings.append(
                 f"💡 Recommended strategy is '{composition.recommended_strategy.value}' "
                 f"but you're using '{household.strategy}'. "
