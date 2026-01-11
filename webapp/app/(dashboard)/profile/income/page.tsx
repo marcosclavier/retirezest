@@ -20,6 +20,15 @@ export default function IncomePage() {
   const [showForm, setShowForm] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [includePartner, setIncludePartner] = useState(false);
+  const [showImportBanner, setShowImportBanner] = useState(false);
+  const [availableCalculations, setAvailableCalculations] = useState<{
+    cpp?: any;
+    oas?: any;
+  }>({});
+  const [selectedImports, setSelectedImports] = useState<{
+    cpp: boolean;
+    oas: boolean;
+  }>({ cpp: false, oas: false });
   const [formData, setFormData] = useState<IncomeSource>({
     type: 'employment',
     amount: 0,
@@ -33,7 +42,38 @@ export default function IncomePage() {
     fetchIncomeSources();
     fetchCsrfToken();
     fetchSettings();
+    checkForCalculatedBenefits();
   }, []);
+
+  const checkForCalculatedBenefits = () => {
+    const calculations: any = {};
+
+    // Check for CPP calculation
+    const cppResult = localStorage.getItem('cpp_calculator_result');
+    if (cppResult) {
+      try {
+        calculations.cpp = JSON.parse(cppResult);
+      } catch (e) {
+        console.error('Error parsing CPP result:', e);
+      }
+    }
+
+    // Check for OAS calculation
+    const oasResult = localStorage.getItem('oas_calculator_result');
+    if (oasResult) {
+      try {
+        calculations.oas = JSON.parse(oasResult);
+      } catch (e) {
+        console.error('Error parsing OAS result:', e);
+      }
+    }
+
+    // Show banner if we have calculations and user doesn't already have CPP/OAS in their income sources
+    if (Object.keys(calculations).length > 0) {
+      setAvailableCalculations(calculations);
+      setShowImportBanner(true);
+    }
+  };
 
   const fetchCsrfToken = async () => {
     try {
@@ -93,6 +133,21 @@ export default function IncomePage() {
       });
 
       if (res.ok) {
+        // Clear localStorage if CPP or OAS was added
+        if (formData.type === 'cpp') {
+          localStorage.removeItem('cpp_calculator_result');
+          setAvailableCalculations(prev => ({ ...prev, cpp: undefined }));
+        } else if (formData.type === 'oas') {
+          localStorage.removeItem('oas_calculator_result');
+          setAvailableCalculations(prev => ({ ...prev, oas: undefined }));
+        }
+
+        // Check if banner should be hidden (no more calculations available)
+        if ((!availableCalculations.cpp || formData.type === 'cpp') &&
+            (!availableCalculations.oas || formData.type === 'oas')) {
+          setShowImportBanner(false);
+        }
+
         await fetchIncomeSources();
         setShowForm(false);
         setFormData({
@@ -137,22 +192,205 @@ export default function IncomePage() {
     }
   };
 
+  const handleImportSelected = async () => {
+    if (!selectedImports.cpp && !selectedImports.oas) {
+      return; // Nothing selected
+    }
+
+    setLoading(true);
+
+    try {
+      const promises = [];
+
+      if (selectedImports.cpp && availableCalculations.cpp) {
+        const cppData = {
+          type: 'cpp',
+          amount: availableCalculations.cpp.annualAmount,
+          frequency: 'annual',
+          startAge: availableCalculations.cpp.startAge,
+          owner: 'person1',
+          notes: `Imported from CPP Calculator on ${new Date(availableCalculations.cpp.calculatedAt).toLocaleDateString()}`,
+        };
+
+        promises.push(
+          fetch('/api/profile/income', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            body: JSON.stringify(cppData),
+          })
+        );
+      }
+
+      if (selectedImports.oas && availableCalculations.oas) {
+        const oasData = {
+          type: 'oas',
+          amount: availableCalculations.oas.annualAmount,
+          frequency: 'annual',
+          startAge: 65, // OAS starts at 65
+          owner: 'person1',
+          notes: `Imported from OAS Calculator on ${new Date(availableCalculations.oas.calculatedAt).toLocaleDateString()}`,
+        };
+
+        promises.push(
+          fetch('/api/profile/income', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            body: JSON.stringify(oasData),
+          })
+        );
+      }
+
+      await Promise.all(promises);
+
+      // Clear localStorage for imported items
+      if (selectedImports.cpp) {
+        localStorage.removeItem('cpp_calculator_result');
+      }
+      if (selectedImports.oas) {
+        localStorage.removeItem('oas_calculator_result');
+      }
+
+      await fetchIncomeSources();
+      setShowImportBanner(false);
+      setAvailableCalculations({});
+      setSelectedImports({ cpp: false, oas: false });
+      alert('Benefits imported successfully!');
+    } catch (error) {
+      console.error('Error importing calculations:', error);
+      alert('Failed to import benefits. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.back()}
             className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
           >
-            ← Back to Dashboard
+            ← Back
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Income Sources</h1>
           <p className="text-gray-600 mt-2">
             Add your expected income sources including employment, pensions, CPP, OAS, and other sources.
           </p>
         </div>
+
+        {/* Import CPP/OAS Banner */}
+        {showImportBanner && (
+          <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6 shadow-md">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Government Benefits Calculated!
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    We found calculated benefits from your recent calculator sessions. Would you like to add them as income sources?
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowImportBanner(false)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Dismiss"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {availableCalculations.cpp && (
+                <div className={`bg-white rounded-lg p-4 border-2 transition ${selectedImports.cpp ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="import-cpp"
+                      checked={selectedImports.cpp}
+                      onChange={(e) => setSelectedImports({ ...selectedImports, cpp: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <label htmlFor="import-cpp" className="font-semibold text-gray-900 cursor-pointer">
+                          CPP (Canada Pension Plan)
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          {new Date(availableCalculations.cpp.calculatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600 mb-1">
+                        ${availableCalculations.cpp.monthlyAmount.toLocaleString()}/month
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        ${availableCalculations.cpp.annualAmount.toLocaleString()}/year
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        Starting at age {availableCalculations.cpp.startAge}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {availableCalculations.oas && (
+                <div className={`bg-white rounded-lg p-4 border-2 transition ${selectedImports.oas ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="import-oas"
+                      checked={selectedImports.oas}
+                      onChange={(e) => setSelectedImports({ ...selectedImports, oas: e.target.checked })}
+                      className="mt-1 h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <label htmlFor="import-oas" className="font-semibold text-gray-900 cursor-pointer">
+                          OAS (Old Age Security)
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          {new Date(availableCalculations.oas.calculatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-green-600 mb-1">
+                        ${availableCalculations.oas.monthlyAmount.toLocaleString()}/month
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        ${availableCalculations.oas.annualAmount.toLocaleString()}/year
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        {availableCalculations.oas.yearsInCanada} years in Canada
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleImportSelected}
+              disabled={loading || (!selectedImports.cpp && !selectedImports.oas)}
+              className="w-full px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+            >
+              {loading ? 'Importing...' : `Import Selected (${(selectedImports.cpp ? 1 : 0) + (selectedImports.oas ? 1 : 0)})`}
+            </button>
+          </div>
+        )}
 
         {/* Add Income Button */}
         {!showForm && (
@@ -208,14 +446,53 @@ export default function IncomePage() {
                 </div>
               )}
 
+              {/* CPP/OAS Quick Import Helper */}
+              {((formData.type === 'cpp' && availableCalculations.cpp) ||
+                (formData.type === 'oas' && availableCalculations.oas)) && (
+                <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-blue-900 text-sm mb-1">
+                        {formData.type === 'cpp' ? 'CPP' : 'OAS'} Calculation Available!
+                      </h4>
+                      <p className="text-sm text-blue-800 mb-2">
+                        We found a recent {formData.type === 'cpp' ? 'CPP' : 'OAS'} calculation.
+                        Annual amount: ${formData.type === 'cpp'
+                          ? availableCalculations.cpp.annualAmount.toLocaleString()
+                          : availableCalculations.oas.annualAmount.toLocaleString()}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const calc = formData.type === 'cpp' ? availableCalculations.cpp : availableCalculations.oas;
+                          setFormData({
+                            ...formData,
+                            amount: calc.annualAmount,
+                            frequency: 'annual',
+                            startAge: formData.type === 'cpp' ? calc.startAge : 65,
+                            notes: `Imported from ${formData.type === 'cpp' ? 'CPP' : 'OAS'} Calculator on ${new Date(calc.calculatedAt).toLocaleDateString()}`
+                          });
+                        }}
+                        className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-medium"
+                      >
+                        Use Calculated Amount
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Annual Amount (CAD) *
                 </label>
                 <input
                   type="number"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                  value={formData.amount || ''}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="e.g., 60000"
                   min="0"

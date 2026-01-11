@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   estimateCPPSimple,
   findOptimalCPPStartAge,
@@ -12,7 +13,11 @@ import { HelpTooltip } from '@/components/ui/HelpTooltip';
 import { getShortHelp } from '@/lib/help/helpContent';
 
 export default function CPPCalculatorPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const fromWizard = searchParams.get('from') === 'wizard';
   const [averageIncome, setAverageIncome] = useState('70000');
+  const [displayIncome, setDisplayIncome] = useState('70,000'); // Formatted for display
   const [yearsOfContributions, setYearsOfContributions] = useState('35');
   const [currentAge, setCurrentAge] = useState('65');
   const [startAge, setStartAge] = useState('65');
@@ -21,6 +26,22 @@ export default function CPPCalculatorPage() {
   const [comparison, setComparison] = useState<any>(null);
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [ageFromProfile, setAgeFromProfile] = useState(false);
+
+  // Format number with thousand separators
+  const formatWithCommas = (value: string): string => {
+    const num = value.replace(/,/g, '');
+    if (!num || isNaN(Number(num))) return value;
+    return Number(num).toLocaleString('en-US');
+  };
+
+  // Handle income input change
+  const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/,/g, ''); // Remove existing commas
+    if (rawValue === '' || /^\d+$/.test(rawValue)) {
+      setAverageIncome(rawValue);
+      setDisplayIncome(rawValue ? formatWithCommas(rawValue) : '');
+    }
+  };
 
   // Load saved values from localStorage on mount
   useEffect(() => {
@@ -31,7 +52,10 @@ export default function CPPCalculatorPage() {
     const savedLifeExpectancy = localStorage.getItem('cpp_calculator_life_expectancy');
 
     if (savedCurrentAge) setCurrentAge(savedCurrentAge);
-    if (savedAverageIncome) setAverageIncome(savedAverageIncome);
+    if (savedAverageIncome) {
+      setAverageIncome(savedAverageIncome);
+      setDisplayIncome(formatWithCommas(savedAverageIncome));
+    }
     if (savedYearsOfContributions) setYearsOfContributions(savedYearsOfContributions);
     if (savedStartAge) setStartAge(savedStartAge);
     if (savedLifeExpectancy) setLifeExpectancy(savedLifeExpectancy);
@@ -165,11 +189,52 @@ export default function CPPCalculatorPage() {
       breakEven60vs65,
       breakEven65vs70,
     });
+
+    // Save CPP calculation result to localStorage for easy import to income page
+    localStorage.setItem('cpp_calculator_result', JSON.stringify({
+      monthlyAmount: estimate.monthlyAmount,
+      annualAmount: estimate.annualAmount,
+      startAge: estimate.startAge,
+      calculatedAt: new Date().toISOString(),
+    }));
   };
 
   return (
     <div className="space-y-6">
+      {/* Return to Wizard Banner */}
+      {fromWizard && (
+        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-semibold text-indigo-900">
+                  You opened this from the Setup Wizard
+                </p>
+                <p className="text-sm text-indigo-700">
+                  When you're done exploring CPP benefits, close this tab to return to the wizard
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => window.close()}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition font-medium text-sm whitespace-nowrap ml-4"
+            >
+              Close Tab
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
+        <button
+          onClick={() => router.back()}
+          className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
+        >
+          ← Back
+        </button>
         <h1 className="text-3xl font-bold text-gray-900">CPP Calculator</h1>
         <p className="mt-2 text-gray-600">
           Calculate your Canada Pension Plan retirement benefit
@@ -210,14 +275,13 @@ export default function CPPCalculatorPage() {
               Average Annual Income
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-600 font-medium">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 font-medium">$</span>
               <input
-                type="number"
-                value={averageIncome}
-                onChange={(e) => setAverageIncome(e.target.value)}
-                className="pl-7 block w-full rounded-md border-2 border-gray-400 bg-white text-gray-900 font-medium shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                min="0"
-                step="1000"
+                type="text"
+                inputMode="numeric"
+                value={displayIncome}
+                onChange={handleIncomeChange}
+                className="pl-7 pr-3 py-2 block w-full rounded-md border-2 border-gray-400 bg-white text-gray-900 font-medium shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             <p className="mt-1 text-xs text-gray-500">

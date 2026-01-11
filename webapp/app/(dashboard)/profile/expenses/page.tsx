@@ -187,8 +187,32 @@ export default function ExpensesPage() {
       // Only include recurring expenses in monthly/annual totals
       if (!expense.isRecurring) return total;
 
-      const amount = expense.frequency === 'annual' ? expense.amount / 12 : expense.amount;
-      return total + amount;
+      const frequency = expense.frequency.toLowerCase();
+      let monthlyAmount = 0;
+
+      // Convert to monthly amount based on frequency
+      switch (frequency) {
+        case 'monthly':
+          monthlyAmount = expense.amount;
+          break;
+        case 'annual':
+        case 'yearly':
+          monthlyAmount = expense.amount / 12;
+          break;
+        case 'quarterly':
+          monthlyAmount = expense.amount * 4 / 12;
+          break;
+        case 'weekly':
+          monthlyAmount = expense.amount * 52 / 12;
+          break;
+        case 'biweekly':
+          monthlyAmount = expense.amount * 26 / 12;
+          break;
+        default:
+          monthlyAmount = expense.amount; // Default to monthly
+      }
+
+      return total + monthlyAmount;
     }, 0);
   };
 
@@ -199,12 +223,36 @@ export default function ExpensesPage() {
       // Only include recurring expenses in monthly/annual totals
       if (!expense.isRecurring) return;
 
-      const amount = expense.frequency === 'annual' ? expense.amount / 12 : expense.amount;
+      const frequency = expense.frequency.toLowerCase();
+      let monthlyAmount = 0;
+
+      // Convert to monthly amount based on frequency
+      switch (frequency) {
+        case 'monthly':
+          monthlyAmount = expense.amount;
+          break;
+        case 'annual':
+        case 'yearly':
+          monthlyAmount = expense.amount / 12;
+          break;
+        case 'quarterly':
+          monthlyAmount = expense.amount * 4 / 12;
+          break;
+        case 'weekly':
+          monthlyAmount = expense.amount * 52 / 12;
+          break;
+        case 'biweekly':
+          monthlyAmount = expense.amount * 26 / 12;
+          break;
+        default:
+          monthlyAmount = expense.amount; // Default to monthly
+      }
+
       const isEssential = expense.essential !== undefined ? expense.essential : expense.isEssential;
       if (isEssential) {
-        essential += amount;
+        essential += monthlyAmount;
       } else {
-        discretionary += amount;
+        discretionary += monthlyAmount;
       }
     });
     return { essential, discretionary };

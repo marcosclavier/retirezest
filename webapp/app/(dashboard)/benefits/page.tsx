@@ -1,23 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   estimateCPPSimple,
-  MAX_CPP_2025,
+  MAX_CPP_2026,
 } from '@/lib/calculations/cpp';
 import {
   calculateNetOAS,
-  MAX_OAS_65_2025,
-  MAX_OAS_75_2025,
+  MAX_OAS_65_2026,
+  MAX_OAS_75_2026,
 } from '@/lib/calculations/oas';
 import {
   calculateGIS,
-  MAX_GIS_SINGLE_2025,
-  GIS_INCOME_THRESHOLD_SINGLE_2025,
+  MAX_GIS_SINGLE_2026,
+  GIS_INCOME_THRESHOLD_SINGLE_2026,
 } from '@/lib/calculations/gis';
 
 export default function BenefitsPage() {
+  const searchParams = useSearchParams();
+  const fromWizard = searchParams.get('from') === 'wizard';
   // Quick estimate inputs
   const [age, setAge] = useState('65');
   const [yearsInCanada, setYearsInCanada] = useState('40');
@@ -28,6 +31,36 @@ export default function BenefitsPage() {
   const [cppEstimate, setCppEstimate] = useState<any>(null);
   const [oasEstimate, setOasEstimate] = useState<any>(null);
   const [gisEstimate, setGisEstimate] = useState<any>(null);
+
+  // Load saved values from localStorage on mount
+  useEffect(() => {
+    const savedAge = localStorage.getItem('quick_estimator_age');
+    const savedYearsInCanada = localStorage.getItem('quick_estimator_years_canada');
+    const savedAverageIncome = localStorage.getItem('quick_estimator_avg_income');
+    const savedYearsCPP = localStorage.getItem('quick_estimator_years_cpp');
+
+    if (savedAge) setAge(savedAge);
+    if (savedYearsInCanada) setYearsInCanada(savedYearsInCanada);
+    if (savedAverageIncome) setAverageIncome(savedAverageIncome);
+    if (savedYearsCPP) setYearsOfCPPContributions(savedYearsCPP);
+  }, []);
+
+  // Save values to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('quick_estimator_age', age);
+  }, [age]);
+
+  useEffect(() => {
+    localStorage.setItem('quick_estimator_years_canada', yearsInCanada);
+  }, [yearsInCanada]);
+
+  useEffect(() => {
+    localStorage.setItem('quick_estimator_avg_income', averageIncome);
+  }, [averageIncome]);
+
+  useEffect(() => {
+    localStorage.setItem('quick_estimator_years_cpp', yearsOfCPPContributions);
+  }, [yearsOfCPPContributions]);
 
   const handleQuickEstimate = () => {
     const currentAge = parseInt(age);
@@ -43,7 +76,7 @@ export default function BenefitsPage() {
 
     // Estimate GIS (if eligible - low income)
     const totalIncome = cpp.annualAmount + income;
-    if (totalIncome < GIS_INCOME_THRESHOLD_SINGLE_2025) {
+    if (totalIncome < GIS_INCOME_THRESHOLD_SINGLE_2026) {
       const gis = calculateGIS(totalIncome - oas.annualAmount, 'single', false);
       setGisEstimate(gis);
     } else {
@@ -71,6 +104,40 @@ export default function BenefitsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Back to Dashboard Button */}
+      {!fromWizard && (
+        <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-2">
+          ← Back to Dashboard
+        </Link>
+      )}
+
+      {/* Return to Wizard Banner */}
+      {fromWizard && (
+        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-indigo-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-semibold text-indigo-900">
+                  You opened this from the Setup Wizard
+                </p>
+                <p className="text-sm text-indigo-700">
+                  When you're done exploring benefits, close this tab to return to the wizard
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => window.close()}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition font-medium text-sm whitespace-nowrap ml-4"
+            >
+              Close Tab
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Government Benefits</h1>
         <p className="mt-2 text-gray-600">
@@ -81,7 +148,7 @@ export default function BenefitsPage() {
       {/* Quick Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* CPP Card */}
-        <Link href="/benefits/cpp">
+        <Link href={fromWizard ? "/benefits/cpp?from=wizard" : "/benefits/cpp"}>
           <div className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">CPP Calculator</h3>
@@ -95,8 +162,8 @@ export default function BenefitsPage() {
               Canada Pension Plan retirement benefit based on your contributions and earnings.
             </p>
             <div className="bg-blue-50 rounded p-3">
-              <div className="text-xs text-blue-600 font-medium">Maximum (2025)</div>
-              <div className="text-xl font-bold text-blue-900">${MAX_CPP_2025.toLocaleString()}/mo</div>
+              <div className="text-xs text-blue-600 font-medium">Maximum (2026)</div>
+              <div className="text-xl font-bold text-blue-900">${MAX_CPP_2026.toLocaleString()}/mo</div>
             </div>
             <div className="mt-4 text-sm text-blue-600 font-medium flex items-center">
               Calculate Your CPP
@@ -108,7 +175,7 @@ export default function BenefitsPage() {
         </Link>
 
         {/* OAS Card */}
-        <Link href="/benefits/oas">
+        <Link href={fromWizard ? "/benefits/oas?from=wizard" : "/benefits/oas"}>
           <div className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-green-500">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">OAS Calculator</h3>
@@ -122,8 +189,8 @@ export default function BenefitsPage() {
               Old Age Security pension for Canadians 65+ based on years of residence.
             </p>
             <div className="bg-green-50 rounded p-3">
-              <div className="text-xs text-green-600 font-medium">Maximum (2025)</div>
-              <div className="text-xl font-bold text-green-900">${MAX_OAS_65_2025.toLocaleString()}/mo</div>
+              <div className="text-xs text-green-600 font-medium">Maximum (2026)</div>
+              <div className="text-xl font-bold text-green-900">${MAX_OAS_65_2026.toLocaleString()}/mo</div>
               <div className="text-xs text-green-600 mt-1">Ages 65-74</div>
             </div>
             <div className="mt-4 text-sm text-green-600 font-medium flex items-center">
@@ -136,7 +203,7 @@ export default function BenefitsPage() {
         </Link>
 
         {/* GIS Card */}
-        <Link href="/benefits/gis">
+        <Link href={fromWizard ? "/benefits/gis?from=wizard" : "/benefits/gis"}>
           <div className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-purple-500">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">GIS Calculator</h3>
@@ -150,8 +217,8 @@ export default function BenefitsPage() {
               Guaranteed Income Supplement for low-income OAS recipients.
             </p>
             <div className="bg-purple-50 rounded p-3">
-              <div className="text-xs text-purple-600 font-medium">Maximum (2025)</div>
-              <div className="text-xl font-bold text-purple-900">${MAX_GIS_SINGLE_2025.toLocaleString()}/mo</div>
+              <div className="text-xs text-purple-600 font-medium">Maximum (2026)</div>
+              <div className="text-xl font-bold text-purple-900">${MAX_GIS_SINGLE_2026.toLocaleString()}/mo</div>
               <div className="text-xs text-purple-600 mt-1">Single recipients</div>
             </div>
             <div className="mt-4 text-sm text-purple-600 font-medium flex items-center">
@@ -334,7 +401,7 @@ export default function BenefitsPage() {
             </div>
             <div className="flex items-start">
               <div className="text-purple-600 mr-2">✓</div>
-              <div className="text-gray-700">Income below ${GIS_INCOME_THRESHOLD_SINGLE_2025.toLocaleString()} (single)</div>
+              <div className="text-gray-700">Income below ${GIS_INCOME_THRESHOLD_SINGLE_2026.toLocaleString()} (single)</div>
             </div>
             <div className="flex items-start">
               <div className="text-purple-600 mr-2">✓</div>

@@ -5,8 +5,9 @@
 
 import { CPPEstimate } from '@/types';
 
-// Maximum monthly CPP amount for 2025
+// Maximum monthly CPP amount for 2025 and 2026
 export const MAX_CPP_2025 = 1433.00;
+export const MAX_CPP_2026 = 1507.65;
 
 // Year's Maximum Pensionable Earnings (YMPE) historical data
 export const YMPE_HISTORY: Record<number, number> = {
@@ -21,21 +22,24 @@ export const YMPE_HISTORY: Record<number, number> = {
   2023: 66600,
   2024: 68500,
   2025: 71300,
+  2026: 74600,
 };
 
 // Age adjustment factors for CPP
+// Early: -0.6% per month (7.2% per year) before age 65
+// Late: +0.7% per month (8.4% per year) after age 65
 export const CPP_AGE_FACTORS: Record<number, number> = {
-  60: 0.64,   // -36%
-  61: 0.694,  // -30.6%
-  62: 0.748,  // -25.2%
-  63: 0.802,  // -19.8%
-  64: 0.856,  // -14.4%
-  65: 1.0,    // 0%
-  66: 1.084,  // +8.4%
-  67: 1.168,  // +16.8%
-  68: 1.252,  // +25.2%
-  69: 1.336,  // +33.6%
-  70: 1.42,   // +42%
+  60: 0.64,   // -36% (60 months early × 0.6%)
+  61: 0.712,  // -28.8% (48 months early × 0.6%)
+  62: 0.784,  // -21.6% (36 months early × 0.6%)
+  63: 0.856,  // -14.4% (24 months early × 0.6%)
+  64: 0.928,  // -7.2% (12 months early × 0.6%)
+  65: 1.0,    // 0% (standard age)
+  66: 1.084,  // +8.4% (12 months late × 0.7%)
+  67: 1.168,  // +16.8% (24 months late × 0.7%)
+  68: 1.252,  // +25.2% (36 months late × 0.7%)
+  69: 1.336,  // +33.6% (48 months late × 0.7%)
+  70: 1.42,   // +42% (60 months late × 0.7%)
 };
 
 /**
@@ -77,13 +81,14 @@ export function calculateAverageYMPE(
 /**
  * Calculate CPP monthly amount based on average YMPE
  */
-export function calculateBaseCPP(averageYMPE: number): number {
+export function calculateBaseCPP(averageYMPE: number, year: number = new Date().getFullYear()): number {
   // CPP is 25% of average YMPE, divided by 12 for monthly amount
   const annualCPP = averageYMPE * 0.25;
   const monthlyCPP = annualCPP / 12;
 
-  // Cap at maximum
-  return Math.min(monthlyCPP, MAX_CPP_2025);
+  // Cap at maximum based on year
+  const maxCPP = year >= 2026 ? MAX_CPP_2026 : MAX_CPP_2025;
+  return Math.min(monthlyCPP, maxCPP);
 }
 
 /**
@@ -199,7 +204,7 @@ export function estimateCPPSimple(
   // Fill contribution history from most recent backwards
   for (let i = 0; i < contributoryYears; i++) {
     const year = currentYear - (currentAge - startAge) - i;
-    const ympe = YMPE_HISTORY[year] || 71300; // Use latest if not in history
+    const ympe = YMPE_HISTORY[year] || 74600; // Use 2026 YMPE if not in history
 
     // Only count actual contribution years, rest are zeros
     const isContributionYear = i < yearsOfContributions;

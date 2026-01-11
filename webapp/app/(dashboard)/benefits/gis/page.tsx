@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   calculateGIS,
   isEligibleForGIS,
@@ -16,6 +17,7 @@ import { HelpTooltip } from '@/components/ui/HelpTooltip';
 import { getShortHelp } from '@/lib/help/helpContent';
 
 export default function GISCalculatorPage() {
+  const router = useRouter();
   const [age, setAge] = useState('65');
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
   const [spouseReceivesOAS, setSpouseReceivesOAS] = useState(false);
@@ -34,6 +36,181 @@ export default function GISCalculatorPage() {
   const [eligibility, setEligibility] = useState<any>(null);
   const [incomeBreakdown, setIncomeBreakdown] = useState<any>(null);
   const [strategies, setStrategies] = useState<any>(null);
+  const [hasLoadedIncome, setHasLoadedIncome] = useState(false);
+
+  // Fetch profile and income data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch profile for age
+        let calculatedAge = 65; // Default
+        const profileRes = await fetch('/api/profile');
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          if (profile.dateOfBirth) {
+            // Calculate age from date of birth
+            const today = new Date();
+            const birthDate = new Date(profile.dateOfBirth);
+            calculatedAge = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              calculatedAge--;
+            }
+            setAge(String(calculatedAge));
+          }
+        }
+
+        // Fetch assets to estimate RRSP/RRIF withdrawals and investment income
+        const assetsRes = await fetch('/api/profile/assets');
+        let estimatedRrspWithdrawals = 0;
+        let estimatedInvestmentIncome = 0;
+        if (assetsRes.ok) {
+          const assetsData = await assetsRes.json();
+          const assets = assetsData.assets || [];
+
+          // Calculate estimated RRSP/RRIF withdrawals and investment income
+          // Use age-based RRIF minimum withdrawal rates or 4% for RRSP
+          const currentAge = calculatedAge;
+
+          assets.forEach((asset: any) => {
+            const balance = asset.balance || 0;
+
+            if (asset.type === 'rrsp' || asset.type === 'rrif') {
+              let withdrawalRate = 0.04; // Default 4% for RRSP
+
+              // Use RRIF minimum withdrawal rates based on age
+              if (asset.type === 'rrif' || currentAge >= 71) {
+                // Simplified RRIF minimum withdrawal rate table
+                if (currentAge >= 95) withdrawalRate = 0.20;
+                else if (currentAge >= 90) withdrawalRate = 0.167;
+                else if (currentAge >= 85) withdrawalRate = 0.118;
+                else if (currentAge >= 80) withdrawalRate = 0.082;
+                else if (currentAge >= 75) withdrawalRate = 0.06;
+                else if (currentAge >= 71) withdrawalRate = 0.0528;
+                else withdrawalRate = 0.04; // Pre-71 estimate
+              }
+
+              estimatedRrspWithdrawals += balance * withdrawalRate;
+            } else if (asset.type === 'nonreg' || asset.type === 'corporate') {
+              // Estimate investment income from non-registered accounts
+              // Use a conservative 3% dividend/interest yield
+              const estimatedYield = 0.03;
+              estimatedInvestmentIncome += balance * estimatedYield;
+            }
+          });
+        }
+
+        // Fetch income sources
+        const incomeRes = await fetch('/api/profile/income');
+        if (incomeRes.ok) {
+          const data = await incomeRes.json();
+          const incomeSources = data.income || [];
+
+          // Helper function to convert to annual amount
+          const toAnnual = (amount: number, frequency: string) => {
+            switch (frequency) {
+              case 'monthly': return amount * 12;
+              case 'biweekly': return amount * 26;
+              case 'weekly': return amount * 52;
+              case 'annual': return amount;
+              default: return amount;
+            }
+          };
+
+          // Aggregate income by type
+          let totalEmployment = 0;
+          let totalPension = 0;
+          let totalRrsp = 0;
+          let totalInvestment = 0;
+          let totalRental = 0;
+          let totalCpp = 0;
+          let totalOas = 0;
+
+          incomeSources.forEach((income: any) => {
+            const annualAmount = toAnnual(income.amount, income.frequency);
+
+            switch (income.type) {
+              case 'employment':
+                totalEmployment += annualAmount;
+                break;
+              case 'pension':
+                totalPension += annualAmount;
+                break;
+              case 'cpp':
+                totalCpp += annualAmount;
+                break;
+              case 'oas':
+                totalOas += annualAmount;
+                break;
+              case 'investment':
+                totalInvestment += annualAmount;
+                break;
+              case 'rental':
+                totalRental += annualAmount;
+                break;
+              case 'business':
+                totalEmployment += annualAmount; // Treat business as employment income
+                break;
+              case 'other':
+                // Check description for RRSP/RRIF keywords
+                if (income.description &&
+                    (income.description.toLowerCase().includes('rrsp') ||
+                     income.description.toLowerCase().includes('rrif'))) {
+                  totalRrsp += annualAmount;
+                } else {
+                  totalInvestment += annualAmount;
+                }
+                break;
+            }
+          });
+
+          // Update state with aggregated values
+          let hasIncome = false;
+          if (totalEmployment > 0) {
+            setEmployment(String(Math.round(totalEmployment)));
+            hasIncome = true;
+          }
+          if (totalPension > 0) {
+            setPension(String(Math.round(totalPension)));
+            hasIncome = true;
+          }
+
+          // Combine RRSP/RRIF withdrawals from income sources and estimated from assets
+          const combinedRrspWithdrawals = totalRrsp + estimatedRrspWithdrawals;
+          if (combinedRrspWithdrawals > 0) {
+            setRrspWithdrawals(String(Math.round(combinedRrspWithdrawals)));
+            hasIncome = true;
+          }
+
+          // Combine investment income from income sources and estimated from assets
+          const combinedInvestmentIncome = totalInvestment + estimatedInvestmentIncome;
+          if (combinedInvestmentIncome > 0) {
+            setInvestmentIncome(String(Math.round(combinedInvestmentIncome)));
+            hasIncome = true;
+          }
+          if (totalRental > 0) {
+            setRentalIncome(String(Math.round(totalRental)));
+            hasIncome = true;
+          }
+          if (totalCpp > 0) {
+            setCpp(String(Math.round(totalCpp)));
+            hasIncome = true;
+          }
+          if (totalOas > 0) {
+            setOasAmount(String(Math.round(totalOas)));
+            setReceivesOAS(true);
+            hasIncome = true;
+          }
+
+          setHasLoadedIncome(hasIncome);
+        }
+      } catch (error) {
+        console.error('Error fetching profile and income data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleCalculate = () => {
     // Calculate GIS-countable income
@@ -112,11 +289,40 @@ export default function GISCalculatorPage() {
   return (
     <div className="space-y-6">
       <div>
+        <button
+          onClick={() => router.back()}
+          className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
+        >
+          ← Back
+        </button>
         <h1 className="text-3xl font-bold text-gray-900">GIS Calculator</h1>
         <p className="mt-2 text-gray-600">
           Calculate your Guaranteed Income Supplement benefit
         </p>
       </div>
+
+      {/* Income Auto-populated Banner */}
+      {hasLoadedIncome && (
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="font-semibold text-blue-900 text-sm mb-1">
+                Income Sources Auto-Populated
+              </h4>
+              <p className="text-sm text-blue-800 mb-2">
+                We've pre-filled your income sources from your Financial Profile. You can adjust any values as needed.
+              </p>
+              <div className="text-xs text-blue-700 space-y-1">
+                <div>• RRSP/RRIF withdrawals estimated based on your asset balances and age-appropriate withdrawal rates</div>
+                <div>• Investment income estimated at 3% yield from non-registered accounts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Input Form */}
       <div className="bg-white shadow rounded-lg p-6">
@@ -261,6 +467,11 @@ export default function GISCalculatorPage() {
                   step="100"
                 />
               </div>
+              {parseFloat(rrspWithdrawals) > 0 && (
+                <p className="mt-1 text-xs text-blue-600">
+                  Estimated at {parseInt(age) >= 71 ? 'age-based RRIF minimum' : '4%'} withdrawal rate from your RRSP/RRIF assets
+                </p>
+              )}
             </div>
 
             <div>
@@ -278,6 +489,11 @@ export default function GISCalculatorPage() {
                   step="100"
                 />
               </div>
+              {parseFloat(investmentIncome) > 0 && (
+                <p className="mt-1 text-xs text-blue-600">
+                  Estimated at 3% annual yield from non-registered accounts
+                </p>
+              )}
             </div>
 
             <div>

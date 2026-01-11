@@ -102,7 +102,7 @@ export default function WelcomePage() {
               {/* Time Estimate */}
               <div className="bg-indigo-50 rounded-lg p-3 mb-6">
                 <p className="text-sm text-indigo-900 text-center">
-                  <span className="font-semibold">Time:</span> 30-45 minutes
+                  <span className="font-semibold">Time:</span> 10-20 minutes
                 </p>
               </div>
 

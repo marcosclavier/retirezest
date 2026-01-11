@@ -10,9 +10,18 @@ export const MAX_GIS_SINGLE_2025 = 1065.47;
 export const MAX_GIS_MARRIED_BOTH_2025 = 641.35; // Both receiving OAS
 export const MAX_GIS_MARRIED_ONE_2025 = 1065.47; // Only one receiving OAS
 
+// Maximum monthly GIS amounts for 2026
+export const MAX_GIS_SINGLE_2026 = 1108.74;
+export const MAX_GIS_MARRIED_BOTH_2026 = 667.41; // Both receiving OAS
+export const MAX_GIS_MARRIED_ONE_2026 = 1108.74; // Only one receiving OAS
+
 // Income thresholds for GIS (2025)
 export const GIS_INCOME_THRESHOLD_SINGLE_2025 = 21624;
 export const GIS_INCOME_THRESHOLD_MARRIED_2025 = 28560;
+
+// Income thresholds for GIS (2026) - estimated based on indexation
+export const GIS_INCOME_THRESHOLD_SINGLE_2026 = 22512;
+export const GIS_INCOME_THRESHOLD_MARRIED_2026 = 29712;
 
 // Reduction rate for GIS
 export const GIS_REDUCTION_RATE_SINGLE = 0.5; // 50 cents per dollar
@@ -24,26 +33,27 @@ export const GIS_REDUCTION_RATE_MARRIED = 0.25; // 25 cents per dollar (for coup
 export function calculateGIS(
   annualIncome: number,
   maritalStatus: 'single' | 'married',
-  spouseReceivesOAS: boolean = false
+  spouseReceivesOAS: boolean = false,
+  year: number = new Date().getFullYear()
 ): GISEstimate {
-  // Determine maximum GIS
+  // Determine maximum GIS based on year
   let maxGIS: number;
   let incomeThreshold: number;
   let reductionRate: number;
 
   if (maritalStatus === 'single') {
-    maxGIS = MAX_GIS_SINGLE_2025;
-    incomeThreshold = GIS_INCOME_THRESHOLD_SINGLE_2025;
+    maxGIS = year >= 2026 ? MAX_GIS_SINGLE_2026 : MAX_GIS_SINGLE_2025;
+    incomeThreshold = year >= 2026 ? GIS_INCOME_THRESHOLD_SINGLE_2026 : GIS_INCOME_THRESHOLD_SINGLE_2025;
     reductionRate = GIS_REDUCTION_RATE_SINGLE;
   } else {
     // Married
     if (spouseReceivesOAS) {
-      maxGIS = MAX_GIS_MARRIED_BOTH_2025;
-      incomeThreshold = GIS_INCOME_THRESHOLD_MARRIED_2025;
+      maxGIS = year >= 2026 ? MAX_GIS_MARRIED_BOTH_2026 : MAX_GIS_MARRIED_BOTH_2025;
+      incomeThreshold = year >= 2026 ? GIS_INCOME_THRESHOLD_MARRIED_2026 : GIS_INCOME_THRESHOLD_MARRIED_2025;
       reductionRate = GIS_REDUCTION_RATE_MARRIED;
     } else {
-      maxGIS = MAX_GIS_MARRIED_ONE_2025;
-      incomeThreshold = GIS_INCOME_THRESHOLD_SINGLE_2025;
+      maxGIS = year >= 2026 ? MAX_GIS_MARRIED_ONE_2026 : MAX_GIS_MARRIED_ONE_2025;
+      incomeThreshold = year >= 2026 ? GIS_INCOME_THRESHOLD_SINGLE_2026 : GIS_INCOME_THRESHOLD_SINGLE_2025;
       reductionRate = GIS_REDUCTION_RATE_SINGLE;
     }
   }
@@ -87,7 +97,8 @@ export function isEligibleForGIS(
   age: number,
   receivesOAS: boolean,
   annualIncome: number,
-  maritalStatus: 'single' | 'married' = 'single'
+  maritalStatus: 'single' | 'married' = 'single',
+  year: number = new Date().getFullYear()
 ): {
   eligible: boolean;
   reason?: string;
@@ -108,11 +119,11 @@ export function isEligibleForGIS(
     };
   }
 
-  // Income must be below threshold
+  // Income must be below threshold based on year
   const threshold =
     maritalStatus === 'single'
-      ? GIS_INCOME_THRESHOLD_SINGLE_2025
-      : GIS_INCOME_THRESHOLD_MARRIED_2025;
+      ? (year >= 2026 ? GIS_INCOME_THRESHOLD_SINGLE_2026 : GIS_INCOME_THRESHOLD_SINGLE_2025)
+      : (year >= 2026 ? GIS_INCOME_THRESHOLD_MARRIED_2026 : GIS_INCOME_THRESHOLD_MARRIED_2025);
 
   if (annualIncome >= threshold) {
     return {
@@ -130,7 +141,8 @@ export function isEligibleForGIS(
 export function calculateGISForCouple(
   person1Income: number,
   person2Income: number,
-  bothReceiveOAS: boolean = true
+  bothReceiveOAS: boolean = true,
+  year: number = new Date().getFullYear()
 ): {
   person1GIS: GISEstimate;
   person2GIS: GISEstimate;
@@ -141,8 +153,8 @@ export function calculateGISForCouple(
   const combinedIncome = person1Income + person2Income;
 
   // Calculate GIS for each person
-  const person1GIS = calculateGIS(combinedIncome, 'married', bothReceiveOAS);
-  const person2GIS = calculateGIS(combinedIncome, 'married', bothReceiveOAS);
+  const person1GIS = calculateGIS(combinedIncome, 'married', bothReceiveOAS, year);
+  const person2GIS = calculateGIS(combinedIncome, 'married', bothReceiveOAS, year);
 
   return {
     person1GIS,

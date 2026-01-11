@@ -219,20 +219,47 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
           <CardDescription>Define spending amounts for different life phases</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Information Banner - Show if spending values are pre-populated from expenses */}
+          {isPrefilled && household.spending_go_go > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Spending Phases Calculated from Your Expenses
+                  </h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    These spending amounts are based on your total annual expenses from the Financial Profile. Go-Go spending uses your current expenses, while Slow-Go and No-Go phases assume reduced spending (80% and 70% respectively). You can adjust these values as needed.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-blue-600">Go-Go Years (Active retirement)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <LabelWithTooltip
-                  htmlFor="spending-go-go"
-                  tooltip={simulationTooltips.household.spendingGoGo}
-                >
-                  Annual Spending ($)
-                </LabelWithTooltip>
+                <div className="flex items-center justify-between min-h-[20px]">
+                  <LabelWithTooltip
+                    htmlFor="spending-go-go"
+                    tooltip={simulationTooltips.household.spendingGoGo}
+                  >
+                    Annual Spending ($)
+                  </LabelWithTooltip>
+                  {isPrefilled && household.spending_go_go > 0 && (
+                    <span className="text-xs text-blue-600 font-medium">✓ From expenses</span>
+                  )}
+                </div>
                 <CurrencyInput
                   id="spending-go-go"
                   value={household.spending_go_go}
                   onChange={(value) => onChange('spending_go_go', value)}
+                  className={isPrefilled && household.spending_go_go > 0 ? "bg-blue-50 border-blue-200" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -256,16 +283,22 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             <h3 className="text-sm font-semibold text-blue-600">Slow-Go Years (Reduced activity)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <LabelWithTooltip
-                  htmlFor="spending-slow-go"
-                  tooltip={simulationTooltips.household.spendingSlowGo}
-                >
-                  Annual Spending ($)
-                </LabelWithTooltip>
+                <div className="flex items-center justify-between min-h-[20px]">
+                  <LabelWithTooltip
+                    htmlFor="spending-slow-go"
+                    tooltip={simulationTooltips.household.spendingSlowGo}
+                  >
+                    Annual Spending ($)
+                  </LabelWithTooltip>
+                  {isPrefilled && household.spending_slow_go > 0 && (
+                    <span className="text-xs text-blue-600 font-medium">✓ From expenses</span>
+                  )}
+                </div>
                 <CurrencyInput
                   id="spending-slow-go"
                   value={household.spending_slow_go}
                   onChange={(value) => onChange('spending_slow_go', value)}
+                  className={isPrefilled && household.spending_slow_go > 0 ? "bg-blue-50 border-blue-200" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -289,16 +322,22 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             <h3 className="text-sm font-semibold text-blue-600">No-Go Years (Limited mobility)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <LabelWithTooltip
-                  htmlFor="spending-no-go"
-                  tooltip={simulationTooltips.household.spendingNoGo}
-                >
-                  Annual Spending ($)
-                </LabelWithTooltip>
+                <div className="flex items-center justify-between min-h-[20px]">
+                  <LabelWithTooltip
+                    htmlFor="spending-no-go"
+                    tooltip={simulationTooltips.household.spendingNoGo}
+                  >
+                    Annual Spending ($)
+                  </LabelWithTooltip>
+                  {isPrefilled && household.spending_no_go > 0 && (
+                    <span className="text-xs text-blue-600 font-medium">✓ From expenses</span>
+                  )}
+                </div>
                 <CurrencyInput
                   id="spending-no-go"
                   value={household.spending_no_go}
                   onChange={(value) => onChange('spending_no_go', value)}
+                  className={isPrefilled && household.spending_no_go > 0 ? "bg-blue-50 border-blue-200" : ""}
                 />
               </div>
             </div>

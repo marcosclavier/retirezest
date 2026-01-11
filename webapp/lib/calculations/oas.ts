@@ -9,13 +9,24 @@ import { OASEstimate } from '@/types';
 export const MAX_OAS_65_2025 = 713.34;  // Age 65-74
 export const MAX_OAS_75_2025 = 784.67;  // Age 75+
 
+// Maximum monthly OAS amounts for 2026
+export const MAX_OAS_65_2026 = 742.31;  // Age 65-74
+export const MAX_OAS_75_2026 = 816.54;  // Age 75+
+
 // OAS clawback thresholds for 2025
 export const OAS_CLAWBACK_THRESHOLD_2025 = 90997;
 export const OAS_CLAWBACK_RATE = 0.15; // 15%
 
-// Full clawback income thresholds
+// OAS clawback thresholds for 2026
+export const OAS_CLAWBACK_THRESHOLD_2026 = 93454; // For July 2026-June 2027 (based on 2025 income)
+
+// Full clawback income thresholds for 2025
 export const OAS_FULL_CLAWBACK_65_2025 = 148605; // Age 65-74
 export const OAS_FULL_CLAWBACK_75_2025 = 153771; // Age 75+
+
+// Full clawback income thresholds for 2026
+export const OAS_FULL_CLAWBACK_65_2026 = 154708; // Age 65-74
+export const OAS_FULL_CLAWBACK_75_2026 = 160647; // Age 75+
 
 // Residency requirement for full OAS
 export const FULL_OAS_YEARS = 40; // Years in Canada after age 18
@@ -25,10 +36,13 @@ export const FULL_OAS_YEARS = 40; // Years in Canada after age 18
  */
 export function calculateOASByResidency(
   yearsInCanada: number,
-  age: number = 65
+  age: number = 65,
+  year: number = new Date().getFullYear()
 ): number {
-  // Determine max OAS based on age
-  const maxOAS = age >= 75 ? MAX_OAS_75_2025 : MAX_OAS_65_2025;
+  // Determine max OAS based on age and year
+  const maxOAS = year >= 2026
+    ? (age >= 75 ? MAX_OAS_75_2026 : MAX_OAS_65_2026)
+    : (age >= 75 ? MAX_OAS_75_2025 : MAX_OAS_65_2025);
 
   // Full OAS requires 40 years in Canada after age 18
   if (yearsInCanada >= FULL_OAS_YEARS) {
@@ -52,15 +66,19 @@ export function calculateOASByResidency(
 export function calculateOASClawback(
   grossOAS: number,
   annualIncome: number,
-  age: number = 65
+  age: number = 65,
+  year: number = new Date().getFullYear()
 ): number {
+  // Determine threshold based on year
+  const clawbackThreshold = year >= 2026 ? OAS_CLAWBACK_THRESHOLD_2026 : OAS_CLAWBACK_THRESHOLD_2025;
+
   // No clawback if income below threshold
-  if (annualIncome <= OAS_CLAWBACK_THRESHOLD_2025) {
+  if (annualIncome <= clawbackThreshold) {
     return 0;
   }
 
   // Calculate clawback amount
-  const incomeOverThreshold = annualIncome - OAS_CLAWBACK_THRESHOLD_2025;
+  const incomeOverThreshold = annualIncome - clawbackThreshold;
   const annualClawback = incomeOverThreshold * OAS_CLAWBACK_RATE;
   const monthlyClawback = annualClawback / 12;
 
@@ -74,13 +92,14 @@ export function calculateOASClawback(
 export function calculateNetOAS(
   yearsInCanada: number,
   annualIncome: number,
-  age: number = 65
+  age: number = 65,
+  year: number = new Date().getFullYear()
 ): OASEstimate {
   // Calculate gross OAS based on residency
-  const grossOAS = calculateOASByResidency(yearsInCanada, age);
+  const grossOAS = calculateOASByResidency(yearsInCanada, age, year);
 
   // Calculate clawback
-  const clawback = calculateOASClawback(grossOAS, annualIncome, age);
+  const clawback = calculateOASClawback(grossOAS, annualIncome, age, year);
 
   // Calculate net OAS
   const netMonthlyOAS = Math.max(0, grossOAS - clawback);
@@ -135,10 +154,12 @@ export function isEligibleForOAS(
 /**
  * Calculate income threshold where OAS is fully clawed back
  */
-export function calculateFullClawbackIncome(age: number = 65): number {
-  return age >= 75
-    ? OAS_FULL_CLAWBACK_75_2025
-    : OAS_FULL_CLAWBACK_65_2025;
+export function calculateFullClawbackIncome(age: number = 65, year: number = new Date().getFullYear()): number {
+  if (year >= 2026) {
+    return age >= 75 ? OAS_FULL_CLAWBACK_75_2026 : OAS_FULL_CLAWBACK_65_2026;
+  } else {
+    return age >= 75 ? OAS_FULL_CLAWBACK_75_2025 : OAS_FULL_CLAWBACK_65_2025;
+  }
 }
 
 /**
@@ -148,7 +169,8 @@ export function calculateFullClawbackIncome(age: number = 65): number {
 export function calculateOASDeferral(
   yearsInCanada: number,
   monthsDeferred: number,
-  age: number = 65
+  age: number = 65,
+  year: number = new Date().getFullYear()
 ): {
   monthlyAmount: number;
   annualAmount: number;
@@ -158,7 +180,7 @@ export function calculateOASDeferral(
   const actualMonthsDeferred = Math.min(monthsDeferred, 60);
 
   // Calculate base OAS
-  const baseOAS = calculateOASByResidency(yearsInCanada, age);
+  const baseOAS = calculateOASByResidency(yearsInCanada, age, year);
 
   // Calculate increase (0.6% per month)
   const increasePercent = actualMonthsDeferred * 0.6;
