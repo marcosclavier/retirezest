@@ -82,6 +82,7 @@ export async function PUT(request: NextRequest) {
       endpoint: '/api/scenarios/inflation',
       method: 'PUT',
     });
-    return handleApiError(error);
+    const { status, body } = handleApiError(error);
+    return NextResponse.json(body, { status });
   }
 }
