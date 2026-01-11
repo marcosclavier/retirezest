@@ -9,6 +9,7 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import PartnerInfoStep from './steps/PartnerInfoStep';
 import AssetsStep from './steps/AssetsStep';
 import PartnerAssetsStep from './steps/PartnerAssetsStep';
+import JointAssetsStep from './steps/JointAssetsStep';
 import IncomeStep from './steps/IncomeStep';
 import PartnerIncomeStep from './steps/PartnerIncomeStep';
 import ExpensesStep from './steps/ExpensesStep';
@@ -35,7 +36,7 @@ export default function OnboardingWizard() {
   const includePartner = formData.includePartner || false;
 
   // Calculate total steps and steps array dynamically
-  const TOTAL_STEPS = includePartner ? 9 : 6;
+  const TOTAL_STEPS = includePartner ? 10 : 6;
 
   const steps = useMemo(() => {
     if (includePartner) {
@@ -44,11 +45,12 @@ export default function OnboardingWizard() {
         { id: 'partner', name: 'Partner Info', description: 'Partner information', completed: currentStep > 2 },
         { id: 'assets', name: 'Your Assets', description: 'Your accounts and savings', completed: currentStep > 3 },
         { id: 'partner-assets', name: 'Partner Assets', description: 'Partner accounts', completed: currentStep > 4 },
-        { id: 'income', name: 'Your Income', description: 'Your income sources', completed: currentStep > 5 },
-        { id: 'partner-income', name: 'Partner Income', description: 'Partner income', completed: currentStep > 6 },
-        { id: 'expenses', name: 'Expenses', description: 'Household expenses', completed: currentStep > 7 },
-        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 8 },
-        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 9 },
+        { id: 'joint-assets', name: 'Joint Assets', description: 'Shared accounts', completed: currentStep > 5 },
+        { id: 'income', name: 'Your Income', description: 'Your income sources', completed: currentStep > 6 },
+        { id: 'partner-income', name: 'Partner Income', description: 'Partner income', completed: currentStep > 7 },
+        { id: 'expenses', name: 'Expenses', description: 'Household expenses', completed: currentStep > 8 },
+        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 9 },
+        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 10 },
       ];
     } else {
       return [
@@ -256,7 +258,7 @@ export default function OnboardingWizard() {
     };
 
     if (includePartner) {
-      // With partner: 9 steps
+      // With partner: 10 steps
       switch (currentStep) {
         case 1:
           return <PersonalInfoStep {...commonProps} />;
@@ -267,14 +269,16 @@ export default function OnboardingWizard() {
         case 4:
           return <PartnerAssetsStep {...commonProps} />;
         case 5:
-          return <IncomeStep {...commonProps} />;
+          return <JointAssetsStep {...commonProps} />;
         case 6:
-          return <PartnerIncomeStep {...commonProps} />;
+          return <IncomeStep {...commonProps} />;
         case 7:
-          return <ExpensesStep {...commonProps} />;
+          return <PartnerIncomeStep {...commonProps} />;
         case 8:
-          return <RetirementGoalsStep {...commonProps} />;
+          return <ExpensesStep {...commonProps} />;
         case 9:
+          return <RetirementGoalsStep {...commonProps} />;
+        case 10:
           return <ReviewStep {...commonProps} onComplete={handleComplete} />;
         default:
           return null;
@@ -464,7 +468,8 @@ export default function OnboardingWizard() {
         open={showWelcomeModal}
         onClose={() => {
           setShowWelcomeModal(false);
-          router.push('/dashboard');
+          // Redirect to simulation page instead of dashboard to encourage first simulation
+          router.push('/simulation?onboarding=complete');
         }}
         userName={formData.firstName}
       />

@@ -160,7 +160,7 @@ export default function RetirementGoalsStep({
           </p>
           <div className="space-y-2">
             <a
-              href="/benefits"
+              href="/benefits?from=wizard"
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full px-4 py-3 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700 transition font-medium"

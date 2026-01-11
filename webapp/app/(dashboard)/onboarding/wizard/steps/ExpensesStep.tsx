@@ -18,6 +18,7 @@ export default function ExpensesStep({
   const [monthlyExpenses, setMonthlyExpenses] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [hasExistingExpenses, setHasExistingExpenses] = useState(false);
 
   // Initialize state from formData.expenses if available
   const getMonthlyExpenses = useCallback(() => {
@@ -46,21 +47,88 @@ export default function ExpensesStep({
     initCsrf();
   }, []);
 
-  // Update state when formData changes
+  // Fetch existing expenses and calculate total monthly expenses
   useEffect(() => {
-    if (formData.expenses && Array.isArray(formData.expenses)) {
+    const fetchExistingExpenses = async () => {
+      try {
+        const response = await fetch('/api/profile/expenses', {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const expenses = data.expenses || [];
+
+          if (Array.isArray(expenses) && expenses.length > 0) {
+            setHasExistingExpenses(true);
+
+            // Calculate total monthly expenses from all recurring expenses
+            let totalMonthly = 0;
+            expenses.forEach((expense: any) => {
+              // Only include recurring expenses in the total
+              if (expense.isRecurring !== false) {
+                const amount = parseFloat(expense.amount) || 0;
+
+                // Convert to monthly based on frequency
+                switch (expense.frequency) {
+                  case 'monthly':
+                    totalMonthly += amount;
+                    break;
+                  case 'annual':
+                    totalMonthly += amount / 12;
+                    break;
+                  case 'weekly':
+                    totalMonthly += amount * 52 / 12;
+                    break;
+                  case 'biweekly':
+                    totalMonthly += amount * 26 / 12;
+                    break;
+                  default:
+                    totalMonthly += amount; // Default to monthly
+                }
+              }
+            });
+
+            // Pre-populate with calculated total (read-only)
+            if (totalMonthly > 0) {
+              setMonthlyExpenses(totalMonthly.toFixed(2));
+            }
+
+            console.log('[Expenses] User has', expenses.length, 'existing expenses. Total monthly:', totalMonthly);
+          }
+        }
+      } catch (error) {
+        console.error('[Expenses] Failed to fetch existing expenses:', error);
+      }
+    };
+
+    fetchExistingExpenses();
+  }, []);
+
+  // Update state when formData changes (only if no existing expenses)
+  useEffect(() => {
+    if (!hasExistingExpenses && formData.expenses && Array.isArray(formData.expenses)) {
       setMonthlyExpenses(getMonthlyExpenses());
     }
-  }, [formData.expenses, getMonthlyExpenses]);
+  }, [formData.expenses, getMonthlyExpenses, hasExistingExpenses]);
 
   const handleSave = async () => {
-    // Validation: Either skip is checked OR monthly expenses has a value
-    if (!skipForNow && !monthlyExpenses) {
-      alert('Please enter your monthly expenses or check "Skip for now" to continue.');
+    setIsLoading(true);
+
+    // If user has existing expenses, field is read-only - just continue to next step
+    if (hasExistingExpenses) {
+      updateFormData({ expensesViewed: true });
+      onNext();
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    // Validation: Either skip is checked OR monthly expenses has a value
+    if (!skipForNow && !monthlyExpenses) {
+      alert('Please enter your monthly expenses or check "Skip for now" to continue.');
+      setIsLoading(false);
+      return;
+    }
 
     if (skipForNow) {
       updateFormData({ expensesSkipped: true });
@@ -71,20 +139,46 @@ export default function ExpensesStep({
 
     try {
       if (monthlyExpenses && parseFloat(monthlyExpenses) > 0) {
-        const response = await fetch('/api/profile/expenses', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-csrf-token': csrfToken,
-          },
-          body: JSON.stringify({
-            category: 'other',
-            description: 'Total Monthly Expenses',
-            amount: parseFloat(monthlyExpenses),
-            frequency: 'monthly',
-            essential: true,
-          }),
-        });
+        // Check if "Total Monthly Expenses" already exists
+        const existingExpense = formData.expenses?.find(
+          (e: any) => e.description === 'Total Monthly Expenses' && e.frequency === 'monthly'
+        );
+
+        let response;
+        if (existingExpense) {
+          // Update existing expense
+          response = await fetch('/api/profile/expenses', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            body: JSON.stringify({
+              id: existingExpense.id,
+              category: 'other',
+              description: 'Total Monthly Expenses',
+              amount: parseFloat(monthlyExpenses),
+              frequency: 'monthly',
+              essential: true,
+            }),
+          });
+        } else {
+          // Create new expense
+          response = await fetch('/api/profile/expenses', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            body: JSON.stringify({
+              category: 'other',
+              description: 'Total Monthly Expenses',
+              amount: parseFloat(monthlyExpenses),
+              frequency: 'monthly',
+              essential: true,
+            }),
+          });
+        }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -114,28 +208,51 @@ export default function ExpensesStep({
       </div>
 
       <div className="space-y-6">
-        {/* Skip Option */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="flex items-center h-5">
-              <input
-                id="skipExpenses"
-                type="checkbox"
-                checked={skipForNow}
-                onChange={(e) => setSkipForNow(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500"
-              />
-            </div>
-            <div className="ml-3">
-              <label htmlFor="skipExpenses" className="font-medium text-gray-900">
-                Skip for now - I'll add my expenses later
-              </label>
-              <p className="text-sm text-gray-600 mt-1">
-                You can add detailed expense categories from the Financial Profile page anytime.
-              </p>
+        {/* Warning for Existing Expenses */}
+        {hasExistingExpenses && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Your Current Monthly Expenses (Read-Only)
+                </h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  The value shown below is calculated from all your recurring expenses in your financial profile. This field is read-only in the wizard. To edit or manage your expenses, please use the <strong>Financial Profile</strong> section.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Skip Option - only show if no existing expenses */}
+        {!hasExistingExpenses && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="skipExpenses"
+                  type="checkbox"
+                  checked={skipForNow}
+                  onChange={(e) => setSkipForNow(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500"
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="skipExpenses" className="font-medium text-gray-900">
+                  Skip for now - I'll add my expenses later
+                </label>
+                <p className="text-sm text-gray-600 mt-1">
+                  You can add detailed expense categories from the Financial Profile page anytime.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Expense Input */}
         {!skipForNow && (
@@ -166,7 +283,8 @@ export default function ExpensesStep({
                   id="monthlyExpenses"
                   value={monthlyExpenses}
                   onChange={(e) => setMonthlyExpenses(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg font-bold text-gray-900"
+                  disabled={hasExistingExpenses}
+                  className={`w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg font-bold ${hasExistingExpenses ? 'bg-gray-100 text-gray-700 cursor-not-allowed' : 'text-gray-900'}`}
                   placeholder="0.00"
                   min="0"
                   step="100"
