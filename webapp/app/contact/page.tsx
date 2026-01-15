@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, MessageSquare, User, Send, CheckCircle2 } from 'lucide-react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -16,28 +17,54 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Capture Sentry event ID if there was a recent error
+  const [sentryEventId, setSentryEventId] = useState<string | undefined>();
+
+  useEffect(() => {
+    // Check if there's a recent Sentry error
+    const lastEventId = Sentry.lastEventId();
+    if (lastEventId) {
+      setSentryEventId(lastEventId);
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
+      // Capture context automatically
+      const context = {
+        pageUrl: window.location.href,
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || undefined,
+        screenResolution: `${window.screen.width}x${window.screen.height}`,
+        sentryEventId,
+      };
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          ...context,
+        }),
       });
 
       if (response.ok) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
+        setSentryEventId(undefined);
       } else {
         setSubmitStatus('error');
       }
     } catch (error) {
       setSubmitStatus('error');
+      // Capture this error in Sentry
+      Sentry.captureException(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -87,6 +114,14 @@ export default function ContactPage() {
                     <a href="mailto:contact@retirezest.com" className="underline font-medium">
                       contact@retirezest.com
                     </a>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {sentryEventId && (
+                <Alert className="mb-6 bg-blue-50 border-blue-200">
+                  <AlertDescription className="text-blue-800">
+                    <strong>Note:</strong> We detected you recently encountered an error. This error report will be automatically included with your message to help us assist you better.
                   </AlertDescription>
                 </Alert>
               )}
