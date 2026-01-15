@@ -323,17 +323,10 @@ export default function OnboardingWizard() {
       <div className="flex max-w-7xl mx-auto px-4 gap-6">
         <div className="flex-1 max-w-4xl">
           {/* Header */}
-          <div className="text-center mb-4 sm:mb-8 relative">
+          <div className="text-center mb-4 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               Welcome to RetireZest
             </h1>
-            {saveIndicatorVisible && (
-              <div className="absolute top-0 right-0 sm:relative sm:top-auto sm:right-auto sm:mx-auto sm:w-fit animate-fade-in">
-                <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full inline-block shadow-sm">
-                  Progress saved
-                </span>
-              </div>
-            )}
             <p className="text-sm sm:text-base text-gray-600">
               Let's set up your retirement plan in just a few steps
             </p>
@@ -473,6 +466,15 @@ export default function OnboardingWizard() {
         }}
         userName={formData.firstName}
       />
+
+      {/* Progress Saved Toast - Fixed position, doesn't affect layout */}
+      {saveIndicatorVisible && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+          <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-4 py-2 rounded-full inline-block shadow-lg border border-green-200">
+            ✓ Progress saved
+          </span>
+        </div>
+      )}
     </div>
   );
 }
