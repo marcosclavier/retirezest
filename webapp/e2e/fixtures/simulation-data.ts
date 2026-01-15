@@ -315,20 +315,6 @@ export const testScenarios = {
       taxSmoothing: true,
     },
   },
-
-  // Scenario 8: Manual Strategy
-  manual: {
-    person: standardPerson,
-    household: {
-      ...standardHousehold,
-      strategy: 'manual',
-    },
-    description: 'Custom user-defined withdrawal strategy',
-    expectedOutcome: {
-      success: true, // May require additional config
-      manualRulesApplied: true,
-    },
-  },
 };
 
 // ============================================================================

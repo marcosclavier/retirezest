@@ -297,14 +297,6 @@ export default function ScenariosPage() {
             strategy: 'rrif-frontload' as const,
           }),
         },
-        {
-          name: 'Manual',
-          description: 'Manual withdrawal strategy',
-          modifier: (input: HouseholdInput) => ({
-            ...input,
-            strategy: 'manual' as const,
-          }),
-        },
       ],
     },
     {

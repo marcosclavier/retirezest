@@ -80,8 +80,7 @@ export type WithdrawalStrategy =
   | 'capital-gains-optimized'
   | 'tfsa-first'
   | 'balanced'
-  | 'rrif-frontload'
-  | 'manual';
+  | 'rrif-frontload';
 
 export interface HouseholdInput {
   p1: PersonInput;
@@ -528,11 +527,6 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
     value: 'rrif-frontload',
     label: 'RRIF Front-Load (Tax Smoothing + OAS Protection)',
     description: 'Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
-  },
-  {
-    value: 'manual',
-    label: 'Manual',
-    description: 'Custom withdrawal strategy defined by user',
   },
 ];
 
