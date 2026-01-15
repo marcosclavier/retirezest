@@ -323,17 +323,17 @@ export default function OnboardingWizard() {
       <div className="flex max-w-7xl mx-auto px-4 gap-6">
         <div className="flex-1 max-w-4xl">
           {/* Header */}
-          <div className="text-center mb-4 sm:mb-8">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Welcome to RetireZest
-              </h1>
-              {saveIndicatorVisible && (
-                <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full animate-fade-in">
+          <div className="text-center mb-4 sm:mb-8 relative">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              Welcome to RetireZest
+            </h1>
+            {saveIndicatorVisible && (
+              <div className="absolute top-0 right-0 sm:relative sm:top-auto sm:right-auto sm:mx-auto sm:w-fit animate-fade-in">
+                <span className="text-xs sm:text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full inline-block shadow-sm">
                   Progress saved
                 </span>
-              )}
-            </div>
+              </div>
+            )}
             <p className="text-sm sm:text-base text-gray-600">
               Let's set up your retirement plan in just a few steps
             </p>
