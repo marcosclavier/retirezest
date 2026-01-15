@@ -30,17 +30,20 @@ export async function sendPasswordResetEmail({
   userName,
 }: SendPasswordResetEmailParams): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM || FROM_EMAIL;
+
+    if (!apiKey) {
       console.error('RESEND_API_KEY is not configured');
       return { success: false, error: 'Email service not configured' };
     }
 
     // Initialize Resend client only when needed (lazy initialization)
     // This prevents errors during build time when env vars might not be available
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = new Resend(apiKey);
 
     const response = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: fromEmail,
       to,
       subject: 'Reset your RetireZest password',
       html: getPasswordResetEmailTemplate({ resetUrl, userName }),
@@ -179,16 +182,19 @@ export async function sendAdminNewUserNotification({
   registrationDate,
 }: SendAdminNotificationParams): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM || FROM_EMAIL;
+
+    if (!apiKey) {
       console.error('RESEND_API_KEY is not configured');
       return { success: false, error: 'Email service not configured' };
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = new Resend(apiKey);
     const adminEmail = 'contact@retirezest.com';
 
     const response = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: fromEmail,
       to: adminEmail,
       subject: '🎉 New User Registered on RetireZest',
       html: getAdminNotificationTemplate({ userEmail, userName, registrationDate }),

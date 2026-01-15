@@ -4,7 +4,12 @@
  * Comprehensive report on user engagement and activity
  */
 
+import { config } from 'dotenv';
+import { resolve } from 'path';
 import { PrismaClient } from '@prisma/client';
+
+// Load environment variables from .env.local
+config({ path: resolve(__dirname, '../.env.local') });
 
 const prisma = new PrismaClient();
 
