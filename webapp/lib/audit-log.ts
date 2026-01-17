@@ -61,8 +61,8 @@ export function getClientIp(req: NextRequest): string | null {
     return realIp;
   }
 
-  // Fallback to connection IP (may be proxy)
-  return req.ip || null;
+  // No direct IP available in Next.js 15 NextRequest
+  return null;
 }
 
 /**
