@@ -19,6 +19,7 @@ from api.utils.converters import (
     calculate_spending_analysis,
     extract_key_assumptions,
     extract_chart_data,
+    get_strategy_display_name,
 )
 from modules.simulation import simulate
 from utils.asset_analyzer import AssetAnalyzer
@@ -184,8 +185,8 @@ async def run_simulation(
         # Only warn if strategies are truly different (case-insensitive comparison)
         if composition.recommended_strategy.value.lower() != household.strategy.lower():
             warnings.append(
-                f"💡 Recommended strategy is '{composition.recommended_strategy.value}' "
-                f"but you're using '{household.strategy}'. "
+                f"💡 Recommended strategy is '{get_strategy_display_name(composition.recommended_strategy.value)}' "
+                f"but you're using '{get_strategy_display_name(household.strategy)}'. "
                 f"Reason: {composition.strategy_rationale}"
             )
 

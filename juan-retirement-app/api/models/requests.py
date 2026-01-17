@@ -213,6 +213,12 @@ class HouseholdInput(BaseModel):
         le=0.5,
         description="Fraction of RRIF income to split (0-50%)"
     )
+    income_split_pension_fraction: float = Field(
+        default=0.0,
+        ge=0,
+        le=0.5,
+        description="Fraction of employer pension income to split (0-50%, ages 65+)"
+    )
     hybrid_rrif_topup_per_person: float = Field(
         default=0,
         ge=0,

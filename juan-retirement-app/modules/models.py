@@ -183,6 +183,7 @@ class Household:
     strategy: str = "NonReg->RRIF->Corp->TFSA"
     hybrid_rrif_topup_per_person: float = 0.0
     income_split_rrif_fraction: float = 0.5
+    income_split_pension_fraction: float = 0.0  # Split employer pension income (0-0.5, age 65+). Set to 0.5 when pension income is heavily imbalanced and both spouses are in similar tax brackets.
     reinvest_nonreg_dist: bool = False  # Reinvest non-reg distributions instead of using for spending
 
     # Asset-aware withdrawal strategy

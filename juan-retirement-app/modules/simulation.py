@@ -899,7 +899,7 @@ def calculate_gis_optimization_withdrawal(
     return withdrawals, effective_rate, analysis
 
 
-def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params) -> tuple[float, float, float]:
+def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params, add_pension_delta=0.0) -> tuple[float, float, float]:
     bd       = taxd.get("breakdown", {})
     ordinary = float(bd.get("nr_interest", 0.0))
     eligd    = float(bd.get("nr_elig_div", 0.0))
@@ -908,6 +908,7 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
 
     oas     = float(taxd.get("oas", 0.0))
     cpp_amt = float(taxd.get("cpp", 0.0))
+    employer_pension = float(taxd.get("employer_pension", 0.0))
 
     # Add corporate dividends actually paid to THIS person in the recompute path
     corp_cash = float(wself.get("corp", 0.0))
@@ -917,7 +918,8 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
         else:
             noneligd += corp_cash
 
-    pension_income_local = float(rrif_amt) + float(add_rrif_delta) + cpp_amt
+    # Pension income includes RRIF, employer pension, CPP, and any income splitting adjustments
+    pension_income_local = float(rrif_amt) + float(add_rrif_delta) + employer_pension + float(add_pension_delta) + cpp_amt
 
     fed_res = progressive_tax(
         fed_params, age,
@@ -2165,10 +2167,36 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         split = clamp(hh.income_split_rrif_fraction, 0.0, 0.5)
         transfer12 = split * w1["rrif"] if age1 >= 65 else 0.0
         transfer21 = split * w2["rrif"] if age2 >= 65 else 0.0
-      
+
+        # Employer pension income splitting (up to 50% if age >=65)
+        # CRA rules: Only split from higher to lower earner to optimize tax
+        pension_split = clamp(hh.income_split_pension_fraction, 0.0, 0.5)
+        employer_pension_p1 = float(t1.get("employer_pension", 0.0))
+        employer_pension_p2 = float(t2.get("employer_pension", 0.0))
+
+        # Only split if both are 65+ and there's a pension imbalance
+        if age1 >= 65 and age2 >= 65:
+            if employer_pension_p1 > employer_pension_p2:
+                # P1 has more, split from P1 to P2
+                pension_transfer12 = pension_split * employer_pension_p1
+                pension_transfer21 = 0.0
+            elif employer_pension_p2 > employer_pension_p1:
+                # P2 has more, split from P2 to P1
+                pension_transfer12 = 0.0
+                pension_transfer21 = pension_split * employer_pension_p2
+            else:
+                # Equal pensions, no benefit to splitting
+                pension_transfer12 = 0.0
+                pension_transfer21 = 0.0
+        else:
+            # Not eligible (under 65)
+            pension_transfer12 = 0.0
+            pension_transfer21 = 0.0
+
         # == After calling recompute_tax for each person ==
-        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y)
-        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y)
+        # Pass both RRIF split and employer pension split amounts
+        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y, -pension_transfer12 + pension_transfer21)
+        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, -pension_transfer21 + pension_transfer12)
 
 
         # Rebuild per-person and household totals ONLY from recompute outputs

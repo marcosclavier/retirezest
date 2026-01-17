@@ -51,6 +51,29 @@ def map_api_strategy_to_internal(api_strategy: str) -> str:
     return strategy_mapping.get(api_strategy, api_strategy)
 
 
+def get_strategy_display_name(strategy: str) -> str:
+    """
+    Get user-friendly display name for a strategy.
+
+    Args:
+        strategy: Strategy identifier (kebab-case or internal name)
+
+    Returns:
+        User-friendly display name
+    """
+    display_names = {
+        'corporate-optimized': 'Corporate Optimized',
+        'minimize-income': 'Minimize Income',
+        'rrif-splitting': 'RRIF Splitting',
+        'capital-gains-optimized': 'Capital Gains Optimized',
+        'tfsa-first': 'TFSA First',
+        'balanced': 'Balanced',
+        'rrif-frontload': 'RRIF Frontload',
+        'manual': 'Manual',
+    }
+    return display_names.get(strategy, strategy.replace('-', ' ').title())
+
+
 def api_person_to_internal(api_person: PersonInput) -> Person:
     """
     Convert API PersonInput to internal Person dataclass.
@@ -190,6 +213,7 @@ def api_household_to_internal(
         tfsa_contribution_each=api_household.tfsa_contribution_each,
         reinvest_nonreg_dist=reinvest_setting,  # FIX: Use overridden setting for GIS strategy
         income_split_rrif_fraction=api_household.income_split_rrif_fraction,
+        income_split_pension_fraction=api_household.income_split_pension_fraction,
         hybrid_rrif_topup_per_person=api_household.hybrid_rrif_topup_per_person,
         stop_on_fail=api_household.stop_on_fail,
     )
