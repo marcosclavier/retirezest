@@ -111,7 +111,10 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="results-dashboard">
+      {/* Success Indicator (hidden, for tests) */}
+      {result.success && <div data-testid="success-indicator" className="hidden" />}
+
       {/* Warnings */}
       {result.warnings && result.warnings.length > 0 && (
         <Alert variant="default">
@@ -123,6 +126,36 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                 <li key={index}>{warning}</li>
               ))}
             </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Partial Funding Explanation */}
+      {result.summary && result.summary.success_rate < 1.0 && result.summary.success_rate >= 0.4 && result.summary.final_estate_after_tax > 0 && (
+        <Alert variant="default" className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-900 dark:text-blue-100">Understanding Your Results: Partial Funding</AlertTitle>
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
+            <div className="space-y-2 mt-2">
+              <p>
+                Your plan shows <strong>{formatPercent(result.summary.success_rate)} success rate</strong>, meaning your assets fully fund{' '}
+                <strong>{result.summary.years_funded} of {result.summary.years_simulated} retirement years</strong>.
+              </p>
+              <p>
+                However, you end with an estate of <strong>{formatCurrency(result.summary.final_estate_after_tax)}</strong>,
+                suggesting the "unfunded" years may occur later in retirement when spending naturally decreases.
+              </p>
+              {result.summary.first_failure_year && (
+                <p>
+                  Shortfalls begin in year <strong>{result.summary.first_failure_year}</strong>. Consider adjusting your spending
+                  plan for later retirement years or increasing your savings.
+                </p>
+              )}
+              <p className="text-sm italic">
+                Note: This simulation uses conservative assumptions. Real-world flexibility in spending and lifestyle adjustments
+                can help manage shortfalls, especially in later years.
+              </p>
+            </div>
           </AlertDescription>
         </Alert>
       )}
@@ -171,15 +204,20 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <Calendar className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold" style={{ color: '#111827' }}>
+              <div className="text-xl font-bold" style={{ color: '#111827' }} data-testid="years-funded">
                 {result.summary.years_funded}/{result.summary.years_simulated}
               </div>
               <p className="text-xs font-medium" style={{ color: '#111827' }}>
                 {formatPercent(result.summary.success_rate)} success rate
               </p>
+              {result.summary.success_rate < 1.0 && result.summary.success_rate >= 0.5 && result.summary.final_estate_after_tax > 0 && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  Partial funding - see year-by-year details below
+                </p>
+              )}
               {result.summary.first_failure_year && (
-                <p className="text-xs text-destructive mt-1">
-                  First failure: {result.summary.first_failure_year}
+                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                  Shortfall starts: {result.summary.first_failure_year}
                 </p>
               )}
             </CardContent>
@@ -191,7 +229,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <TrendingUp className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold" style={{ color: '#111827' }}>
+              <div className="text-xl font-bold" style={{ color: '#111827' }} data-testid="final-estate">
                 {formatCurrency(result.summary.final_estate_after_tax)}
               </div>
               <p className="text-xs font-medium" style={{ color: '#111827' }}>
@@ -206,10 +244,10 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <DollarSign className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold" style={{ color: '#111827' }}>
+              <div className="text-xl font-bold" style={{ color: '#111827' }} data-testid="total-tax">
                 {formatCurrency(result.summary.total_tax_paid)}
               </div>
-              <p className="text-xs font-medium" style={{ color: '#111827' }}>
+              <p className="text-xs font-medium" style={{ color: '#111827' }} data-testid="avg-tax-rate">
                 Avg effective rate: {formatPercent(result.summary.avg_effective_tax_rate)}
               </p>
             </CardContent>
@@ -221,7 +259,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <DollarSign className="h-4 w-4 text-gray-700 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl font-bold" style={{ color: '#111827' }}>
+              <div className="text-xl font-bold" style={{ color: '#111827' }} data-testid="total-withdrawals">
                 {formatCurrency(result.summary.total_withdrawals)}
               </div>
               <p className="text-xs font-medium" style={{ color: '#111827' }}>

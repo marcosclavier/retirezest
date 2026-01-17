@@ -646,12 +646,19 @@ def calculate_health_score(
     """
     Calculate plan health score based on 5 criteria (20 points each, total 100).
 
+    Uses graduated scoring to fairly credit partial success rather than all-or-nothing.
+
     Criteria:
-    1. Full period funded (100%)? - 20 points
-    2. Adequate funding reserve (80%+ of period)? - 20 points
-    3. Good tax efficiency (<25% rate)? - 20 points
-    4. Government benefits available? - 20 points
-    5. Growing net worth? - 20 points
+    1. Funding Coverage (0-20 points): Graduated based on % of years funded
+       - 100%: 20pts, 90%: 18pts, 75%: 15pts, 60%: 12pts, 40%: 8pts, <40%: 4pts
+    2. Estate Preservation (0-20 points): Graduated based on final vs initial net worth
+       - 100%+: 20pts, 75%: 16pts, 50%: 12pts, 25%: 8pts, <25%: 4pts
+    3. Tax Efficiency (0-20 points): Graduated based on average effective tax rate
+       - <15%: 20pts, <20%: 16pts, <25%: 12pts, <30%: 8pts, ≥30%: 4pts
+    4. Benefit Optimization (0-20 points): Graduated based on annual government benefits
+       - $50K+: 20pts, $35K: 16pts, $20K: 12pts, $10K: 8pts, <$10K: 4pts
+    5. Risk Management (0-20 points): Graduated based on longevity risk coverage
+       - 95%+: 20pts, 85%: 16pts, 70%: 12pts, 50%: 8pts, <50%: 4pts
 
     Returns:
         tuple: (score 0-100, rating string, criteria dict)
@@ -659,67 +666,141 @@ def calculate_health_score(
     criteria = {}
     score = 0
 
-    # Criterion 1: Full period funded
-    # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
-    full_period_funded = bool(success_rate >= 1.0)
-    criterion_score = 20 if full_period_funded else 0
-    criteria['full_period_funded'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': 'Excellent' if criterion_score == 20 else 'Poor',
-        'description': 'Plan funds all years'
-    }
-    score += criterion_score
-
-    # Criterion 2: Adequate funding reserve (80%+ of period)
-    adequate_reserve = bool(success_rate >= 0.80)
-    criterion_score = 20 if adequate_reserve else 0
-    criteria['adequate_reserve'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': 'Excellent' if criterion_score == 20 else 'Poor',
-        'description': 'Plan funds 80%+ of years'
-    }
-    score += criterion_score
-
-    # Criterion 3: Good tax efficiency (<25% effective rate)
-    good_tax_efficiency = bool(avg_effective_tax_rate < 0.25)
-    criterion_score = 20 if good_tax_efficiency else 0
-    criteria['good_tax_efficiency'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': 'Excellent' if criterion_score == 20 else 'Poor',
-        'description': 'Effective tax rate under 25%'
-    }
-    score += criterion_score
-
-    # Criterion 4: Government benefits available
-    has_benefits = bool(total_government_benefits > 0)
-    criterion_score = 20 if has_benefits else 0
-    criteria['government_benefits'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': 'Excellent' if criterion_score == 20 else 'Poor',
-        'description': 'Receiving government benefits (CPP/OAS/GIS)'
-    }
-    score += criterion_score
-
-    # Criterion 5: Growing or stable net worth
-    # IMPORTANT: If plan failed (success_rate < 1.0), net worth cannot be "growing"
-    # because the primary objective (funding retirement) was not met
-    if success_rate < 1.0:
-        # Plan failed - automatically score 0 for this criterion
-        growing_net_worth = False
+    # Criterion 1: Funding Coverage (graduated scoring)
+    # More nuanced scoring that credits partial success
+    if success_rate >= 1.0:
+        criterion_score = 20  # Excellent: 100% funded
+        status = 'Excellent'
+    elif success_rate >= 0.90:
+        criterion_score = 18  # Very Good: 90-99% funded
+        status = 'Good'
+    elif success_rate >= 0.75:
+        criterion_score = 15  # Good: 75-89% funded
+        status = 'Good'
+    elif success_rate >= 0.60:
+        criterion_score = 12  # Fair: 60-74% funded
+        status = 'Fair'
+    elif success_rate >= 0.40:
+        criterion_score = 8   # At Risk: 40-59% funded
+        status = 'At Risk'
     else:
-        # Plan succeeded - check if net worth maintained or grew
-        growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+        criterion_score = 4   # Poor: <40% funded
+        status = 'Poor'
 
-    criterion_score = 20 if growing_net_worth else 0
-    criteria['growing_net_worth'] = {
+    criteria['funding_coverage'] = {
         'score': criterion_score,
         'max_score': 20,
-        'status': 'Excellent' if criterion_score == 20 else 'Poor',
-        'description': 'Net worth maintained or growing'
+        'status': status,
+        'description': f'Plan funds {success_rate*100:.0f}% of retirement years'
+    }
+    score += criterion_score
+
+    # Criterion 2: Estate Preservation (graduated scoring)
+    # Rewards maintaining assets even with partial funding
+    estate_preservation_ratio = final_net_worth / initial_net_worth if initial_net_worth > 0 else 0
+
+    if estate_preservation_ratio >= 1.0:
+        criterion_score = 20  # Excellent: Estate grew
+        status = 'Excellent'
+    elif estate_preservation_ratio >= 0.75:
+        criterion_score = 16  # Good: Estate retained 75%+
+        status = 'Good'
+    elif estate_preservation_ratio >= 0.50:
+        criterion_score = 12  # Fair: Estate retained 50%+
+        status = 'Fair'
+    elif estate_preservation_ratio >= 0.25:
+        criterion_score = 8   # At Risk: Estate retained 25%+
+        status = 'At Risk'
+    else:
+        criterion_score = 4   # Poor: Estate depleted
+        status = 'Poor'
+
+    criteria['estate_preservation'] = {
+        'score': criterion_score,
+        'max_score': 20,
+        'status': status,
+        'description': f'Estate retains {estate_preservation_ratio*100:.0f}% of initial value'
+    }
+    score += criterion_score
+
+    # Criterion 3: Tax Efficiency (graduated scoring)
+    if avg_effective_tax_rate < 0.15:
+        criterion_score = 20  # Excellent: <15% tax
+        status = 'Excellent'
+    elif avg_effective_tax_rate < 0.20:
+        criterion_score = 16  # Good: 15-20% tax
+        status = 'Good'
+    elif avg_effective_tax_rate < 0.25:
+        criterion_score = 12  # Fair: 20-25% tax
+        status = 'Fair'
+    elif avg_effective_tax_rate < 0.30:
+        criterion_score = 8   # At Risk: 25-30% tax
+        status = 'At Risk'
+    else:
+        criterion_score = 4   # Poor: >30% tax
+        status = 'Poor'
+
+    criteria['tax_efficiency'] = {
+        'score': criterion_score,
+        'max_score': 20,
+        'status': status,
+        'description': f'Average tax rate: {avg_effective_tax_rate*100:.1f}%'
+    }
+    score += criterion_score
+
+    # Criterion 4: Government Benefits Optimization (graduated scoring)
+    # Rewards maximizing government benefits relative to contributions
+    # Assumes average retiree gets ~$1.5M in CPP/OAS over 30+ years
+    benefits_per_year = total_government_benefits / years_simulated if years_simulated > 0 else 0
+
+    if benefits_per_year >= 50000:
+        criterion_score = 20  # Excellent: High benefits ($50K+/year)
+        status = 'Excellent'
+    elif benefits_per_year >= 35000:
+        criterion_score = 16  # Good: Above average ($35-50K/year)
+        status = 'Good'
+    elif benefits_per_year >= 20000:
+        criterion_score = 12  # Fair: Average ($20-35K/year)
+        status = 'Fair'
+    elif benefits_per_year >= 10000:
+        criterion_score = 8   # At Risk: Below average ($10-20K/year)
+        status = 'At Risk'
+    else:
+        criterion_score = 4   # Poor: Minimal benefits (<$10K/year)
+        status = 'Poor'
+
+    criteria['benefit_optimization'] = {
+        'score': criterion_score,
+        'max_score': 20,
+        'status': status,
+        'description': f'Government benefits: ${benefits_per_year:,.0f}/year'
+    }
+    score += criterion_score
+
+    # Criterion 5: Risk Management (graduated scoring based on funding volatility)
+    # This criterion assesses how well the plan manages longevity risk
+    # Higher success rates indicate better risk management
+    if success_rate >= 0.95:
+        criterion_score = 20  # Excellent: Very low risk
+        status = 'Excellent'
+    elif success_rate >= 0.85:
+        criterion_score = 16  # Good: Low risk
+        status = 'Good'
+    elif success_rate >= 0.70:
+        criterion_score = 12  # Fair: Moderate risk
+        status = 'Fair'
+    elif success_rate >= 0.50:
+        criterion_score = 8   # At Risk: High risk but viable
+        status = 'At Risk'
+    else:
+        criterion_score = 4   # Poor: Very high risk
+        status = 'Poor'
+
+    criteria['risk_management'] = {
+        'score': criterion_score,
+        'max_score': 20,
+        'status': status,
+        'description': f'Longevity risk: {100-success_rate*100:.0f}% of years underfunded'
     }
     score += criterion_score
 

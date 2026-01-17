@@ -156,7 +156,7 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-4xl font-bold ${getTextColor(health_score)}`}>{health_score}</span>
+              <span className={`text-4xl font-bold ${getTextColor(health_score)}`} data-testid="health-score">{health_score}</span>
               <span className={`text-xs ${getTextColorMuted(health_score)}`}>out of 100</span>
             </div>
           </div>
@@ -180,12 +180,23 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
               <div>
                 <p className={getTextColorMuted(health_score)}>Success Rate</p>
                 <p className={`font-medium ${getTextColor(health_score)}`}>{(summary.success_rate * 100).toFixed(1)}%</p>
+                <p className={`text-xs ${getTextColorMuted(health_score)} mt-0.5`}>
+                  {summary.success_rate >= 0.9 ? 'Fully funded' :
+                   summary.success_rate >= 0.7 ? 'Strong funding' :
+                   summary.success_rate >= 0.5 ? 'Partial funding' :
+                   'Limited funding'}
+                </p>
               </div>
               <div>
                 <p className={getTextColorMuted(health_score)}>Years Funded</p>
                 <p className={`font-medium ${getTextColor(health_score)}`}>
                   {summary.years_funded}/{summary.years_simulated}
                 </p>
+                {summary.first_failure_year && (
+                  <p className={`text-xs ${getTextColorMuted(health_score)} mt-0.5`}>
+                    Shortfall starts: {summary.first_failure_year}
+                  </p>
+                )}
               </div>
               <div>
                 <p className={getTextColorMuted(health_score)}>Tax Efficiency</p>
