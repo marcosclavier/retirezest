@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createAuditLogFromRequest, AuditAction } from '@/lib/audit-log';
 import bcrypt from 'bcryptjs';
 
 // Force dynamic rendering - do not pre-render during build
@@ -98,7 +99,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 9. Log deletion event (for audit trail)
+    // 9. Log deletion event to audit trail
+    await createAuditLogFromRequest(req, user.id, AuditAction.ACCOUNT_DELETE, {
+      description: `Account marked for deletion (30-day recovery period)`,
+      metadata: {
+        email: user.email,
+        deletedAt: deletedAt.toISOString(),
+        scheduledDeletionAt: scheduledDeletionAt.toISOString(),
+        reason: reason || 'No reason provided',
+      },
+    });
+
     console.log(`[ACCOUNT DELETION] User ${user.email} (ID: ${user.id}) marked for deletion. Scheduled for permanent deletion on ${scheduledDeletionAt.toISOString()}`);
 
     // 10. Return success response

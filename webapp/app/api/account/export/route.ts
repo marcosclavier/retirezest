@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createAuditLogFromRequest, AuditAction } from '@/lib/audit-log';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -195,7 +196,19 @@ export async function GET(req: NextRequest) {
       },
     };
 
-    // 5. Log export event
+    // 5. Log export event to audit log
+    await createAuditLogFromRequest(req, user.id, AuditAction.DATA_EXPORT, {
+      description: `User exported their complete data (${Object.keys(exportData.financialData.assets).length} assets, ${Object.keys(exportData.financialData.incomeSources).length} income sources)`,
+      metadata: {
+        email: user.email,
+        exportType: 'complete_user_data',
+        assetsCount: exportData.financialData.assets.length,
+        incomeCount: exportData.financialData.incomeSources.length,
+        expensesCount: exportData.financialData.expenses.length,
+        scenariosCount: exportData.scenarios.length,
+      },
+    });
+
     console.log(`[DATA EXPORT] User ${user.email} (ID: ${user.id}) exported their data`);
 
     // 6. Return data as JSON with download headers

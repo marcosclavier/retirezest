@@ -73,6 +73,7 @@ model User {
   scenarios         Scenario[]
   projections       Projection[]
   simulationRuns    SimulationRun[]
+  auditLogs         AuditLog[]
 
   @@index([email])
   @@index([createdAt])
@@ -320,4 +321,32 @@ model SimulationRun {
   @@index([createdAt])
   @@index([strategy])
   @@index([healthScore])
+}
+
+// Audit log for tracking important user actions (GDPR compliance)
+model AuditLog {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Action details
+  action      String    // DATA_EXPORT, ACCOUNT_DELETE, ACCOUNT_DELETE_CANCEL, LOGIN, LOGOUT, etc.
+  description String?   // Optional human-readable description
+  metadata    String?   // JSON string for additional context (e.g., export format, deletion reason)
+
+  // Request context
+  ipAddress   String?   // IP address of the request
+  userAgent   String?   // Browser/device information
+
+  // Result
+  success     Boolean   @default(true)
+  errorMessage String?  // If success=false, what went wrong
+
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
