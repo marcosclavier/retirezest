@@ -180,12 +180,14 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
               <div>
                 <p className={getTextColorMuted(health_score)}>Success Rate</p>
                 <p className={`font-medium ${getTextColor(health_score)}`}>{(summary.success_rate * 100).toFixed(1)}%</p>
-                <p className={`text-xs ${getTextColorMuted(health_score)} mt-0.5`}>
-                  {summary.success_rate >= 0.9 ? 'Fully funded' :
-                   summary.success_rate >= 0.7 ? 'Strong funding' :
-                   summary.success_rate >= 0.5 ? 'Partial funding' :
-                   'Limited funding'}
-                </p>
+                {typeof summary.success_rate === 'number' && (
+                  <p className={`text-xs ${getTextColorMuted(health_score)} mt-0.5`}>
+                    {summary.success_rate >= 0.9 ? 'Fully funded' :
+                     summary.success_rate >= 0.7 ? 'Strong funding' :
+                     summary.success_rate >= 0.5 ? 'Partial funding' :
+                     'Limited funding'}
+                  </p>
+                )}
               </div>
               <div>
                 <p className={getTextColorMuted(health_score)}>Years Funded</p>

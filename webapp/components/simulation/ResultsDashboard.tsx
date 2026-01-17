@@ -131,7 +131,12 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
       )}
 
       {/* Partial Funding Explanation */}
-      {result.summary && result.summary.success_rate < 1.0 && result.summary.success_rate >= 0.4 && result.summary.final_estate_after_tax > 0 && (
+      {result.summary &&
+       typeof result.summary.success_rate === 'number' &&
+       result.summary.success_rate < 1.0 &&
+       result.summary.success_rate >= 0.4 &&
+       typeof result.summary.final_estate_after_tax === 'number' &&
+       result.summary.final_estate_after_tax > 0 && (
         <Alert variant="default" className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
           <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <AlertTitle className="text-blue-900 dark:text-blue-100">Understanding Your Results: Partial Funding</AlertTitle>
@@ -139,7 +144,7 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
             <div className="space-y-2 mt-2">
               <p>
                 Your plan shows <strong>{formatPercent(result.summary.success_rate)} success rate</strong>, meaning your assets fully fund{' '}
-                <strong>{result.summary.years_funded} of {result.summary.years_simulated} retirement years</strong>.
+                <strong>{result.summary.years_funded || 0} of {result.summary.years_simulated || 0} retirement years</strong>.
               </p>
               <p>
                 However, you end with an estate of <strong>{formatCurrency(result.summary.final_estate_after_tax)}</strong>,
@@ -210,7 +215,11 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
               <p className="text-xs font-medium" style={{ color: '#111827' }}>
                 {formatPercent(result.summary.success_rate)} success rate
               </p>
-              {result.summary.success_rate < 1.0 && result.summary.success_rate >= 0.5 && result.summary.final_estate_after_tax > 0 && (
+              {typeof result.summary.success_rate === 'number' &&
+               result.summary.success_rate < 1.0 &&
+               result.summary.success_rate >= 0.5 &&
+               typeof result.summary.final_estate_after_tax === 'number' &&
+               result.summary.final_estate_after_tax > 0 && (
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                   Partial funding - see year-by-year details below
                 </p>
