@@ -14,16 +14,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2, FileDown, Loader2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2, FileDown, Loader2, Lock } from 'lucide-react';
 import { RetirementReport } from '@/components/reports/RetirementReport';
 import { generatePDF } from '@/lib/reports/generatePDF';
 import { KeyInsightsCard } from '@/components/simulation/KeyInsightsCard';
 
 interface ResultsDashboardProps {
   result: SimulationResponse;
+  isPremium?: boolean;
+  onUpgradeClick?: () => void;
 }
 
-export function ResultsDashboard({ result }: ResultsDashboardProps) {
+export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: ResultsDashboardProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [reportSettings, setReportSettings] = useState<{ companyName?: string; companyLogo?: string }>({});
   const [isMounted, setIsMounted] = useState(false);
@@ -83,6 +85,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
 
   // Generate PDF report
   const handleExportPDF = async () => {
+    // Check if user is premium
+    if (!isPremium) {
+      if (onUpgradeClick) {
+        onUpgradeClick();
+      }
+      return;
+    }
+
     setIsGeneratingPDF(true);
     try {
       await generatePDF('retirement-report', 'RetireZest-Retirement-Report.pdf');
@@ -170,10 +180,14 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6">
             <div className="flex-1">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Professional Retirement Report</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                Professional Retirement Report
+                {!isPremium && <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-1 rounded">Premium</span>}
+              </h3>
               <p className="text-xs sm:text-sm text-gray-700 mt-1">
                 Download a comprehensive PDF report with detailed analysis, tax breakdown, estate planning, and
                 year-by-year projections.
+                {!isPremium && <span className="block mt-1 text-blue-600 font-medium">Upgrade to Premium to unlock PDF reports</span>}
               </p>
             </div>
             <Button
@@ -190,9 +204,10 @@ export function ResultsDashboard({ result }: ResultsDashboardProps) {
                 </>
               ) : (
                 <>
-                  <FileDown className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">Download PDF Report</span>
-                  <span className="sm:hidden">Download PDF</span>
+                  {!isPremium && <Lock className="h-5 w-5 mr-2" />}
+                  {isPremium && <FileDown className="h-5 w-5 mr-2" />}
+                  <span className="hidden sm:inline">{isPremium ? 'Download PDF Report' : 'Upgrade for PDF'}</span>
+                  <span className="sm:hidden">{isPremium ? 'Download PDF' : 'Upgrade'}</span>
                 </>
               )}
             </Button>
