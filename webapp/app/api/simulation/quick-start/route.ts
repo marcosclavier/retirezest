@@ -195,6 +195,14 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     // TFSA settings
     tfsa_room_start: 7000,
     tfsa_contribution_annual: 0,
+
+    // Early RRIF withdrawal settings (disabled by default for quick-start)
+    enable_early_rrif_withdrawal: false,
+    early_rrif_withdrawal_start_age: 65,
+    early_rrif_withdrawal_end_age: 70,
+    early_rrif_withdrawal_annual: 20000,
+    early_rrif_withdrawal_percentage: 5.0,
+    early_rrif_withdrawal_mode: 'fixed',
   };
 
   // Partner defaults (if applicable) - use defaultPersonInput as base
@@ -253,6 +261,14 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
 
     tfsa_room_start: 7000,
     tfsa_contribution_annual: 0,
+
+    // Early RRIF withdrawal settings (disabled by default for quick-start)
+    enable_early_rrif_withdrawal: false,
+    early_rrif_withdrawal_start_age: 65,
+    early_rrif_withdrawal_end_age: 70,
+    early_rrif_withdrawal_annual: 20000,
+    early_rrif_withdrawal_percentage: 5.0,
+    early_rrif_withdrawal_mode: 'fixed',
   } : {
     name: '',
     start_age: 0,
@@ -308,6 +324,14 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
 
     tfsa_room_start: 7000,
     tfsa_contribution_annual: 0,
+
+    // Early RRIF withdrawal settings (disabled by default for quick-start)
+    enable_early_rrif_withdrawal: false,
+    early_rrif_withdrawal_start_age: 65,
+    early_rrif_withdrawal_end_age: 70,
+    early_rrif_withdrawal_annual: 20000,
+    early_rrif_withdrawal_percentage: 5.0,
+    early_rrif_withdrawal_mode: 'fixed',
   };
 
   // Build household input with smart defaults
