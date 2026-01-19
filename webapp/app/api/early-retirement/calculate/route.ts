@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import {
+  getUserSubscription,
+  checkEarlyRetirementLimit,
+  incrementEarlyRetirementCount,
+} from '@/lib/subscription';
 
 interface EarlyRetirementRequest {
   currentAge: number;
@@ -28,11 +33,42 @@ export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
     const session = await getSession();
-    if (!session?.userId) {
+    if (!session?.userId || !session?.email) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+    }
+
+    // Get user's subscription status
+    const subscription = await getUserSubscription(session.email);
+    if (!subscription) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const isPremium = subscription.isPremium;
+
+    // Rate limiting for free users
+    if (!isPremium) {
+      const rateLimit = await checkEarlyRetirementLimit(session.email);
+
+      if (!rateLimit.allowed) {
+        return NextResponse.json(
+          {
+            error: 'Daily calculation limit reached. Upgrade to Premium for unlimited calculations.',
+            upgradeRequired: true,
+            limitInfo: {
+              dailyLimit: 10,
+              remaining: rateLimit.remaining,
+              resetTime: 'tomorrow',
+            },
+          },
+          { status: 429 }
+        );
+      }
     }
 
     const body = await request.json() as EarlyRetirementRequest;
@@ -134,18 +170,10 @@ export async function POST(request: NextRequest) {
       accountDiversification: Object.values(currentSavings).filter(v => v > 0).length,
     });
 
-    // Generate market condition scenarios (pessimistic, neutral, optimistic)
-    const marketScenarios = {
-      pessimistic: calculateFullScenario(
-        currentAge,
-        totalCurrentSavings,
-        annualSavings,
-        targetRetirementAge,
-        targetAnnualExpenses,
-        lifeExpectancy,
-        scenarios.pessimistic.returnRate,
-        scenarios.pessimistic.inflationRate
-      ),
+    // Generate market condition scenarios
+    // FREE USERS: Only neutral scenario
+    // PREMIUM USERS: All three scenarios (pessimistic, neutral, optimistic)
+    const marketScenarios: any = {
       neutral: calculateFullScenario(
         currentAge,
         totalCurrentSavings,
@@ -156,7 +184,21 @@ export async function POST(request: NextRequest) {
         scenarios.neutral.returnRate,
         scenarios.neutral.inflationRate
       ),
-      optimistic: calculateFullScenario(
+    };
+
+    // Premium users get all scenarios
+    if (isPremium) {
+      marketScenarios.pessimistic = calculateFullScenario(
+        currentAge,
+        totalCurrentSavings,
+        annualSavings,
+        targetRetirementAge,
+        targetAnnualExpenses,
+        lifeExpectancy,
+        scenarios.pessimistic.returnRate,
+        scenarios.pessimistic.inflationRate
+      );
+      marketScenarios.optimistic = calculateFullScenario(
         currentAge,
         totalCurrentSavings,
         annualSavings,
@@ -165,13 +207,15 @@ export async function POST(request: NextRequest) {
         lifeExpectancy,
         scenarios.optimistic.returnRate,
         scenarios.optimistic.inflationRate
-      ),
-    };
+      );
+    }
 
     // Generate age-based scenarios for comparison (using neutral assumptions)
+    // FREE USERS: Only target age scenario
+    // PREMIUM USERS: Multiple age scenarios
     const ageScenarios: RetirementScenario[] = [];
 
-    // Scenario 1: Target age
+    // Scenario 1: Target age (available to all users)
     ageScenarios.push({
       retirementAge: targetRetirementAge,
       totalNeeded: requiredNestEgg,
@@ -181,40 +225,48 @@ export async function POST(request: NextRequest) {
       shortfall: savingsGap,
     });
 
-    // Scenario 2: 2 years later
-    if (targetRetirementAge + 2 <= lifeExpectancy) {
-      const scenario2 = calculateScenario(
-        currentAge,
-        totalCurrentSavings,
-        annualSavings,
-        targetRetirementAge + 2,
-        targetAnnualExpenses,
-        lifeExpectancy,
-        assumedReturn,
-        inflationRate
-      );
-      ageScenarios.push(scenario2);
-    }
+    // Premium users get additional age scenarios
+    if (isPremium) {
+      // Scenario 2: 2 years later
+      if (targetRetirementAge + 2 <= lifeExpectancy) {
+        const scenario2 = calculateScenario(
+          currentAge,
+          totalCurrentSavings,
+          annualSavings,
+          targetRetirementAge + 2,
+          targetAnnualExpenses,
+          lifeExpectancy,
+          assumedReturn,
+          inflationRate
+        );
+        ageScenarios.push(scenario2);
+      }
 
-    // Scenario 3: Traditional (65)
-    if (65 > targetRetirementAge && 65 <= lifeExpectancy && 65 > currentAge) {
-      const scenario3 = calculateScenario(
-        currentAge,
-        totalCurrentSavings,
-        annualSavings,
-        65,
-        targetAnnualExpenses,
-        lifeExpectancy,
-        assumedReturn,
-        inflationRate
-      );
-      ageScenarios.push(scenario3);
+      // Scenario 3: Traditional (65)
+      if (65 > targetRetirementAge && 65 <= lifeExpectancy && 65 > currentAge) {
+        const scenario3 = calculateScenario(
+          currentAge,
+          totalCurrentSavings,
+          annualSavings,
+          65,
+          targetAnnualExpenses,
+          lifeExpectancy,
+          assumedReturn,
+          inflationRate
+        );
+        ageScenarios.push(scenario3);
+      }
     }
 
     // Alternative retirement age (if target not feasible)
     const alternativeRetirementAge = savingsGap > 0 && earliestRetirementAge > targetRetirementAge
       ? earliestRetirementAge
       : null;
+
+    // Increment usage counter for free users (after successful calculation)
+    if (!isPremium) {
+      await incrementEarlyRetirementCount(session.email);
+    }
 
     const response = {
       readinessScore,
@@ -225,13 +277,17 @@ export async function POST(request: NextRequest) {
       savingsGap,
       additionalMonthlySavings,
       alternativeRetirementAge,
-      marketScenarios,    // Pessimistic, neutral, optimistic market conditions
-      ageScenarios,       // Different retirement ages with neutral assumptions
+      marketScenarios,    // Free: neutral only, Premium: all three scenarios
+      ageScenarios,       // Free: target age only, Premium: multiple ages
       assumptions: {
-        pessimistic: scenarios.pessimistic,
+        pessimistic: isPremium ? scenarios.pessimistic : undefined,
         neutral: scenarios.neutral,
-        optimistic: scenarios.optimistic,
+        optimistic: isPremium ? scenarios.optimistic : undefined,
       },
+      // Subscription metadata
+      isPremium,
+      tier: subscription.tier,
+      subscriptionStatus: subscription.status,
     };
 
     return NextResponse.json(response, { status: 200 });

@@ -58,6 +58,19 @@ model User {
   companyName          String?   // Optional company name for report branding
   companyLogo          String?   // Optional company logo URL for report branding
 
+  // Premium subscription fields
+  subscriptionTier           String    @default("free") // "free" | "premium"
+  subscriptionStatus         String    @default("active") // "active" | "cancelled" | "expired"
+  subscriptionStartDate      DateTime?
+  subscriptionEndDate        DateTime?
+  stripeCustomerId           String?   @unique
+  stripeSubscriptionId       String?   @unique
+  stripePriceId              String?   // Track which price/plan they're on
+
+  // Usage tracking for rate limiting (free tier)
+  earlyRetirementCalcsToday  Int       @default(0)
+  earlyRetirementCalcsDate   DateTime?
+
   // Account deletion (soft delete with 30-day grace period)
   deletedAt            DateTime? // When account was marked for deletion
   scheduledDeletionAt  DateTime? // When permanent deletion will occur (deletedAt + 30 days)
@@ -81,6 +94,10 @@ model User {
   @@index([emailVerificationToken])
   @@index([deletedAt])
   @@index([scheduledDeletionAt])
+  @@index([subscriptionTier])
+  @@index([subscriptionStatus])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
 }
 
 model Income {
@@ -117,6 +134,15 @@ model Asset {
   returnRate      Float?    // Expected annual return rate percentage
   owner           String?   @default("person1") // person1, person2, joint - for couples planning
   notes           String?
+
+  // Early RRIF/RRSP withdrawal customization (applies to RRSP/RRIF types)
+  enableEarlyRrifWithdrawal Boolean? @default(false)
+  earlyRrifStartAge         Int?     // Age to start early withdrawals
+  earlyRrifEndAge           Int?     // Age to end early withdrawals (must be < 71)
+  earlyRrifAnnualAmount     Float?   // Fixed annual withdrawal amount
+  earlyRrifPercentage       Float?   // Or percentage of balance (0-100)
+  earlyRrifMode             String?  // 'fixed' or 'percentage'
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

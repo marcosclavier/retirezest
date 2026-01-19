@@ -15,6 +15,7 @@ import {
 import { Collapsible } from '@/components/ui/collapsible';
 import { HelpTooltip } from '@/components/ui/HelpTooltip';
 import { simulationTooltips } from '@/lib/help-text/simulation-tooltips';
+import EarlyRrifWithdrawalControl from '@/components/simulation/EarlyRrifWithdrawalControl';
 
 // Helper component for labels with optional tooltips
 function LabelWithTooltip({ htmlFor, children, tooltip }: { htmlFor: string; children: React.ReactNode; tooltip?: string }) {
@@ -187,6 +188,30 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               />
             </div>
           </div>
+
+          {/* Early RRIF Withdrawal Control - Show only if RRSP/RRIF balance > 0 */}
+          {((person.rrsp_balance ?? 0) > 0 || (person.rrif_balance ?? 0) > 0) && (
+            <div className="mt-6">
+              <EarlyRrifWithdrawalControl
+                enabled={person.enable_early_rrif_withdrawal ?? false}
+                startAge={person.early_rrif_withdrawal_start_age ?? person.start_age}
+                endAge={person.early_rrif_withdrawal_end_age ?? 70}
+                annualAmount={person.early_rrif_withdrawal_annual ?? 20000}
+                percentage={person.early_rrif_withdrawal_percentage ?? 5.0}
+                mode={person.early_rrif_withdrawal_mode ?? 'fixed'}
+                personName={person.name}
+                currentAge={person.start_age}
+                onUpdate={(settings) => {
+                  onChange('enable_early_rrif_withdrawal', settings.enabled);
+                  onChange('early_rrif_withdrawal_start_age', settings.startAge);
+                  onChange('early_rrif_withdrawal_end_age', settings.endAge);
+                  onChange('early_rrif_withdrawal_annual', settings.annualAmount);
+                  onChange('early_rrif_withdrawal_percentage', settings.percentage);
+                  onChange('early_rrif_withdrawal_mode', settings.mode);
+                }}
+              />
+            </div>
+          )}
         </Collapsible>
 
         {/* Government Benefits */}

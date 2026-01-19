@@ -69,6 +69,14 @@ export interface PersonInput {
   // TFSA settings (per person)
   tfsa_room_start: number;
   tfsa_contribution_annual: number;
+
+  // Early RRIF/RRSP withdrawal customization (before age 71)
+  enable_early_rrif_withdrawal: boolean;
+  early_rrif_withdrawal_start_age: number;
+  early_rrif_withdrawal_end_age: number;
+  early_rrif_withdrawal_annual: number; // Fixed annual amount
+  early_rrif_withdrawal_percentage: number; // Or as % of balance (0-100)
+  early_rrif_withdrawal_mode: 'fixed' | 'percentage'; // Which mode to use
 }
 
 export type Province = 'AB' | 'BC' | 'ON' | 'QC';
@@ -460,6 +468,14 @@ export const defaultPersonInput: PersonInput = {
 
   tfsa_room_start: 7000,
   tfsa_contribution_annual: 0,
+
+  // Early RRIF withdrawal defaults (disabled by default)
+  enable_early_rrif_withdrawal: false,
+  early_rrif_withdrawal_start_age: 65,
+  early_rrif_withdrawal_end_age: 70,
+  early_rrif_withdrawal_annual: 20000,
+  early_rrif_withdrawal_percentage: 5.0,
+  early_rrif_withdrawal_mode: 'fixed',
 };
 
 // Default household input
