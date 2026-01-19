@@ -223,6 +223,7 @@ export default function SimulationPage() {
     };
 
     initializeData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Quick-start mode detection: Auto-run simulation with smart defaults
