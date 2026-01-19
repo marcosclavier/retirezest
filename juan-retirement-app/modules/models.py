@@ -116,6 +116,14 @@ class Person:
     yield_tfsa_growth: float = 0.05
     yield_rrsp_growth: float = 0.05
 
+    # Early RRIF/RRSP withdrawal customization (before age 71)
+    enable_early_rrif_withdrawal: bool = False
+    early_rrif_withdrawal_start_age: int = 65
+    early_rrif_withdrawal_end_age: int = 70
+    early_rrif_withdrawal_annual: float = 20000.0
+    early_rrif_withdrawal_percentage: float = 5.0
+    early_rrif_withdrawal_mode: str = "fixed"  # "fixed" or "percentage"
+
     # Bucketed non-registered accounts
     nr_cash: float = 0.0      # bank/high interest savings
     nr_gic: float = 0.0       # term deposits

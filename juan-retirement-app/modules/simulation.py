@@ -79,6 +79,122 @@ def rrif_minimum(balance: float, age: int) -> float:
     return balance * factor
 
 
+def calculate_early_rrif_withdrawal(person: Person, age: int) -> float:
+    """
+    Calculate custom early RRIF/RRSP withdrawal for the year.
+
+    This allows users to specify custom withdrawals before age 71
+    (when mandatory minimums kick in). Useful for tax planning,
+    income splitting, and OAS clawback avoidance.
+
+    Args:
+        person (Person): Person with RRIF withdrawal settings.
+        age (int): Current age.
+
+    Returns:
+        float: Withdrawal amount for this year ($).
+
+    Examples:
+        >>> person = Person(name="Test", start_age=65)
+        >>> person.enable_early_rrif_withdrawal = True
+        >>> person.early_rrif_withdrawal_start_age = 65
+        >>> person.early_rrif_withdrawal_end_age = 70
+        >>> person.early_rrif_withdrawal_annual = 25000
+        >>> person.early_rrif_withdrawal_mode = "fixed"
+        >>> calculate_early_rrif_withdrawal(person, 67)
+        25000.0
+        >>> calculate_early_rrif_withdrawal(person, 72)
+        0.0
+    """
+    # Check if early withdrawals are enabled
+    if not getattr(person, 'enable_early_rrif_withdrawal', False):
+        return 0.0
+
+    # Check if age is within the specified range
+    start_age = getattr(person, 'early_rrif_withdrawal_start_age', 65)
+    end_age = getattr(person, 'early_rrif_withdrawal_end_age', 70)
+
+    if age < start_age or age > end_age:
+        return 0.0
+
+    # Check if person has RRSP/RRIF balance
+    rrsp_balance = getattr(person, 'rrsp_balance', 0.0)
+    rrif_balance = getattr(person, 'rrif_balance', 0.0)
+    total_rrif_balance = rrsp_balance + rrif_balance
+
+    if total_rrif_balance < 0.01:
+        return 0.0
+
+    # Get withdrawal mode
+    mode = getattr(person, 'early_rrif_withdrawal_mode', 'fixed')
+
+    if mode == 'fixed':
+        # Fixed amount per year
+        amount = getattr(person, 'early_rrif_withdrawal_annual', 20000.0)
+        # Don't withdraw more than available
+        return min(amount, total_rrif_balance)
+
+    elif mode == 'percentage':
+        # Percentage of balance
+        percentage = getattr(person, 'early_rrif_withdrawal_percentage', 5.0)
+        return total_rrif_balance * (percentage / 100.0)
+
+    else:
+        logger.warning(f"Unknown early RRIF withdrawal mode: {mode}")
+        return 0.0
+
+
+def validate_early_rrif_settings(person: Person) -> List[str]:
+    """
+    Validate early RRIF withdrawal settings.
+
+    Returns:
+        List[str]: List of validation errors (empty if valid).
+
+    Examples:
+        >>> person = Person(name="Test", start_age=65)
+        >>> person.enable_early_rrif_withdrawal = True
+        >>> person.early_rrif_withdrawal_start_age = 65
+        >>> person.early_rrif_withdrawal_end_age = 70
+        >>> person.early_rrif_withdrawal_mode = "fixed"
+        >>> validate_early_rrif_settings(person)
+        []
+    """
+    errors = []
+
+    if not getattr(person, 'enable_early_rrif_withdrawal', False):
+        return errors  # Not enabled, nothing to validate
+
+    # End age must be < 71 (when mandatory minimums start)
+    end_age = getattr(person, 'early_rrif_withdrawal_end_age', 70)
+    if end_age >= 71:
+        errors.append("Early RRIF withdrawal end age must be less than 71")
+
+    # Start age must be before end age
+    start_age = getattr(person, 'early_rrif_withdrawal_start_age', 65)
+    if start_age >= end_age:
+        errors.append("Early RRIF withdrawal start age must be before end age")
+
+    # Mode must be valid
+    mode = getattr(person, 'early_rrif_withdrawal_mode', 'fixed')
+    if mode not in ["fixed", "percentage"]:
+        errors.append(f"Invalid early RRIF withdrawal mode: {mode}")
+
+    # Percentage must be 0-100
+    if mode == "percentage":
+        percentage = getattr(person, 'early_rrif_withdrawal_percentage', 5.0)
+        if percentage < 0 or percentage > 100:
+            errors.append("Early RRIF withdrawal percentage must be between 0 and 100")
+
+    # Fixed amount must be positive
+    if mode == "fixed":
+        amount = getattr(person, 'early_rrif_withdrawal_annual', 20000.0)
+        if amount < 0:
+            errors.append("Early RRIF withdrawal amount must be positive")
+
+    return errors
+
+
 def nonreg_distributions(person: Person) -> Dict[str, float]:
     """
     Calculate non-registered account baseline distributions.
@@ -1088,6 +1204,18 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # -----  RRIF minimum must be defined before withdrawals for this age -----
     rrif_min = rrif_minimum(person.rrif_balance, age)
+
+    # -----  Calculate early RRIF withdrawals (before age 71) -----
+    # These are voluntary withdrawals for tax planning
+    early_rrif = calculate_early_rrif_withdrawal(person, age)
+
+    # Total RRIF withdrawal requirement is MAX of minimum or early withdrawal
+    # (early withdrawals only apply before age 71, minimums after)
+    rrif_min = max(rrif_min, early_rrif)
+
+    # Log if early withdrawals are active
+    if early_rrif > 0:
+        logger.info(f"{person.name} age {age}: Early RRIF withdrawal ${early_rrif:,.0f}")
 
     # FIX: RRIF minimum is MANDATORY by Canadian tax law, but should be enforced
     # AFTER the withdrawal strategy order is applied, not BEFORE.
