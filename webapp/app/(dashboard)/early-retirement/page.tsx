@@ -58,7 +58,6 @@ export default function EarlyRetirementPage() {
   const [selectedAge, setSelectedAge] = useState<number>(60);
   const [error, setError] = useState<string | null>(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadProfileData = useCallback(async () => {
     try {
       setProfileLoading(true);
@@ -85,6 +84,7 @@ export default function EarlyRetirementPage() {
     } finally {
       setProfileLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load user profile data on mount
