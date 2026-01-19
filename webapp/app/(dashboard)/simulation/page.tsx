@@ -25,6 +25,7 @@ import { YearByYearTable } from '@/components/simulation/YearByYearTable';
 import { SmartStartCard } from '@/components/simulation/SmartStartCard';
 import { PlanSnapshotCard } from '@/components/simulation/PlanSnapshotCard';
 import { FloatingCTA } from '@/components/simulation/FloatingCTA';
+import { UpgradeModal } from '@/components/modals/UpgradeModal';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -77,6 +78,9 @@ export default function SimulationPage() {
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
   const [showSmartStart, setShowSmartStart] = useState(true);
   const [showDetailedInputs, setShowDetailedInputs] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'csv' | 'pdf' | 'export' | 'early-retirement' | 'general'>('general');
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -148,8 +152,28 @@ export default function SimulationPage() {
     }
   }, [household.spending_inflation, household.general_inflation, isInitialized, prefillAttempted, csrfToken, debouncedSaveInflationRates]);
 
+  // Fetch subscription status on mount
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const response = await fetch('/api/user/subscription');
+        if (response.ok) {
+          const data = await response.json();
+          setIsPremium(data.isPremium || false);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription status:', error);
+        // Default to free tier on error
+        setIsPremium(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
+
   // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     healthCheck().then(setApiHealthy);
 
     // Fetch CSRF token first, then load prefill data
@@ -663,6 +687,11 @@ export default function SimulationPage() {
     setPrefillAttempted(true);
   };
 
+  const handleUpgradeClick = (feature: 'csv' | 'pdf' | 'export' | 'early-retirement' | 'general' = 'general') => {
+    setUpgradeFeature(feature);
+    setShowUpgradeModal(true);
+  };
+
   const handleRunSimulation = async () => {
     setIsLoading(true);
     setResult(null);
@@ -1162,19 +1191,31 @@ export default function SimulationPage() {
                     <HealthScoreCard summary={result.summary} />
                   </div>
                   <div className="lg:col-span-2">
-                    <ResultsDashboard result={result} />
+                    <ResultsDashboard
+                      result={result}
+                      isPremium={isPremium}
+                      onUpgradeClick={() => handleUpgradeClick('pdf')}
+                    />
                   </div>
                 </div>
               )}
 
               {/* Fallback if no summary */}
               {result.success && !result.summary && (
-                <ResultsDashboard result={result} />
+                <ResultsDashboard
+                  result={result}
+                  isPremium={isPremium}
+                  onUpgradeClick={() => handleUpgradeClick('pdf')}
+                />
               )}
 
               {/* Error state */}
               {!result.success && (
-                <ResultsDashboard result={result} />
+                <ResultsDashboard
+                  result={result}
+                  isPremium={isPremium}
+                  onUpgradeClick={() => handleUpgradeClick('pdf')}
+                />
               )}
 
               {/* Charts Section */}
@@ -1208,6 +1249,8 @@ export default function SimulationPage() {
                   <YearByYearTable
                     yearByYear={result.year_by_year}
                     reinvestNonregDist={result.household_input?.reinvest_nonreg_dist ?? true}
+                    isPremium={isPremium}
+                    onUpgradeClick={() => handleUpgradeClick('csv')}
                   />
                 </div>
               )}
@@ -1229,6 +1272,13 @@ export default function SimulationPage() {
           isLoading={isLoading}
         />
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        feature={upgradeFeature}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, RefreshCw, TrendingUp } from 'lucide-react';
@@ -19,10 +19,11 @@ interface EarlyRetirementData {
   savingsGap: number;
   additionalMonthlySavings: number;
   alternativeRetirementAge: number | null;
-  scenarios: RetirementScenario[];
+  ageScenarios: RetirementScenario[];
   assumptions: {
-    returnRate: number;
-    inflationRate: number;
+    pessimistic: { returnRate: number; inflationRate: number };
+    neutral: { returnRate: number; inflationRate: number };
+    optimistic: { returnRate: number; inflationRate: number };
   };
 }
 
@@ -57,12 +58,7 @@ export default function EarlyRetirementPage() {
   const [selectedAge, setSelectedAge] = useState<number>(60);
   const [error, setError] = useState<string | null>(null);
 
-  // Load user profile data on mount
-  useEffect(() => {
-    loadProfileData();
-  }, []);
-
-  const loadProfileData = async () => {
+  const loadProfileData = useCallback(async () => {
     try {
       setProfileLoading(true);
       setError(null);
@@ -88,7 +84,12 @@ export default function EarlyRetirementPage() {
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, []);
+
+  // Load user profile data on mount
+  useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
 
   const calculateEarlyRetirement = async (customData?: UserProfile) => {
     const data = customData || profileData;
@@ -212,6 +213,24 @@ export default function EarlyRetirementPage() {
         </Alert>
       )}
 
+      {/* Disclaimer - Educational Purposes */}
+      {profileData && !error && (
+        <Alert className="border-blue-300 bg-blue-50">
+          <AlertCircle className="h-5 w-5 text-blue-600" />
+          <AlertDescription className="text-blue-900">
+            <strong className="block mb-2">Important Disclaimer:</strong>
+            <p className="text-sm mb-2">
+              This calculator is for <strong>educational purposes only</strong> and provides estimates based on simplified assumptions.
+              Actual retirement planning involves many complex factors including taxes, government benefits, healthcare costs, and market volatility.
+            </p>
+            <p className="text-sm">
+              <strong>Please consult a qualified financial advisor</strong> before making any retirement or investment decisions.
+              This tool does not constitute professional financial advice.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Main Content - Only show if we have profile data */}
       {profileData && !error && (
         <>
@@ -233,7 +252,7 @@ export default function EarlyRetirementPage() {
               selectedAge={selectedAge}
               earliestAge={result.earliestRetirementAge}
               onAgeChange={handleAgeChange}
-              scenarios={result.scenarios}
+              scenarios={result.ageScenarios}
               isLoading={isLoading}
             />
           )}
@@ -253,11 +272,11 @@ export default function EarlyRetirementPage() {
           )}
 
           {/* Scenario Comparison */}
-          {result && result.scenarios.length > 0 && (
+          {result && result.ageScenarios && result.ageScenarios.length > 0 && (
             <RetirementScenarios
-              scenarios={result.scenarios}
+              scenarios={result.ageScenarios}
               currentAge={profileData.currentAge}
-              assumptions={result.assumptions}
+              assumptions={result.assumptions.neutral}
             />
           )}
 
@@ -284,6 +303,64 @@ export default function EarlyRetirementPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Assumptions and Limitations */}
+      {result && profileData && (
+        <div className="bg-white border border-gray-300 rounded-lg p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-gray-600" />
+            Calculation Assumptions
+          </h3>
+
+          <div className="space-y-4 text-sm">
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Investment Returns & Inflation:</h4>
+              <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <li><strong>Pessimistic Scenario:</strong> 4% annual return, 3% inflation</li>
+                <li><strong>Neutral Scenario (default):</strong> 5% annual return, 2.5% inflation</li>
+                <li><strong>Optimistic Scenario:</strong> 7% annual return, 2% inflation</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Withdrawal Strategy:</h4>
+              <p className="text-gray-700 ml-2">
+                Uses the <strong>4% safe withdrawal rule</strong> (25x annual expenses) with inflation adjustments based on retirement duration.
+              </p>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                Canadian Government Benefits - Important Notes:
+              </h4>
+              <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm ml-2">
+                <li><strong>CPP (Canada Pension Plan):</strong> Can start as early as age 60 (with reduced benefits) or as late as age 70 (with increased benefits). Standard age is 65.</li>
+                <li><strong>OAS (Old Age Security):</strong> Begins at age 65. Can be deferred to age 70 for higher payments.</li>
+                <li><strong>GIS (Guaranteed Income Supplement):</strong> Available at age 65 for low-income seniors.</li>
+                <li><strong>Provincial Benefits:</strong> Each province may offer additional retirement income programs (e.g., GAINS in Ontario, SAFER in BC).</li>
+                <li className="mt-2 font-semibold text-yellow-900">
+                  ⚠️ This calculator does NOT automatically include CPP, OAS, GIS, or provincial benefits in calculations.
+                  Please use the <a href="/benefits" className="underline hover:text-yellow-700">Benefits Calculators</a> to estimate your government benefits separately.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">What's NOT Included:</h4>
+              <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
+                <li>Detailed tax planning and optimization strategies</li>
+                <li>Healthcare costs and insurance premiums</li>
+                <li>Pension income (employer pensions)</li>
+                <li>Inheritance or windfalls</li>
+                <li>Real estate equity or rental income</li>
+                <li>Part-time work or business income in retirement</li>
+                <li>Provincial tax variations and credits</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Call to Action - Link to Full Simulation */}
