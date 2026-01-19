@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import { YearResult } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,15 +13,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, Download, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download, ChevronRight, Lock } from 'lucide-react';
 
 interface YearByYearTableProps {
   yearByYear: YearResult[];
   initialRowsToShow?: number;
   reinvestNonregDist?: boolean;
+  isPremium?: boolean;
+  onUpgradeClick?: () => void;
 }
 
-export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true }: YearByYearTableProps) {
+export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true, isPremium = false, onUpgradeClick }: YearByYearTableProps) {
   const [showAll, setShowAll] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof YearResult>('year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -80,6 +82,14 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
   };
 
   const exportToCSV = () => {
+    // Check if user is premium
+    if (!isPremium) {
+      if (onUpgradeClick) {
+        onUpgradeClick();
+      }
+      return;
+    }
+
     const headers = [
       'Year',
       'Age P1',
@@ -181,9 +191,15 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
               Detailed simulation results ({yearByYear.length} years)
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={exportToCSV}>
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
+          <Button
+            variant={isPremium ? "outline" : "default"}
+            size="sm"
+            onClick={exportToCSV}
+            className={!isPremium ? "bg-blue-600 hover:bg-blue-700" : ""}
+          >
+            {!isPremium && <Lock className="h-4 w-4 mr-2" />}
+            {isPremium && <Download className="h-4 w-4 mr-2" />}
+            Export CSV {!isPremium && "(Premium)"}
           </Button>
         </div>
       </CardHeader>
