@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { calculateProfileCompletion, getCompletionLevel, getNextAction } from '@/lib/utils/profileCompletion';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { DashboardFeedbackPanel } from '@/components/feedback/DashboardFeedbackPanel';
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -107,6 +108,49 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* Early Retirement CTA - Show for users under 55 */}
+      {user?.dateOfBirth && (() => {
+        const birthDate = new Date(user.dateOfBirth);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear() -
+          (today.getMonth() < birthDate.getMonth() ||
+           (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
+        return age < 55;
+      })() && (
+        <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+                <h2 className="text-2xl font-bold">Planning Early Retirement?</h2>
+              </div>
+              <p className="text-white/90 mb-4">
+                Discover if you can retire before 65. Our Early Retirement Calculator shows you exactly when you can retire and what you need to save to make it happen.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/early-retirement"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  Check Early Retirement
+                </Link>
+                <Link
+                  href="/simulation"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition border-2 border-white/30"
+                >
+                  Full Simulation →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Simulation Ready CTA - Show when user has data but hasn't run simulation */}
       {isReadyForSimulation && !lastSimulation && (
         <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg shadow-lg p-6 mb-8">
@@ -170,7 +214,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
                   <p className="text-xs text-gray-600 mb-1">Success Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">{lastSimulation.successRate ? (lastSimulation.successRate * 100).toFixed(0) : 'N/A'}%</p>
+                  <p className="text-2xl font-bold text-gray-900">{typeof lastSimulation.successRate === 'number' ? (lastSimulation.successRate * 100).toFixed(0) : 'N/A'}%</p>
                   <p className="text-xs text-gray-600">{lastSimulation.yearsFunded || 0}/{lastSimulation.yearsSimulated || 0} years</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
@@ -385,7 +429,7 @@ export default async function DashboardPage() {
 
       {/* Success Message when profile is complete */}
       {completion.percentage === 100 && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
           <div className="flex items-center">
             <svg className="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -399,6 +443,11 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* User Feedback Panel */}
+      <div className="mb-8">
+        <DashboardFeedbackPanel />
+      </div>
     </div>
   );
 }

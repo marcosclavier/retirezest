@@ -87,6 +87,7 @@ model User {
   projections       Projection[]
   simulationRuns    SimulationRun[]
   auditLogs         AuditLog[]
+  userFeedback      UserFeedback[]
 
   @@index([email])
   @@index([createdAt])
@@ -375,4 +376,68 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// User feedback for product improvement and satisfaction tracking
+model UserFeedback {
+  id          String    @id @default(uuid())
+  userId      String?   // Nullable to allow anonymous feedback
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Feedback type and context
+  feedbackType        String    // "post_simulation", "dashboard", "improvement_suggestion", "feature_request", "general"
+  triggerContext      String?   // What triggered the feedback (e.g., "after_first_simulation", "dashboard_panel")
+
+  // Satisfaction metrics
+  satisfactionScore   Int?      // 1-5 scale: Is RetireZest suitable for your needs?
+  npsScore            Int?      // 0-10 scale: Would you recommend RetireZest?
+  helpfulnessScore    Int?      // 1-5 scale: Did the simulation help you?
+
+  // Structured feedback
+  didSimulationHelp   String?   // "yes", "somewhat", "no" (for post-simulation)
+  missingFeatures     String?   // JSON array of feature checkboxes selected
+  improvementAreas    String?   // JSON array of improvement areas
+
+  // Open-ended responses
+  whatWouldMakeUseful String?   // Open text: What would make this more useful?
+  whatIsConfusing     String?   // Open text: What's confusing?
+  improvementSuggestion String? // Open text: General improvement suggestions
+  additionalComments  String?   // Open text: Any other comments
+
+  // Context data (auto-captured)
+  pageUrl             String?   // Page where feedback was given
+  referrerUrl         String?   // Previous page
+  userAgent           String?   // Browser/device info
+  sessionId           String?   // Session identifier
+
+  // User segment data (for analysis)
+  userAge             Int?      // User's age at time of feedback
+  userProvince        String?   // Province
+  includesPartner     Boolean?  // Couples planning?
+  subscriptionTier    String?   // "free" or "premium"
+  simulationCount     Int?      // How many simulations had they run?
+  daysSinceSignup     Int?      // Days since account creation
+
+  // Response tracking
+  responded           Boolean   @default(false)
+  respondedAt         DateTime?
+  respondedBy         String?   // Admin user who responded
+  responseNotes       String?   // Internal notes about response
+
+  // Priority and status
+  priority            Int       @default(3) // 1-5 scale (auto-calculated)
+  status              String    @default("new") // "new", "reviewed", "actioned", "closed"
+  tags                String?   // JSON array of tags for categorization
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([feedbackType])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([satisfactionScore])
+  @@index([npsScore])
+  @@map("user_feedback")
 }

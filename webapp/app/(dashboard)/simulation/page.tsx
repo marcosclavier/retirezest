@@ -26,6 +26,7 @@ import { SmartStartCard } from '@/components/simulation/SmartStartCard';
 import { PlanSnapshotCard } from '@/components/simulation/PlanSnapshotCard';
 import { FloatingCTA } from '@/components/simulation/FloatingCTA';
 import { UpgradeModal } from '@/components/modals/UpgradeModal';
+import { PostSimulationFeedbackModal } from '@/components/feedback/PostSimulationFeedbackModal';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -81,12 +82,21 @@ export default function SimulationPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'csv' | 'pdf' | 'export' | 'early-retirement' | 'general'>('general');
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [hasShownFeedback, setHasShownFeedback] = useState(false);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
   useEffect(() => {
     console.log('🔧 Simulation page initialized - database data will load first');
     setIsInitialized(true);
+
+    // Check if user has already submitted or skipped post-simulation feedback
+    const hasSkipped = localStorage.getItem('post_simulation_feedback_skipped') === 'true';
+    const hasSubmitted = localStorage.getItem('post_simulation_feedback_submitted') === 'true';
+    if (hasSkipped || hasSubmitted) {
+      setHasShownFeedback(true);
+    }
   }, []);
 
   // Debounced localStorage save functions (500ms delay to reduce writes)
@@ -722,6 +732,14 @@ export default function SimulationPage() {
       // Switch to results tab if simulation succeeded
       if (response.success) {
         setActiveTab('results');
+
+        // Show post-simulation feedback modal if not shown before
+        if (!hasShownFeedback) {
+          // Delay modal appearance by 2 seconds to let user see results first
+          setTimeout(() => {
+            setShowFeedbackModal(true);
+          }, 2000);
+        }
       }
     } catch (error) {
       console.error('Simulation error:', error);
@@ -1279,6 +1297,19 @@ export default function SimulationPage() {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         feature={upgradeFeature}
+      />
+
+      {/* Post-Simulation Feedback Modal */}
+      <PostSimulationFeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => {
+          setShowFeedbackModal(false);
+          setHasShownFeedback(true);
+        }}
+        onSubmit={() => {
+          setHasShownFeedback(true);
+          localStorage.setItem('post_simulation_feedback_submitted', 'true');
+        }}
       />
     </div>
   );
