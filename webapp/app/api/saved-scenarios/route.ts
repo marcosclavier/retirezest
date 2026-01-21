@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: {
-        isPremium: true,
+        subscriptionTier: true,
         savedSimulationScenarios: {
           select: { id: true },
         },
@@ -95,7 +95,8 @@ export async function POST(req: NextRequest) {
 
     // Check freemium limits (3 free scenarios, unlimited for premium)
     const scenarioCount = user.savedSimulationScenarios.length;
-    if (!user.isPremium && scenarioCount >= 3) {
+    const isPremium = user.subscriptionTier === 'premium';
+    if (!isPremium && scenarioCount >= 3) {
       return NextResponse.json(
         {
           error: 'Free users can only save up to 3 scenarios. Upgrade to Premium for unlimited scenarios.',
