@@ -91,6 +91,7 @@ model User {
   simulationRuns    SimulationRun[]
   auditLogs         AuditLog[]
   userFeedback      UserFeedback[]
+  savedSimulationScenarios SavedSimulationScenario[]
 
   @@index([email])
   @@index([createdAt])
@@ -444,4 +445,37 @@ model UserFeedback {
   @@index([satisfactionScore])
   @@index([npsScore])
   @@map("user_feedback")
+}
+
+// Saved simulation scenarios for what-if analysis
+model SavedSimulationScenario {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Scenario metadata
+  name            String    // e.g., "Delay CPP to 70", "Reduce Spending 20%"
+  description     String?   // Optional detailed description
+  scenarioType    String    @default("custom") // "baseline", "quick_what_if", "custom"
+
+  // Complete simulation inputs snapshot (JSON)
+  inputData       String    // HouseholdInput as JSON
+
+  // Simulation results snapshot (JSON) - only if scenario has been run
+  results         String?   // SimulationResponse as JSON
+  hasResults      Boolean   @default(false)
+
+  // Metadata
+  isFavorite      Boolean   @default(false)
+  tags            String?   // JSON array of tags for categorization
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, scenarioType])
+  @@index([userId, isFavorite])
+  @@index([createdAt])
+  @@map("saved_simulation_scenarios")
 }

@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Play, Trash2, Copy, Plus, TrendingUp, TrendingDown, Settings } from 'lucide-react';
+import { Play, Trash2, Copy, Plus, TrendingUp, TrendingDown, Settings, Save, BookmarkCheck } from 'lucide-react';
 import { runSimulation } from '@/lib/api/simulation-client';
 import {
   type HouseholdInput,
@@ -19,6 +19,7 @@ import {
   type WithdrawalStrategy,
   strategyOptions,
 } from '@/lib/types/simulation';
+import { loadSavedScenarios, saveScenario, deleteSavedScenario } from '@/lib/saved-scenarios';
 
 interface Scenario {
   id: string;
@@ -27,6 +28,8 @@ interface Scenario {
   inputs: HouseholdInput;
   results?: SimulationResponse;
   isRunning: boolean;
+  savedId?: string; // ID in database if saved
+  isSaved?: boolean; // Whether this scenario is saved to database
 }
 
 export default function ScenariosPage() {
@@ -57,6 +60,28 @@ export default function ScenariosPage() {
       }
     };
     fetchCsrfToken();
+  }, []);
+
+  // Load saved scenarios from database on mount
+  useEffect(() => {
+    const loadScenarios = async () => {
+      const saved = await loadSavedScenarios();
+      if (saved.length > 0) {
+        const loadedScenarios: Scenario[] = saved.map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description || '',
+          inputs: s.inputData,
+          results: s.results || undefined,
+          isRunning: false,
+          savedId: s.id,
+          isSaved: true,
+        }));
+        setScenarios(loadedScenarios);
+        setBaselineLoaded(true);
+      }
+    };
+    loadScenarios();
   }, []);
 
   // Load baseline scenario from localStorage or prefill API
@@ -394,12 +419,57 @@ export default function ScenariosPage() {
     },
   ];
 
-  const deleteScenario = (id: string) => {
-    if (scenarios.find(s => s.id === id)?.name.includes('Baseline')) {
+  const handleSaveScenario = async (id: string) => {
+    const scenario = scenarios.find(s => s.id === id);
+    if (!scenario) return;
+
+    const result = await saveScenario({
+      name: scenario.name,
+      description: scenario.description,
+      scenarioType: scenario.name.includes('Baseline') ? 'baseline' : 'custom',
+      inputData: scenario.inputs,
+      results: scenario.results,
+      hasResults: !!scenario.results,
+    });
+
+    if (result.success) {
+      // Update scenario to mark as saved
+      setScenarios(prev =>
+        prev.map(s =>
+          s.id === id
+            ? { ...s, isSaved: true, savedId: result.scenarioId }
+            : s
+        )
+      );
+      alert('Scenario saved successfully!');
+    } else if (result.requiresPremium) {
+      if (confirm(result.error + '\n\nWould you like to upgrade now?')) {
+        window.location.href = '/subscribe';
+      }
+    } else {
+      alert(result.error || 'Failed to save scenario');
+    }
+  };
+
+  const deleteScenario = async (id: string) => {
+    const scenario = scenarios.find(s => s.id === id);
+    if (!scenario) return;
+
+    if (scenario.name.includes('Baseline')) {
       if (!confirm('This is your baseline scenario. Are you sure you want to delete it?')) {
         return;
       }
     }
+
+    // If saved to database, delete from there too
+    if (scenario.savedId) {
+      const success = await deleteSavedScenario(scenario.savedId);
+      if (!success) {
+        alert('Failed to delete from database');
+        return;
+      }
+    }
+
     setScenarios(prev => prev.filter(s => s.id !== id));
     setSelectedScenarios(prev => prev.filter(sid => sid !== id));
   };
@@ -414,6 +484,8 @@ export default function ScenariosPage() {
       name: `${scenario.name} (Copy)`,
       results: undefined,
       isRunning: false,
+      isSaved: false, // Duplicates are not saved by default
+      savedId: undefined,
     };
 
     setScenarios(prev => [...prev, newScenario]);
@@ -822,6 +894,24 @@ export default function ScenariosPage() {
                 )}
 
                 <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                  {!scenario.isSaved ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSaveScenario(scenario.id);
+                      }}
+                      className="flex-1 px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-white hover:bg-green-50 flex items-center justify-center gap-1"
+                      title="Save this scenario to database"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save
+                    </button>
+                  ) : (
+                    <div className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-500 bg-gray-50 flex items-center justify-center gap-1 cursor-default">
+                      <BookmarkCheck className="w-4 h-4" />
+                      Saved
+                    </div>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
