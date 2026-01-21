@@ -12,8 +12,10 @@ export function MobileNav() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/profile', label: 'Financial Profile' },
     { href: '/benefits', label: 'Benefits' },
+    { href: '/early-retirement', label: 'Early Retirement' },
     { href: '/simulation', label: 'Simulation' },
     { href: '/scenarios', label: 'Scenarios' },
+    { href: '/account/billing', label: 'Account & Billing' },
     { href: '/help', label: 'Help & FAQ' },
   ];
 
