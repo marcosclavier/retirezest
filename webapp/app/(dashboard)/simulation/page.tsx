@@ -921,12 +921,12 @@ export default function SimulationPage() {
                   {includePartner && <p className="font-medium text-gray-700 mb-2">{household.p1.name || 'You'}</p>}
                   <div className="flex justify-between">
                     <span className="text-gray-600">{includePartner ? 'Age:' : 'Name:'}</span>
-                    <span>{includePartner ? household.p1.start_age : household.p1.name}</span>
+                    <span>{includePartner ? (household.p1.start_age || '—') : (household.p1.name || '—')}</span>
                   </div>
                   {!includePartner && (
                     <div className="flex justify-between mt-1">
                       <span className="text-gray-600">Age:</span>
-                      <span>{household.p1.start_age}</span>
+                      <span>{household.p1.start_age || '—'}</span>
                     </div>
                   )}
                 </div>
@@ -937,7 +937,7 @@ export default function SimulationPage() {
                     <p className="font-medium text-gray-700 mb-2">{household.p2.name}</p>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Age:</span>
-                      <span>{household.p2.start_age}</span>
+                      <span>{household.p2.start_age || '—'}</span>
                     </div>
                   </div>
                 )}
