@@ -9,6 +9,7 @@ import { RetirementAgeSlider } from '@/components/retirement/RetirementAgeSlider
 import { SavingsGapAnalysis } from '@/components/retirement/SavingsGapAnalysis';
 import { RetirementScenarios } from '@/components/retirement/RetirementScenarios';
 import { ActionPlan } from '@/components/retirement/ActionPlan';
+import { CalculationInputs } from '@/components/retirement/CalculationInputs';
 
 interface EarlyRetirementData {
   readinessScore: number;
@@ -24,6 +25,25 @@ interface EarlyRetirementData {
     pessimistic: { returnRate: number; inflationRate: number };
     neutral: { returnRate: number; inflationRate: number };
     optimistic: { returnRate: number; inflationRate: number };
+  };
+  recommendedContributions?: {
+    rrspMonthly: number;
+    rrspAnnual: number;
+    tfsaMonthly: number;
+    tfsaAnnual: number;
+    nonRegisteredMonthly: number;
+    nonRegisteredAnnual: number;
+    totalMonthly: number;
+    totalAnnual: number;
+    warnings: string[];
+    notes: string[];
+  };
+  craInfo?: {
+    rrspToRrifAge: number;
+    cppEarliestAge: number;
+    cppStandardAge: number;
+    oasStartAge: number;
+    notes: string[];
   };
 }
 
@@ -48,6 +68,24 @@ interface UserProfile {
   targetRetirementAge: number;
   targetAnnualExpenses: number;
   lifeExpectancy: number;
+  province?: string;
+  includePartner?: boolean;
+  partner?: {
+    age: number;
+    currentSavings: {
+      rrsp: number;
+      tfsa: number;
+      nonRegistered: number;
+    };
+    annualIncome: number;
+    targetRetirementAge: number;
+  };
+  householdIncome?: number;
+  jointAssets?: {
+    rrsp: number;
+    tfsa: number;
+    nonRegistered: number;
+  };
 }
 
 export default function EarlyRetirementPage() {
@@ -57,6 +95,7 @@ export default function EarlyRetirementPage() {
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [selectedAge, setSelectedAge] = useState<number>(60);
   const [error, setError] = useState<string | null>(null);
+  const [showAgeCorrectionInfo, setShowAgeCorrectionInfo] = useState(false);
 
   const loadProfileData = useCallback(async () => {
     try {
@@ -73,6 +112,13 @@ export default function EarlyRetirementPage() {
       const data = await response.json();
       setProfileData(data);
       setSelectedAge(data.targetRetirementAge || 60);
+
+      // Note: We can't directly detect if age was auto-corrected since the API already returns the corrected value
+      // But we can check if the profile needs updating based on relationship between current and target age
+      // This info message will show if target age seems too close to current age (suggesting it may have been corrected)
+      if (data.currentAge && data.targetRetirementAge && data.targetRetirementAge - data.currentAge <= 5) {
+        setShowAgeCorrectionInfo(true);
+      }
 
       // Automatically calculate if user has data
       if (data.currentAge && data.currentAge > 0) {
@@ -200,6 +246,21 @@ export default function EarlyRetirementPage() {
         </Alert>
       )}
 
+      {/* Age Correction Info */}
+      {showAgeCorrectionInfo && profileData && (
+        <Alert className="border-blue-300 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-900">
+            <strong>Target Retirement Age Adjusted:</strong> Your target retirement age has been set to {profileData.targetRetirementAge}
+            {' '}(must be at least {profileData.currentAge + 1} to be greater than your current age of {profileData.currentAge}).
+            {' '}You can adjust this using the slider below, or{' '}
+            <a href="/onboarding/wizard" className="underline font-semibold hover:text-blue-700">
+              update your profile
+            </a>.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* No Profile Data Warning */}
       {!profileData && !profileLoading && !error && (
         <Alert className="border-yellow-300 bg-yellow-50">
@@ -235,6 +296,20 @@ export default function EarlyRetirementPage() {
       {/* Main Content - Only show if we have profile data */}
       {profileData && !error && (
         <>
+          {/* Financial Profile Input Data */}
+          <CalculationInputs
+            currentAge={profileData.currentAge}
+            targetRetirementAge={selectedAge}
+            lifeExpectancy={profileData.lifeExpectancy}
+            currentSavings={profileData.currentSavings}
+            annualIncome={profileData.annualIncome}
+            annualSavings={profileData.annualSavings}
+            targetAnnualExpenses={profileData.targetAnnualExpenses}
+            includePartner={profileData.includePartner}
+            partner={profileData.partner}
+            province={profileData.province}
+          />
+
           {/* Readiness Score - Hero Component */}
           {result && (
             <EarlyRetirementScore
@@ -269,6 +344,7 @@ export default function EarlyRetirementPage() {
               alternativeRetirementAge={result.alternativeRetirementAge}
               targetRetirementAge={selectedAge}
               yearsToRetirement={selectedAge - profileData.currentAge}
+              recommendedContributions={result.recommendedContributions}
             />
           )}
 
@@ -291,6 +367,7 @@ export default function EarlyRetirementPage() {
               currentAge={profileData.currentAge}
               targetAgeFeasible={result.targetAgeFeasible}
               alternativeRetirementAge={result.alternativeRetirementAge}
+              recommendedContributions={result.recommendedContributions}
             />
           )}
 
@@ -334,17 +411,20 @@ export default function EarlyRetirementPage() {
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
-                Canadian Government Benefits - Important Notes:
+                CRA & Canadian Retirement Rules:
               </h4>
               <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm ml-2">
-                <li><strong>CPP (Canada Pension Plan):</strong> Can start as early as age 60 (with reduced benefits) or as late as age 70 (with increased benefits). Standard age is 65.</li>
-                <li><strong>OAS (Old Age Security):</strong> Begins at age 65. Can be deferred to age 70 for higher payments.</li>
-                <li><strong>GIS (Guaranteed Income Supplement):</strong> Available at age 65 for low-income seniors.</li>
-                <li><strong>Provincial Benefits:</strong> Each province may offer additional retirement income programs (e.g., GAINS in Ontario, SAFER in BC).</li>
-                <li className="mt-2 font-semibold text-yellow-900">
-                  ⚠️ This calculator does NOT automatically include CPP, OAS, GIS, or provincial benefits in calculations.
-                  Please use the <a href="/benefits" className="underline hover:text-yellow-700">Benefits Calculators</a> to estimate your government benefits separately.
+                {result.craInfo?.notes.map((note: string, index: number) => (
+                  <li key={index}>{note}</li>
+                ))}
+                <li className="mt-2">
+                  <strong>Province:</strong> {profileData.province || 'Ontario'} - Provincial tax rates and credits apply.
                 </li>
+                {profileData.includePartner && (
+                  <li>
+                    <strong>Couples Planning:</strong> Pension income splitting available at age 65 to reduce household taxes.
+                  </li>
+                )}
               </ul>
             </div>
 

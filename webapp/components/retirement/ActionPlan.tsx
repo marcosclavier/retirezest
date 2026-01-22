@@ -8,6 +8,18 @@ interface ActionPlanProps {
   currentAge: number;
   targetAgeFeasible: boolean;
   alternativeRetirementAge: number | null;
+  recommendedContributions?: {
+    rrspMonthly: number;
+    rrspAnnual: number;
+    tfsaMonthly: number;
+    tfsaAnnual: number;
+    nonRegisteredMonthly: number;
+    nonRegisteredAnnual: number;
+    totalMonthly: number;
+    totalAnnual: number;
+    warnings: string[];
+    notes: string[];
+  };
 }
 
 interface ActionItem {
@@ -28,6 +40,7 @@ export function ActionPlan({
   currentAge,
   targetAgeFeasible,
   alternativeRetirementAge,
+  recommendedContributions,
 }: ActionPlanProps) {
   const yearsToRetirement = targetRetirementAge - currentAge;
 
@@ -36,7 +49,32 @@ export function ActionPlan({
     const items: ActionItem[] = [];
 
     // High priority actions based on savings gap
-    if (savingsGap > 0) {
+    if (savingsGap > 0 && recommendedContributions) {
+      // CRA-compliant account-specific recommendations
+      const { rrspMonthly, tfsaMonthly, nonRegisteredMonthly, totalMonthly } = recommendedContributions;
+
+      let description = `To close your savings gap, increase your monthly contributions:\n`;
+      if (rrspMonthly > 0) {
+        description += `\n• RRSP: $${Math.round(rrspMonthly)}/month (tax-deductible)`;
+      }
+      if (tfsaMonthly > 0) {
+        description += `\n• TFSA: $${Math.round(tfsaMonthly)}/month (tax-free growth)`;
+      }
+      if (nonRegisteredMonthly > 0) {
+        description += `\n• Non-Registered: $${Math.round(nonRegisteredMonthly)}/month (taxable)`;
+      }
+      description += `\n\nTotal: $${Math.round(totalMonthly)}/month. Consider automating these transfers.`;
+
+      items.push({
+        id: 'increase-savings',
+        title: `Increase monthly savings (CRA-compliant breakdown)`,
+        description,
+        priority: 'high',
+        completed: false,
+        icon: DollarSign,
+      });
+    } else if (savingsGap > 0) {
+      // Fallback for when recommendedContributions not available
       items.push({
         id: 'increase-savings',
         title: `Increase monthly savings to $${Math.round(additionalMonthlySavings)}`,

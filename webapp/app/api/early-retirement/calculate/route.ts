@@ -6,6 +6,52 @@ import {
   incrementEarlyRetirementCount,
 } from '@/lib/subscription';
 
+/**
+ * CRA-Compliant Canadian Retirement Planning Constants (2026)
+ *
+ * IMPORTANT: These are simplified assumptions for educational purposes.
+ * Real retirement planning must account for:
+ * - Tax implications (federal + provincial)
+ * - CPP/OAS benefits (varies by contribution history and start age)
+ * - GIS eligibility (income-tested)
+ * - RRSP/RRIF minimum withdrawal rules (CRA prescribed)
+ * - TFSA contribution limits (annual)
+ * - Pension income splitting (couples can split up to 50% after age 65)
+ * - Provincial tax credits and benefits
+ */
+const CRA_CONSTANTS = {
+  // RRSP/RRIF Rules
+  RRSP_TO_RRIF_AGE: 71, // Must convert RRSP to RRIF by end of year you turn 71
+  RRIF_MIN_WITHDRAWAL_START: 72, // Mandatory RRIF withdrawals start the year after conversion
+
+  // RRSP Contribution Limits (2026)
+  RRSP_CONTRIBUTION_RATE: 0.18, // 18% of prior year's earned income
+  RRSP_ANNUAL_LIMIT_2026: 32490, // Maximum RRSP deduction limit for 2026
+  RRSP_OVER_CONTRIBUTION_BUFFER: 2000, // Allowed over-contribution without penalty
+  RRSP_OVER_CONTRIBUTION_PENALTY: 0.01, // 1% per month penalty on excess
+
+  // CPP Rules (Canada Pension Plan)
+  CPP_STANDARD_AGE: 65,
+  CPP_EARLIEST_AGE: 60, // 60% reduction at 60, 0.6% per month (36% at 60)
+  CPP_LATEST_AGE: 70, // 42% increase at 70, 0.7% per month
+  CPP_MAX_MONTHLY_2026: 1364.60, // Maximum CPP at age 65 (2026)
+
+  // OAS Rules (Old Age Security)
+  OAS_START_AGE: 65,
+  OAS_DEFERRAL_MAX_AGE: 70, // Can defer to 70 for 36% increase (0.6% per month)
+  OAS_MAX_MONTHLY_2026: 707.68, // Maximum OAS (Jan-Mar 2026)
+  OAS_CLAWBACK_THRESHOLD_2026: 90997, // Income threshold for OAS recovery tax
+
+  // TFSA Limits
+  TFSA_ANNUAL_LIMIT_2026: 7000, // 2026 contribution limit
+  TFSA_CUMULATIVE_LIMIT_2026: 102000, // For those 18+ since 2009
+
+  // Life Expectancy (Statistics Canada)
+  LIFE_EXPECTANCY_MALE: 81,
+  LIFE_EXPECTANCY_FEMALE: 85,
+  LIFE_EXPECTANCY_DEFAULT: 95, // Conservative planning assumption
+};
+
 interface EarlyRetirementRequest {
   currentAge: number;
   currentSavings: {
@@ -27,6 +73,142 @@ interface RetirementScenario {
   monthlySavingsRequired: number;
   projectedSavings: number;
   shortfall: number;
+}
+
+interface AccountSpecificRecommendations {
+  rrspMonthly: number;
+  rrspAnnual: number;
+  tfsaMonthly: number;
+  tfsaAnnual: number;
+  nonRegisteredMonthly: number;
+  nonRegisteredAnnual: number;
+  totalMonthly: number;
+  totalAnnual: number;
+  warnings: string[];
+  notes: string[];
+}
+
+/**
+ * Calculate CRA-compliant RRSP contribution limit
+ */
+function calculateRrspLimit(
+  annualIncome: number,
+  currentAge: number,
+  pensionAdjustment: number = 0
+): { annual: number; monthly: number; canContribute: boolean } {
+  // Cannot contribute to RRSP after age 71
+  if (currentAge >= CRA_CONSTANTS.RRSP_TO_RRIF_AGE) {
+    return { annual: 0, monthly: 0, canContribute: false };
+  }
+
+  // Calculate RRSP limit: lesser of 18% of income or annual maximum
+  const incomeBasedLimit = annualIncome * CRA_CONSTANTS.RRSP_CONTRIBUTION_RATE;
+  const effectiveLimit = Math.min(incomeBasedLimit, CRA_CONSTANTS.RRSP_ANNUAL_LIMIT_2026);
+
+  // Subtract pension adjustment (employer pension contributions)
+  const finalLimit = Math.max(0, effectiveLimit - pensionAdjustment);
+
+  return {
+    annual: finalLimit,
+    monthly: finalLimit / 12,
+    canContribute: true,
+  };
+}
+
+/**
+ * Calculate account-specific contribution recommendations
+ * Distributes additional savings across RRSP, TFSA, and non-registered accounts
+ * in tax-optimal order, respecting CRA contribution limits
+ */
+function calculateAccountRecommendations(
+  additionalMonthlySavings: number,
+  annualIncome: number,
+  currentAge: number,
+  pensionAdjustment: number = 0
+): AccountSpecificRecommendations {
+  const warnings: string[] = [];
+  const notes: string[] = [];
+
+  // Calculate RRSP limit
+  const rrspLimit = calculateRrspLimit(annualIncome, currentAge, pensionAdjustment);
+
+  // TFSA limits
+  const tfsaMonthlyLimit = CRA_CONSTANTS.TFSA_ANNUAL_LIMIT_2026 / 12;
+
+  // Distribute savings in tax-optimal order: RRSP first, then TFSA, then non-registered
+  let remainingSavings = additionalMonthlySavings;
+  let rrspMonthly = 0;
+  let tfsaMonthly = 0;
+  let nonRegisteredMonthly = 0;
+
+  // Step 1: RRSP (if eligible and within limits)
+  if (rrspLimit.canContribute && remainingSavings > 0) {
+    rrspMonthly = Math.min(remainingSavings, rrspLimit.monthly);
+    remainingSavings -= rrspMonthly;
+
+    if (additionalMonthlySavings > rrspLimit.monthly) {
+      warnings.push(
+        `Your recommended savings ($${Math.round(additionalMonthlySavings)}/month) exceed your RRSP contribution limit ($${Math.round(rrspLimit.monthly)}/month). We've allocated the excess to TFSA and non-registered accounts.`
+      );
+      notes.push(
+        `Your RRSP limit is based on 18% of your income ($${annualIncome.toLocaleString()}) = $${Math.round(rrspLimit.annual).toLocaleString()}/year.`
+      );
+    }
+  } else if (!rrspLimit.canContribute && currentAge >= CRA_CONSTANTS.RRSP_TO_RRIF_AGE) {
+    warnings.push(
+      `You cannot contribute to RRSP after age ${CRA_CONSTANTS.RRSP_TO_RRIF_AGE}. All savings will go to TFSA and non-registered accounts.`
+    );
+    notes.push(
+      `Convert your RRSP to RRIF by December 31 of the year you turn ${CRA_CONSTANTS.RRSP_TO_RRIF_AGE}.`
+    );
+  }
+
+  // Step 2: TFSA (tax-free growth)
+  if (remainingSavings > 0) {
+    tfsaMonthly = Math.min(remainingSavings, tfsaMonthlyLimit);
+    remainingSavings -= tfsaMonthly;
+
+    if (remainingSavings > 0) {
+      warnings.push(
+        `Recommended savings exceed both RRSP and TFSA annual limits. Remaining $${Math.round(remainingSavings)}/month will go to non-registered accounts (taxable).`
+      );
+    }
+  }
+
+  // Step 3: Non-registered (taxable, but no contribution limits)
+  if (remainingSavings > 0) {
+    nonRegisteredMonthly = remainingSavings;
+  }
+
+  // Add educational notes
+  if (rrspMonthly > 0) {
+    notes.push('RRSP contributions are tax-deductible and grow tax-deferred until withdrawal.');
+  }
+  if (tfsaMonthly > 0) {
+    notes.push('TFSA contributions grow tax-free and withdrawals do not affect OAS/GIS eligibility.');
+  }
+  if (nonRegisteredMonthly > 0) {
+    notes.push('Non-registered investments are subject to capital gains tax but have no contribution limits.');
+  }
+
+  if (pensionAdjustment > 0) {
+    notes.push(
+      `Your RRSP room is reduced by $${pensionAdjustment.toLocaleString()} due to your employer pension plan (Pension Adjustment).`
+    );
+  }
+
+  return {
+    rrspMonthly,
+    rrspAnnual: rrspMonthly * 12,
+    tfsaMonthly,
+    tfsaAnnual: tfsaMonthly * 12,
+    nonRegisteredMonthly,
+    nonRegisteredAnnual: nonRegisteredMonthly * 12,
+    totalMonthly: rrspMonthly + tfsaMonthly + nonRegisteredMonthly,
+    totalAnnual: (rrspMonthly + tfsaMonthly + nonRegisteredMonthly) * 12,
+    warnings,
+    notes,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -151,6 +333,14 @@ export async function POST(request: NextRequest) {
     const additionalMonthlySavings = savingsGap > 0
       ? calculateMonthlyPayment(savingsGap, assumedReturn / 12, yearsToRetirement * 12)
       : 0;
+
+    // Calculate CRA-compliant account-specific recommendations
+    const accountRecommendations = calculateAccountRecommendations(
+      additionalMonthlySavings,
+      annualIncome,
+      currentAge,
+      0 // TODO: Add pension adjustment from user profile
+    );
 
     // Calculate earliest retirement age
     const earliestRetirementAge = calculateEarliestRetirementAge(
@@ -283,6 +473,26 @@ export async function POST(request: NextRequest) {
         pessimistic: isPremium ? scenarios.pessimistic : undefined,
         neutral: scenarios.neutral,
         optimistic: isPremium ? scenarios.optimistic : undefined,
+      },
+      // CRA-compliant account-specific contribution recommendations
+      recommendedContributions: accountRecommendations,
+      // CRA-specific information for Canadian retirement planning
+      craInfo: {
+        rrspToRrifAge: CRA_CONSTANTS.RRSP_TO_RRIF_AGE,
+        rrspContributionRate: CRA_CONSTANTS.RRSP_CONTRIBUTION_RATE,
+        rrspAnnualLimit2026: CRA_CONSTANTS.RRSP_ANNUAL_LIMIT_2026,
+        cppEarliestAge: CRA_CONSTANTS.CPP_EARLIEST_AGE,
+        cppStandardAge: CRA_CONSTANTS.CPP_STANDARD_AGE,
+        oasStartAge: CRA_CONSTANTS.OAS_START_AGE,
+        tfsaAnnualLimit2026: CRA_CONSTANTS.TFSA_ANNUAL_LIMIT_2026,
+        notes: [
+          'This calculator does NOT include CPP or OAS benefits. Visit /benefits to estimate government benefits.',
+          `RRSP must be converted to RRIF by December 31 of the year you turn ${CRA_CONSTANTS.RRSP_TO_RRIF_AGE}.`,
+          `CPP can start as early as age ${CRA_CONSTANTS.CPP_EARLIEST_AGE} (reduced) or delayed to age ${CRA_CONSTANTS.CPP_LATEST_AGE} (increased).`,
+          'For couples: Pension income splitting available at age 65 for eligible pension income.',
+          'TFSA withdrawals are tax-free and do not affect OAS/GIS eligibility.',
+          'RRIF withdrawals are fully taxable and may trigger OAS clawback if income exceeds threshold.',
+        ],
       },
       // Subscription metadata
       isPremium,

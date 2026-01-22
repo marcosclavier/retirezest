@@ -13,6 +13,18 @@ interface SavingsGapAnalysisProps {
   alternativeRetirementAge: number | null;
   targetRetirementAge: number;
   yearsToRetirement: number;
+  recommendedContributions?: {
+    rrspMonthly: number;
+    rrspAnnual: number;
+    tfsaMonthly: number;
+    tfsaAnnual: number;
+    nonRegisteredMonthly: number;
+    nonRegisteredAnnual: number;
+    totalMonthly: number;
+    totalAnnual: number;
+    warnings: string[];
+    notes: string[];
+  };
 }
 
 export function SavingsGapAnalysis({
@@ -24,6 +36,7 @@ export function SavingsGapAnalysis({
   alternativeRetirementAge,
   targetRetirementAge,
   yearsToRetirement,
+  recommendedContributions,
 }: SavingsGapAnalysisProps) {
   const totalCurrentSavings = currentSavings.rrsp + currentSavings.tfsa + currentSavings.nonRegistered;
   const projectedGrowth = projectedSavings - totalCurrentSavings;
@@ -161,20 +174,72 @@ export function SavingsGapAnalysis({
                   <div className="bg-red-100 rounded-full p-2">
                     <DollarSign className="h-5 w-5 text-red-600" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-gray-900 mb-1">
-                      Option 1: Save More Each Month
+                      Option 1: Save More Each Month (CRA-Compliant)
                     </p>
-                    <p className="text-sm text-gray-700 mb-2">
-                      Increase your monthly savings by{' '}
-                      <strong className="text-red-600">
-                        ${Math.round(additionalMonthlySavings)}/month
-                      </strong>
-                      {' '}to retire at age {targetRetirementAge}.
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      That's ${(additionalMonthlySavings * 12).toLocaleString()}/year additional savings
-                    </p>
+                    {recommendedContributions ? (
+                      <>
+                        <p className="text-sm text-gray-700 mb-3">
+                          To retire at age {targetRetirementAge}, distribute your savings across these tax-advantaged accounts:
+                        </p>
+                        <div className="space-y-2 mb-3">
+                          {recommendedContributions.rrspMonthly > 0 && (
+                            <div className="flex justify-between items-center bg-blue-50 rounded px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">RRSP (tax-deductible):</span>
+                              <span className="text-sm font-bold text-blue-600">
+                                ${Math.round(recommendedContributions.rrspMonthly)}/month
+                              </span>
+                            </div>
+                          )}
+                          {recommendedContributions.tfsaMonthly > 0 && (
+                            <div className="flex justify-between items-center bg-green-50 rounded px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">TFSA (tax-free growth):</span>
+                              <span className="text-sm font-bold text-green-600">
+                                ${Math.round(recommendedContributions.tfsaMonthly)}/month
+                              </span>
+                            </div>
+                          )}
+                          {recommendedContributions.nonRegisteredMonthly > 0 && (
+                            <div className="flex justify-between items-center bg-gray-50 rounded px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">Non-Registered (taxable):</span>
+                              <span className="text-sm font-bold text-gray-600">
+                                ${Math.round(recommendedContributions.nonRegisteredMonthly)}/month
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center bg-red-50 rounded px-3 py-2 border border-red-200">
+                            <span className="text-sm font-bold text-gray-900">Total:</span>
+                            <span className="text-sm font-bold text-red-600">
+                              ${Math.round(recommendedContributions.totalMonthly)}/month
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          Annual total: ${Math.round(recommendedContributions.totalAnnual).toLocaleString()}/year
+                        </p>
+                        {recommendedContributions.warnings.length > 0 && (
+                          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                            <p className="text-xs text-yellow-800">
+                              <strong>Note:</strong> {recommendedContributions.warnings[0]}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gray-700 mb-2">
+                          Increase your monthly savings by{' '}
+                          <strong className="text-red-600">
+                            ${Math.round(additionalMonthlySavings)}/month
+                          </strong>
+                          {' '}to retire at age {targetRetirementAge}.
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          That's ${(additionalMonthlySavings * 12).toLocaleString()}/year additional savings
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
