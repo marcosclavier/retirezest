@@ -35,63 +35,109 @@ export async function GET(request: NextRequest) {
       ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()
       : 50; // Default age if not set
 
-    // Aggregate assets by type
+    // Couples planning: Calculate partner age if applicable
+    const includePartner = user.includePartner || false;
+    const partnerAge = includePartner && user.partnerDateOfBirth
+      ? new Date().getFullYear() - new Date(user.partnerDateOfBirth).getFullYear()
+      : null;
+
+    // Get province for CRA-compliant rules
+    const province = user.province || 'ON';
+
+    // Aggregate assets by type and owner
     const assets = user.assets || [];
-    const rrsp = assets
+
+    // Person 1 (primary user) assets
+    const person1Assets = assets.filter((a: any) => !a.owner || a.owner === 'person1');
+    const rrsp = person1Assets
       .filter((a: any) => a.type === 'rrsp' || a.type === 'rrif')
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
-    const tfsa = assets
+    const tfsa = person1Assets
       .filter((a: any) => a.type === 'tfsa')
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
-    const nonRegistered = assets
-      .filter((a: any) => ['nonreg', 'savings', 'investment', 'corporate', 'other'].includes(a.type))
+    const nonRegistered = person1Assets
+      .filter((a: any) => ['nonreg', 'savings', 'investment', 'other', 'corporate'].includes(a.type))
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
 
-    // Calculate annual income
-    const incomeSources = user.incomeSources || [];
-    const annualIncome = incomeSources.reduce((sum: number, i: any) => {
-      const amount = Number(i.amount) || 0;
-      const freq = (i.frequency || 'annual').toLowerCase();
-      switch (freq) {
-        case 'monthly':
-          return sum + amount * 12;
-        case 'annual':
-        case 'annually':
-        case 'yearly':
-          return sum + amount;
-        case 'weekly':
-          return sum + amount * 52;
-        case 'biweekly':
-        case 'bi-weekly':
-        case 'bi_weekly':
-          return sum + amount * 26;
-        default:
-          return sum + amount; // Default to annual
-      }
-    }, 0);
+    // Joint assets (split 50/50 for calculations)
+    const jointAssets = assets.filter((a: any) => a.owner === 'joint');
+    const jointRrsp = jointAssets
+      .filter((a: any) => a.type === 'rrsp' || a.type === 'rrif')
+      .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0) / 2;
+    const jointTfsa = jointAssets
+      .filter((a: any) => a.type === 'tfsa')
+      .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0) / 2;
+    const jointNonReg = jointAssets
+      .filter((a: any) => ['nonreg', 'savings', 'investment', 'other', 'corporate'].includes(a.type))
+      .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0) / 2;
 
-    // Calculate annual expenses
-    const expenses = user.expenses || [];
-    const annualExpenses = expenses.reduce((sum: number, e: any) => {
-      const amount = Number(e.amount) || 0;
-      const freq = (e.frequency || 'annual').toLowerCase();
+    // Person 2 (partner) assets
+    let partnerRrsp = 0;
+    let partnerTfsa = 0;
+    let partnerNonReg = 0;
+
+    if (includePartner) {
+      const person2Assets = assets.filter((a: any) => a.owner === 'person2');
+      partnerRrsp = person2Assets
+        .filter((a: any) => a.type === 'rrsp' || a.type === 'rrif')
+        .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
+      partnerTfsa = person2Assets
+        .filter((a: any) => a.type === 'tfsa')
+        .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
+      partnerNonReg = person2Assets
+        .filter((a: any) => ['nonreg', 'savings', 'investment', 'other', 'corporate'].includes(a.type))
+        .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
+    }
+
+    // Helper to annualize income/expense
+    const annualize = (amount: number, frequency: string): number => {
+      const freq = (frequency || 'annual').toLowerCase();
       switch (freq) {
         case 'monthly':
-          return sum + amount * 12;
+          return amount * 12;
         case 'annual':
         case 'annually':
         case 'yearly':
-          return sum + amount;
+          return amount;
         case 'weekly':
-          return sum + amount * 52;
+          return amount * 52;
         case 'biweekly':
         case 'bi-weekly':
         case 'bi_weekly':
-          return sum + amount * 26;
+          return amount * 26;
         default:
-          return sum + amount; // Default to annual
+          return amount; // Default to annual
       }
-    }, 0);
+    };
+
+    // Calculate annual income (person 1 + joint + person 2 if applicable)
+    const incomeSources = user.incomeSources || [];
+
+    // Person 1 income
+    const person1Income = incomeSources
+      .filter((i: any) => !i.owner || i.owner === 'person1')
+      .reduce((sum: number, i: any) => sum + annualize(Number(i.amount) || 0, i.frequency), 0);
+
+    // Joint income (split 50/50)
+    const jointIncome = incomeSources
+      .filter((i: any) => i.owner === 'joint')
+      .reduce((sum: number, i: any) => sum + annualize(Number(i.amount) || 0, i.frequency), 0) / 2;
+
+    // Person 2 income
+    const partnerIncome = includePartner
+      ? incomeSources
+          .filter((i: any) => i.owner === 'person2')
+          .reduce((sum: number, i: any) => sum + annualize(Number(i.amount) || 0, i.frequency), 0)
+      : 0;
+
+    const annualIncome = person1Income + jointIncome;
+    const totalHouseholdIncome = annualIncome + partnerIncome;
+
+    // Calculate annual expenses (household level)
+    const expenses = user.expenses || [];
+    const annualExpenses = expenses
+      .filter((e: any) => !e.isRecurring || e.isRecurring === true) // Only recurring expenses
+      .reduce((sum: number, e: any) => sum + annualize(Number(e.amount) || 0, e.frequency), 0);
 
     // Estimate annual savings (20% of income by default if not tracked)
     const annualSavings = Math.max(
@@ -99,19 +145,49 @@ export async function GET(request: NextRequest) {
       annualIncome * 0.20 // Assume 20% savings rate
     );
 
+    // Ensure target retirement age is valid (greater than current age)
+    const dbTargetAge = user.targetRetirementAge || 60;
+    const validTargetAge = dbTargetAge > currentAge ? dbTargetAge : Math.max(currentAge + 5, 60);
+
     // Build profile response
     const profileData = {
+      // Person 1 (primary user) data
       currentAge,
       currentSavings: {
-        rrsp: Math.round(rrsp),
-        tfsa: Math.round(tfsa),
-        nonRegistered: Math.round(nonRegistered),
+        // For couples planning, include partner assets + full joint amounts for household total
+        rrsp: Math.round(rrsp + jointRrsp + (includePartner ? partnerRrsp + jointRrsp : 0)),
+        tfsa: Math.round(tfsa + jointTfsa + (includePartner ? partnerTfsa + jointTfsa : 0)),
+        nonRegistered: Math.round(nonRegistered + jointNonReg + (includePartner ? partnerNonReg + jointNonReg : 0)),
       },
       annualIncome: Math.round(annualIncome),
       annualSavings: Math.round(annualSavings),
-      targetRetirementAge: user.targetRetirementAge || 60,
-      targetAnnualExpenses: Math.round(annualExpenses > 0 ? annualExpenses : annualIncome * 0.70),
+      targetRetirementAge: validTargetAge,
+      targetAnnualExpenses: Math.round(annualExpenses > 0 ? annualExpenses : totalHouseholdIncome * 0.70),
       lifeExpectancy: user.lifeExpectancy || 95,
+
+      // Province for CRA-compliant rules
+      province,
+
+      // Couples planning data
+      includePartner,
+      ...(includePartner && {
+        partner: {
+          age: partnerAge,
+          currentSavings: {
+            rrsp: Math.round(partnerRrsp + jointRrsp),
+            tfsa: Math.round(partnerTfsa + jointTfsa),
+            nonRegistered: Math.round(partnerNonReg + jointNonReg),
+          },
+          annualIncome: Math.round(partnerIncome + jointIncome),
+          targetRetirementAge: validTargetAge, // Can be customized later
+        },
+        householdIncome: Math.round(totalHouseholdIncome),
+        jointAssets: {
+          rrsp: Math.round(jointRrsp * 2),
+          tfsa: Math.round(jointTfsa * 2),
+          nonRegistered: Math.round(jointNonReg * 2),
+        },
+      }),
     };
 
     return NextResponse.json(profileData, { status: 200 });
