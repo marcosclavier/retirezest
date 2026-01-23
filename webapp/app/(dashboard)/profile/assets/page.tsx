@@ -269,7 +269,15 @@ export default function AssetsPage() {
                 <label className="block text-sm font-medium text-gray-700">Account Type *</label>
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    // Clear contribution room if switching to account type that doesn't support it
+                    if (newType !== 'tfsa' && newType !== 'rrsp') {
+                      setFormData({ ...formData, type: newType, contributionRoom: '' });
+                    } else {
+                      setFormData({ ...formData, type: newType });
+                    }
+                  }}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
                 >
@@ -327,20 +335,28 @@ export default function AssetsPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Contribution Room ($)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.contributionRoom}
-                  onChange={(e) => setFormData({ ...formData, contributionRoom: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  placeholder="For RRSP/TFSA"
-                />
-              </div>
+              {/* Only show contribution room for TFSA and RRSP */}
+              {(formData.type === 'tfsa' || formData.type === 'rrsp') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Contribution Room ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.contributionRoom}
+                    onChange={(e) => setFormData({ ...formData, contributionRoom: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                    placeholder={formData.type === 'tfsa' ? 'e.g., 7000 (2026 limit)' : 'e.g., 15000'}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formData.type === 'tfsa'
+                      ? 'Your available TFSA contribution room for 2026'
+                      : 'Your available RRSP contribution room (18% of income limit)'}
+                  </p>
+                </div>
+              )}
 
               {includePartner && (
                 <div>
