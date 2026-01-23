@@ -365,14 +365,15 @@ export async function POST(request: NextRequest) {
       0 // TODO: Add pension adjustment from user profile
     );
 
-    // Calculate earliest retirement age
+    // Calculate earliest retirement age (now accounts for government benefits)
     const earliestRetirementAge = calculateEarliestRetirementAge(
       currentAge,
       totalCurrentSavings,
       annualSavings,
       targetAnnualExpenses,
       lifeExpectancy,
-      assumedReturn
+      assumedReturn,
+      body.includePartner || false
     );
 
     // Calculate readiness score
@@ -700,6 +701,7 @@ function calculateMonthlyPayment(
 
 /**
  * Calculate earliest age user can retire with current savings trajectory
+ * Now accounts for government benefits (CPP/OAS) to reduce required nest egg
  */
 function calculateEarliestRetirementAge(
   currentAge: number,
@@ -707,7 +709,8 @@ function calculateEarliestRetirementAge(
   annualSavings: number,
   annualExpenses: number,
   lifeExpectancy: number,
-  returnRate: number
+  returnRate: number,
+  includePartner: boolean = false
 ): number {
   // Try each age from current+1 to lifeExpectancy
   for (let retireAge = currentAge + 1; retireAge < lifeExpectancy; retireAge++) {
@@ -719,8 +722,32 @@ function calculateEarliestRetirementAge(
     const fvSavings = annualSavings * ((Math.pow(1 + returnRate, yearsToRetire) - 1) / returnRate);
     const projectedSavings = fvCurrent + fvSavings;
 
-    // Required at this age
-    const required = annualExpenses * 25 * (1 + (0.025 * Math.min(yearsInRetirement / 2, 15)));
+    // Estimate government benefits at this retirement age
+    // Simplified estimate: CPP ~$10K if 60+, OAS ~$8K if 65+
+    let govBenefits = 0;
+    if (retireAge >= 60) {
+      const cppRate = retireAge >= 65 ? 1.0 : (retireAge >= 60 ? 0.64 : 0); // Early CPP is reduced
+      govBenefits += 10000 * cppRate;
+    }
+    if (retireAge >= 65) {
+      govBenefits += 8000;
+    }
+    if (includePartner) {
+      // Partner gets same benefits (simplified)
+      if (retireAge >= 60) {
+        const cppRate = retireAge >= 65 ? 1.0 : 0.64;
+        govBenefits += 10000 * cppRate;
+      }
+      if (retireAge >= 65) {
+        govBenefits += 8000;
+      }
+    }
+
+    // Net expenses after government benefits
+    const netExpenses = Math.max(0, annualExpenses - govBenefits);
+
+    // Required at this age (using 25x rule with inflation adjustment)
+    const required = netExpenses * 25 * (1 + (0.025 * Math.min(yearsInRetirement / 2, 15)));
 
     // Check if we have enough
     if (projectedSavings >= required) {
