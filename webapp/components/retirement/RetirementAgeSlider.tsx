@@ -45,7 +45,8 @@ export function RetirementAgeSlider({
         , scenarios[0]))
     : null;
 
-  const isFeasible = selectedScenario && selectedScenario.shortfall <= 0;
+  // Check feasibility: shortfall is always >= 0 due to Math.max, so we need to check if it's 0 OR if projectedSavings >= totalNeeded
+  const isFeasible = selectedScenario && (selectedScenario.shortfall === 0 || selectedScenario.projectedSavings >= selectedScenario.totalNeeded);
   const isRisky = selectedScenario && selectedScenario.successRate < 80 && selectedScenario.successRate >= 60;
   const isUnlikely = selectedScenario && selectedScenario.successRate < 60;
 
