@@ -63,22 +63,24 @@ function calculateScenario_NEW(
   const fvSavings = annualSavings * ((Math.pow(1 + returnRate, yearsToRetirement) - 1) / returnRate);
   const projectedSavings = fvCurrent + fvSavings;
 
-  // Calculate government benefits
+  // Calculate government benefits using official CRA 2026 maximum amounts
+  // CPP: $18,091.80/year at 65 (full), $11,590.75/year at 60 (36% reduction)
+  // OAS: $8,907.72/year at 65-74, $9,798.48/year at 75+
   let govBenefits = 0;
   if (retirementAge >= 60) {
     const cppRate = retirementAge >= 65 ? 1.0 : 0.64;
-    govBenefits += 10000 * cppRate;
+    govBenefits += 18091.80 * cppRate;
   }
   if (retirementAge >= 65) {
-    govBenefits += 8000;
+    govBenefits += retirementAge >= 75 ? 9798.48 : 8907.72;
   }
   if (includePartner) {
     if (retirementAge >= 60) {
       const cppRate = retirementAge >= 65 ? 1.0 : 0.64;
-      govBenefits += 10000 * cppRate;
+      govBenefits += 18091.80 * cppRate;
     }
     if (retirementAge >= 65) {
-      govBenefits += 8000;
+      govBenefits += retirementAge >= 75 ? 9798.48 : 8907.72;
     }
   }
 
@@ -150,17 +152,17 @@ ages.forEach(age => {
     testData.includePartner
   );
 
-  console.log(`\n📍 Government Benefits:`);
+  console.log(`\n📍 Government Benefits (CRA 2026 maximum amounts):`);
   if (age >= 65) {
-    const cppPerPerson = 10000;
-    const oasPerPerson = 8000;
+    const cppPerPerson = 18091.80;
+    const oasPerPerson = age >= 75 ? 9798.48 : 8907.72;
     const totalPerPerson = cppPerPerson + oasPerPerson;
     const total = totalPerPerson * (testData.includePartner ? 2 : 1);
     console.log(`  CPP: $${cppPerPerson.toLocaleString()} × ${testData.includePartner ? 2 : 1} = $${(cppPerPerson * (testData.includePartner ? 2 : 1)).toLocaleString()}`);
     console.log(`  OAS: $${oasPerPerson.toLocaleString()} × ${testData.includePartner ? 2 : 1} = $${(oasPerPerson * (testData.includePartner ? 2 : 1)).toLocaleString()}`);
     console.log(`  TOTAL: $${total.toLocaleString()}/year`);
   } else if (age >= 60) {
-    const cppPerPerson = 6400; // 64% of $10K
+    const cppPerPerson = 11590.75; // 64% of $18,091.80
     const total = cppPerPerson * (testData.includePartner ? 2 : 1);
     console.log(`  CPP (early, reduced): $${cppPerPerson.toLocaleString()} × ${testData.includePartner ? 2 : 1} = $${total.toLocaleString()}`);
     console.log(`  OAS: Not available until 65`);

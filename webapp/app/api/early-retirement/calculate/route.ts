@@ -725,23 +725,27 @@ function calculateEarliestRetirementAge(
     const projectedSavings = fvCurrent + fvSavings;
 
     // Estimate government benefits at this retirement age
-    // Simplified estimate: CPP ~$10K if 60+, OAS ~$8K if 65+
+    // Using official CRA 2026 maximum amounts
+    // CPP: $18,091.80/year at 65 (full), $11,590.75/year at 60 (36% reduction)
+    // OAS: $8,907.72/year at 65-74, $9,798.48/year at 75+
     let govBenefits = 0;
     if (retireAge >= 60) {
-      const cppRate = retireAge >= 65 ? 1.0 : (retireAge >= 60 ? 0.64 : 0); // Early CPP is reduced
-      govBenefits += 10000 * cppRate;
+      const cppRate = retireAge >= 65 ? 1.0 : 0.64; // Early CPP is reduced by 36%
+      govBenefits += 18091.80 * cppRate;
     }
     if (retireAge >= 65) {
-      govBenefits += 8000;
+      const oasAmount = retireAge >= 75 ? 9798.48 : 8907.72;
+      govBenefits += oasAmount;
     }
     if (includePartner) {
-      // Partner gets same benefits (simplified)
+      // Partner gets same benefits (simplified - assumes similar earnings history)
       if (retireAge >= 60) {
         const cppRate = retireAge >= 65 ? 1.0 : 0.64;
-        govBenefits += 10000 * cppRate;
+        govBenefits += 18091.80 * cppRate;
       }
       if (retireAge >= 65) {
-        govBenefits += 8000;
+        const oasAmount = retireAge >= 75 ? 9798.48 : 8907.72;
+        govBenefits += oasAmount;
       }
     }
 
@@ -830,22 +834,27 @@ function calculateScenario(
   const projectedSavings = fvCurrent + fvSavings;
 
   // Estimate government benefits at retirement age
+  // Using official CRA 2026 maximum amounts
+  // CPP: $18,091.80/year at 65 (full), $11,590.75/year at 60 (36% reduction)
+  // OAS: $8,907.72/year at 65-74, $9,798.48/year at 75+
   let govBenefits = 0;
   if (retirementAge >= 60) {
-    const cppRate = retirementAge >= 65 ? 1.0 : 0.64; // Early CPP is reduced
-    govBenefits += 10000 * cppRate;
+    const cppRate = retirementAge >= 65 ? 1.0 : 0.64; // Early CPP is reduced by 36%
+    govBenefits += 18091.80 * cppRate;
   }
   if (retirementAge >= 65) {
-    govBenefits += 8000;
+    const oasAmount = retirementAge >= 75 ? 9798.48 : 8907.72;
+    govBenefits += oasAmount;
   }
   if (includePartner) {
-    // Partner gets same benefits (simplified)
+    // Partner gets same benefits (simplified - assumes similar earnings history)
     if (retirementAge >= 60) {
       const cppRate = retirementAge >= 65 ? 1.0 : 0.64;
-      govBenefits += 10000 * cppRate;
+      govBenefits += 18091.80 * cppRate;
     }
     if (retirementAge >= 65) {
-      govBenefits += 8000;
+      const oasAmount = retirementAge >= 75 ? 9798.48 : 8907.72;
+      govBenefits += oasAmount;
     }
   }
 
