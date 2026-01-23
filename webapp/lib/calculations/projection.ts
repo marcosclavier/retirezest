@@ -30,6 +30,9 @@ export interface ProjectionInput {
   rentalIncome: number;
   otherIncome: number;
 
+  // RRSP contributions (tax deductible)
+  annualRRSPContribution?: number; // Annual RRSP contributions before retirement
+
   // CPP/OAS
   cppStartAge: number;
   oasStartAge: number;
@@ -371,6 +374,16 @@ export function projectRetirement(input: ProjectionInput): ProjectionSummary {
       }
     }
 
+    // RRSP contributions (only before retirement and while employed)
+    const rrspContribution = (!isRetired && employmentIncome > 0 && input.annualRRSPContribution)
+      ? input.annualRRSPContribution * Math.pow(1 + input.inflationRate, yearsFromNow)
+      : 0;
+
+    // Add RRSP contributions to balance
+    if (rrspContribution > 0) {
+      rrspBalance += rrspContribution;
+    }
+
     // Investment income (on remaining balances)
     const investmentIncome = (rrspBalance + tfsaBalance + nonRegBalance) * input.investmentReturnRate;
 
@@ -387,6 +400,7 @@ export function projectRetirement(input: ProjectionInput): ProjectionSummary {
       nonEligibleDividends: 0, // TODO: Add dividend tracking
       capitalGains: nonRegWithdrawal, // Non-reg withdrawals treated as capital gains
       oasReceived: oasIncome,
+      rrspContributions: rrspContribution, // Tax deductible RRSP contributions
       age,
       province: input.province,
     };

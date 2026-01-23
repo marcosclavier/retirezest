@@ -53,6 +53,11 @@ export const CAPITAL_GAINS_2026 = {
   highThreshold: 250000,
 };
 
+export const RRSP_LIMITS_2026 = {
+  contributionRate: 0.18, // 18% of previous year's earned income
+  maxContribution: 32490, // CRA 2026 RRSP contribution limit
+};
+
 // ============================================================================
 // ONTARIO TAX (2026)
 // ============================================================================
@@ -360,6 +365,48 @@ export function calculateCapitalGainsInclusion(capitalGains: number): {
   };
 }
 
+/**
+ * Validate and calculate RRSP contribution deduction
+ * @param contribution RRSP contribution amount
+ * @param earnedIncome Previous year's earned income (for calculating limit)
+ * @param unusedContributionRoom Unused contribution room from previous years
+ * @returns Validated RRSP deduction amount and warning if over limit
+ */
+export function validateRRSPContribution(
+  contribution: number,
+  earnedIncome: number = 0,
+  unusedContributionRoom: number = 0
+): {
+  deductibleAmount: number;
+  excessContribution: number;
+  contributionLimit: number;
+  warning?: string;
+} {
+  // Calculate contribution limit: 18% of earned income + unused room, max $32,490
+  const earnedIncomeLimit = earnedIncome * RRSP_LIMITS_2026.contributionRate;
+  const contributionLimit = Math.min(
+    earnedIncomeLimit + unusedContributionRoom,
+    RRSP_LIMITS_2026.maxContribution + unusedContributionRoom
+  );
+
+  // Check if contribution exceeds limit
+  if (contribution > contributionLimit) {
+    const excessContribution = contribution - contributionLimit;
+    return {
+      deductibleAmount: contributionLimit,
+      excessContribution,
+      contributionLimit,
+      warning: `RRSP contribution of $${contribution.toLocaleString()} exceeds limit of $${contributionLimit.toLocaleString()}. Only $${contributionLimit.toLocaleString()} is deductible. Excess: $${excessContribution.toLocaleString()}`,
+    };
+  }
+
+  return {
+    deductibleAmount: contribution,
+    excessContribution: 0,
+    contributionLimit,
+  };
+}
+
 // ============================================================================
 // FEDERAL TAX CALCULATION
 // ============================================================================
@@ -371,6 +418,7 @@ export interface TaxCalculationInputs {
   nonEligibleDividends: number;
   capitalGains: number;
   oasReceived: number;
+  rrspContributions?: number; // RRSP contributions (tax deductible)
   age: number;
   province: string;
 }
@@ -397,12 +445,17 @@ export function calculateFederalTax(inputs: TaxCalculationInputs): {
   );
   const capitalGainsCalc = calculateCapitalGainsInclusion(inputs.capitalGains);
 
-  const taxableIncome =
+  // Calculate taxable income with RRSP contribution deduction
+  const rrspDeduction = inputs.rrspContributions || 0;
+  const taxableIncome = Math.max(
+    0,
     inputs.ordinaryIncome +
-    inputs.pensionIncome +
-    inputs.oasReceived +
-    dividendCalc.totalGrossup +
-    capitalGainsCalc.includedAmount;
+      inputs.pensionIncome +
+      inputs.oasReceived +
+      dividendCalc.totalGrossup +
+      capitalGainsCalc.includedAmount -
+      rrspDeduction
+  );
 
   // 2. Apply tax brackets
   const { tax: grossTax, marginalRate } = applyTaxBrackets(
@@ -494,12 +547,17 @@ export function calculateOntarioTax(inputs: TaxCalculationInputs): {
   );
   const capitalGainsCalc = calculateCapitalGainsInclusion(inputs.capitalGains);
 
-  const taxableIncome =
+  // Calculate taxable income with RRSP contribution deduction
+  const rrspDeduction = inputs.rrspContributions || 0;
+  const taxableIncome = Math.max(
+    0,
     inputs.ordinaryIncome +
-    inputs.pensionIncome +
-    inputs.oasReceived +
-    dividendCalc.totalGrossup +
-    capitalGainsCalc.includedAmount;
+      inputs.pensionIncome +
+      inputs.oasReceived +
+      dividendCalc.totalGrossup +
+      capitalGainsCalc.includedAmount -
+      rrspDeduction
+  );
 
   // 2. Apply Ontario tax brackets
   const { tax: grossTax, marginalRate } = applyTaxBrackets(
@@ -576,12 +634,17 @@ export function calculateAlbertaTax(inputs: TaxCalculationInputs): {
   );
   const capitalGainsCalc = calculateCapitalGainsInclusion(inputs.capitalGains);
 
-  const taxableIncome =
+  // Calculate taxable income with RRSP contribution deduction
+  const rrspDeduction = inputs.rrspContributions || 0;
+  const taxableIncome = Math.max(
+    0,
     inputs.ordinaryIncome +
-    inputs.pensionIncome +
-    inputs.oasReceived +
-    dividendCalc.totalGrossup +
-    capitalGainsCalc.includedAmount;
+      inputs.pensionIncome +
+      inputs.oasReceived +
+      dividendCalc.totalGrossup +
+      capitalGainsCalc.includedAmount -
+      rrspDeduction
+  );
 
   // 2. Apply Alberta tax brackets
   const { tax: grossTax, marginalRate } = applyTaxBrackets(
