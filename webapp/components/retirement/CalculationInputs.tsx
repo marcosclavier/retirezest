@@ -14,6 +14,7 @@ interface CalculationInputsProps {
     rrsp: number;
     tfsa: number;
     nonRegistered: number;
+    corporate: number;
   };
   annualIncome: number;
   annualSavings: number;
@@ -25,6 +26,7 @@ interface CalculationInputsProps {
       rrsp: number;
       tfsa: number;
       nonRegistered: number;
+      corporate: number;
     };
     annualIncome: number;
   };
@@ -52,7 +54,7 @@ export function CalculationInputs({
     }).format(amount);
   };
 
-  const totalCurrentSavings = currentSavings.rrsp + currentSavings.tfsa + currentSavings.nonRegistered;
+  const totalCurrentSavings = currentSavings.rrsp + currentSavings.tfsa + currentSavings.nonRegistered + currentSavings.corporate;
   const yearsToRetirement = targetRetirementAge - currentAge;
   const yearsInRetirement = lifeExpectancy - targetRetirementAge;
   const monthlySavings = annualSavings / 12;
@@ -60,7 +62,7 @@ export function CalculationInputs({
 
   // Partner data
   const partnerTotalSavings = partner
-    ? partner.currentSavings.rrsp + partner.currentSavings.tfsa + partner.currentSavings.nonRegistered
+    ? partner.currentSavings.rrsp + partner.currentSavings.tfsa + partner.currentSavings.nonRegistered + partner.currentSavings.corporate
     : 0;
   const householdTotalSavings = totalCurrentSavings + partnerTotalSavings;
   const householdIncome = annualIncome + (partner?.annualIncome || 0);
@@ -161,6 +163,12 @@ export function CalculationInputs({
                 <span className="text-gray-700">Non-Registered:</span>
                 <span className="font-semibold text-gray-900">{formatCurrency(currentSavings.nonRegistered)}</span>
               </div>
+              {currentSavings.corporate > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-700">Corporate:</span>
+                  <span className="font-semibold text-gray-900">{formatCurrency(currentSavings.corporate)}</span>
+                </div>
+              )}
               <div className="pt-2 border-t border-gray-300">
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-semibold">Total Savings:</span>
@@ -247,6 +255,27 @@ export function CalculationInputs({
             </div>
           </div>
         </div>
+
+        {/* Corporate Account Disclaimer */}
+        {currentSavings.corporate > 0 && (
+          <div className="mt-4 text-xs bg-amber-50 border border-amber-200 rounded-md p-3">
+            <div className="flex items-start gap-2">
+              <span className="text-amber-600 font-bold text-sm">📌</span>
+              <div>
+                <strong className="text-amber-900">Corporate Account Tax Treatment:</strong>
+                <p className="text-amber-800 mt-1">
+                  For this quick estimate, corporate accounts are treated similarly to non-registered accounts.
+                  Corporate withdrawals involve complex tax planning including eligible/non-eligible dividend rates,
+                  capital dividend account optimization, and integration with personal tax planning.
+                </p>
+                <p className="text-amber-800 mt-1 font-medium">
+                  For accurate corporate tax strategies, please use the{' '}
+                  <a href="/simulation" className="underline hover:text-amber-900">Full Simulation tool</a>.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Note */}
         <div className="mt-4 text-xs text-gray-600 bg-gray-50 rounded-md p-3 border border-gray-200">

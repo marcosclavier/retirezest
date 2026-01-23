@@ -55,8 +55,13 @@ export async function GET(request: NextRequest) {
     const tfsa = person1Assets
       .filter((a: any) => a.type === 'tfsa')
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
+
+    // Separate corporate from non-registered for display purposes
+    const corporate = person1Assets
+      .filter((a: any) => a.type === 'corporate')
+      .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
     const nonRegistered = person1Assets
-      .filter((a: any) => ['nonreg', 'savings', 'investment', 'other', 'corporate'].includes(a.type))
+      .filter((a: any) => ['nonreg', 'savings', 'investment', 'other'].includes(a.type))
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
 
     // Joint assets (split 50/50 for calculations)
@@ -67,13 +72,19 @@ export async function GET(request: NextRequest) {
     const jointTfsa = jointAssets
       .filter((a: any) => a.type === 'tfsa')
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0) / 2;
+
+    // Separate corporate from non-registered for joint assets
+    const jointCorporate = jointAssets
+      .filter((a: any) => a.type === 'corporate')
+      .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0) / 2;
     const jointNonReg = jointAssets
-      .filter((a: any) => ['nonreg', 'savings', 'investment', 'other', 'corporate'].includes(a.type))
+      .filter((a: any) => ['nonreg', 'savings', 'investment', 'other'].includes(a.type))
       .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0) / 2;
 
     // Person 2 (partner) assets
     let partnerRrsp = 0;
     let partnerTfsa = 0;
+    let partnerCorporate = 0;
     let partnerNonReg = 0;
 
     if (includePartner) {
@@ -84,8 +95,13 @@ export async function GET(request: NextRequest) {
       partnerTfsa = person2Assets
         .filter((a: any) => a.type === 'tfsa')
         .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
+
+      // Separate corporate from non-registered for partner
+      partnerCorporate = person2Assets
+        .filter((a: any) => a.type === 'corporate')
+        .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
       partnerNonReg = person2Assets
-        .filter((a: any) => ['nonreg', 'savings', 'investment', 'other', 'corporate'].includes(a.type))
+        .filter((a: any) => ['nonreg', 'savings', 'investment', 'other'].includes(a.type))
         .reduce((sum: number, a: any) => sum + Number(a.balance || 0), 0);
     }
 
@@ -155,9 +171,11 @@ export async function GET(request: NextRequest) {
       currentAge,
       currentSavings: {
         // For couples planning, include partner assets + full joint amounts for household total
+        // Note: Corporate is treated same as non-registered for calculation purposes (simplified)
         rrsp: Math.round(rrsp + jointRrsp + (includePartner ? partnerRrsp + jointRrsp : 0)),
         tfsa: Math.round(tfsa + jointTfsa + (includePartner ? partnerTfsa + jointTfsa : 0)),
         nonRegistered: Math.round(nonRegistered + jointNonReg + (includePartner ? partnerNonReg + jointNonReg : 0)),
+        corporate: Math.round(corporate + jointCorporate + (includePartner ? partnerCorporate + jointCorporate : 0)),
       },
       annualIncome: Math.round(annualIncome),
       annualSavings: Math.round(annualSavings),
@@ -177,6 +195,7 @@ export async function GET(request: NextRequest) {
             rrsp: Math.round(partnerRrsp + jointRrsp),
             tfsa: Math.round(partnerTfsa + jointTfsa),
             nonRegistered: Math.round(partnerNonReg + jointNonReg),
+            corporate: Math.round(partnerCorporate + jointCorporate),
           },
           annualIncome: Math.round(partnerIncome + jointIncome),
           targetRetirementAge: validTargetAge, // Can be customized later
@@ -186,6 +205,7 @@ export async function GET(request: NextRequest) {
           rrsp: Math.round(jointRrsp * 2),
           tfsa: Math.round(jointTfsa * 2),
           nonRegistered: Math.round(jointNonReg * 2),
+          corporate: Math.round(jointCorporate * 2),
         },
       }),
     };

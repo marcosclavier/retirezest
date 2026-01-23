@@ -26,6 +26,12 @@ interface EarlyRetirementData {
     neutral: { returnRate: number; inflationRate: number };
     optimistic: { returnRate: number; inflationRate: number };
   };
+  governmentBenefits?: {
+    cppAnnual: number;
+    oasAnnual: number;
+    totalAnnual: number;
+    notes: string[];
+  };
   recommendedContributions?: {
     rrspMonthly: number;
     rrspAnnual: number;
@@ -62,6 +68,7 @@ interface UserProfile {
     rrsp: number;
     tfsa: number;
     nonRegistered: number;
+    corporate: number;
   };
   annualIncome: number;
   annualSavings: number;
@@ -76,6 +83,7 @@ interface UserProfile {
       rrsp: number;
       tfsa: number;
       nonRegistered: number;
+      corporate: number;
     };
     annualIncome: number;
     targetRetirementAge: number;
@@ -85,6 +93,7 @@ interface UserProfile {
     rrsp: number;
     tfsa: number;
     nonRegistered: number;
+    corporate: number;
   };
 }
 
@@ -150,12 +159,23 @@ export default function EarlyRetirementPage() {
       setIsLoading(true);
       setError(null);
 
+      // Combine corporate + non-registered for simplified calculation
+      // (Corporate is displayed separately in UI but treated same as non-registered in calc)
+      const requestData = {
+        ...data,
+        currentSavings: {
+          rrsp: data.currentSavings.rrsp,
+          tfsa: data.currentSavings.tfsa,
+          nonRegistered: data.currentSavings.nonRegistered + data.currentSavings.corporate,
+        },
+      };
+
       const response = await fetch('/api/early-retirement/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -408,6 +428,29 @@ export default function EarlyRetirementPage() {
               </p>
             </div>
 
+            {/* Government Benefits */}
+            {result.governmentBenefits && result.governmentBenefits.totalAnnual > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-green-600" />
+                  Government Benefits Included:
+                </h4>
+                <div className="text-sm text-gray-700 space-y-2 ml-2">
+                  <p className="font-medium">Estimated Annual Benefits at Retirement:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>CPP (Canada Pension Plan): ${result.governmentBenefits.cppAnnual.toLocaleString()}/year</li>
+                    <li>OAS (Old Age Security): ${result.governmentBenefits.oasAnnual.toLocaleString()}/year</li>
+                    <li className="font-semibold">Total Government Benefits: ${result.governmentBenefits.totalAnnual.toLocaleString()}/year</li>
+                  </ul>
+                  <div className="mt-2 text-xs text-gray-600">
+                    {result.governmentBenefits.notes.map((note: string, index: number) => (
+                      <p key={index} className="mb-1">{note}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
@@ -446,14 +489,31 @@ export default function EarlyRetirementPage() {
 
       {/* Call to Action - Link to Full Simulation */}
       {result && profileData && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Ready for a Detailed Analysis?
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            Quick Estimate vs. Detailed Simulation
           </h3>
-          <p className="text-gray-600 mb-4">
-            Run a comprehensive retirement simulation to see year-by-year projections,
-            tax optimization strategies, and detailed cash flow analysis.
-          </p>
+          <div className="space-y-3 mb-4">
+            <div>
+              <p className="font-medium text-gray-900 mb-1">This Early Retirement Calculator:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 ml-2">
+                <li>Quick estimate using simplified 4% withdrawal rule</li>
+                <li>Includes estimated CPP/OAS benefits (simplified)</li>
+                <li>Great for initial planning and feasibility check</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Full Simulation Tool Includes:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 ml-2">
+                <li>Year-by-year Monte Carlo projections with market scenarios</li>
+                <li>Detailed federal and provincial tax calculations</li>
+                <li>Optimized withdrawal strategies (RRIF minimums, income splitting)</li>
+                <li>CPP/OAS/GIS with actual CRA rules and clawbacks</li>
+                <li>Estate planning and legacy analysis</li>
+              </ul>
+            </div>
+          </div>
           <a
             href="/simulation"
             className="inline-flex items-center justify-center h-10 py-2 px-4 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"

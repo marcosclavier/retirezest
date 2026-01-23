@@ -64,6 +64,18 @@ interface EarlyRetirementRequest {
   targetRetirementAge: number;
   targetAnnualExpenses: number;
   lifeExpectancy: number;
+  // Couples planning fields
+  includePartner?: boolean;
+  partner?: {
+    age: number;
+    currentSavings?: {
+      rrsp: number;
+      tfsa: number;
+      nonRegistered: number;
+    };
+    annualIncome?: number;
+    targetRetirementAge?: number;
+  };
 }
 
 interface RetirementScenario {
@@ -319,11 +331,22 @@ export async function POST(request: NextRequest) {
 
     const projectedSavingsAtTarget = futureValueCurrent + futureValueSavings;
 
+    // Estimate government benefits (CPP/OAS) for retirement planning
+    const governmentBenefits = estimateGovernmentBenefits(
+      targetRetirementAge,
+      currentAge,
+      annualIncome,
+      body.includePartner || false,
+      body.partner?.age
+    );
+
     // Calculate required nest egg using multiple methods
+    // Government benefits reduce the required savings needed
     const requiredNestEgg = calculateRequiredNestEgg(
       targetAnnualExpenses,
       yearsInRetirement,
-      inflationRate
+      inflationRate,
+      governmentBenefits.totalAnnual
     );
 
     // Calculate savings gap
@@ -474,6 +497,13 @@ export async function POST(request: NextRequest) {
         neutral: scenarios.neutral,
         optimistic: isPremium ? scenarios.optimistic : undefined,
       },
+      // Government benefits estimation
+      governmentBenefits: {
+        cppAnnual: governmentBenefits.cppAnnual,
+        oasAnnual: governmentBenefits.oasAnnual,
+        totalAnnual: governmentBenefits.totalAnnual,
+        notes: governmentBenefits.notes,
+      },
       // CRA-compliant account-specific contribution recommendations
       recommendedContributions: accountRecommendations,
       // CRA-specific information for Canadian retirement planning
@@ -486,7 +516,9 @@ export async function POST(request: NextRequest) {
         oasStartAge: CRA_CONSTANTS.OAS_START_AGE,
         tfsaAnnualLimit2026: CRA_CONSTANTS.TFSA_ANNUAL_LIMIT_2026,
         notes: [
-          'This calculator does NOT include CPP or OAS benefits. Visit /benefits to estimate government benefits.',
+          '✅ Government benefits (CPP/OAS) are now included in retirement calculations.',
+          'These are ESTIMATES based on simplified assumptions. Actual benefits depend on contribution history and residency.',
+          'For detailed benefit estimates, visit Service Canada or use the full Simulation tool.',
           `RRSP must be converted to RRIF by December 31 of the year you turn ${CRA_CONSTANTS.RRSP_TO_RRIF_AGE}.`,
           `CPP can start as early as age ${CRA_CONSTANTS.CPP_EARLIEST_AGE} (reduced) or delayed to age ${CRA_CONSTANTS.CPP_LATEST_AGE} (increased).`,
           'For couples: Pension income splitting available at age 65 for eligible pension income.',
@@ -512,15 +544,138 @@ export async function POST(request: NextRequest) {
 }
 
 /**
+ * Estimate annual CPP benefits based on retirement age
+ * Simplified estimation - actual CPP depends on contribution history
+ */
+function estimateCPPBenefits(
+  retirementAge: number,
+  annualIncome: number
+): number {
+  // CPP standard age is 65, with max benefit of $16,375/year (2026)
+  const MAX_CPP_AT_65 = CRA_CONSTANTS.CPP_MAX_MONTHLY_2026 * 12;
+
+  // Estimate based on income (simplified - actual calculation is more complex)
+  // Assume 70% of max for someone with average earnings
+  let estimatedCPP = MAX_CPP_AT_65 * 0.70;
+
+  // Adjust for early/late retirement
+  if (retirementAge < CRA_CONSTANTS.CPP_STANDARD_AGE) {
+    // 0.6% reduction per month before 65 (max 36% reduction at age 60)
+    const monthsEarly = (CRA_CONSTANTS.CPP_STANDARD_AGE - retirementAge) * 12;
+    const reduction = Math.min(monthsEarly * 0.006, 0.36);
+    estimatedCPP *= (1 - reduction);
+  } else if (retirementAge > CRA_CONSTANTS.CPP_STANDARD_AGE) {
+    // 0.7% increase per month after 65 (max 42% increase at age 70)
+    const monthsLate = Math.min((retirementAge - CRA_CONSTANTS.CPP_STANDARD_AGE) * 12, 60);
+    const increase = monthsLate * 0.007;
+    estimatedCPP *= (1 + increase);
+  }
+
+  // If income is very low, estimate lower CPP
+  if (annualIncome < 30000) {
+    estimatedCPP *= 0.5;
+  }
+
+  return Math.round(estimatedCPP);
+}
+
+/**
+ * Estimate annual OAS benefits based on retirement age
+ */
+function estimateOASBenefits(
+  retirementAge: number,
+  currentAge: number
+): number {
+  // OAS starts at 65, max benefit $8,492/year (2026)
+  const MAX_OAS = CRA_CONSTANTS.OAS_MAX_MONTHLY_2026 * 12;
+
+  // Can only receive OAS at 65+
+  if (retirementAge < CRA_CONSTANTS.OAS_START_AGE) {
+    return 0;
+  }
+
+  // Estimate based on years in Canada (simplified - assume full residency)
+  let estimatedOAS = MAX_OAS;
+
+  // Adjust for deferral (0.6% increase per month, max 36% at age 70)
+  if (retirementAge > CRA_CONSTANTS.OAS_START_AGE) {
+    const monthsLate = Math.min((retirementAge - CRA_CONSTANTS.OAS_START_AGE) * 12, 60);
+    const increase = monthsLate * 0.006;
+    estimatedOAS *= (1 + increase);
+  }
+
+  return Math.round(estimatedOAS);
+}
+
+/**
+ * Calculate total annual government benefits for household
+ */
+function estimateGovernmentBenefits(
+  retirementAge: number,
+  currentAge: number,
+  annualIncome: number,
+  includePartner: boolean,
+  partnerAge?: number
+): {
+  cppAnnual: number;
+  oasAnnual: number;
+  totalAnnual: number;
+  notes: string[];
+} {
+  const notes: string[] = [];
+
+  // Person 1 benefits
+  const person1CPP = estimateCPPBenefits(retirementAge, annualIncome);
+  const person1OAS = estimateOASBenefits(retirementAge, currentAge);
+
+  // Person 2 benefits (if applicable)
+  let person2CPP = 0;
+  let person2OAS = 0;
+
+  if (includePartner && partnerAge) {
+    // Estimate partner benefits (simplified - assume similar income profile)
+    person2CPP = estimateCPPBenefits(retirementAge, annualIncome * 0.5);
+    person2OAS = estimateOASBenefits(retirementAge, partnerAge);
+  }
+
+  const totalCPP = person1CPP + person2CPP;
+  const totalOAS = person1OAS + person2OAS;
+
+  // Add informational notes
+  if (retirementAge < 65) {
+    notes.push(`CPP reduced by ${((65 - retirementAge) * 12 * 0.6).toFixed(1)}% for early retirement`);
+    notes.push(`OAS not available until age 65`);
+  }
+
+  if (includePartner) {
+    notes.push(`Estimated for both partners - actual amounts depend on contribution history`);
+  }
+
+  notes.push(`Government benefits estimates are approximate and should be verified with Service Canada`);
+
+  return {
+    cppAnnual: totalCPP,
+    oasAnnual: totalOAS,
+    totalAnnual: totalCPP + totalOAS,
+    notes,
+  };
+}
+
+/**
  * Calculate required nest egg using 4% rule with inflation adjustment
+ * Now accounts for government benefits reducing required savings
  */
 function calculateRequiredNestEgg(
   annualExpenses: number,
   yearsInRetirement: number,
-  inflationRate: number
+  inflationRate: number,
+  annualGovernmentBenefits: number = 0
 ): number {
+  // Net expenses after government benefits
+  const netExpenses = Math.max(0, annualExpenses - annualGovernmentBenefits);
+
   // Use 25x rule (4% withdrawal rate) as base
-  const baseNestEgg = annualExpenses * 25;
+  const baseNestEgg = netExpenses * 25;
 
   // Add inflation buffer for long retirement
   const inflationAdjustment = 1 + (inflationRate * Math.min(yearsInRetirement / 2, 15));
