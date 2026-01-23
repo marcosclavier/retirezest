@@ -451,7 +451,8 @@ export async function POST(request: NextRequest) {
           targetAnnualExpenses,
           lifeExpectancy,
           assumedReturn,
-          inflationRate
+          inflationRate,
+          body.includePartner || false
         );
         ageScenarios.push(scenario2);
       }
@@ -466,7 +467,8 @@ export async function POST(request: NextRequest) {
           targetAnnualExpenses,
           lifeExpectancy,
           assumedReturn,
-          inflationRate
+          inflationRate,
+          body.includePartner || false
         );
         ageScenarios.push(scenario3);
       }
@@ -806,6 +808,7 @@ function calculateSuccessRate(projected: number, required: number): number {
 
 /**
  * Calculate a complete retirement scenario
+ * Now accounts for government benefits (CPP/OAS) to reduce required nest egg
  */
 function calculateScenario(
   currentAge: number,
@@ -815,7 +818,8 @@ function calculateScenario(
   annualExpenses: number,
   lifeExpectancy: number,
   returnRate: number,
-  inflationRate: number
+  inflationRate: number,
+  includePartner: boolean = false
 ): RetirementScenario {
   const yearsToRetirement = retirementAge - currentAge;
   const yearsInRetirement = lifeExpectancy - retirementAge;
@@ -825,8 +829,31 @@ function calculateScenario(
   const fvSavings = annualSavings * ((Math.pow(1 + returnRate, yearsToRetirement) - 1) / returnRate);
   const projectedSavings = fvCurrent + fvSavings;
 
-  // Required
-  const totalNeeded = calculateRequiredNestEgg(annualExpenses, yearsInRetirement, inflationRate);
+  // Estimate government benefits at retirement age
+  let govBenefits = 0;
+  if (retirementAge >= 60) {
+    const cppRate = retirementAge >= 65 ? 1.0 : 0.64; // Early CPP is reduced
+    govBenefits += 10000 * cppRate;
+  }
+  if (retirementAge >= 65) {
+    govBenefits += 8000;
+  }
+  if (includePartner) {
+    // Partner gets same benefits (simplified)
+    if (retirementAge >= 60) {
+      const cppRate = retirementAge >= 65 ? 1.0 : 0.64;
+      govBenefits += 10000 * cppRate;
+    }
+    if (retirementAge >= 65) {
+      govBenefits += 8000;
+    }
+  }
+
+  // Net expenses after government benefits
+  const netExpenses = Math.max(0, annualExpenses - govBenefits);
+
+  // Required (using net expenses after benefits)
+  const totalNeeded = calculateRequiredNestEgg(netExpenses, yearsInRetirement, inflationRate);
 
   // Gap and monthly savings
   const shortfall = Math.max(0, totalNeeded - projectedSavings);
