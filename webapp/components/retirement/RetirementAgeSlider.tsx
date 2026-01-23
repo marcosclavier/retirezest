@@ -36,14 +36,16 @@ export function RetirementAgeSlider({
   }, [selectedAge]);
 
   // Find scenario for selected age (or closest match)
-  const selectedScenario = scenarios.find(s => s.retirementAge === localAge) ||
-    scenarios.reduce((prev, curr) =>
-      Math.abs(curr.retirementAge - localAge) < Math.abs(prev.retirementAge - localAge)
-        ? curr
-        : prev
-    , scenarios[0]);
+  const selectedScenario = scenarios && scenarios.length > 0
+    ? (scenarios.find(s => s.retirementAge === localAge) ||
+        scenarios.reduce((prev, curr) =>
+          Math.abs(curr.retirementAge - localAge) < Math.abs(prev.retirementAge - localAge)
+            ? curr
+            : prev
+        , scenarios[0]))
+    : null;
 
-  const isFeasible = selectedScenario && selectedScenario.shortfall === 0;
+  const isFeasible = selectedScenario && selectedScenario.shortfall <= 0;
   const isRisky = selectedScenario && selectedScenario.successRate < 80 && selectedScenario.successRate >= 60;
   const isUnlikely = selectedScenario && selectedScenario.successRate < 60;
 

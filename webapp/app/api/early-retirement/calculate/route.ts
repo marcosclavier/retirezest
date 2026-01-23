@@ -484,7 +484,7 @@ export async function POST(request: NextRequest) {
     const response = {
       readinessScore,
       earliestRetirementAge,
-      targetAgeFeasible: savingsGap === 0,
+      targetAgeFeasible: savingsGap <= 0,
       projectedSavingsAtTarget,
       requiredSavings: requiredNestEgg,
       savingsGap,
