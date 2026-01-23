@@ -73,10 +73,11 @@ export function ActionPlan({
       items.push({
         id: 'government-benefits-optimization',
         title: 'Maximize government benefits strategy',
-        description: `At your age, CPP and OAS are key income sources. Consider optimal CPP start date (delaying to 70 increases benefits 42%). Watch for OAS clawback if income exceeds $90,997.`,
+        description: `Government benefits (CPP/OAS) are reducing your required withdrawals. If not yet claimed, consider optimal timing: delaying CPP to 70 increases benefits by 42%. Watch for OAS clawback if income exceeds $95,323/person (2026). For detailed benefit projections and tax strategies, run the full simulation.`,
         priority: 'high',
         completed: false,
         icon: Calendar,
+        link: '/simulation',
       });
 
       items.push({
