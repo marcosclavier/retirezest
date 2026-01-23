@@ -200,8 +200,8 @@ export function ActionPlan({
       link: '/profile',
     });
 
-    // Government benefits optimization (skip if already handled above)
-    if (targetRetirementAge < 65 && lifeStage !== 'near_retirement' && lifeStage !== 'already_retired') {
+    // Government benefits optimization (skip if already handled in near_retirement section)
+    if (targetRetirementAge < 65 && lifeStage !== 'near_retirement') {
       const bridgeYears = 65 - targetRetirementAge;
       items.push({
         id: 'cpp-strategy',
