@@ -44,9 +44,96 @@ export function ActionPlan({
 }: ActionPlanProps) {
   const yearsToRetirement = targetRetirementAge - currentAge;
 
+  // Detect life stage for context-appropriate recommendations
+  const lifeStage = (() => {
+    if (currentAge >= 65) return 'already_retired';
+    if (currentAge >= 60 || yearsToRetirement <= 5) return 'near_retirement';
+    if (targetRetirementAge < 55 || (currentAge < 40 && targetRetirementAge < 50)) return 'fire_seeker';
+    if (currentAge >= 45 && yearsToRetirement <= 15) return 'mid_career_catchup';
+    return 'standard';
+  })();
+
   // Generate personalized action items based on user's situation
   const getActionItems = (): ActionItem[] => {
     const items: ActionItem[] = [];
+
+    // SPECIAL CASE: Already at/past traditional retirement age
+    if (lifeStage === 'already_retired') {
+      // Focus on withdrawal strategy, not accumulation
+      items.push({
+        id: 'withdrawal-strategy',
+        title: 'Optimize tax-efficient withdrawal strategy',
+        description: `You're already at retirement age. Focus on withdrawing from accounts in the most tax-efficient order: Non-registered first (capital gains), then RRSP/RRIF (fully taxable), preserve TFSA for flexibility and estate planning.`,
+        priority: 'high',
+        completed: false,
+        icon: DollarSign,
+        link: '/simulation',
+      });
+
+      items.push({
+        id: 'government-benefits-optimization',
+        title: 'Maximize government benefits strategy',
+        description: `At your age, CPP and OAS are key income sources. Consider optimal CPP start date (delaying to 70 increases benefits 42%). Watch for OAS clawback if income exceeds $90,997.`,
+        priority: 'high',
+        completed: false,
+        icon: Calendar,
+      });
+
+      items.push({
+        id: 'estate-planning',
+        title: 'Review estate and beneficiary planning',
+        description: `With substantial assets, ensure beneficiary designations are current, consider spousal rollovers, and plan for tax-efficient estate transfers.`,
+        priority: 'medium',
+        completed: false,
+        icon: FileText,
+      });
+
+      // Skip savings recommendations - not relevant for retirees
+      return items;
+    }
+
+    // SPECIAL CASE: FIRE seeker (retiring before 55)
+    if (lifeStage === 'fire_seeker' && targetRetirementAge < 55) {
+      items.push({
+        id: 'tfsa-priority',
+        title: '⚠️ Prioritize TFSA for early retirement flexibility',
+        description: `Critical for FIRE: RRSP funds are locked until age 55 (except HBP/LLP). TFSA withdrawals are always tax-free and penalty-free. Build substantial TFSA to bridge ages ${targetRetirementAge}-55.`,
+        priority: 'high',
+        completed: false,
+        icon: TrendingUp,
+      });
+
+      items.push({
+        id: 'bridge-years-planning',
+        title: `Plan for "bridge years" (age ${targetRetirementAge}-65)`,
+        description: `Before government benefits start: CPP earliest at 60, OAS at 65. You'll need ${65 - targetRetirementAge} years of expenses from savings alone. Consider part-time work or semi-retirement.`,
+        priority: 'high',
+        completed: false,
+        icon: Calendar,
+      });
+    }
+
+    // NEAR RETIREMENT: Focus shifts to preservation and transition
+    if (lifeStage === 'near_retirement') {
+      items.push({
+        id: 'risk-reduction',
+        title: 'Review investment risk tolerance',
+        description: `With ${yearsToRetirement} years to retirement, consider gradually shifting to more conservative allocations to protect against market downturns.`,
+        priority: 'high',
+        completed: false,
+        icon: TrendingUp,
+      });
+
+      items.push({
+        id: 'cpp-oas-planning',
+        title: 'Finalize CPP/OAS claiming strategy',
+        description: `Decide when to start CPP (60-70) and plan OAS timing. Delaying CPP past 65 adds 0.7%/month (8.4%/year). Run scenarios in full simulation.`,
+        priority: 'high',
+        completed: false,
+        icon: Calendar,
+        link: '/simulation',
+      });
+    }
 
     // High priority actions based on savings gap
     if (savingsGap > 0 && recommendedContributions) {
@@ -85,48 +172,64 @@ export function ActionPlan({
       });
     }
 
-    // RRSP optimization
-    items.push({
-      id: 'maximize-rrsp',
-      title: 'Maximize RRSP contributions',
-      description: 'Check your RRSP contribution room and maximize tax-deferred savings. This reduces current taxes while building retirement wealth.',
-      priority: savingsGap > 0 ? 'high' : 'medium',
-      completed: false,
-      icon: TrendingUp,
-      link: '/profile',
-    });
-
-    // TFSA optimization
-    items.push({
-      id: 'maximize-tfsa',
-      title: 'Maximize TFSA contributions',
-      description: 'Use your TFSA contribution room for tax-free growth. Ideal for early retirement since withdrawals are tax-free.',
-      priority: 'medium',
-      completed: false,
-      icon: TrendingUp,
-      link: '/profile',
-    });
-
-    // Government benefits optimization
-    if (targetRetirementAge < 65) {
+    // RRSP optimization (context-aware)
+    if (lifeStage !== 'fire_seeker' || targetRetirementAge >= 55) {
       items.push({
-        id: 'cpp-strategy',
-        title: 'Plan CPP/OAS claiming strategy',
-        description: 'If retiring before 65, decide when to start CPP (60-70) and plan for OAS at 65. Delaying can increase benefits significantly.',
-        priority: 'medium',
+        id: 'maximize-rrsp',
+        title: 'Maximize RRSP contributions',
+        description: lifeStage === 'mid_career_catchup'
+          ? 'Check your RRSP contribution room - you may have significant unused room from prior years. This provides immediate tax deductions while catching up on retirement savings.'
+          : 'Check your RRSP contribution room and maximize tax-deferred savings. This reduces current taxes while building retirement wealth.',
+        priority: savingsGap > 0 ? 'high' : 'medium',
         completed: false,
-        icon: Calendar,
-        link: '/benefits',
+        icon: TrendingUp,
+        link: '/profile',
       });
     }
 
-    // Consider alternative retirement age
+    // TFSA optimization (context-aware priority)
+    items.push({
+      id: 'maximize-tfsa',
+      title: lifeStage === 'fire_seeker' ? '🔥 Maximize TFSA (Critical for Early Retirement)' : 'Maximize TFSA contributions',
+      description: lifeStage === 'fire_seeker'
+        ? `HIGHEST PRIORITY for retiring at ${targetRetirementAge}: TFSA provides penalty-free access before age 55. Unlike RRSP, you can withdraw anytime without tax. Build this first for early retirement flexibility.`
+        : 'Use your TFSA contribution room for tax-free growth. Ideal for early retirement since withdrawals are tax-free and don\'t affect OAS/GIS eligibility.',
+      priority: lifeStage === 'fire_seeker' ? 'high' : 'medium',
+      completed: false,
+      icon: TrendingUp,
+      link: '/profile',
+    });
+
+    // Government benefits optimization (skip if already handled above)
+    if (targetRetirementAge < 65 && lifeStage !== 'near_retirement' && lifeStage !== 'already_retired') {
+      const bridgeYears = 65 - targetRetirementAge;
+      items.push({
+        id: 'cpp-strategy',
+        title: 'Plan CPP/OAS claiming strategy',
+        description: lifeStage === 'fire_seeker'
+          ? `Critical: OAS doesn't start until 65, CPP earliest at 60. You'll need ${bridgeYears} years of expenses from savings alone (ages ${targetRetirementAge}-65). Consider semi-retirement or part-time work during this period.`
+          : 'If retiring before 65, decide when to start CPP (60-70) and plan for OAS at 65. Delaying can increase benefits significantly.',
+        priority: lifeStage === 'fire_seeker' ? 'high' : 'medium',
+        completed: false,
+        icon: Calendar,
+        link: '/simulation',
+      });
+    }
+
+    // Consider alternative retirement age (with reality check)
     if (!targetAgeFeasible && alternativeRetirementAge) {
+      const yearsDelay = alternativeRetirementAge - targetRetirementAge;
+      const isSignificantGap = savingsGap > 500000; // Large gap suggests major issues
+
       items.push({
         id: 'alternative-age',
-        title: `Consider retiring at age ${alternativeRetirementAge}`,
-        description: `Retiring ${alternativeRetirementAge - targetRetirementAge} years later allows your savings more time to grow, requiring less additional savings now.`,
-        priority: 'medium',
+        title: isSignificantGap
+          ? `⚠️ Reality Check: Delay retirement to age ${alternativeRetirementAge}`
+          : `Consider retiring at age ${alternativeRetirementAge}`,
+        description: isSignificantGap
+          ? `With a $${Math.round(savingsGap/1000)}K shortfall, retiring at ${targetRetirementAge} is not realistic with current savings. Delaying ${yearsDelay} years to age ${alternativeRetirementAge} makes retirement achievable. Alternative: dramatically increase savings or reduce expenses.`
+          : `Retiring ${yearsDelay} years later allows your savings more time to grow, requiring less additional savings now. This could make early retirement much more comfortable.`,
+        priority: isSignificantGap ? 'high' : 'medium',
         completed: false,
         icon: Calendar,
       });
