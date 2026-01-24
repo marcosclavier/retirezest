@@ -20,6 +20,32 @@ export default function ExpensesStep({
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [hasExistingExpenses, setHasExistingExpenses] = useState(false);
 
+  // Helper functions for number formatting
+  const formatWithCommas = (value: string | number): string => {
+    const numValue = typeof value === 'string' ? value.replace(/,/g, '') : String(value);
+    const num = parseFloat(numValue);
+    if (isNaN(num)) return '';
+    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  const removeCommas = (value: string): string => {
+    return value.replace(/,/g, '');
+  };
+
+  const handleNumberInput = (value: string, setter: (val: string) => void) => {
+    // Allow only numbers and commas
+    const cleaned = value.replace(/[^\d,]/g, '');
+    setter(cleaned);
+  };
+
+  const handleNumberBlur = (value: string, setter: (val: string) => void) => {
+    // Format with commas on blur
+    if (value) {
+      const formatted = formatWithCommas(removeCommas(value));
+      setter(formatted);
+    }
+  };
+
   // Initialize state from formData.expenses if available
   const getMonthlyExpenses = useCallback(() => {
     if (formData.expenses && Array.isArray(formData.expenses)) {
@@ -27,7 +53,7 @@ export default function ExpensesStep({
       const totalExpense = formData.expenses.find(
         (e: any) => e.description === 'Total Monthly Expenses' && e.frequency === 'monthly'
       );
-      return totalExpense ? String(totalExpense.amount) : '';
+      return totalExpense ? formatWithCommas(totalExpense.amount) : '';
     }
     return '';
   }, [formData.expenses]);
@@ -91,7 +117,7 @@ export default function ExpensesStep({
 
             // Pre-populate with calculated total (read-only)
             if (totalMonthly > 0) {
-              setMonthlyExpenses(totalMonthly.toFixed(2));
+              setMonthlyExpenses(formatWithCommas(totalMonthly));
             }
 
             console.log('[Expenses] User has', expenses.length, 'existing expenses. Total monthly:', totalMonthly);
@@ -138,7 +164,7 @@ export default function ExpensesStep({
     }
 
     try {
-      if (monthlyExpenses && parseFloat(monthlyExpenses) > 0) {
+      if (monthlyExpenses && parseFloat(removeCommas(monthlyExpenses)) > 0) {
         // Check if "Total Monthly Expenses" already exists
         const existingExpense = formData.expenses?.find(
           (e: any) => e.description === 'Total Monthly Expenses' && e.frequency === 'monthly'
@@ -157,7 +183,7 @@ export default function ExpensesStep({
               id: existingExpense.id,
               category: 'other',
               description: 'Total Monthly Expenses',
-              amount: parseFloat(monthlyExpenses),
+              amount: parseFloat(removeCommas(monthlyExpenses)),
               frequency: 'monthly',
               essential: true,
             }),
@@ -173,7 +199,7 @@ export default function ExpensesStep({
             body: JSON.stringify({
               category: 'other',
               description: 'Total Monthly Expenses',
-              amount: parseFloat(monthlyExpenses),
+              amount: parseFloat(removeCommas(monthlyExpenses)),
               frequency: 'monthly',
               essential: true,
             }),
@@ -217,13 +243,21 @@ export default function ExpensesStep({
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="ml-3">
+              <div className="ml-3 flex-1">
                 <h3 className="text-sm font-medium text-blue-800">
                   Your Current Monthly Expenses (Read-Only)
                 </h3>
-                <p className="text-sm text-blue-700 mt-1">
-                  The value shown below is calculated from all your recurring expenses in your financial profile. This field is read-only in the wizard. To edit or manage your expenses, please use the <strong>Financial Profile</strong> section.
+                <p className="text-sm text-blue-700 mt-1 mb-3">
+                  The value shown below is calculated from all your recurring expenses in your financial profile. This field is read-only in the wizard.
                 </p>
+                <a
+                  href="/profile/expenses"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+                >
+                  Edit in Financial Profile →
+                </a>
               </div>
             </div>
           </div>
@@ -279,15 +313,14 @@ export default function ExpensesStep({
               <div className="relative">
                 <span className="absolute left-3 top-2 text-gray-500">$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="monthlyExpenses"
                   value={monthlyExpenses}
-                  onChange={(e) => setMonthlyExpenses(e.target.value)}
+                  onChange={(e) => handleNumberInput(e.target.value, setMonthlyExpenses)}
+                  onBlur={(e) => handleNumberBlur(e.target.value, setMonthlyExpenses)}
                   disabled={hasExistingExpenses}
                   className={`w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg font-bold ${hasExistingExpenses ? 'bg-gray-100 text-gray-700 cursor-not-allowed' : 'text-gray-900'}`}
-                  placeholder="0.00"
-                  min="0"
-                  step="100"
+                  placeholder="0"
                   required
                 />
               </div>
@@ -296,10 +329,10 @@ export default function ExpensesStep({
               </p>
 
               {/* Annual Preview */}
-              {monthlyExpenses && parseFloat(monthlyExpenses) > 0 && (
+              {monthlyExpenses && parseFloat(removeCommas(monthlyExpenses)) > 0 && (
                 <div className="mt-3 p-3 bg-indigo-50 border border-indigo-200 rounded-md">
                   <p className="text-sm text-indigo-900">
-                    <strong>Annual Expenses:</strong> ${(parseFloat(monthlyExpenses) * 12).toLocaleString()}
+                    <strong>Annual Expenses:</strong> ${(parseFloat(removeCommas(monthlyExpenses)) * 12).toLocaleString()}
                   </p>
                   <p className="text-xs text-indigo-700 mt-1">
                     This will be used as your baseline retirement spending requirement

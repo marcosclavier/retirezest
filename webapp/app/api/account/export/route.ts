@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createAuditLogFromRequest, AuditAction } from '@/lib/audit-log';
+import { getUserSubscription } from '@/lib/subscription';
 
 // Force dynamic rendering - do not pre-render during build
 export const dynamic = 'force-dynamic';
@@ -22,14 +23,34 @@ export async function GET(req: NextRequest) {
     // 1. Verify authentication
     const session = await getSession();
 
-    if (!session?.userId) {
+    if (!session?.userId || !session?.email) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // 2. Get complete user data with all relations
+    // 2. Check subscription status - data export is premium-only
+    const subscription = await getUserSubscription(session.email);
+    if (!subscription) {
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    if (!subscription.isPremium) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Data export is a Premium feature. Upgrade to Premium to export your complete data.',
+          upgradeRequired: true,
+        },
+        { status: 403 }
+      );
+    }
+
+    // 3. Get complete user data with all relations
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       include: {
@@ -53,10 +74,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 3. Remove sensitive fields (password hash)
+    // 4. Remove sensitive fields (password hash)
     const { passwordHash, resetToken, emailVerificationToken, ...userData } = user;
 
-    // 4. Prepare export data
+    // 5. Prepare export data
     const exportData = {
       exportDate: new Date().toISOString(),
       exportType: 'complete_user_data',
@@ -196,7 +217,7 @@ export async function GET(req: NextRequest) {
       },
     };
 
-    // 5. Log export event to audit log
+    // 6. Log export event to audit log
     await createAuditLogFromRequest(req, user.id, AuditAction.DATA_EXPORT, {
       description: `User exported their complete data (${Object.keys(exportData.financialData.assets).length} assets, ${Object.keys(exportData.financialData.incomeSources).length} income sources)`,
       metadata: {
@@ -211,7 +232,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`[DATA EXPORT] User ${user.email} (ID: ${user.id}) exported their data`);
 
-    // 6. Return data as JSON with download headers
+    // 7. Return data as JSON with download headers
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       headers: {
         'Content-Type': 'application/json',

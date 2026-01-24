@@ -22,11 +22,37 @@ export default function PartnerIncomeStep({
   const [isLoading, setIsLoading] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
 
+  // Helper functions for number formatting
+  const formatWithCommas = (value: string | number): string => {
+    const numValue = typeof value === 'string' ? value.replace(/,/g, '') : String(value);
+    const num = parseFloat(numValue);
+    if (isNaN(num)) return '';
+    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  const removeCommas = (value: string): string => {
+    return value.replace(/,/g, '');
+  };
+
+  const handleNumberInput = (value: string, setter: (val: string) => void) => {
+    // Allow only numbers and commas
+    const cleaned = value.replace(/[^\d,]/g, '');
+    setter(cleaned);
+  };
+
+  const handleNumberBlur = (value: string, setter: (val: string) => void) => {
+    // Format with commas on blur
+    if (value) {
+      const formatted = formatWithCommas(removeCommas(value));
+      setter(formatted);
+    }
+  };
+
   // Initialize state from formData.incomes if available (filter for person2/partner)
   const getPartnerIncomeAmount = useCallback((type: string) => {
     if (formData.incomes && Array.isArray(formData.incomes)) {
       const income = formData.incomes.find((i: any) => i.type === type && i.owner === 'person2');
-      return income ? String(income.amount) : '';
+      return income ? formatWithCommas(income.amount) : '';
     }
     return '';
   }, [formData.incomes]);
@@ -77,44 +103,44 @@ export default function PartnerIncomeStep({
     try {
       const incomes = [];
 
-      if (employmentIncome && parseFloat(employmentIncome) > 0) {
+      if (employmentIncome && parseFloat(removeCommas(employmentIncome)) > 0) {
         incomes.push({
           type: 'employment',
           description: `${formData.partnerFirstName || 'Partner'} Employment Income`,
-          amount: parseFloat(employmentIncome),
+          amount: parseFloat(removeCommas(employmentIncome)),
           frequency: 'annual',
           owner: 'person2',
           isTaxable: true,
         });
       }
 
-      if (pensionIncome && parseFloat(pensionIncome) > 0) {
+      if (pensionIncome && parseFloat(removeCommas(pensionIncome)) > 0) {
         incomes.push({
           type: 'pension',
           description: `${formData.partnerFirstName || 'Partner'} Employer Pension`,
-          amount: parseFloat(pensionIncome),
+          amount: parseFloat(removeCommas(pensionIncome)),
           frequency: 'annual',
           owner: 'person2',
           isTaxable: true,
         });
       }
 
-      if (rentalIncome && parseFloat(rentalIncome) > 0) {
+      if (rentalIncome && parseFloat(removeCommas(rentalIncome)) > 0) {
         incomes.push({
           type: 'rental',
           description: `${formData.partnerFirstName || 'Partner'} Rental Income`,
-          amount: parseFloat(rentalIncome),
+          amount: parseFloat(removeCommas(rentalIncome)),
           frequency: 'annual',
           owner: 'person2',
           isTaxable: true,
         });
       }
 
-      if (otherIncome && parseFloat(otherIncome) > 0) {
+      if (otherIncome && parseFloat(removeCommas(otherIncome)) > 0) {
         incomes.push({
           type: 'other',
           description: `${formData.partnerFirstName || 'Partner'} Other Income`,
-          amount: parseFloat(otherIncome),
+          amount: parseFloat(removeCommas(otherIncome)),
           frequency: 'annual',
           owner: 'person2',
           isTaxable: true,
@@ -201,14 +227,13 @@ export default function PartnerIncomeStep({
               <div className="relative">
                 <span className="absolute left-3 top-2 text-gray-500">$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="partner-employment"
                   value={employmentIncome}
-                  onChange={(e) => setEmploymentIncome(e.target.value)}
+                  onChange={(e) => handleNumberInput(e.target.value, setEmploymentIncome)}
+                  onBlur={(e) => handleNumberBlur(e.target.value, setEmploymentIncome)}
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
-                  placeholder="0.00"
-                  min="0"
-                  step="1000"
+                  placeholder="0"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -224,14 +249,13 @@ export default function PartnerIncomeStep({
               <div className="relative">
                 <span className="absolute left-3 top-2 text-gray-500">$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="partner-pension"
                   value={pensionIncome}
-                  onChange={(e) => setPensionIncome(e.target.value)}
+                  onChange={(e) => handleNumberInput(e.target.value, setPensionIncome)}
+                  onBlur={(e) => handleNumberBlur(e.target.value, setPensionIncome)}
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
-                  placeholder="0.00"
-                  min="0"
-                  step="1000"
+                  placeholder="0"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -247,14 +271,13 @@ export default function PartnerIncomeStep({
               <div className="relative">
                 <span className="absolute left-3 top-2 text-gray-500">$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="partner-rental"
                   value={rentalIncome}
-                  onChange={(e) => setRentalIncome(e.target.value)}
+                  onChange={(e) => handleNumberInput(e.target.value, setRentalIncome)}
+                  onBlur={(e) => handleNumberBlur(e.target.value, setRentalIncome)}
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
-                  placeholder="0.00"
-                  min="0"
-                  step="500"
+                  placeholder="0"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -270,14 +293,13 @@ export default function PartnerIncomeStep({
               <div className="relative">
                 <span className="absolute left-3 top-2 text-gray-500">$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="partner-other"
                   value={otherIncome}
-                  onChange={(e) => setOtherIncome(e.target.value)}
+                  onChange={(e) => handleNumberInput(e.target.value, setOtherIncome)}
+                  onBlur={(e) => handleNumberBlur(e.target.value, setOtherIncome)}
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
-                  placeholder="0.00"
-                  min="0"
-                  step="500"
+                  placeholder="0"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">

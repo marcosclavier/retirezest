@@ -25,6 +25,7 @@ import { YearByYearTable } from '@/components/simulation/YearByYearTable';
 import { SmartStartCard } from '@/components/simulation/SmartStartCard';
 import { PlanSnapshotCard } from '@/components/simulation/PlanSnapshotCard';
 import { FloatingCTA } from '@/components/simulation/FloatingCTA';
+import { SimulationWizard } from '@/components/simulation/SimulationWizard';
 import { UpgradeModal } from '@/components/modals/UpgradeModal';
 import { PostSimulationFeedbackModal } from '@/components/feedback/PostSimulationFeedbackModal';
 
@@ -84,6 +85,7 @@ export default function SimulationPage() {
   const [upgradeFeature, setUpgradeFeature] = useState<'csv' | 'pdf' | 'export' | 'early-retirement' | 'general'>('general');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [hasShownFeedback, setHasShownFeedback] = useState(false);
+  const [isWizardMode, setIsWizardMode] = useState(false);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -765,6 +767,35 @@ export default function SimulationPage() {
               Run comprehensive retirement projections with tax optimization
             </p>
           </div>
+
+          {/* Wizard Mode Toggle */}
+          {!result && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">View:</span>
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setIsWizardMode(true)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isWizardMode
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  🧭 Guided
+                </button>
+                <button
+                  onClick={() => setIsWizardMode(false)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    !isWizardMode
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  ⚡ Express
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Hero CTA - Prominent call-to-action when user has data but no results */}
@@ -1110,8 +1141,22 @@ export default function SimulationPage() {
         </Button>
       </div>
 
-      {/* Tabs for Input and Results */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      {/* Wizard Mode or Tabs */}
+      {isWizardMode && !result ? (
+        <SimulationWizard
+          household={household}
+          onUpdate={(updates) => setHousehold((prev) => ({ ...prev, ...updates }))}
+          onComplete={async () => {
+            setIsWizardMode(false);
+            await handleRunSimulation();
+          }}
+          onCancel={() => setIsWizardMode(false)}
+          includePartner={includePartner}
+        />
+      ) : (
+        <>
+          {/* Tabs for Input and Results */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
           <TabsTrigger value="input">Input</TabsTrigger>
           <TabsTrigger value="results" disabled={!result}>
@@ -1281,6 +1326,8 @@ export default function SimulationPage() {
           )}
         </TabsContent>
       </Tabs>
+        </>
+      )}
 
       {/* Floating CTA - only show on input tab */}
       {activeTab === 'input' && (

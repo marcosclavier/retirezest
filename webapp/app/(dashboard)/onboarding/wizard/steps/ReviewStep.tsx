@@ -28,48 +28,128 @@ export default function ReviewStep({
 
       {/* Setup Summary */}
       <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6 mb-6">
-        <h3 className="font-semibold text-indigo-900 mb-4">Setup Complete</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Personal Info</p>
-            <div className="flex items-center">
-              <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-              <span className="font-medium text-gray-900">Saved</span>
+        <h3 className="font-semibold text-indigo-900 mb-4">Setup Complete - Your Information Summary</h3>
+
+        {/* Personal & Partner Information */}
+        <div className="mb-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Personal Information</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Province</p>
+              <p className="font-medium text-gray-900">{formData.province || 'Not set'}</p>
             </div>
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Marital Status</p>
+              <p className="font-medium text-gray-900 capitalize">{formData.maritalStatus || 'Not set'}</p>
+            </div>
+            {formData.includePartner && (
+              <>
+                <div className="bg-white rounded-lg p-3">
+                  <p className="text-xs text-gray-600 mb-1">Partner</p>
+                  <p className="font-medium text-gray-900">
+                    {formData.partnerFirstName ? `${formData.partnerFirstName} ${formData.partnerLastName || ''}` : 'Not set'}
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-3">
+                  <p className="text-xs text-gray-600 mb-1">Partner DOB</p>
+                  <p className="font-medium text-gray-900">{formData.partnerDateOfBirth || 'Not set'}</p>
+                </div>
+              </>
+            )}
           </div>
+        </div>
 
-          {formData.includePartner && (
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Partner Info</p>
-              <div className="flex items-center">
-                <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-                <span className="font-medium text-gray-900">Saved</span>
-              </div>
+        {/* Retirement Goals */}
+        <div className="mb-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Retirement Goals</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Target Retirement Age</p>
+              <p className="font-medium text-gray-900">{formData.targetRetirementAge || '65'}</p>
             </div>
-          )}
-
-          <div className="bg-white rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Retirement Goals</p>
-            <div className="flex items-center">
-              <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-              <span className="font-medium text-gray-900">
-                Retire at {formData.targetRetirementAge || '65'}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Financial Data</p>
-            <div className="flex items-center">
-              <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-              <span className="font-medium text-gray-900">
-                {!formData.assetsSkipped || !formData.incomeSkipped || !formData.expensesSkipped
-                  ? 'Added'
-                  : 'Can add later'}
-              </span>
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Planning To Age</p>
+              <p className="font-medium text-gray-900">{formData.lifeExpectancy || '95'}</p>
             </div>
           </div>
         </div>
+
+        {/* Financial Data Status */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Financial Information</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Assets</p>
+              <div className="flex items-center">
+                <CheckCircleIcon className={`h-4 w-4 mr-1 ${formData.assetsSkipped ? 'text-yellow-500' : 'text-green-600'}`} />
+                <span className="text-sm font-medium text-gray-900">
+                  {formData.assetsSkipped ? 'Skipped - Add later' : `Added (${formData.assetCount || 0})`}
+                </span>
+              </div>
+            </div>
+            {formData.includePartner && (
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Partner Assets</p>
+                <div className="flex items-center">
+                  <CheckCircleIcon className={`h-4 w-4 mr-1 ${formData.partnerAssetsSkipped ? 'text-yellow-500' : 'text-green-600'}`} />
+                  <span className="text-sm font-medium text-gray-900">
+                    {formData.partnerAssetsSkipped ? 'Skipped' : `Added (${formData.partnerAssetCount || 0})`}
+                  </span>
+                </div>
+              </div>
+            )}
+            {formData.includePartner && (
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Joint Assets</p>
+                <div className="flex items-center">
+                  <CheckCircleIcon className={`h-4 w-4 mr-1 ${formData.jointAssetsSkipped ? 'text-yellow-500' : 'text-green-600'}`} />
+                  <span className="text-sm font-medium text-gray-900">
+                    {formData.jointAssetsSkipped ? 'Skipped' : `Added (${formData.jointAssetCount || 0})`}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Income Sources</p>
+              <div className="flex items-center">
+                <CheckCircleIcon className={`h-4 w-4 mr-1 ${formData.incomeSkipped ? 'text-yellow-500' : 'text-green-600'}`} />
+                <span className="text-sm font-medium text-gray-900">
+                  {formData.incomeSkipped ? 'Skipped - Add later' : `Added (${formData.incomeCount || 0})`}
+                </span>
+              </div>
+            </div>
+            {formData.includePartner && (
+              <div className="bg-white rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Partner Income</p>
+                <div className="flex items-center">
+                  <CheckCircleIcon className={`h-4 w-4 mr-1 ${formData.partnerIncomeSkipped ? 'text-yellow-500' : 'text-green-600'}`} />
+                  <span className="text-sm font-medium text-gray-900">
+                    {formData.partnerIncomeSkipped ? 'Skipped' : `Added (${formData.partnerIncomeCount || 0})`}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="bg-white rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Monthly Expenses</p>
+              <div className="flex items-center">
+                <CheckCircleIcon className={`h-4 w-4 mr-1 ${formData.expensesSkipped ? 'text-yellow-500' : 'text-green-600'}`} />
+                <span className="text-sm font-medium text-gray-900">
+                  {formData.expensesSkipped ? 'Skipped - Add later' : formData.monthlyExpenses ? `$${parseFloat(formData.monthlyExpenses).toLocaleString()}` : 'Added'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Warning if important data was skipped */}
+        {(formData.assetsSkipped || formData.incomeSkipped || formData.expensesSkipped) && (
+          <div className="mt-4 bg-yellow-50 border border-yellow-300 rounded-lg p-3">
+            <p className="text-sm text-yellow-900">
+              <strong>Note:</strong> You skipped some financial information. For the most accurate retirement projections,
+              please add this data from your Financial Profile before running simulations.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Next Steps */}

@@ -7,23 +7,23 @@ export default function HowItWorksSection() {
   const steps = [
     {
       number: '1',
-      title: 'Create Account',
-      subtitle: '30 seconds',
-      description: 'Sign up with just your email. No credit card required.',
-      icon: '👤',
+      title: 'Quick Feasibility Check',
+      subtitle: '2 minutes',
+      description: 'Check if early retirement is possible with our Early Retirement Calculator. Get instant feedback on your retirement timeline.',
+      icon: '🎯',
     },
     {
       number: '2',
-      title: 'Enter Your Info',
+      title: 'Complete Your Profile',
       subtitle: '15 minutes',
-      description: 'Add your income, assets, and retirement goals through our simple guided forms.',
+      description: 'Add your income, assets, expenses, and retirement goals through our guided setup wizard.',
       icon: '📝',
     },
     {
       number: '3',
-      title: 'Get Your Plan',
+      title: 'Get Your Optimized Plan',
       subtitle: 'Instantly',
-      description: 'View projections, compare scenarios, and download professional reports.',
+      description: 'Run comprehensive simulations with tax optimization, compare strategies, and get year-by-year projections to age 95.',
       icon: '📊',
     },
   ];
@@ -34,10 +34,10 @@ export default function HowItWorksSection() {
 
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Start Planning in 3 Simple Steps
+            From Dream to Reality in 3 Steps
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-            From signup to your complete retirement plan in under 20 minutes
+            Check feasibility → Build your profile → Optimize your strategy
           </p>
         </div>
 

@@ -28,6 +28,15 @@ export async function verifyTurnstile(
   token: string,
   remoteIp?: string
 ): Promise<TurnstileVerificationResult> {
+  // Bypass Turnstile in E2E test mode
+  if (process.env.E2E_TEST_MODE === 'true') {
+    return {
+      success: true,
+      challengeTimestamp: new Date().toISOString(),
+      hostname: 'localhost',
+    };
+  }
+
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secretKey) {

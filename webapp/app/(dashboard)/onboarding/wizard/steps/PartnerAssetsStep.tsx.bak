@@ -1,0 +1,495 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface PartnerAssetsStepProps {
+  formData: any;
+  updateFormData: (data: any) => void;
+  onNext: () => void;
+  onPrevious: () => void;
+}
+
+export default function PartnerAssetsStep({
+  formData,
+  updateFormData,
+  onNext,
+}: PartnerAssetsStepProps) {
+  const [skipForNow, setSkipForNow] = useState(false);
+  const [rrspBalance, setRrspBalance] = useState('');
+  const [tfsaBalance, setTfsaBalance] = useState('');
+  const [nonRegBalance, setNonRegBalance] = useState('');
+  const [savingsBalance, setSavingsBalance] = useState('');
+  const [rrifBalance, setRrifBalance] = useState('');
+  const [liraBalance, setLiraBalance] = useState('');
+  const [corporateBalance, setCorporateBalance] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [existingAssets, setExistingAssets] = useState<Record<string, { id: string; balance: number }>>({});
+  const [hasLoadedExisting, setHasLoadedExisting] = useState(false);
+
+  // Helper functions for number formatting
+  const formatWithCommas = (value: string | number): string => {
+    const numValue = typeof value === 'string' ? value.replace(/,/g, '') : String(value);
+    const num = parseFloat(numValue);
+    if (isNaN(num)) return '';
+    return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  const removeCommas = (value: string): string => {
+    return value.replace(/,/g, '');
+  };
+
+  const handleNumberInput = (value: string, setter: (val: string) => void) => {
+    // Allow only numbers and commas
+    const cleaned = value.replace(/[^\d,]/g, '');
+    setter(cleaned);
+  };
+
+  const handleNumberBlur = (value: string, setter: (val: string) => void) => {
+    // Format with commas on blur
+    if (value) {
+      const formatted = formatWithCommas(removeCommas(value));
+      setter(formatted);
+    }
+  };
+
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await fetch('/api/csrf');
+        const data = await response.json();
+        setCsrfToken(data.token || null);
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
+    };
+    fetchCsrfToken();
+  }, []);
+
+  // Fetch existing partner assets from database on mount
+  useEffect(() => {
+    const fetchExistingAssets = async () => {
+      try {
+        const response = await fetch('/api/profile/assets', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const assetsMap: Record<string, { id: string; balance: number }> = {};
+
+          // Extract assets array from response
+          const assets = data.assets || data;
+
+          // Filter for person2/partner assets and map by type
+          if (Array.isArray(assets)) {
+            assets.forEach((asset: any) => {
+              if (asset.owner === 'person2') {
+                assetsMap[asset.type] = {
+                  id: asset.id,
+                  balance: asset.balance,
+                };
+              }
+            });
+          }
+
+          setExistingAssets(assetsMap);
+          setHasLoadedExisting(Object.keys(assetsMap).length > 0);
+
+          // Pre-populate form fields with existing data (with comma formatting)
+          if (assetsMap.rrsp) setRrspBalance(formatWithCommas(assetsMap.rrsp.balance));
+          if (assetsMap.tfsa) setTfsaBalance(formatWithCommas(assetsMap.tfsa.balance));
+          if (assetsMap.nonreg) setNonRegBalance(formatWithCommas(assetsMap.nonreg.balance));
+          if (assetsMap.savings) setSavingsBalance(formatWithCommas(assetsMap.savings.balance));
+          if (assetsMap.rrif) setRrifBalance(formatWithCommas(assetsMap.rrif.balance));
+          if (assetsMap.lira) setLiraBalance(formatWithCommas(assetsMap.lira.balance));
+          if (assetsMap.corporate) setCorporateBalance(formatWithCommas(assetsMap.corporate.balance));
+
+          console.log('[Partner Assets] Loaded existing assets:', Object.keys(assetsMap));
+        }
+      } catch (error) {
+        console.error('[Partner Assets] Failed to fetch existing assets:', error);
+      }
+    };
+
+    fetchExistingAssets();
+  }, []);
+
+  // Note: We removed the formData.assets loading logic because it was overriding
+  // the database data. Now we only load from the API to get the true source of truth.
+
+  const handleSave = async () => {
+    // Validation: Either skip is checked OR at least one field has a value
+    const hasAnyAsset = rrspBalance || tfsaBalance || nonRegBalance || savingsBalance ||
+                        rrifBalance || liraBalance || corporateBalance;
+
+    if (!skipForNow && !hasAnyAsset) {
+      alert('Please enter at least one asset amount for your partner or check "Skip for now" to continue.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    if (skipForNow) {
+      updateFormData({ partnerAssetsSkipped: true });
+      onNext();
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Save each asset if it has a value
+      const assets = [];
+
+      if (rrspBalance && parseFloat(rrspBalance) > 0) {
+        assets.push({
+          type: 'rrsp',
+          name: `${formData.partnerFirstName || 'Partner'}'s RRSP Account`,
+          balance: parseFloat(rrspBalance),
+          owner: 'person2',
+        });
+      }
+
+      if (tfsaBalance && parseFloat(tfsaBalance) > 0) {
+        assets.push({
+          type: 'tfsa',
+          name: `${formData.partnerFirstName || 'Partner'}'s TFSA Account`,
+          balance: parseFloat(tfsaBalance),
+          owner: 'person2',
+        });
+      }
+
+      if (nonRegBalance && parseFloat(nonRegBalance) > 0) {
+        assets.push({
+          type: 'nonreg',
+          name: `${formData.partnerFirstName || 'Partner'}'s Non-Registered Investment Account`,
+          balance: parseFloat(nonRegBalance),
+          owner: 'person2',
+        });
+      }
+
+      if (savingsBalance && parseFloat(savingsBalance) > 0) {
+        assets.push({
+          type: 'savings',
+          name: `${formData.partnerFirstName || 'Partner'}'s Savings Account`,
+          balance: parseFloat(savingsBalance),
+          owner: 'person2',
+        });
+      }
+
+      if (rrifBalance && parseFloat(rrifBalance) > 0) {
+        assets.push({
+          type: 'rrif',
+          name: `${formData.partnerFirstName || 'Partner'}'s RRIF Account`,
+          balance: parseFloat(rrifBalance),
+          owner: 'person2',
+        });
+      }
+
+      if (liraBalance && parseFloat(liraBalance) > 0) {
+        assets.push({
+          type: 'lira',
+          name: `${formData.partnerFirstName || 'Partner'}'s LIRA Account`,
+          balance: parseFloat(liraBalance),
+          owner: 'person2',
+        });
+      }
+
+      if (corporateBalance && parseFloat(corporateBalance) > 0) {
+        assets.push({
+          type: 'corporate',
+          name: `${formData.partnerFirstName || 'Partner'}'s Corporate Investment Account`,
+          balance: parseFloat(corporateBalance),
+          owner: 'person2',
+        });
+      }
+
+      // Save assets to database
+      for (const asset of assets) {
+        const existingAsset = existingAssets[asset.type];
+        const method = existingAsset ? 'PUT' : 'POST';
+
+        // For PUT, include the id in the body
+        const payload = existingAsset
+          ? { ...asset, id: existingAsset.id }
+          : asset;
+
+        console.log(`[Partner Assets] ${method} ${asset.type}:`, asset.balance, existingAsset ? `(id: ${existingAsset.id})` : '(new)');
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+
+        if (csrfToken) {
+          headers['x-csrf-token'] = csrfToken;
+        }
+
+        const response = await fetch('/api/profile/assets', {
+          method,
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Failed to save partner asset:', errorData);
+          throw new Error(errorData.message || 'Failed to save partner asset');
+        }
+      }
+
+      updateFormData({ partnerAssetsAdded: true, partnerAssetCount: assets.length });
+      onNext();
+    } catch (error) {
+      console.error('Error saving partner assets:', error);
+      alert('Failed to save partner assets. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const partnerName = formData.partnerFirstName || 'Your Partner';
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{partnerName}'s Assets & Accounts</h2>
+        <p className="text-gray-600">
+          Let's add {partnerName}'s savings and investment accounts. You can add more detailed information later.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Warning for Existing Assets */}
+        {hasLoadedExisting && !skipForNow && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Updating Existing Partner Assets
+                </h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  These values have been previously entered in your financial profile. Any changes made here will update the existing partner assets. For permanent changes, please update them in the Financial Profile section.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Skip Option */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="skipPartnerAssets"
+                type="checkbox"
+                checked={skipForNow}
+                onChange={(e) => setSkipForNow(e.target.checked)}
+                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+            </div>
+            <div className="ml-3">
+              <label htmlFor="skipPartnerAssets" className="font-medium text-gray-900">
+                Skip for now - I'll add partner assets later
+              </label>
+              <p className="text-sm text-gray-600 mt-1">
+                You can add detailed partner asset information from the Financial Profile page anytime.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Asset Input Fields */}
+        {!skipForNow && (
+          <div className="space-y-6 bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <p className="text-sm text-gray-700">
+              Enter approximate balances for {partnerName}'s accounts. You can update these later with exact amounts.
+            </p>
+
+            {/* RRSP */}
+            <div>
+              <label htmlFor="partner-rrsp" className="block text-sm font-medium text-gray-700 mb-2">
+                RRSP Balance
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-rrsp"
+                  value={rrspBalance}
+                  onChange={(e) => setRrspBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Registered Retirement Savings Plan - Tax-deferred growth
+              </p>
+            </div>
+
+            {/* TFSA */}
+            <div>
+              <label htmlFor="partner-tfsa" className="block text-sm font-medium text-gray-700 mb-2">
+                TFSA Balance
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-tfsa"
+                  value={tfsaBalance}
+                  onChange={(e) => setTfsaBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Tax-Free Savings Account - Tax-free growth and withdrawals
+              </p>
+            </div>
+
+            {/* Non-Registered */}
+            <div>
+              <label htmlFor="partner-nonreg" className="block text-sm font-medium text-gray-700 mb-2">
+                Non-Registered Investments
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-nonreg"
+                  value={nonRegBalance}
+                  onChange={(e) => setNonRegBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Taxable investment accounts (stocks, bonds, mutual funds)
+              </p>
+            </div>
+
+            {/* Savings */}
+            <div>
+              <label htmlFor="partner-savings" className="block text-sm font-medium text-gray-700 mb-2">
+                Savings Account
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-savings"
+                  value={savingsBalance}
+                  onChange={(e) => setSavingsBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="500"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Regular bank savings or emergency fund
+              </p>
+            </div>
+
+            {/* RRIF */}
+            <div>
+              <label htmlFor="partner-rrif" className="block text-sm font-medium text-gray-700 mb-2">
+                RRIF Balance
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-rrif"
+                  value={rrifBalance}
+                  onChange={(e) => setRrifBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Registered Retirement Income Fund - Converted from RRSP
+              </p>
+            </div>
+
+            {/* LIRA */}
+            <div>
+              <label htmlFor="partner-lira" className="block text-sm font-medium text-gray-700 mb-2">
+                LIRA Balance
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-lira"
+                  value={liraBalance}
+                  onChange={(e) => setLiraBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Locked-In Retirement Account - From former employer pension
+              </p>
+            </div>
+
+            {/* Corporate */}
+            <div>
+              <label htmlFor="partner-corporate" className="block text-sm font-medium text-gray-700 mb-2">
+                Corporate Investment Account
+              </label>
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-2">
+                <p className="text-xs text-blue-800">
+                  <strong>For Business Owners:</strong> Include investments held within {partnerName}'s corporation.
+                  This helps us plan tax-efficient withdrawal strategies.
+                </p>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  id="partner-corporate"
+                  value={corporateBalance}
+                  onChange={(e) => setCorporateBalance(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-bold text-gray-900"
+                  placeholder="0.00"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Business investment accounts held in a corporation
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Save and Continue Button */}
+      <div className="mt-8">
+        <button
+          onClick={handleSave}
+          disabled={isLoading}
+          className="w-full px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+        >
+          {isLoading ? 'Saving...' : 'Save and Continue'}
+        </button>
+      </div>
+    </div>
+  );
+}

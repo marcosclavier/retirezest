@@ -24,11 +24,11 @@ export const simulationTooltips = {
 
     nonregACB: "Adjusted Cost Base - the original purchase price of your non-registered investments. Used to calculate capital gains. Typically 70-90% of current balance. Example: $120,000 for a $150,000 balance",
 
-    cppStartAge: "Age when you'll start receiving Canada Pension Plan benefits. Can start between age 60-70. Starting at 65 is standard. Example: 65",
+    cppStartAge: "Age when you'll start receiving Canada Pension Plan benefits. Can start between 60-70. Earlier = lower payments (36% reduction at 60), later = higher payments (42% increase at 70). Starting at 65 is standard. Example: 65",
 
     cppAnnualAmount: "Annual CPP benefit amount at the age you start. Maximum is about $17,500 (2025). Average is $10,000-$12,000. Calculate your estimate at canada.ca/cpp. Example: $15,000",
 
-    oasStartAge: "Age when you'll start receiving Old Age Security benefits. Can start between 65-70. Delaying increases benefits by 0.6% per month. Example: 65",
+    oasStartAge: "Age when you'll start receiving Old Age Security benefits. OAS starts at 65 minimum. Deferring to age 70 increases payments by 36% (0.6% per month). High-income retirees ($93,000+ in 2026) may face OAS clawback. Example: 65",
 
     oasAnnualAmount: "Annual OAS benefit amount at age 65. Maximum is about $8,900 (2025). Subject to clawback if income is too high. Example: $8,500",
 
@@ -79,18 +79,18 @@ export const simulationTooltips = {
 
     strategy: {
       label: "Tax-Efficient Withdrawal Strategy",
-      description: "Determines which accounts to withdraw from first to minimize lifetime taxes. Different strategies work better for different situations.",
+      description: "Determines which accounts to withdraw from first to minimize lifetime taxes and maximize government benefits. The right strategy can save tens of thousands in taxes over retirement.",
 
       options: {
-        minimizeIncome: "Recommended for most retirees. Minimizes taxable income each year to reduce taxes and preserve government benefits (OAS, GIS). Withdraws from TFSA and non-registered accounts first, delays RRSP/RRIF withdrawals.",
+        minimizeIncome: "Recommended for most retirees. Minimizes taxable income each year to reduce taxes and preserve government benefits (OAS, GIS). Withdraws from TFSA and non-registered accounts first, delays RRSP/RRIF withdrawals. Best for maximizing after-tax retirement income.",
 
-        tfsaLast: "Preserves TFSA for as long as possible while minimizing tax. Good if you want to maximize tax-free growth or leave TFSA to beneficiaries. Delays TFSA withdrawals.",
+        tfsaLast: "Preserves TFSA for as long as possible while minimizing tax. Good if you want to maximize tax-free growth or leave TFSA to beneficiaries. Delays TFSA withdrawals until other sources are exhausted.",
 
-        proportional: "Withdraws proportionally from all account types. Simpler but usually not tax-optimal. Good for understanding tax implications of each account type.",
+        proportional: "Withdraws proportionally from all account types. Simpler but usually not tax-optimal. Good for understanding tax implications of each account type. Not recommended for most situations.",
 
-        nonregFirst: "Exhausts non-registered accounts first, then registered accounts. Can be optimal in some cases but may trigger higher taxes initially.",
+        nonregFirst: "Exhausts non-registered accounts first, then registered accounts. Tax-efficient approach that withdraws from taxable accounts early to preserve tax-sheltered growth in TFSA/RRSP.",
 
-        rrspFirst: "Draws down RRSP/RRIF first to reduce future required minimum withdrawals. Rarely optimal but useful for comparison.",
+        rrspFirst: "Draws down RRSP/RRIF first to reduce future required minimum withdrawals. May be useful if you expect higher income later or want to minimize estate taxes. Rarely optimal for most retirees.",
       },
     },
 

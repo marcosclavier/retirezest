@@ -4,6 +4,7 @@ import { calculateProfileCompletion, getCompletionLevel, getNextAction } from '@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { DashboardFeedbackPanel } from '@/components/feedback/DashboardFeedbackPanel';
+import { GettingStartedChecklistWrapper } from '@/components/dashboard/GettingStartedChecklistWrapper';
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -107,6 +108,22 @@ export default async function DashboardPage() {
           Here's an overview of your retirement planning progress
         </p>
       </div>
+
+      {/* Getting Started Checklist - Show for incomplete profiles */}
+      {completion.percentage < 100 && (
+        <div className="mb-8">
+          <GettingStartedChecklistWrapper
+            profileData={{
+              hasPersonalInfo: !!user?.firstName && !!user?.dateOfBirth && !!user?.province,
+              hasAssets: hasAssets,
+              hasIncome: hasIncome,
+              hasExpenses: hasExpenses,
+              hasBenefits: !!user?.cppCalculatorUsedAt || !!user?.oasCalculatorUsedAt,
+              hasSimulation: !!lastSimulation,
+            }}
+          />
+        </div>
+      )}
 
       {/* Early Retirement CTA - Smart visibility logic */}
       {(() => {

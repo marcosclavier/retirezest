@@ -37,6 +37,15 @@ export interface RateLimitResult {
 
 export function rateLimit(config: RateLimitConfig) {
   return async (request: NextRequest): Promise<RateLimitResult> => {
+    // Bypass rate limiting in E2E test mode
+    if (process.env.E2E_TEST_MODE === 'true') {
+      return {
+        success: true,
+        remaining: config.maxRequests,
+        resetTime: Date.now() + config.windowMs
+      };
+    }
+
     // Get client identifier (IP address or forwarded IP)
     const forwarded = request.headers.get('x-forwarded-for');
     const ip = forwarded ? forwarded.split(',')[0].trim() :

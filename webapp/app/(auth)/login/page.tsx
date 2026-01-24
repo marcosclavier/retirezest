@@ -15,13 +15,20 @@ export default function LoginPage() {
   const [turnstileKey, setTurnstileKey] = useState(0); // Key to force Turnstile re-render
 
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
+  const isE2ETestMode = process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true';
 
   useEffect(() => {
+    // In E2E test mode, automatically set a fake token to allow login
+    if (isE2ETestMode) {
+      setTurnstileToken('e2e-test-token');
+      return;
+    }
+
     if (!turnstileSiteKey) {
       console.error('Turnstile site key is not configured');
       setError('Security verification is not properly configured. Please contact support.');
     }
-  }, [turnstileSiteKey]);
+  }, [turnstileSiteKey, isE2ETestMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,25 +128,28 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="flex justify-center my-4">
-            {turnstileSiteKey ? (
-              <Turnstile
-                key={turnstileKey}
-                siteKey={turnstileSiteKey}
-                onSuccess={(token) => setTurnstileToken(token)}
-                onError={() => setTurnstileToken(null)}
-                onExpire={() => setTurnstileToken(null)}
-                options={{
-                  theme: 'light',
-                  size: 'normal',
-                }}
-              />
-            ) : (
-              <div className="text-sm text-red-600">
-                Security verification configuration missing. Please refresh the page.
-              </div>
-            )}
-          </div>
+          {/* Hide Turnstile in E2E test mode */}
+          {!isE2ETestMode && (
+            <div className="flex justify-center my-4">
+              {turnstileSiteKey ? (
+                <Turnstile
+                  key={turnstileKey}
+                  siteKey={turnstileSiteKey}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => setTurnstileToken(null)}
+                  onExpire={() => setTurnstileToken(null)}
+                  options={{
+                    theme: 'light',
+                    size: 'normal',
+                  }}
+                />
+              ) : (
+                <div className="text-sm text-red-600">
+                  Security verification configuration missing. Please refresh the page.
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"

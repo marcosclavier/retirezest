@@ -26,7 +26,7 @@ import { edgeCaseScenarios } from './fixtures/simulation-data';
  */
 
 test.describe('Simulation Edge Cases and Error Scenarios', () => {
-  // Setup: Login before each test
+  // Setup: Login before each test (E2E_TEST_MODE bypasses rate limiting)
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
     await page.fill('input[type="email"]', 'test@example.com');
@@ -62,7 +62,7 @@ test.describe('Simulation Edge Cases and Error Scenarios', () => {
 
     if (hasWarnings > 0) {
       console.log('Insufficient Assets Warning:', warningText);
-      expect(warningText).toContain('insufficient' || 'underfunded' || 'depleted');
+      expect(warningText).toMatch(/insufficient|underfunded|depleted/i);
     }
 
     // Get results
@@ -183,7 +183,7 @@ test.describe('Simulation Edge Cases and Error Scenarios', () => {
 
       // Get warning text
       const warningText = await page.locator('text=not supported').first().textContent();
-      expect(warningText).toContain('not supported' || 'Saskatchewan');
+      expect(warningText).toMatch(/not supported|Saskatchewan/i);
 
       // Verify mapped to supported province
       const provinceValue = await page.locator('#province').textContent();
@@ -279,7 +279,7 @@ test.describe('Simulation Edge Cases and Error Scenarios', () => {
 
     // Verify error message mentions timeout
     const errorText = await page.locator('[role="alert"]').textContent();
-    expect(errorText?.toLowerCase()).toContain('timeout' || 'failed' || 'error');
+    expect(errorText?.toLowerCase()).toMatch(/timeout|failed|error/);
 
     await takeStrategyScreenshot(page, 'api-timeout', 'error');
 
@@ -343,7 +343,7 @@ test.describe('Simulation Edge Cases and Error Scenarios', () => {
     if (errorVisible) {
       const errorText = await page.locator('[role="alert"]').first().textContent();
       console.log('Invalid Input Error:', errorText);
-      expect(errorText?.toLowerCase()).toContain('invalid' || 'negative' || 'error');
+      expect(errorText?.toLowerCase()).toMatch(/invalid|negative|error/);
     }
 
     await takeStrategyScreenshot(page, 'invalid-input', 'error');

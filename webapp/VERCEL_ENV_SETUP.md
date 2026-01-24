@@ -1,9 +1,10 @@
 # Vercel Environment Variables Setup
 
-## ✅ Webhook Secret Received
-```
-whsec_diihzeGDVpkG8Ii3l7vtWrC1HAy1DFX2
-```
+## ✅ All Required Values Collected
+
+**Date:** January 21, 2026
+**Product:** Monthly Premium (`prod_TpoXjnDCWzVPRS`)
+**Price:** $5.99 CAD/month
 
 ## 📋 Required Environment Variables for Production
 
@@ -11,47 +12,37 @@ Go to **Vercel Dashboard** → **retirezest project** → **Settings** → **Env
 
 Set these variables for **Production** environment only:
 
-### 1. STRIPE_WEBHOOK_SECRET
+### 1. STRIPE_WEBHOOK_SECRET ✅
 ```
-whsec_diihzeGDVpkG8Ii3l7vtWrC1HAy1DFX2
+whsec_9gG73KlRNjAK0EdNAux5zUx2CRT6kUBp
 ```
-**Source:** From Stripe webhook endpoint you just created
+**Source:** From Stripe webhook endpoint (production webhook)
 
-### 2. STRIPE_SECRET_KEY
+### 2. STRIPE_SECRET_KEY ✅
 ```
 sk_live_...
 ```
-**Where to get it:**
-1. Go to [Stripe Dashboard](https://dashboard.stripe.com)
-2. Make sure toggle says "LIVE" (top right)
-3. Go to **Developers** → **API keys**
-4. Copy the **Secret key** (starts with `sk_live_`)
+**Source:** Stripe Dashboard (LIVE mode) → Developers → API keys → Secret key (starts with sk_live_)
 
-### 3. STRIPE_PREMIUM_MONTHLY_PRICE_ID
+### 3. STRIPE_PREMIUM_MONTHLY_PRICE_ID ✅
 ```
-price_...
+price_1Ss8ucRwcyFDEm4sMgINgKpv
 ```
-**Where to get it:**
-1. In Stripe Dashboard (LIVE mode)
-2. Go to **Products**
-3. Click on "RetireZest Premium" (or your premium product)
-4. Copy the **Price ID** from the monthly price (starts with `price_`)
+**Product:** Monthly Premium (prod_TpoXjnDCWzVPRS)
+**Price:** $5.99 CAD/month
 
-### 4. STRIPE_PREMIUM_YEARLY_PRICE_ID (if you have one)
+### 4. STRIPE_PREMIUM_YEARLY_PRICE_ID ✅
 ```
-price_...
+price_1Ss9CmRwcyFDEm4soU2ud91p
 ```
-**Where to get it:**
-- Same as above, but for yearly price
-- If you don't have a yearly price, you can skip this or set it to the same as monthly
+**Product:** Annual Premium Service (prod_TpoZJH3zjLRSAz)
+**Price:** $47.00 CAD/year (recurring subscription)
 
-### 5. NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY (if used in frontend)
+### 5. NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ✅
 ```
 pk_live_...
 ```
-**Where to get it:**
-1. Stripe Dashboard (LIVE mode) → **Developers** → **API keys**
-2. Copy the **Publishable key** (starts with `pk_live_`)
+**Source:** Stripe Dashboard (LIVE mode) → Developers → API keys → Publishable key (starts with pk_live_)
 
 ---
 
@@ -79,9 +70,9 @@ pk_live_...
 
 ## ✅ Checklist
 
-- [ ] Get `sk_live_...` from Stripe Dashboard
-- [ ] Get `price_...` ID from Stripe Products
-- [ ] Add all 4-5 environment variables in Vercel (Production only)
+- [x] Get `sk_live_...` from Stripe Dashboard
+- [x] Get `price_...` ID from Stripe Products
+- [ ] **→ Add all environment variables in Vercel (Production only)** ← YOU ARE HERE
 - [ ] Redeploy application (without cache)
 - [ ] Test subscription cancellation
 - [ ] Verify webhook event succeeded in Stripe

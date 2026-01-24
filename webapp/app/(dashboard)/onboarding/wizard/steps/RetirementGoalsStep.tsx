@@ -146,6 +146,34 @@ export default function RetirementGoalsStep({
           </div>
         )}
 
+        {/* Early Retirement Callout - Show if targeting retirement before 65 */}
+        {parseInt(targetRetirementAge, 10) < 65 && (
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-lg p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-purple-900 mb-2">Planning Early Retirement?</h4>
+                <p className="text-sm text-purple-800 mb-3">
+                  You've selected retirement at age {targetRetirementAge}. After completing this wizard, use our <strong>Early Retirement Calculator</strong> to:
+                </p>
+                <ul className="text-sm text-purple-800 space-y-1 mb-3 ml-4">
+                  <li>• See if early retirement at {targetRetirementAge} is financially feasible</li>
+                  <li>• Calculate exactly how much you need to save</li>
+                  <li>• Explore different retirement age scenarios</li>
+                  <li>• Get a personalized action plan</li>
+                </ul>
+                <p className="text-xs text-purple-700">
+                  💡 We'll remind you to check the Early Retirement Calculator after you finish setup
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Government Benefits Information */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
           <h3 className="font-semibold text-blue-900 mb-3 flex items-center">

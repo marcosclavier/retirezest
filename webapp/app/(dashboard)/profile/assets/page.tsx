@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { TooltipHelp } from '@/components/ui/tooltip-help';
 
 interface Asset {
   id: string;
@@ -266,7 +267,13 @@ export default function AssetsPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Account Type *</label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Account Type *</label>
+                  <TooltipHelp
+                    content="TFSA: Tax-free growth and withdrawals. RRSP: Tax-deferred growth, taxed on withdrawal. RRIF: Required at age 71. Non-Reg: Taxable investment accounts."
+                    learnMoreUrl="/help"
+                  />
+                </div>
                 <select
                   value={formData.type}
                   onChange={(e) => {
@@ -320,9 +327,15 @@ export default function AssetsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Expected Return Rate (% per year)
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Expected Return Rate (% per year)
+                  </label>
+                  <TooltipHelp
+                    content="Historical average: TFSA/RRSP 5-7%, GICs 3-5%, Savings 1-2%. Conservative portfolios: 4-5%, Balanced: 6-7%, Aggressive: 7-9%."
+                    learnMoreUrl="/help"
+                  />
+                </div>
                 <input
                   type="number"
                   step="0.01"
@@ -338,9 +351,17 @@ export default function AssetsPage() {
               {/* Only show contribution room for TFSA and RRSP */}
               {(formData.type === 'tfsa' || formData.type === 'rrsp') && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Contribution Room ($)
-                  </label>
+                  <div className="flex items-center gap-2 mb-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Contribution Room ($)
+                    </label>
+                    <TooltipHelp
+                      content={formData.type === 'tfsa'
+                        ? '2026 TFSA limit is $7,000. Find your total contribution room on your CRA My Account.'
+                        : 'RRSP room is 18% of previous year income (max $31,560 for 2026). Check your Notice of Assessment or CRA My Account.'}
+                      learnMoreUrl="/help"
+                    />
+                  </div>
                   <input
                     type="number"
                     step="0.01"
