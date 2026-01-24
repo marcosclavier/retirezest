@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { LogoutButton } from '@/components/LogoutButton';
 import { MobileNav } from '@/components/MobileNav';
 import { DesktopNav } from '@/components/DesktopNav';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { VerificationBanner } from '@/components/VerificationBanner';
 import { prisma } from '@/lib/prisma';
 
@@ -68,6 +69,7 @@ export default async function DashboardLayout({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumbs />
         {children}
       </main>
     </div>
