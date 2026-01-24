@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SimulationResponse } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, RotateCcw, Sparkles } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { TrendingUp, TrendingDown, RotateCcw, Sparkles, Play, Loader2, AlertCircle } from 'lucide-react';
 
 interface WhatIfSlidersProps {
   result: SimulationResponse;
@@ -20,17 +21,6 @@ export interface ScenarioAdjustments {
   oasStartAgeShift: number;    // -5 to +5 years (but min 65, max 70)
 }
 
-/**
- * WhatIfSliders - Interactive sliders for exploring retirement scenarios
- *
- * Features:
- * - Adjust spending level (50% to 150% of current plan)
- * - Shift retirement age (-5 to +5 years)
- * - Adjust CPP start age (60-70)
- * - Adjust OAS start age (65-70)
- * - Real-time impact preview (estimated without full simulation)
- * - Reset to original values
- */
 export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) {
   const [adjustments, setAdjustments] = useState<ScenarioAdjustments>({
     spendingMultiplier: 1.0,
@@ -40,6 +30,9 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [whatIfResult, setWhatIfResult] = useState<SimulationResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Original values from simulation
   const originalRetirementAge = result.household_input?.p1.start_age || 65;
@@ -51,66 +44,28 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
   const newCppAge = Math.max(60, Math.min(70, originalCppAge + adjustments.cppStartAgeShift));
   const newOasAge = Math.max(65, Math.min(70, originalOasAge + adjustments.oasStartAgeShift));
 
-  // Estimated impact calculations (simplified, client-side estimates)
-  const estimateImpact = () => {
-    if (!result.summary) return null;
-
-    const baseHealthScore = Math.round((result.summary.success_rate || 0) * 100);
-    const baseFinalEstate = result.summary.final_estate_after_tax;
-
-    // Impact factors (simplified estimates)
-    let healthScoreChange = 0;
-    let estateChange = 0;
-
-    // Spending impact: reducing spending improves outcomes
-    const spendingImpact = (1.0 - adjustments.spendingMultiplier) * 10; // ±10 points per 10% change
-    healthScoreChange += spendingImpact;
-    estateChange += (baseFinalEstate * (1.0 - adjustments.spendingMultiplier)) * 0.5;
-
-    // Retirement age impact: delaying retirement helps
-    const retirementImpact = adjustments.retirementAgeShift * 3; // +3 points per year delayed
-    healthScoreChange += retirementImpact;
-    estateChange += adjustments.retirementAgeShift * 25000; // Rough estimate
-
-    // CPP delay impact: up to 42% more at 70 vs 65
-    const cppDelayYears = Math.max(0, adjustments.cppStartAgeShift);
-    const cppImpact = cppDelayYears * 1.5; // +1.5 points per year delayed
-    healthScoreChange += cppImpact;
-    estateChange += cppDelayYears * 10000;
-
-    // OAS delay impact: up to 36% more at 70 vs 65
-    const oasDelayYears = Math.max(0, adjustments.oasStartAgeShift);
-    const oasImpact = oasDelayYears * 1.2; // +1.2 points per year delayed
-    healthScoreChange += oasImpact;
-    estateChange += oasDelayYears * 8000;
-
-    const estimatedHealthScore = Math.min(100, Math.max(0, baseHealthScore + healthScoreChange));
-    const estimatedEstate = Math.max(0, baseFinalEstate + estateChange);
-
-    return {
-      healthScoreChange: Math.round(healthScoreChange),
-      estimatedHealthScore: Math.round(estimatedHealthScore),
-      estateChange: Math.round(estateChange),
-      estimatedEstate: Math.round(estimatedEstate),
-    };
-  };
-
-  const impact = estimateImpact();
-
-  // Update parent component when adjustments change
-  useEffect(() => {
-    const hasAnyChanges =
+  // Check if adjustments have been made
+  const checkHasChanges = () => {
+    return (
       adjustments.spendingMultiplier !== 1.0 ||
       adjustments.retirementAgeShift !== 0 ||
       adjustments.cppStartAgeShift !== 0 ||
-      adjustments.oasStartAgeShift !== 0;
+      adjustments.oasStartAgeShift !== 0
+    );
+  };
 
-    setHasChanges(hasAnyChanges);
+  const handleAdjustmentChange = (field: keyof ScenarioAdjustments, value: number) => {
+    const newAdjustments = { ...adjustments, [field]: value };
+    setAdjustments(newAdjustments);
+    setHasChanges(checkHasChanges());
 
-    if (onScenarioChange && hasAnyChanges) {
-      onScenarioChange(adjustments);
+    // Clear previous What-If result when adjustments change
+    setWhatIfResult(null);
+
+    if (onScenarioChange) {
+      onScenarioChange(newAdjustments);
     }
-  }, [adjustments, onScenarioChange]);
+  };
 
   const handleReset = () => {
     setAdjustments({
@@ -119,11 +74,65 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
       cppStartAgeShift: 0,
       oasStartAgeShift: 0,
     });
+    setHasChanges(false);
+    setWhatIfResult(null);
+    setError(null);
+  };
+
+  const handleRunScenario = async () => {
+    if (!result.household_input) {
+      setError('No household input available');
+      return;
+    }
+
+    setIsRunning(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/simulation/what-if', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          household: result.household_input,
+          adjustments,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to run What-If scenario');
+      }
+
+      if (data.success) {
+        setWhatIfResult(data);
+      } else {
+        setError(data.message || 'Simulation failed');
+      }
+    } catch (err) {
+      console.error('What-If scenario error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to run What-If scenario');
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   if (!result.summary || !result.household_input) {
     return null;
   }
+
+  const baseHealthScore = Math.round((result.summary.success_rate || 0) * 100);
+  const baseFinalEstate = result.summary.final_estate_after_tax;
+
+  const whatIfHealthScore = whatIfResult?.summary
+    ? Math.round((whatIfResult.summary.success_rate || 0) * 100)
+    : null;
+  const whatIfFinalEstate = whatIfResult?.summary?.final_estate_after_tax || null;
+
+  const healthScoreChange = whatIfHealthScore !== null ? whatIfHealthScore - baseHealthScore : null;
+  const estateChange = whatIfFinalEstate !== null ? whatIfFinalEstate - baseFinalEstate : null;
 
   return (
     <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
@@ -141,7 +150,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
           )}
         </div>
         <CardDescription>
-          Explore how changes to your plan would impact your retirement health score
+          Explore how changes to your plan would impact your retirement
         </CardDescription>
       </CardHeader>
 
@@ -159,7 +168,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
           <Slider
             value={[adjustments.spendingMultiplier * 100]}
             onValueChange={(values) =>
-              setAdjustments({ ...adjustments, spendingMultiplier: values[0] / 100 })
+              handleAdjustmentChange('spendingMultiplier', values[0] / 100)
             }
             min={50}
             max={150}
@@ -188,7 +197,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
           <Slider
             value={[adjustments.retirementAgeShift + 5]}
             onValueChange={(values) =>
-              setAdjustments({ ...adjustments, retirementAgeShift: values[0] - 5 })
+              handleAdjustmentChange('retirementAgeShift', values[0] - 5)
             }
             min={0}
             max={10}
@@ -217,7 +226,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
           <Slider
             value={[adjustments.cppStartAgeShift + 5]}
             onValueChange={(values) =>
-              setAdjustments({ ...adjustments, cppStartAgeShift: values[0] - 5 })
+              handleAdjustmentChange('cppStartAgeShift', values[0] - 5)
             }
             min={0}
             max={10}
@@ -246,7 +255,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
           <Slider
             value={[adjustments.oasStartAgeShift + 5]}
             onValueChange={(values) =>
-              setAdjustments({ ...adjustments, oasStartAgeShift: values[0] - 5 })
+              handleAdjustmentChange('oasStartAgeShift', values[0] - 5)
             }
             min={0}
             max={5}
@@ -262,39 +271,96 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
           </p>
         </div>
 
-        {/* Impact Summary */}
-        {hasChanges && impact && (
+        {/* Run Scenario Button */}
+        {hasChanges && (
+          <div className="pt-4">
+            <Button
+              onClick={handleRunScenario}
+              disabled={isRunning}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              size="lg"
+            >
+              {isRunning ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Running Scenario...
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-4 w-4" />
+                  Run What-If Scenario
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <Alert className="border-red-300 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-900">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Results Comparison */}
+        {whatIfResult && whatIfResult.summary && (
           <div className="mt-6 p-4 bg-white rounded-lg border-2 border-blue-200">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              {impact.healthScoreChange >= 0 ? (
+            <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              {healthScoreChange !== null && healthScoreChange >= 0 ? (
                 <TrendingUp className="h-4 w-4 text-green-600" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-red-600" />
               )}
-              Estimated Impact
+              Comparison: Original vs What-If
             </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Health Score:</span>
-                <span className={`text-sm font-medium ${impact.healthScoreChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {impact.estimatedHealthScore}
-                  <span className="text-xs ml-1">
-                    ({impact.healthScoreChange >= 0 ? '+' : ''}{impact.healthScoreChange})
-                  </span>
-                </span>
+
+            {/* Health Score Comparison */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <div className="text-xs text-gray-600 mb-1">Original</div>
+                <div className="text-2xl font-bold text-gray-900">{baseHealthScore}</div>
+                <div className="text-xs text-gray-600">Health Score</div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Final Estate:</span>
-                <span className={`text-sm font-medium ${impact.estateChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${Math.round(impact.estimatedEstate / 1000)}K
-                  <span className="text-xs ml-1">
-                    ({impact.estateChange >= 0 ? '+' : ''}{Math.round(impact.estateChange / 1000)}K)
-                  </span>
-                </span>
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-xs text-blue-600 mb-1">What-If</div>
+                <div className="text-2xl font-bold text-blue-900">{whatIfHealthScore}</div>
+                <div className="text-xs text-blue-600">
+                  {healthScoreChange !== null && (
+                    <span className={healthScoreChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      ({healthScoreChange >= 0 ? '+' : ''}{healthScoreChange})
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <p className="text-xs text-gray-600 mt-3 italic">
-              These are simplified estimates. Run a new simulation for precise results.
+
+            {/* Final Estate Comparison */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <div className="text-xs text-gray-600 mb-1">Original</div>
+                <div className="text-lg font-bold text-gray-900">
+                  ${Math.round(baseFinalEstate / 1000)}K
+                </div>
+                <div className="text-xs text-gray-600">Final Estate</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-xs text-blue-600 mb-1">What-If</div>
+                <div className="text-lg font-bold text-blue-900">
+                  ${whatIfFinalEstate !== null ? Math.round(whatIfFinalEstate / 1000) : 0}K
+                </div>
+                <div className="text-xs text-blue-600">
+                  {estateChange !== null && (
+                    <span className={estateChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      ({estateChange >= 0 ? '+' : ''}{Math.round(estateChange / 1000)}K)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 mt-4 italic">
+              Real simulation results with full tax calculations and asset management.
             </p>
           </div>
         )}
