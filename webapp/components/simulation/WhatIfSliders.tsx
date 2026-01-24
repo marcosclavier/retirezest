@@ -341,19 +341,19 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <div className="text-xs text-gray-600 mb-1">Original</div>
                 <div className="text-lg font-bold text-gray-900">
-                  ${Math.round(baseFinalEstate / 1000)}K
+                  ${Math.round(baseFinalEstate).toLocaleString()}
                 </div>
                 <div className="text-xs text-gray-600">Final Estate</div>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600 mb-1">What-If</div>
                 <div className="text-lg font-bold text-blue-900">
-                  ${whatIfFinalEstate !== null ? Math.round(whatIfFinalEstate / 1000) : 0}K
+                  ${whatIfFinalEstate !== null ? Math.round(whatIfFinalEstate).toLocaleString() : '0'}
                 </div>
                 <div className="text-xs text-blue-600">
                   {estateChange !== null && (
                     <span className={estateChange >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      ({estateChange >= 0 ? '+' : ''}{Math.round(estateChange / 1000)}K)
+                      ({estateChange >= 0 ? '+' : ''}{Math.round(estateChange).toLocaleString()})
                     </span>
                   )}
                 </div>

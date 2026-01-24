@@ -47,7 +47,7 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
     const endAge = result.household_input?.end_age || 95;
     insights.push({
       type: 'success',
-      text: `Your assets will last to age ${endAge}${summary.final_estate_after_tax > 50000 ? ` with $${Math.round(summary.final_estate_after_tax / 1000)}K remaining` : ''}`
+      text: `Your assets will last to age ${endAge}${summary.final_estate_after_tax > 50000 ? ` with $${Math.round(summary.final_estate_after_tax / 1000).toLocaleString()}K remaining` : ''}`
     });
   } else if (summary.years_funded) {
     const shortfall = (summary.years_simulated || 0) - summary.years_funded;
@@ -99,7 +99,7 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
   if (summary.final_estate_after_tax > 200000 && summary.success_rate >= 0.9) {
     insights.push({
       type: 'info',
-      text: `You may be able to spend $${Math.round((summary.final_estate_after_tax * 0.3) / 1000)}K more and still leave an estate`
+      text: `You may be able to spend $${Math.round((summary.final_estate_after_tax * 0.3) / 1000).toLocaleString()}K more and still leave an estate`
     });
   }
 
