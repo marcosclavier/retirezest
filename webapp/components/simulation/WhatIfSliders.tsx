@@ -166,7 +166,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
             step={5}
             className="w-full"
           />
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-700">
             {adjustments.spendingMultiplier < 1.0
               ? `Reduce spending by ${Math.round((1.0 - adjustments.spendingMultiplier) * 100)}%`
               : adjustments.spendingMultiplier > 1.0
@@ -195,7 +195,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
             step={1}
             className="w-full"
           />
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-700">
             {adjustments.retirementAgeShift > 0
               ? `Retire ${adjustments.retirementAgeShift} year${adjustments.retirementAgeShift !== 1 ? 's' : ''} later`
               : adjustments.retirementAgeShift < 0
@@ -224,7 +224,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
             step={1}
             className="w-full"
           />
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-700">
             {adjustments.cppStartAgeShift > 0
               ? `Delay CPP by ${adjustments.cppStartAgeShift} year${adjustments.cppStartAgeShift !== 1 ? 's' : ''} for ${Math.round(adjustments.cppStartAgeShift * 8.4)}% higher payments`
               : adjustments.cppStartAgeShift < 0
@@ -253,7 +253,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
             step={1}
             className="w-full"
           />
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-700">
             {adjustments.oasStartAgeShift > 0
               ? `Delay OAS by ${adjustments.oasStartAgeShift} year${adjustments.oasStartAgeShift !== 1 ? 's' : ''} for ${Math.round(adjustments.oasStartAgeShift * 7.2)}% higher payments`
               : adjustments.oasStartAgeShift < 0
@@ -275,7 +275,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
             </h4>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Health Score:</span>
+                <span className="text-sm text-gray-700">Health Score:</span>
                 <span className={`text-sm font-medium ${impact.healthScoreChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {impact.estimatedHealthScore}
                   <span className="text-xs ml-1">
@@ -284,7 +284,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Final Estate:</span>
+                <span className="text-sm text-gray-700">Final Estate:</span>
                 <span className={`text-sm font-medium ${impact.estateChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   ${Math.round(impact.estimatedEstate / 1000)}K
                   <span className="text-xs ml-1">
@@ -293,7 +293,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
                 </span>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-3 italic">
+            <p className="text-xs text-gray-600 mt-3 italic">
               These are simplified estimates. Run a new simulation for precise results.
             </p>
           </div>
