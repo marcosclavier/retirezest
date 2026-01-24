@@ -94,6 +94,7 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           household: result.household_input,
           adjustments,

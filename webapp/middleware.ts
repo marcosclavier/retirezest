@@ -70,6 +70,7 @@ const CSRF_EXEMPT_ROUTES = [
   '/api/auth/logout',
   '/api/csrf',
   '/api/health',
+  '/api/simulation/what-if', // What-If scenarios don't modify database
 ];
 
 export async function middleware(request: NextRequest) {
