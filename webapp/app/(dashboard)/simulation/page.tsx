@@ -28,6 +28,7 @@ import { FloatingCTA } from '@/components/simulation/FloatingCTA';
 import { SimulationWizard } from '@/components/simulation/SimulationWizard';
 import { UpgradeModal } from '@/components/modals/UpgradeModal';
 import { PostSimulationFeedbackModal } from '@/components/feedback/PostSimulationFeedbackModal';
+import { StaleDataAlert } from '@/components/simulation/StaleDataAlert';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -86,6 +87,8 @@ export default function SimulationPage() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [hasShownFeedback, setHasShownFeedback] = useState(false);
   const [isWizardMode, setIsWizardMode] = useState(false);
+  const [lastProfileUpdate, setLastProfileUpdate] = useState<Date | null>(null);
+  const [lastSimulationLoad, setLastSimulationLoad] = useState<Date | null>(null);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -875,6 +878,16 @@ export default function SimulationPage() {
           </Alert>
         )}
 
+        {/* Stale Data Alert - Phase 2.4: Smart Refresh Prompts */}
+        {lastProfileUpdate && lastSimulationLoad && (
+          <StaleDataAlert
+            lastProfileUpdate={lastProfileUpdate}
+            lastSimulationLoad={lastSimulationLoad}
+            onRefresh={handleReloadFromProfile}
+            isRefreshing={prefillLoading}
+          />
+        )}
+
         {/* API Health Warning */}
         {apiHealthy === false && (
           <Alert variant="destructive">
@@ -1155,17 +1168,17 @@ export default function SimulationPage() {
         />
       ) : (
         <>
-          {/* Tabs for Input and Results */}
+          {/* Tabs for Input and Results - Desktop only, hidden on mobile */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+        <TabsList className="hidden md:grid w-full grid-cols-2 max-w-md mx-auto">
           <TabsTrigger value="input">Input</TabsTrigger>
           <TabsTrigger value="results" disabled={!result}>
             Results
           </TabsTrigger>
         </TabsList>
 
-        {/* Input Tab */}
-        <TabsContent value="input" className="space-y-6">
+        {/* Input Tab - Desktop: Tab content, Mobile: Always visible */}
+        <TabsContent value="input" className="md:space-y-6 space-y-6 md:data-[state=inactive]:hidden">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Form Area */}
             <div className="lg:col-span-2 space-y-6">
@@ -1233,8 +1246,16 @@ export default function SimulationPage() {
           </div>
         </TabsContent>
 
-        {/* Results Tab */}
-        <TabsContent value="results" className="space-y-6">
+        {/* Results Tab - Desktop: Tab content, Mobile: Always visible below input */}
+        <TabsContent value="results" className="md:space-y-6 space-y-6 md:data-[state=inactive]:hidden">
+          {/* Mobile: Section header when results exist */}
+          {result && (
+            <div className="md:hidden">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 pt-6 border-t-2 border-gray-200">
+                Your Results
+              </h2>
+            </div>
+          )}
           {/* Quick Start Disclaimer */}
           {isQuickStart && result && (
             <Alert className="bg-blue-50 border-blue-200">
@@ -1250,11 +1271,12 @@ export default function SimulationPage() {
             <>
               {/* Health Score Card - Prominent Position */}
               {result.success && result.summary && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                  {/* Mobile: Health score first for immediate impact */}
+                  <div className="lg:col-span-1 order-1 lg:order-1">
                     <HealthScoreCard summary={result.summary} />
                   </div>
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-2 order-2 lg:order-2">
                     <ResultsDashboard
                       result={result}
                       isPremium={isPremium}
@@ -1287,10 +1309,11 @@ export default function SimulationPage() {
                 <div className="space-y-6">
                   <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>Visualizations</h2>
 
-                  {/* Portfolio and Spending Charts */}
+                  {/* Portfolio Chart - Full width, optimized for all screens */}
                   <PortfolioChart yearByYear={result.year_by_year} />
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Tax and Spending Charts - Stack on mobile, side-by-side on desktop */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <TaxChart yearByYear={result.year_by_year} />
                     <SpendingChart yearByYear={result.year_by_year} />
                   </div>
@@ -1298,13 +1321,15 @@ export default function SimulationPage() {
                   {/* Additional Charts from chart_data */}
                   {result.chart_data?.data_points && result.chart_data.data_points.length > 0 && (
                     <>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Government Benefits and Withdrawals - Stack on mobile */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                         <GovernmentBenefitsChart
                           chartData={result.chart_data.data_points}
                           reinvestNonregDist={result.household_input?.reinvest_nonreg_dist ?? true}
                         />
                         <WithdrawalsBySourceChart chartData={result.chart_data.data_points} />
                       </div>
+                      {/* Income Composition - Full width */}
                       <IncomeCompositionChart chartData={result.chart_data.data_points} />
                     </>
                   )}
@@ -1329,8 +1354,8 @@ export default function SimulationPage() {
         </>
       )}
 
-      {/* Floating CTA - only show on input tab */}
-      {activeTab === 'input' && (
+      {/* Floating CTA - Show on all devices, always visible on mobile (continuous scroll) */}
+      {!isWizardMode && (
         <FloatingCTA
           household={household}
           includePartner={includePartner}
