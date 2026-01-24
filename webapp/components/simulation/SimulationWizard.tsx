@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Check, Sparkles } from 'lucide-react';
 import { PersonInput, HouseholdInput } from '@/lib/types/simulation';
+import { FieldTooltip } from '@/components/ui/FieldTooltip';
+import { TOOLTIPS } from '@/lib/tooltips';
 
 interface SimulationWizardProps {
   household: HouseholdInput;
@@ -202,9 +204,12 @@ export function SimulationWizard({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Plan Until Age
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Plan Until Age
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.GENERAL.LIFE_EXPECTANCY} />
+                </div>
                 <input
                   type="number"
                   value={household.end_age || 95}
@@ -231,9 +236,12 @@ export function SimulationWizard({
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  TFSA Balance
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    TFSA Balance
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.ACCOUNT.TFSA} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -255,9 +263,12 @@ export function SimulationWizard({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  RRSP Balance
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    RRSP Balance
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.ACCOUNT.RRSP} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -281,9 +292,12 @@ export function SimulationWizard({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  RRIF Balance
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    RRIF Balance
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.ACCOUNT.RRIF} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -307,9 +321,12 @@ export function SimulationWizard({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Non-Registered Balance
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Non-Registered Balance
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.ACCOUNT.NON_REGISTERED} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -365,9 +382,12 @@ export function SimulationWizard({
               <h4 className="font-semibold text-gray-900 text-lg">Canada Pension Plan (CPP)</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    CPP Start Age
-                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      CPP Start Age
+                    </label>
+                    <FieldTooltip content={TOOLTIPS.BENEFITS.CPP_START_AGE} />
+                  </div>
                   <input
                     type="number"
                     value={household.p1.cpp_start_age || 65}
@@ -386,9 +406,12 @@ export function SimulationWizard({
                   <p className="text-xs text-gray-500 mt-1">Age 60-70 (65 is standard)</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Annual CPP Amount
-                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Annual CPP Amount
+                    </label>
+                    <FieldTooltip content={TOOLTIPS.BENEFITS.CPP_AMOUNT} />
+                  </div>
                   <div className="relative">
                     <span className="absolute left-3 top-2 text-gray-500">$</span>
                     <input
@@ -417,9 +440,12 @@ export function SimulationWizard({
               <h4 className="font-semibold text-gray-900 text-lg">Old Age Security (OAS)</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    OAS Start Age
-                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      OAS Start Age
+                    </label>
+                    <FieldTooltip content={TOOLTIPS.BENEFITS.OAS_START_AGE} />
+                  </div>
                   <input
                     type="number"
                     value={household.p1.oas_start_age || 65}
@@ -438,9 +464,12 @@ export function SimulationWizard({
                   <p className="text-xs text-gray-500 mt-1">Age 65-70 (65 is standard)</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Annual OAS Amount
-                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Annual OAS Amount
+                    </label>
+                    <FieldTooltip content={TOOLTIPS.BENEFITS.OAS_AMOUNT} />
+                  </div>
                   <div className="relative">
                     <span className="absolute left-3 top-2 text-gray-500">$</span>
                     <input
@@ -480,9 +509,12 @@ export function SimulationWizard({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Go-Go Years Spending (Annual)
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Go-Go Years Spending (Annual)
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.SPENDING.GO_GO_PHASE} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -516,9 +548,12 @@ export function SimulationWizard({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slow-Go Years Spending (Annual)
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Slow-Go Years Spending (Annual)
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.SPENDING.SLOW_GO_PHASE} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
@@ -552,9 +587,12 @@ export function SimulationWizard({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  No-Go Years Spending (Annual)
-                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    No-Go Years Spending (Annual)
+                  </label>
+                  <FieldTooltip content={TOOLTIPS.SPENDING.NO_GO_PHASE} />
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-500">$</span>
                   <input
