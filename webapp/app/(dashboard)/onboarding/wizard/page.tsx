@@ -13,6 +13,7 @@ import JointAssetsStep from './steps/JointAssetsStep';
 import IncomeStep from './steps/IncomeStep';
 import PartnerIncomeStep from './steps/PartnerIncomeStep';
 import ExpensesStep from './steps/ExpensesStep';
+import RealEstateStep from './steps/RealEstateStep';
 import RetirementGoalsStep from './steps/RetirementGoalsStep';
 import ReviewStep from './steps/ReviewStep';
 
@@ -36,7 +37,7 @@ export default function OnboardingWizard() {
   const includePartner = formData.includePartner || false;
 
   // Calculate total steps and steps array dynamically
-  const TOTAL_STEPS = includePartner ? 10 : 6;
+  const TOTAL_STEPS = includePartner ? 11 : 7;
 
   const steps = useMemo(() => {
     if (includePartner) {
@@ -46,20 +47,22 @@ export default function OnboardingWizard() {
         { id: 'assets', name: 'Your Assets', description: 'Your accounts and savings', completed: currentStep > 3 },
         { id: 'partner-assets', name: 'Partner Assets', description: 'Partner accounts', completed: currentStep > 4 },
         { id: 'joint-assets', name: 'Joint Assets', description: 'Shared accounts', completed: currentStep > 5 },
-        { id: 'income', name: 'Your Income', description: 'Your income sources', completed: currentStep > 6 },
-        { id: 'partner-income', name: 'Partner Income', description: 'Partner income', completed: currentStep > 7 },
-        { id: 'expenses', name: 'Expenses', description: 'Household expenses', completed: currentStep > 8 },
-        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 9 },
-        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 10 },
+        { id: 'real-estate', name: 'Real Estate', description: 'Properties and home equity', completed: currentStep > 6 },
+        { id: 'income', name: 'Your Income', description: 'Your income sources', completed: currentStep > 7 },
+        { id: 'partner-income', name: 'Partner Income', description: 'Partner income', completed: currentStep > 8 },
+        { id: 'expenses', name: 'Expenses', description: 'Household expenses', completed: currentStep > 9 },
+        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 10 },
+        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 11 },
       ];
     } else {
       return [
         { id: 'personal', name: 'Personal Info', description: 'Your basic information', completed: currentStep > 1 },
         { id: 'assets', name: 'Assets', description: 'Your accounts and savings', completed: currentStep > 2 },
-        { id: 'income', name: 'Income', description: 'Current and future income', completed: currentStep > 3 },
-        { id: 'expenses', name: 'Expenses', description: 'Monthly and annual expenses', completed: currentStep > 4 },
-        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 5 },
-        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 6 },
+        { id: 'real-estate', name: 'Real Estate', description: 'Properties and home equity', completed: currentStep > 3 },
+        { id: 'income', name: 'Income', description: 'Current and future income', completed: currentStep > 4 },
+        { id: 'expenses', name: 'Expenses', description: 'Monthly and annual expenses', completed: currentStep > 5 },
+        { id: 'goals', name: 'Retirement Goals', description: 'CPP, OAS, and targets', completed: currentStep > 6 },
+        { id: 'review', name: 'Review', description: 'Review and finish setup', completed: currentStep > 7 },
       ];
     }
   }, [includePartner, currentStep]);
@@ -258,7 +261,7 @@ export default function OnboardingWizard() {
     };
 
     if (includePartner) {
-      // With partner: 10 steps
+      // With partner: 11 steps
       switch (currentStep) {
         case 1:
           return <PersonalInfoStep {...commonProps} />;
@@ -271,32 +274,36 @@ export default function OnboardingWizard() {
         case 5:
           return <JointAssetsStep {...commonProps} />;
         case 6:
-          return <IncomeStep {...commonProps} />;
+          return <RealEstateStep {...commonProps} />;
         case 7:
-          return <PartnerIncomeStep {...commonProps} />;
+          return <IncomeStep {...commonProps} />;
         case 8:
-          return <ExpensesStep {...commonProps} />;
+          return <PartnerIncomeStep {...commonProps} />;
         case 9:
-          return <RetirementGoalsStep {...commonProps} />;
+          return <ExpensesStep {...commonProps} />;
         case 10:
+          return <RetirementGoalsStep {...commonProps} />;
+        case 11:
           return <ReviewStep {...commonProps} onComplete={handleComplete} />;
         default:
           return null;
       }
     } else {
-      // Without partner: 6 steps
+      // Without partner: 7 steps
       switch (currentStep) {
         case 1:
           return <PersonalInfoStep {...commonProps} />;
         case 2:
           return <AssetsStep {...commonProps} />;
         case 3:
-          return <IncomeStep {...commonProps} />;
+          return <RealEstateStep {...commonProps} />;
         case 4:
-          return <ExpensesStep {...commonProps} />;
+          return <IncomeStep {...commonProps} />;
         case 5:
-          return <RetirementGoalsStep {...commonProps} />;
+          return <ExpensesStep {...commonProps} />;
         case 6:
+          return <RetirementGoalsStep {...commonProps} />;
+        case 7:
           return <ReviewStep {...commonProps} onComplete={handleComplete} />;
         default:
           return null;

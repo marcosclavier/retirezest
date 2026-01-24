@@ -92,6 +92,7 @@ model User {
   auditLogs         AuditLog[]
   userFeedback      UserFeedback[]
   savedSimulationScenarios SavedSimulationScenario[]
+  realEstateAssets  RealEstateAsset[]
 
   @@index([email])
   @@index([createdAt])
@@ -478,4 +479,50 @@ model SavedSimulationScenario {
   @@index([userId, isFavorite])
   @@index([createdAt])
   @@map("saved_simulation_scenarios")
+}
+
+model RealEstateAsset {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Property identification
+  propertyType      String    // "principal_residence", "rental", "vacation", "commercial"
+  address           String?
+  city              String?
+  province          String?
+
+  // Financial details
+  purchasePrice     Float
+  purchaseDate      DateTime
+  currentValue      Float
+  mortgageBalance   Float     @default(0)
+
+  // Rental property specifics
+  monthlyRentalIncome Float  @default(0)
+  monthlyExpenses   Float     @default(0)
+
+  // Ownership
+  owner             String    @default("person1") // "person1" | "person2" | "joint"
+  ownershipPercent  Float     @default(100)
+
+  // Principal residence designation
+  isPrincipalResidence Boolean @default(false)
+  principalResidenceYears Float @default(0)
+
+  // Retirement strategy
+  planToSell        Boolean   @default(false)
+  plannedSaleYear   Int?
+  plannedSalePrice  Float?
+  downsizeTo        Float?    // Amount to purchase smaller property
+
+  // Metadata
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([propertyType])
+  @@index([isPrincipalResidence])
+  @@map("real_estate_assets")
 }

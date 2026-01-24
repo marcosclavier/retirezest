@@ -50,6 +50,25 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Fetch all real estate assets
+    const realEstateAssets = await prisma.realEstateAsset.findMany({
+      where: { userId: session.userId },
+      select: {
+        propertyType: true,
+        currentValue: true,
+        mortgageBalance: true,
+        owner: true,
+        ownershipPercent: true,
+        monthlyRentalIncome: true,
+        isPrincipalResidence: true,
+        planToSell: true,
+        plannedSaleYear: true,
+        plannedSalePrice: true,
+        downsizeTo: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
     // Fetch all income sources (CPP, OAS, pension, rental, other)
     const incomeSources = await prisma.income.findMany({
       where: {
@@ -178,6 +197,31 @@ export async function GET(request: NextRequest) {
       rental_income_annual: number;
       other_income_annual: number;
     }>);
+
+    // Add rental income from real estate properties
+    realEstateAssets.forEach((property) => {
+      if (property.monthlyRentalIncome > 0) {
+        const owner = property.owner || 'person1';
+        const annualRentalIncome = property.monthlyRentalIncome * 12;
+        const ownershipShare = (property.ownershipPercent / 100) * annualRentalIncome;
+
+        // Initialize income object if it doesn't exist
+        if (!incomeByOwner[owner]) {
+          incomeByOwner[owner] = {
+            cpp_start_age: null,
+            cpp_annual_at_start: null,
+            oas_start_age: null,
+            oas_annual_at_start: null,
+            employer_pension_annual: 0,
+            rental_income_annual: 0,
+            other_income_annual: 0,
+          };
+        }
+
+        // Add property rental income to total
+        incomeByOwner[owner].rental_income_annual += ownershipShare;
+      }
+    });
 
     // Aggregate assets by type and owner
     const assetsByOwner = assets.reduce((acc, asset) => {
@@ -383,12 +427,22 @@ export async function GET(request: NextRequest) {
     // Use includePartner setting from profile (takes priority over marital status or assets)
     const includePartner = shouldIncludePartner;
 
+    // Calculate total real estate equity
+    const totalRealEstateEquity = realEstateAssets.reduce((sum, property) => {
+      const equity = property.currentValue - property.mortgageBalance;
+      const ownership = property.ownershipPercent / 100;
+      return sum + (equity * ownership);
+    }, 0);
+
     // Calculate total net worth (exclude tfsa_room as it's not a balance)
-    const totalNetWorth =
+    // Include real estate equity in total net worth
+    const totalLiquidNetWorth =
       person1Totals.tfsa_balance + person1Totals.rrsp_balance + person1Totals.rrif_balance +
       person1Totals.nonreg_balance + person1Totals.corporate_balance +
       person2Totals.tfsa_balance + person2Totals.rrsp_balance + person2Totals.rrif_balance +
       person2Totals.nonreg_balance + person2Totals.corporate_balance;
+
+    const totalNetWorth = totalLiquidNetWorth + totalRealEstateEquity;
 
     // Calculate total annual spending from expenses
     let totalAnnualSpending = 0;
@@ -491,13 +545,19 @@ export async function GET(request: NextRequest) {
       includePartner,
       hasAssets: assets.length > 0,
       hasPartnerAssets,
-      totalNetWorth,
+      totalNetWorth, // Total including real estate equity
+      totalLiquidNetWorth, // Investment accounts only (excludes real estate)
       lifeExpectancy: user?.lifeExpectancy || 95, // Planning horizon from profile
       totalAnnualSpending, // Total annual spending from expenses
       hasExpenses: expenses.length > 0,
       recommendedStrategy, // Smart default strategy based on user's profile
       spendingInflation: baselineScenario?.expenseInflationRate || 2.0, // Default 2%
       generalInflation: baselineScenario?.inflationRate || 2.0, // Default 2%
+      realEstate: {
+        assets: realEstateAssets,
+        totalEquity: totalRealEstateEquity,
+        hasProperties: realEstateAssets.length > 0,
+      },
     });
   } catch (error) {
     logger.error('Error fetching simulation prefill data', error, {

@@ -29,6 +29,7 @@ export function MobileNav() {
       subItems: [
         { href: '/profile', label: 'Personal Info' },
         { href: '/profile/assets', label: 'Assets' },
+        { href: '/profile/real-estate', label: 'Real Estate' },
         { href: '/profile/income', label: 'Income' },
         { href: '/profile/expenses', label: 'Expenses' },
         { href: '/profile/debts', label: 'Debts' },

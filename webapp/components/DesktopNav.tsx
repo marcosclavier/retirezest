@@ -67,6 +67,12 @@ export function DesktopNav() {
                 Assets
               </Link>
               <Link
+                href="/profile/real-estate"
+                className={dropdownLinkClasses(pathname === '/profile/real-estate')}
+              >
+                Real Estate
+              </Link>
+              <Link
                 href="/profile/income"
                 className={dropdownLinkClasses(pathname === '/profile/income')}
               >
