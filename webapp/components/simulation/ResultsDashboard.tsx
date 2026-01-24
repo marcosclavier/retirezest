@@ -18,6 +18,8 @@ import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart,
 import { RetirementReport } from '@/components/reports/RetirementReport';
 import { generatePDF } from '@/lib/reports/generatePDF';
 import { KeyInsightsCard } from '@/components/simulation/KeyInsightsCard';
+import { ResultsHeroSection } from '@/components/simulation/ResultsHeroSection';
+import { WhatIfSliders } from '@/components/simulation/WhatIfSliders';
 
 interface ResultsDashboardProps {
   result: SimulationResponse;
@@ -175,6 +177,14 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
         </Alert>
       )}
 
+      {/* Hero Section with Health Score */}
+      <ResultsHeroSection result={result} />
+
+      {/* What-If Sliders */}
+      <WhatIfSliders result={result} />
+
+      {/* Detailed Results Section */}
+      <div id="detailed-results">
       {/* PDF Export Button */}
       {result.summary && result.year_by_year && result.household_input && (
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
@@ -764,6 +774,7 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
           />
         </div>
       )}
+      </div>
     </div>
   );
 }
