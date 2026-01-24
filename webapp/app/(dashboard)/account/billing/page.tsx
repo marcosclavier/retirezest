@@ -168,15 +168,15 @@ export default function BillingPage() {
               <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                 <Calendar className="h-5 w-5 text-blue-600 flex-shrink-0" />
                 <div className="text-sm">
-                  <div className="font-medium">Billing Cycle</div>
-                  <div className="text-gray-600">Monthly or Yearly</div>
+                  <div className="font-medium text-gray-900">Billing Cycle</div>
+                  <div className="text-gray-700">Monthly or Yearly</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                 <CreditCard className="h-5 w-5 text-blue-600 flex-shrink-0" />
                 <div className="text-sm">
-                  <div className="font-medium">Payment Method</div>
-                  <div className="text-gray-600">Managed via Stripe</div>
+                  <div className="font-medium text-gray-900">Payment Method</div>
+                  <div className="text-gray-700">Managed via Stripe</div>
                 </div>
               </div>
             </div>

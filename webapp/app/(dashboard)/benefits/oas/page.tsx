@@ -426,7 +426,7 @@ export default function OASCalculatorPage() {
                             : 'border-gray-200 bg-gray-50'
                         }`}
                       >
-                        <div className="text-sm font-medium text-gray-600">
+                        <div className="text-sm font-medium text-gray-700">
                           {months === 0
                             ? `Now (${currentAge})`
                             : `+${months / 12} yr${months / 12 > 1 ? 's' : ''} (${targetAge})`
