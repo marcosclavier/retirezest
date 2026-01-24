@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useDebouncedCallback } from '@/lib/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
@@ -80,15 +80,15 @@ export default function SimulationPage() {
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
   const [showSmartStart, setShowSmartStart] = useState(true);
-  const [showDetailedInputs, setShowDetailedInputs] = useState(false);
+  const [, setShowDetailedInputs] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'csv' | 'pdf' | 'export' | 'early-retirement' | 'general'>('general');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [hasShownFeedback, setHasShownFeedback] = useState(false);
   const [isWizardMode, setIsWizardMode] = useState(false);
-  const [lastProfileUpdate, setLastProfileUpdate] = useState<Date | null>(null);
-  const [lastSimulationLoad, setLastSimulationLoad] = useState<Date | null>(null);
+  const [lastProfileUpdate] = useState<Date | null>(null);
+  const [lastSimulationLoad] = useState<Date | null>(null);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -354,26 +354,6 @@ export default function SimulationPage() {
           'corp_cash_bucket',
           'corp_gic_bucket',
           'corp_invest_bucket',
-        ];
-
-        // Custom fields that should be preserved from localStorage if user modified them
-        const customFields = [
-          'cpp_start_age',
-          'cpp_annual_at_start',
-          'oas_start_age',
-          'oas_annual_at_start',
-          'y_nr_cash_interest',
-          'y_nr_gic_interest',
-          'y_nr_inv_total_return',
-          'y_nr_inv_elig_div',
-          'y_nr_inv_nonelig_div',
-          'y_nr_inv_capg',
-          'y_nr_inv_roc_pct',
-          'y_corp_cash_interest',
-          'y_corp_gic_interest',
-          'y_corp_inv_total_return',
-          'y_corp_inv_elig_div',
-          'y_corp_inv_capg',
         ];
 
         // Helper to merge person data: use fresh assets, preserve custom settings
