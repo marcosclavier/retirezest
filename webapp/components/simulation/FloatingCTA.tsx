@@ -159,21 +159,22 @@ export function FloatingCTA({ household, includePartner, onRunSimulation, isLoad
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons - Enhanced for mobile touch */}
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={scrollToTop}
-              className="h-12 w-12 rounded-full shadow-lg border-2 border-gray-300 bg-white p-0"
+              className="h-14 w-14 min-h-[56px] min-w-[56px] rounded-full shadow-lg border-2 border-gray-300 bg-white p-0"
+              aria-label="Scroll to top"
             >
-              <ChevronUp className="h-5 w-5" />
+              <ChevronUp className="h-6 w-6" />
             </Button>
             <Button
               onClick={onRunSimulation}
               disabled={isLoading || progress < 30}
-              size="lg"
-              className="h-12 px-6 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              size="mobile"
+              className="min-h-[56px] rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-8"
             >
               <Play className="mr-2 h-5 w-5" />
               {isLoading ? 'Running...' : 'Run'}

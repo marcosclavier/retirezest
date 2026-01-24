@@ -22,14 +22,14 @@ export function Collapsible({ title, children, defaultOpen = false, description,
     )}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-blue-50 transition-colors rounded-t-lg"
+        className="w-full px-4 md:px-4 py-4 md:py-3 flex items-center justify-between text-left hover:bg-blue-50 active:bg-blue-100 transition-colors rounded-t-lg min-h-[48px] touch-manipulation"
       >
-        <div className="flex-1 flex items-center gap-2">
+        <div className="flex-1 flex items-center gap-3 md:gap-2">
           {isComplete && (
-            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+            <CheckCircle2 className="h-6 w-6 md:h-5 md:w-5 text-green-600 flex-shrink-0" />
           )}
           <div>
-            <h3 className="text-base font-semibold text-blue-700">{title}</h3>
+            <h3 className="text-base md:text-base font-semibold text-blue-700">{title}</h3>
             {description && (
               <p className="text-sm text-gray-600 mt-1">{description}</p>
             )}
@@ -37,7 +37,7 @@ export function Collapsible({ title, children, defaultOpen = false, description,
         </div>
         <ChevronDown
           className={cn(
-            'h-5 w-5 text-gray-600 transition-transform duration-200 flex-shrink-0',
+            'h-6 w-6 md:h-5 md:w-5 text-gray-600 transition-transform duration-200 flex-shrink-0 ml-2',
             isOpen && 'transform rotate-180'
           )}
         />
