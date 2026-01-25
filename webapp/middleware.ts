@@ -71,6 +71,7 @@ const CSRF_EXEMPT_ROUTES = [
   '/api/csrf',
   '/api/health',
   '/api/simulation/what-if', // What-If scenarios don't modify database
+  '/api/simulation/run', // Simulation runs are authenticated but don't modify critical user data
 ];
 
 export async function middleware(request: NextRequest) {
