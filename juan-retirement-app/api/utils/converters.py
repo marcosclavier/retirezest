@@ -24,56 +24,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def map_api_strategy_to_internal(api_strategy: str) -> str:
-    """
-    Map API strategy names to internal simulation engine strategy names.
-
-    API uses kebab-case names like "corporate-optimized".
-    Simulation engine uses descriptive names like "Corp->RRIF->NonReg->TFSA".
-
-    Args:
-        api_strategy: Strategy name from API request
-
-    Returns:
-        Strategy name for internal simulation engine
-    """
-    strategy_mapping = {
-        "corporate-optimized": "Corp->RRIF->NonReg->TFSA",
-        "minimize-income": "GIS-Optimized (NonReg->Corp->TFSA->RRIF)",  # FIX: Use GIS-optimized order to minimize taxable income
-        "rrif-splitting": "RRIF->Corp->NonReg->TFSA",
-        "capital-gains-optimized": "NonReg->RRIF->Corp->TFSA",
-        "tfsa-first": "TFSA->Corp->RRIF->NonReg",
-        "balanced": "Balanced",
-        "rrif-frontload": "RRIF-Frontload",
-        "manual": "NonReg->RRIF->Corp->TFSA",  # Default order
-    }
-
-    return strategy_mapping.get(api_strategy, api_strategy)
-
-
-def get_strategy_display_name(strategy: str) -> str:
-    """
-    Get user-friendly display name for a strategy.
-
-    Args:
-        strategy: Strategy identifier (kebab-case or internal name)
-
-    Returns:
-        User-friendly display name
-    """
-    display_names = {
-        'corporate-optimized': 'Corporate Optimized',
-        'minimize-income': 'Minimize Income',
-        'rrif-splitting': 'RRIF Splitting',
-        'capital-gains-optimized': 'Capital Gains Optimized',
-        'tfsa-first': 'TFSA First',
-        'balanced': 'Balanced',
-        'rrif-frontload': 'RRIF Frontload',
-        'manual': 'Manual',
-    }
-    return display_names.get(strategy, strategy.replace('-', ' ').title())
-
-
 def api_person_to_internal(api_person: PersonInput) -> Person:
     """
     Convert API PersonInput to internal Person dataclass.
@@ -89,12 +39,7 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         Person dataclass for simulation engine
     """
 
-    # Debug logging - see what API is sending
-    print(f"🔄 Converting {api_person.name} to internal model:")
-    print(f"   API balances: TFSA=${api_person.tfsa_balance:,.0f}, RRIF=${api_person.rrif_balance:,.0f}, "
-          f"RRSP=${api_person.rrsp_balance:,.0f}, NonReg=${api_person.nonreg_balance:,.0f}, Corp=${api_person.corporate_balance:,.0f}")
-
-    person = Person(
+    return Person(
         name=api_person.name,
         start_age=api_person.start_age,
 
@@ -103,11 +48,6 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         cpp_annual_at_start=api_person.cpp_annual_at_start,
         oas_start_age=api_person.oas_start_age,
         oas_annual_at_start=api_person.oas_annual_at_start,
-        employer_pension_annual=api_person.employer_pension_annual,
-
-        # Other income sources
-        rental_income_annual=api_person.rental_income_annual,
-        other_income_annual=api_person.other_income_annual,
 
         # Account balances
         tfsa_balance=api_person.tfsa_balance,
@@ -156,14 +96,19 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         # TFSA room
         tfsa_room_start=api_person.tfsa_room_start,
         tfsa_room_annual_growth=api_person.tfsa_room_annual_growth,
+
+        # Real estate - rental income and property details
+        rental_income_annual=api_person.rental_income_annual,
+        has_primary_residence=api_person.has_primary_residence,
+        primary_residence_value=api_person.primary_residence_value,
+        primary_residence_purchase_price=api_person.primary_residence_purchase_price,
+        primary_residence_mortgage=api_person.primary_residence_mortgage,
+        primary_residence_monthly_payment=api_person.primary_residence_monthly_payment,
+        plan_to_downsize=api_person.plan_to_downsize,
+        downsize_year=api_person.downsize_year,
+        downsize_new_home_cost=api_person.downsize_new_home_cost,
+        downsize_is_principal_residence=api_person.downsize_is_principal_residence,
     )
-
-    # Debug logging - verify Person object has correct balances
-    print(f"✅ Created Person object for {person.name}:")
-    print(f"   Person balances: TFSA=${person.tfsa_balance:,.0f}, RRIF=${person.rrif_balance:,.0f}, "
-          f"RRSP=${person.rrsp_balance:,.0f}, NonReg=${person.nonreg_balance:,.0f}, Corp=${person.corporate_balance:,.0f}")
-
-    return person
 
 
 def api_household_to_internal(
@@ -181,16 +126,7 @@ def api_household_to_internal(
         Household dataclass for simulation engine
     """
 
-    # FIX: GIS-Optimized strategy REQUIRES nonreg distributions to be available for spending
-    # Override reinvest_nonreg_dist to False when using minimize-income strategy
-    # This ensures the ~$40-50k/year in nonreg distributions can be used to cover spending
-    # without creating gaps in the plan
-    reinvest_setting = api_household.reinvest_nonreg_dist
-    if api_household.strategy == "minimize-income":
-        reinvest_setting = False
-        logger.info(f"🔧 GIS-Optimized strategy: Forcing reinvest_nonreg_dist=False to make distributions available for spending")
-
-    household = Household(
+    return Household(
         p1=api_person_to_internal(api_household.p1),
         p2=api_person_to_internal(api_household.p2),
 
@@ -198,7 +134,7 @@ def api_household_to_internal(
         start_year=api_household.start_year,
         end_age=api_household.end_age,
 
-        strategy=map_api_strategy_to_internal(api_household.strategy),
+        strategy=api_household.strategy,
 
         spending_go_go=api_household.spending_go_go,
         go_go_end_age=api_household.go_go_end_age,
@@ -211,19 +147,11 @@ def api_household_to_internal(
 
         gap_tolerance=api_household.gap_tolerance,
         tfsa_contribution_each=api_household.tfsa_contribution_each,
-        reinvest_nonreg_dist=reinvest_setting,  # FIX: Use overridden setting for GIS strategy
+        reinvest_nonreg_dist=api_household.reinvest_nonreg_dist,
         income_split_rrif_fraction=api_household.income_split_rrif_fraction,
-        income_split_pension_fraction=api_household.income_split_pension_fraction,
         hybrid_rrif_topup_per_person=api_household.hybrid_rrif_topup_per_person,
         stop_on_fail=api_household.stop_on_fail,
     )
-
-    # Debug: Verify Household has Person data
-    print(f"🏠 Household created:")
-    print(f"   p1.name={household.p1.name}, p1.tfsa_balance=${household.p1.tfsa_balance:,.0f}")
-    print(f"   p2.name={household.p2.name}, p2.tfsa_balance=${household.p2.tfsa_balance:,.0f}")
-
-    return household
 
 
 def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
@@ -241,44 +169,6 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
 
     for _, row in df.iterrows():
         try:
-            # Calculate spending components first for reuse
-            government_benefits = float(
-                row.get('cpp_p1', 0) + row.get('cpp_p2', 0) +
-                row.get('oas_p1', 0) + row.get('oas_p2', 0) +
-                row.get('gis_p1', 0) + row.get('gis_p2', 0)
-            )
-
-            withdrawals = float(
-                row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0)) +
-                row.get('withdraw_tfsa_p2', row.get('tfsa_withdrawal_p2', 0)) +
-                row.get('withdraw_rrif_p1', row.get('rrif_withdrawal_p1', 0)) +
-                row.get('withdraw_rrif_p2', row.get('rrif_withdrawal_p2', 0)) +
-                row.get('withdraw_nonreg_p1', row.get('nonreg_withdrawal_p1', 0)) +
-                row.get('withdraw_nonreg_p2', row.get('nonreg_withdrawal_p2', 0)) +
-                row.get('withdraw_corp_p1', row.get('corporate_withdrawal_p1', 0)) +
-                row.get('withdraw_corp_p2', row.get('corporate_withdrawal_p2', 0))
-            )
-
-            taxes = float(row.get('total_tax_after_split', row.get('total_tax', 0)))
-
-            # NonReg distributions: Always include for transparency in reports
-            # When reinvest_nonreg_dist=False, these count as spending cash
-            # When reinvest_nonreg_dist=True, these are reinvested and not available for spending
-            nonreg_distributions = float(row.get('nr_dist_tot', 0))
-            reinvest_nonreg = row.get('reinvest_nonreg_dist', False)  # Default False to match Household model
-
-            # Only count distributions as spending cash when NOT reinvesting
-            distributions_as_cash = 0 if reinvest_nonreg else nonreg_distributions
-
-            # CRITICAL: TFSA contributions are SEPARATE from spending
-            # They are funded by withdrawals but should NOT count toward "spending met"
-            # spending_met should only reflect actual household spending, not savings
-            tfsa_contributions = float(row.get('contrib_tfsa_p1', 0)) + float(row.get('contrib_tfsa_p2', 0))
-
-            spending_need = float(row.get('spend_target_after_tax', row.get('spending_need', 0)))
-            spending_met = government_benefits + withdrawals + distributions_as_cash - taxes - tfsa_contributions
-            spending_gap = max(0, spending_need - spending_met)  # Gap can't be negative
-
             results.append(YearResult(
                 year=int(row.get('year', 0)),
                 age_p1=int(row.get('age_p1', 0)),
@@ -293,17 +183,6 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 gis_p2=float(row.get('gis_p2', 0)),
                 oas_clawback_p1=float(row.get('oas_clawback_p1', 0)),
                 oas_clawback_p2=float(row.get('oas_clawback_p2', 0)),
-
-                # Employer pension
-                employer_pension_p1=float(row.get('employer_pension_p1', 0)),
-                employer_pension_p2=float(row.get('employer_pension_p2', 0)),
-
-                # NonReg passive distributions
-                nonreg_distributions=nonreg_distributions,
-
-                # TFSA contributions (NonReg -> TFSA transfers)
-                tfsa_contribution_p1=float(row.get('contrib_tfsa_p1', 0)),
-                tfsa_contribution_p2=float(row.get('contrib_tfsa_p2', 0)),
 
                 # Withdrawals (handle various column naming conventions)
                 tfsa_withdrawal_p1=float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))),
@@ -331,17 +210,17 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 taxable_income_p2=float(row.get('taxable_inc_p2', row.get('taxable_income_p2', 0))),
                 total_tax_p1=float(row.get('tax_after_split_p1', row.get('tax_p1', 0))),
                 total_tax_p2=float(row.get('tax_after_split_p2', row.get('tax_p2', 0))),
-                total_tax=taxes,
+                total_tax=float(row.get('total_tax_after_split', row.get('total_tax', 0))),
                 marginal_rate_p1=float(row.get('marginal_rate_p1', row.get('marginal_p1', 0))),
                 marginal_rate_p2=float(row.get('marginal_rate_p2', row.get('marginal_p2', 0))),
 
-                # Spending - Now properly calculated
-                spending_need=spending_need,
-                spending_met=spending_met,
-                spending_gap=spending_gap,
+                # Spending
+                spending_need=float(row.get('spend_target_after_tax', row.get('spending_need', 0))),
+                spending_met=float(row.get('spend_target_after_tax', row.get('spending_met', 0))),
+                spending_gap=float(row.get('underfunded_after_tax', row.get('spending_gap', 0))),
 
-                # Status - Success when spending needs are met (not underfunded)
-                plan_success=not bool(row.get('is_underfunded', False)),
+                # Status
+                plan_success=bool(row.get('plan_success', row.get('success', True))),
                 failure_reason=row.get('failure_reason', None),
             ))
         except Exception as e:
@@ -381,17 +260,7 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         )
 
     years_simulated = len(df)
-
-    # Count years where spending needs were actually met (underfunded < $1)
-    # This is more accurate than just checking if net_worth > 0
-    if 'underfunded_after_tax' in df.columns:
-        years_funded = len(df[df['underfunded_after_tax'] < 1.0])
-    elif 'net_worth_end' in df.columns:
-        # Fallback to old method if underfunded column not available
-        years_funded = len(df[df['net_worth_end'] > 0])
-    else:
-        years_funded = years_simulated
-
+    years_funded = len(df[df['net_worth_end'] > 0]) if 'net_worth_end' in df.columns else years_simulated
     success_rate = years_funded / years_simulated if years_simulated > 0 else 0.0
 
     # === Government Benefits Totals ===
@@ -500,21 +369,14 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
     final_estate_after_tax = float(final_row.get('after_tax_legacy', final_estate_gross * 0.75))
 
     # Tax rates
-    # Calculate effective tax rate based on total taxable income
-    # First try using taxable_inc columns, then fall back to total income+withdrawals
     total_income_cols = ['taxable_inc_p1', 'taxable_inc_p2']
     if all(col in df.columns for col in total_income_cols):
-        total_taxable_income = df[total_income_cols].sum().sum()
-        if total_taxable_income > 0:
-            avg_effective_tax_rate = total_tax_paid / total_taxable_income
-        elif total_income_and_withdrawals > 0:
-            # Fallback: use total income + withdrawals if taxable income is zero
-            avg_effective_tax_rate = total_tax_paid / total_income_and_withdrawals
-        else:
-            avg_effective_tax_rate = 0.0
-    elif total_income_and_withdrawals > 0:
-        # Fallback: columns don't exist, use total income + withdrawals
-        avg_effective_tax_rate = total_tax_paid / total_income_and_withdrawals
+        total_income = df[total_income_cols].sum().sum()
+        avg_effective_tax_rate = (
+            (total_tax_paid / total_income)
+            if total_income > 0
+            else 0.0
+        )
     else:
         avg_effective_tax_rate = 0.0
 
@@ -524,36 +386,10 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         else 0.0
     )
 
-    # Find first failure - check for underfunded years
-    # Note: The DataFrame has 'is_underfunded', not 'plan_success'
-    # plan_success is only computed during YearResult conversion
-    if 'is_underfunded' in df.columns:
-        # is_underfunded=True means the plan FAILED that year
-        failure_rows = df[df['is_underfunded'] == True]
-        first_failure_year = (
-            int(failure_rows.iloc[0]['year'])
-            if len(failure_rows) > 0
-            else None
-        )
-    elif 'plan_success' in df.columns:
-        # Fallback for older data that might have plan_success directly
-        failure_rows = df[~df['plan_success']]
-        first_failure_year = (
-            int(failure_rows.iloc[0]['year'])
-            if len(failure_rows) > 0
-            else None
-        )
-    elif 'success' in df.columns:
-        # Another fallback
-        failure_rows = df[~df['success']]
-        first_failure_year = (
-            int(failure_rows.iloc[0]['year'])
-            if len(failure_rows) > 0
-            else None
-        )
-    elif 'net_worth_end' in df.columns:
-        # Last resort: use net_worth_end to detect first failure
-        failure_rows = df[df['net_worth_end'] <= 0]
+    # Find first failure
+    failure_col = 'plan_success' if 'plan_success' in df.columns else 'success'
+    if failure_col in df.columns:
+        failure_rows = df[df[failure_col] == False]
         first_failure_year = (
             int(failure_rows.iloc[0]['year'])
             if len(failure_rows) > 0
@@ -574,35 +410,6 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         else:
             total_underfunded_years = 0
             total_underfunding = 0
-
-    # === Correct Final Estate for Failed Plans ===
-    # IMPORTANT: If plan failed before end_age, we need to understand WHY
-    # The simulation continues after failure - two scenarios:
-    # 1. Assets depleted - net worth declining to 0
-    # 2. Withdrawal constraints - assets remain/grow but can't be accessed efficiently
-    if first_failure_year is not None:
-        # Find the LAST row (end of simulation) to get actual final balances
-        final_row = df.iloc[-1]
-        final_net_worth = float(final_row.get('net_worth_end', 0))
-        final_estate_gross = final_net_worth
-        final_estate_after_tax = float(final_row.get('after_tax_legacy', final_estate_gross * 0.75))
-
-        # For failed plans, recalculate net worth trend
-        # If net worth is GROWING despite failure, this indicates a withdrawal strategy problem
-        # (assets exist but can't be accessed efficiently to meet spending needs)
-        if initial_net_worth > 0:
-            net_worth_change_pct = ((final_net_worth - initial_net_worth) / initial_net_worth) * 100
-
-            # For failed plans, categorize the trend to help identify the issue
-            if net_worth_change_pct > 5:
-                # Growing net worth + failed plan = withdrawal strategy problem
-                net_worth_trend = "Growing (Withdrawal Issue)"
-            elif net_worth_change_pct < -5:
-                # Declining net worth + failed plan = asset depletion (expected)
-                net_worth_trend = "Declining (Asset Depletion)"
-            else:
-                # Stable net worth + failed plan = withdrawal constraints
-                net_worth_trend = "Stable (Access Limited)"
 
     # === Health Score Calculation ===
     health_score, health_rating, health_criteria = calculate_health_score(
@@ -670,19 +477,12 @@ def calculate_health_score(
     """
     Calculate plan health score based on 5 criteria (20 points each, total 100).
 
-    Uses graduated scoring to fairly credit partial success rather than all-or-nothing.
-
     Criteria:
-    1. Funding Coverage (0-20 points): Graduated based on % of years funded
-       - 100%: 20pts, 90%: 18pts, 75%: 15pts, 60%: 12pts, 40%: 8pts, <40%: 4pts
-    2. Estate Preservation (0-20 points): Graduated based on final vs initial net worth
-       - 100%+: 20pts, 75%: 16pts, 50%: 12pts, 25%: 8pts, <25%: 4pts
-    3. Tax Efficiency (0-20 points): Graduated based on average effective tax rate
-       - <15%: 20pts, <20%: 16pts, <25%: 12pts, <30%: 8pts, ≥30%: 4pts
-    4. Benefit Optimization (0-20 points): Graduated based on annual government benefits
-       - $50K+: 20pts, $35K: 16pts, $20K: 12pts, $10K: 8pts, <$10K: 4pts
-    5. Risk Management (0-20 points): Graduated based on longevity risk coverage
-       - 95%+: 20pts, 85%: 16pts, 70%: 12pts, 50%: 8pts, <50%: 4pts
+    1. Full period funded (100%)? - 20 points
+    2. Adequate funding reserve (80%+ of period)? - 20 points
+    3. Good tax efficiency (<25% rate)? - 20 points
+    4. Government benefits available? - 20 points
+    5. Growing net worth? - 20 points
 
     Returns:
         tuple: (score 0-100, rating string, criteria dict)
@@ -690,143 +490,56 @@ def calculate_health_score(
     criteria = {}
     score = 0
 
-    # Criterion 1: Funding Coverage (graduated scoring)
-    # More nuanced scoring that credits partial success
-    if success_rate >= 1.0:
-        criterion_score = 20  # Excellent: 100% funded
-        status = 'Excellent'
-    elif success_rate >= 0.90:
-        criterion_score = 18  # Very Good: 90-99% funded
-        status = 'Good'
-    elif success_rate >= 0.75:
-        criterion_score = 15  # Good: 75-89% funded
-        status = 'Good'
-    elif success_rate >= 0.60:
-        criterion_score = 12  # Fair: 60-74% funded
-        status = 'Fair'
-    elif success_rate >= 0.40:
-        criterion_score = 8   # At Risk: 40-59% funded
-        status = 'At Risk'
-    else:
-        criterion_score = 4   # Poor: <40% funded
-        status = 'Poor'
-
-    criteria['funding_coverage'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': status,
-        'description': f'Plan funds {success_rate*100:.0f}% of retirement years'
+    # Criterion 1: Full period funded
+    # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
+    full_period_funded = bool(success_rate >= 1.0)
+    criteria['full_period_funded'] = {
+        'met': full_period_funded,
+        'points': 20 if full_period_funded else 0,
+        'description': 'Plan funds all years'
     }
-    score += criterion_score
+    if full_period_funded:
+        score += 20
 
-    # Criterion 2: Estate Preservation (graduated scoring)
-    # Rewards maintaining assets even with partial funding
-    estate_preservation_ratio = final_net_worth / initial_net_worth if initial_net_worth > 0 else 0
-
-    if estate_preservation_ratio >= 1.0:
-        criterion_score = 20  # Excellent: Estate grew
-        status = 'Excellent'
-    elif estate_preservation_ratio >= 0.75:
-        criterion_score = 16  # Good: Estate retained 75%+
-        status = 'Good'
-    elif estate_preservation_ratio >= 0.50:
-        criterion_score = 12  # Fair: Estate retained 50%+
-        status = 'Fair'
-    elif estate_preservation_ratio >= 0.25:
-        criterion_score = 8   # At Risk: Estate retained 25%+
-        status = 'At Risk'
-    else:
-        criterion_score = 4   # Poor: Estate depleted
-        status = 'Poor'
-
-    criteria['estate_preservation'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': status,
-        'description': f'Estate retains {estate_preservation_ratio*100:.0f}% of initial value'
+    # Criterion 2: Adequate funding reserve (80%+ of period)
+    adequate_reserve = bool(success_rate >= 0.80)
+    criteria['adequate_reserve'] = {
+        'met': adequate_reserve,
+        'points': 20 if adequate_reserve else 0,
+        'description': 'Plan funds 80%+ of years'
     }
-    score += criterion_score
+    if adequate_reserve:
+        score += 20
 
-    # Criterion 3: Tax Efficiency (graduated scoring)
-    if avg_effective_tax_rate < 0.15:
-        criterion_score = 20  # Excellent: <15% tax
-        status = 'Excellent'
-    elif avg_effective_tax_rate < 0.20:
-        criterion_score = 16  # Good: 15-20% tax
-        status = 'Good'
-    elif avg_effective_tax_rate < 0.25:
-        criterion_score = 12  # Fair: 20-25% tax
-        status = 'Fair'
-    elif avg_effective_tax_rate < 0.30:
-        criterion_score = 8   # At Risk: 25-30% tax
-        status = 'At Risk'
-    else:
-        criterion_score = 4   # Poor: >30% tax
-        status = 'Poor'
-
-    criteria['tax_efficiency'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': status,
-        'description': f'Average tax rate: {avg_effective_tax_rate*100:.1f}%'
+    # Criterion 3: Good tax efficiency (<25% effective rate)
+    good_tax_efficiency = bool(avg_effective_tax_rate < 0.25)
+    criteria['good_tax_efficiency'] = {
+        'met': good_tax_efficiency,
+        'points': 20 if good_tax_efficiency else 0,
+        'description': 'Effective tax rate under 25%'
     }
-    score += criterion_score
+    if good_tax_efficiency:
+        score += 20
 
-    # Criterion 4: Government Benefits Optimization (graduated scoring)
-    # Rewards maximizing government benefits relative to contributions
-    # Assumes average retiree gets ~$1.5M in CPP/OAS over 30+ years
-    benefits_per_year = total_government_benefits / years_simulated if years_simulated > 0 else 0
-
-    if benefits_per_year >= 50000:
-        criterion_score = 20  # Excellent: High benefits ($50K+/year)
-        status = 'Excellent'
-    elif benefits_per_year >= 35000:
-        criterion_score = 16  # Good: Above average ($35-50K/year)
-        status = 'Good'
-    elif benefits_per_year >= 20000:
-        criterion_score = 12  # Fair: Average ($20-35K/year)
-        status = 'Fair'
-    elif benefits_per_year >= 10000:
-        criterion_score = 8   # At Risk: Below average ($10-20K/year)
-        status = 'At Risk'
-    else:
-        criterion_score = 4   # Poor: Minimal benefits (<$10K/year)
-        status = 'Poor'
-
-    criteria['benefit_optimization'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': status,
-        'description': f'Government benefits: ${benefits_per_year:,.0f}/year'
+    # Criterion 4: Government benefits available
+    has_benefits = bool(total_government_benefits > 0)
+    criteria['government_benefits'] = {
+        'met': has_benefits,
+        'points': 20 if has_benefits else 0,
+        'description': 'Receiving government benefits (CPP/OAS/GIS)'
     }
-    score += criterion_score
+    if has_benefits:
+        score += 20
 
-    # Criterion 5: Risk Management (graduated scoring based on funding volatility)
-    # This criterion assesses how well the plan manages longevity risk
-    # Higher success rates indicate better risk management
-    if success_rate >= 0.95:
-        criterion_score = 20  # Excellent: Very low risk
-        status = 'Excellent'
-    elif success_rate >= 0.85:
-        criterion_score = 16  # Good: Low risk
-        status = 'Good'
-    elif success_rate >= 0.70:
-        criterion_score = 12  # Fair: Moderate risk
-        status = 'Fair'
-    elif success_rate >= 0.50:
-        criterion_score = 8   # At Risk: High risk but viable
-        status = 'At Risk'
-    else:
-        criterion_score = 4   # Poor: Very high risk
-        status = 'Poor'
-
-    criteria['risk_management'] = {
-        'score': criterion_score,
-        'max_score': 20,
-        'status': status,
-        'description': f'Longevity risk: {100-success_rate*100:.0f}% of years underfunded'
+    # Criterion 5: Growing or stable net worth
+    growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+    criteria['growing_net_worth'] = {
+        'met': growing_net_worth,
+        'points': 20 if growing_net_worth else 0,
+        'description': 'Net worth maintained or growing'
     }
-    score += criterion_score
+    if growing_net_worth:
+        score += 20
 
     # Determine rating based on score
     if score >= 80:
@@ -997,39 +710,10 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         corp_p1 = float(row.get('withdraw_corp_p1', 0))
         corp_p2 = float(row.get('withdraw_corp_p2', 0))
 
-        # Get non-registered distributions (passive income)
-        nr_dist_p1 = float(
-            row.get('nr_interest_p1', 0) +
-            row.get('nr_elig_div_p1', 0) +
-            row.get('nr_nonelig_div_p1', 0) +
-            row.get('nr_capg_dist_p1', 0)
-        )
-        nr_dist_p2 = float(
-            row.get('nr_interest_p2', 0) +
-            row.get('nr_elig_div_p2', 0) +
-            row.get('nr_nonelig_div_p2', 0) +
-            row.get('nr_capg_dist_p2', 0)
-        )
-        nr_dist_total = float(row.get('nr_dist_tot', nr_dist_p1 + nr_dist_p2))
-
         total_p1 = rrif_p1 + nonreg_p1 + tfsa_p1 + corp_p1
         total_p2 = rrif_p2 + nonreg_p2 + tfsa_p2 + corp_p2
 
         spending_target = float(row.get('spend_target_after_tax', 0))
-
-        # Get government benefits
-        cpp_p1 = float(row.get('cpp_p1', 0))
-        cpp_p2 = float(row.get('cpp_p2', 0))
-        oas_p1 = float(row.get('oas_p1', 0))
-        oas_p2 = float(row.get('oas_p2', 0))
-
-        # Get other income sources
-        employer_pension_p1 = float(row.get('employer_pension_p1', 0))
-        employer_pension_p2 = float(row.get('employer_pension_p2', 0))
-        rental_income_p1 = float(row.get('rental_income_p1', 0))
-        rental_income_p2 = float(row.get('rental_income_p2', 0))
-        other_income_p1 = float(row.get('other_income_p1', 0))
-        other_income_p2 = float(row.get('other_income_p2', 0))
 
         plan.append(FiveYearPlanYear(
             year=int(row.get('year', 0)),
@@ -1038,16 +722,6 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             spending_target=spending_target,
             spending_target_p1=spending_target / 2,  # Split evenly for now
             spending_target_p2=spending_target / 2,
-            cpp_p1=cpp_p1,
-            cpp_p2=cpp_p2,
-            oas_p1=oas_p1,
-            oas_p2=oas_p2,
-            employer_pension_p1=employer_pension_p1,
-            employer_pension_p2=employer_pension_p2,
-            rental_income_p1=rental_income_p1,
-            rental_income_p2=rental_income_p2,
-            other_income_p1=other_income_p1,
-            other_income_p2=other_income_p2,
             rrif_withdrawal_p1=rrif_p1,
             rrif_withdrawal_p2=rrif_p2,
             nonreg_withdrawal_p1=nonreg_p1,
@@ -1056,9 +730,6 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             tfsa_withdrawal_p2=tfsa_p2,
             corp_withdrawal_p1=corp_p1,
             corp_withdrawal_p2=corp_p2,
-            nonreg_distributions_p1=nr_dist_p1,
-            nonreg_distributions_p2=nr_dist_p2,
-            nonreg_distributions_total=nr_dist_total,
             total_withdrawn_p1=total_p1,
             total_withdrawn_p2=total_p2,
             total_withdrawn=total_p1 + total_p2,
@@ -1200,9 +871,6 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         gis_total = float(row.get('gis_p1', 0)) + float(row.get('gis_p2', 0))
         government_benefits_total = cpp_total + oas_total + gis_total
 
-        # NonReg distributions (passive income)
-        nonreg_distributions = float(row.get('nr_dist_tot', 0))
-
         # Aggregate balances (combined P1+P2)
         rrif_balance = float(row.get('end_rrif_p1', 0)) + float(row.get('end_rrif_p2', 0))
         tfsa_balance = float(row.get('end_tfsa_p1', 0)) + float(row.get('end_tfsa_p2', 0))
@@ -1221,23 +889,10 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
 
         # Tax data
         total_tax = float(row.get('total_tax_after_split', row.get('total_tax', 0)))
-
-        # Calculate taxable income from various sources
-        # RRIF withdrawals are fully taxable
-        # Corporate withdrawals (dividends) are taxable
-        # Non-reg withdrawals have taxable capital gains (50% of gains)
-        # CPP and OAS are taxable
-        # Note: We approximate taxable income here since we don't have the exact taxable_inc columns
-        taxable_income = (
-            rrif_withdrawal +  # Fully taxable
-            corporate_withdrawal +  # Taxable as dividends
-            (nonreg_withdrawal * 0.5) +  # Approximate: 50% of withdrawal is taxable gain
-            cpp_total +  # Taxable
-            oas_total  # Taxable
-        )
+        taxable_income = float(row.get('taxable_inc_p1', 0)) + float(row.get('taxable_inc_p2', 0))
         effective_tax_rate = (total_tax / taxable_income * 100) if taxable_income > 0 else 0
 
-        # TFSA withdrawals and GIS are tax-free income
+        # TFSA withdrawals are tax-free income
         tax_free_income = tfsa_withdrawal + gis_total
 
         # Spending data
@@ -1261,7 +916,6 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
             oas_total=oas_total,
             gis_total=gis_total,
             government_benefits_total=government_benefits_total,
-            nonreg_distributions=nonreg_distributions,
             total_tax=total_tax,
             effective_tax_rate=effective_tax_rate,
             taxable_income=taxable_income,

@@ -11,17 +11,14 @@ Core Functions:
 
 from typing import Dict, List, Tuple, Optional
 import pandas as pd
-import logging
 from modules.models import Person, Household, TaxParams, YearResult
 from modules.config import get_tax_params, index_tax_params
 from modules.tax_engine import progressive_tax
 from modules.withdrawal_strategies import get_strategy, is_hybrid_strategy
 from modules.tax_optimizer import TaxOptimizer
 from modules.estate_tax_calculator import EstateCalculator
+from modules import real_estate
 from utils.helpers import clamp
-
-# Set up logging
-logger = logging.getLogger(__name__)
 
 
 def rrif_min_factor(age: int) -> float:
@@ -77,122 +74,6 @@ def rrif_minimum(balance: float, age: int) -> float:
     """
     factor = rrif_min_factor(age)
     return balance * factor
-
-
-def calculate_early_rrif_withdrawal(person: Person, age: int) -> float:
-    """
-    Calculate custom early RRIF/RRSP withdrawal for the year.
-
-    This allows users to specify custom withdrawals before age 71
-    (when mandatory minimums kick in). Useful for tax planning,
-    income splitting, and OAS clawback avoidance.
-
-    Args:
-        person (Person): Person with RRIF withdrawal settings.
-        age (int): Current age.
-
-    Returns:
-        float: Withdrawal amount for this year ($).
-
-    Examples:
-        >>> person = Person(name="Test", start_age=65)
-        >>> person.enable_early_rrif_withdrawal = True
-        >>> person.early_rrif_withdrawal_start_age = 65
-        >>> person.early_rrif_withdrawal_end_age = 70
-        >>> person.early_rrif_withdrawal_annual = 25000
-        >>> person.early_rrif_withdrawal_mode = "fixed"
-        >>> calculate_early_rrif_withdrawal(person, 67)
-        25000.0
-        >>> calculate_early_rrif_withdrawal(person, 72)
-        0.0
-    """
-    # Check if early withdrawals are enabled
-    if not getattr(person, 'enable_early_rrif_withdrawal', False):
-        return 0.0
-
-    # Check if age is within the specified range
-    start_age = getattr(person, 'early_rrif_withdrawal_start_age', 65)
-    end_age = getattr(person, 'early_rrif_withdrawal_end_age', 70)
-
-    if age < start_age or age > end_age:
-        return 0.0
-
-    # Check if person has RRSP/RRIF balance
-    rrsp_balance = getattr(person, 'rrsp_balance', 0.0)
-    rrif_balance = getattr(person, 'rrif_balance', 0.0)
-    total_rrif_balance = rrsp_balance + rrif_balance
-
-    if total_rrif_balance < 0.01:
-        return 0.0
-
-    # Get withdrawal mode
-    mode = getattr(person, 'early_rrif_withdrawal_mode', 'fixed')
-
-    if mode == 'fixed':
-        # Fixed amount per year
-        amount = getattr(person, 'early_rrif_withdrawal_annual', 20000.0)
-        # Don't withdraw more than available
-        return min(amount, total_rrif_balance)
-
-    elif mode == 'percentage':
-        # Percentage of balance
-        percentage = getattr(person, 'early_rrif_withdrawal_percentage', 5.0)
-        return total_rrif_balance * (percentage / 100.0)
-
-    else:
-        logger.warning(f"Unknown early RRIF withdrawal mode: {mode}")
-        return 0.0
-
-
-def validate_early_rrif_settings(person: Person) -> List[str]:
-    """
-    Validate early RRIF withdrawal settings.
-
-    Returns:
-        List[str]: List of validation errors (empty if valid).
-
-    Examples:
-        >>> person = Person(name="Test", start_age=65)
-        >>> person.enable_early_rrif_withdrawal = True
-        >>> person.early_rrif_withdrawal_start_age = 65
-        >>> person.early_rrif_withdrawal_end_age = 70
-        >>> person.early_rrif_withdrawal_mode = "fixed"
-        >>> validate_early_rrif_settings(person)
-        []
-    """
-    errors = []
-
-    if not getattr(person, 'enable_early_rrif_withdrawal', False):
-        return errors  # Not enabled, nothing to validate
-
-    # End age must be < 71 (when mandatory minimums start)
-    end_age = getattr(person, 'early_rrif_withdrawal_end_age', 70)
-    if end_age >= 71:
-        errors.append("Early RRIF withdrawal end age must be less than 71")
-
-    # Start age must be before end age
-    start_age = getattr(person, 'early_rrif_withdrawal_start_age', 65)
-    if start_age >= end_age:
-        errors.append("Early RRIF withdrawal start age must be before end age")
-
-    # Mode must be valid
-    mode = getattr(person, 'early_rrif_withdrawal_mode', 'fixed')
-    if mode not in ["fixed", "percentage"]:
-        errors.append(f"Invalid early RRIF withdrawal mode: {mode}")
-
-    # Percentage must be 0-100
-    if mode == "percentage":
-        percentage = getattr(person, 'early_rrif_withdrawal_percentage', 5.0)
-        if percentage < 0 or percentage > 100:
-            errors.append("Early RRIF withdrawal percentage must be between 0 and 100")
-
-    # Fixed amount must be positive
-    if mode == "fixed":
-        amount = getattr(person, 'early_rrif_withdrawal_annual', 20000.0)
-        if amount < 0:
-            errors.append("Early RRIF withdrawal amount must be positive")
-
-    return errors
 
 
 def nonreg_distributions(person: Person) -> Dict[str, float]:
@@ -255,10 +136,6 @@ def nonreg_distributions(person: Person) -> Dict[str, float]:
         yield_elig_div = float(getattr(person, "y_nr_inv_elig_div", 0.02))
         yield_nonelig_div = float(getattr(person, "y_nr_inv_nonelig_div", 0.00))
         yield_capg = float(getattr(person, "y_nr_inv_capg", 0.02))
-
-        # Log balances and yields for debugging
-        logger.debug(f"  NonReg buckets - cash: ${cash_balance:,.0f}, gic: ${gic_balance:,.0f}, invest: ${invest_balance:,.0f}")
-        logger.debug(f"  NonReg yields - cash: {yield_cash_interest:.4f}, gic: {yield_gic_interest:.4f}, elig_div: {yield_elig_div:.4f}, capg: {yield_capg:.4f}")
 
         # Bucketed mode: each bucket gets its own yield
         # Cash bucket at cash interest rate
@@ -355,12 +232,13 @@ def corp_passive_income(person: Person) -> Dict[str, float]:
 
         # DEBUG: Log first time we see huge numbers
         if corp_total > 1e12:
-            logger.debug(f"DEBUG: HUGE corp balance detected: {corp_total:.0f}")
-            logger.debug(f"  Buckets: cash={cash:.0f}, gic={gic:.0f}, invest={invest:.0f}")
-            logger.debug(f"  Percentages: cash={cash_pct:.4f}, gic={gic_pct:.4f}, invest={invest_pct:.4f}")
-            logger.debug(f"  Amounts: cash={cash_amount:.0f}, gic={gic_amount:.0f}, invest={invest_amount:.0f}")
-            logger.debug(f"  Yields: int={yield_int:.4f}, elig={yield_elig:.4f}, nonelig={yield_nonelig:.4f}, capg={yield_capg:.4f}")
-            logger.debug(f"  Generated: int={interest_gen:.0f}, elig={elig_div_gen:.0f}, nonelig={nonelig_div_gen:.0f}, capg={capg_gen:.0f}")
+            import sys
+            print(f"DEBUG: HUGE corp balance detected: {corp_total:.0f}", file=sys.stderr)
+            print(f"  Buckets: cash={cash:.0f}, gic={gic:.0f}, invest={invest:.0f}", file=sys.stderr)
+            print(f"  Percentages: cash={cash_pct:.4f}, gic={gic_pct:.4f}, invest={invest_pct:.4f}", file=sys.stderr)
+            print(f"  Amounts: cash={cash_amount:.0f}, gic={gic_amount:.0f}, invest={invest_amount:.0f}", file=sys.stderr)
+            print(f"  Yields: int={yield_int:.4f}, elig={yield_elig:.4f}, nonelig={yield_nonelig:.4f}, capg={yield_capg:.4f}", file=sys.stderr)
+            print(f"  Generated: int={interest_gen:.0f}, elig={elig_div_gen:.0f}, nonelig={nonelig_div_gen:.0f}, capg={capg_gen:.0f}", file=sys.stderr)
 
     # RDTOH tracking: 15% of non-eligible dividends become RDTOH
     rdtoh_add = nonelig_div_gen * 0.15
@@ -445,18 +323,17 @@ def tax_for_detailed(
     withdrawals_rrif_base: float,
     cpp_income: float,
     oas_income: float,
-    employer_pension: float,
-    rental_income: float = 0.0,
-    other_income: float = 0.0,
     age: int,
     fed_params,
     prov_params,
+    rental_income: float = 0.0,
+    downsizing_capital_gains: float = 0.0,
 ) -> tuple:
     """
     Returns household tax components (federal + provincial) for this candidate incremental withdrawal mix.
 
     Returns:
-        tuple: (total_tax, federal_tax, provincial_tax, federal_oas_clawback, provincial_oas_clawback, taxable_income)
+        tuple: (total_tax, federal_tax, provincial_tax, federal_oas_clawback, provincial_oas_clawback)
 
     This mirrors the call signature to progressive_tax(...) but returns detailed breakdown.
     """
@@ -467,6 +344,8 @@ def tax_for_detailed(
 
     # Build income components after the "what-if" adds:
     ordinary_income = float(nr_interest) if nr_interest is not None else 0.0
+    # Add rental income from real estate properties (fully taxable as ordinary income)
+    ordinary_income += float(rental_income)
 
     # Eligible / non-eligible dividends:
     extra_elig = float(add_corp_dividend) if corp_dividend_type.lower().startswith("elig") else 0.0
@@ -475,13 +354,12 @@ def tax_for_detailed(
     elig_dividends = float(nr_elig_div if nr_elig_div is not None else 0.0) + extra_elig
     nonelig_dividends = float(nr_nonelig_div if nr_nonelig_div is not None else 0.0) + extra_nonelig
 
-    # Capital gains bucket includes fund CG distributions *and* realized gain from extra sale
-    cap_gains = float(nr_capg_dist if nr_capg_dist is not None else 0.0) + float(cg_from_sale)
+    # Capital gains bucket includes fund CG distributions *and* realized gain from extra sale *and* downsizing gains
+    cap_gains = float(nr_capg_dist if nr_capg_dist is not None else 0.0) + float(cg_from_sale) + float(downsizing_capital_gains)
 
     # Pension-type income for progressive_tax:
     #   RRIF is pension_income once you're in RRIF-land
-    #   Also includes CPP, employer pension (DB/DC), rental income, and other income
-    pension_income = float(withdrawals_rrif_base) + float(add_rrif) + float(cpp_income) + float(employer_pension) + float(rental_income) + float(other_income)
+    pension_income = float(withdrawals_rrif_base) + float(add_rrif) + float(cpp_income)
 
     oas_received = float(oas_income)
 
@@ -517,10 +395,7 @@ def tax_for_detailed(
     prov_tax = float(res_p["net_tax"])
     total_tax = fed_tax + prov_tax
 
-    # Extract taxable income (same for federal and provincial)
-    taxable_income = float(res_f.get("taxable_income", 0.0))
-
-    return total_tax, fed_tax, prov_tax, fed_oas_clawback, prov_oas_clawback, taxable_income
+    return total_tax, fed_tax, prov_tax, fed_oas_clawback, prov_oas_clawback
 
 
 def tax_for(
@@ -539,12 +414,11 @@ def tax_for(
     withdrawals_rrif_base: float,
     cpp_income: float,
     oas_income: float,
-    employer_pension: float,
-    rental_income: float = 0.0,
-    other_income: float = 0.0,
     age: int,
     fed_params,
     prov_params,
+    rental_income: float = 0.0,
+    downsizing_capital_gains: float = 0.0,
 ) -> float:
     """
     Returns household tax (federal + provincial) for this candidate incremental withdrawal mix.
@@ -560,12 +434,11 @@ def tax_for(
     - withdrawals_rrif_base:
         RRIF dollars already withdrawn (and considered pension income) before add_rrif
     - cpp_income, oas_income: baseline CPP & OAS for this person
-    - employer_pension: employer pension (DB/DC) annual income
     - age: this person's age in this tax year
     - fed_params, prov_params: *already indexed* tax parameter objects for that year
     """
     # Use the detailed function and return just the total
-    total_tax, _, _, _, _, _ = tax_for_detailed(
+    total_tax, _, _, _, _ = tax_for_detailed(
         add_nonreg=add_nonreg,
         add_rrif=add_rrif,
         add_corp_dividend=add_corp_dividend,
@@ -579,12 +452,11 @@ def tax_for(
         withdrawals_rrif_base=withdrawals_rrif_base,
         cpp_income=cpp_income,
         oas_income=oas_income,
-        employer_pension=employer_pension,
-        rental_income=rental_income,
-        other_income=other_income,
         age=age,
         fed_params=fed_params,
         prov_params=prov_params,
+        rental_income=rental_income,
+        downsizing_capital_gains=downsizing_capital_gains,
     )
     return total_tax
 
@@ -859,23 +731,19 @@ def calculate_gis_optimization_withdrawal(
         # = marginal_tax_rate + gis_loss_per_dollar
         total_cost = marginal_tax_rate + gis_loss_per_dollar
 
-        # TFSA preference: Small preference to defer TFSA when tax cost is similar
-        # PRIORITY HIERARCHY:
-        # 1. FIRST: Fund spending (TFSA will be used if needed)
-        # 2. SECOND: Tax efficiency (slight preference for other sources if cost is similar)
-        # 3. THIRD: Legacy (preserve TFSA only after spending is met)
-        #
-        # Reduced from 10% to 2% penalty - enough to prefer other sources when costs are equal,
-        # but not enough to prevent TFSA withdrawal when it's needed for spending
+        # TFSA preference: Add a penalty to defer TFSA withdrawal until necessary
+        # TFSA should be the last resort for spending, not the first choice
+        # Even though TFSA has 0% tax, it's valuable to preserve for future flexibility
         if source == "tfsa":
-            # Small 2% penalty - only matters when choosing between equal-cost sources
-            total_cost += 0.02
+            # Add 10% effective cost penalty to TFSA to make it less attractive than NonReg/Corp
+            # This defers TFSA use until other sources are depleted
+            total_cost += 0.10
 
         withdrawal_costs[source] = total_cost
         cost_breakdown[source] = {
             "marginal_tax_rate": marginal_tax_rate,
             "gis_clawback_rate": gis_loss_per_dollar,
-            "tfsa_preference_penalty": 0.02 if source == "tfsa" else 0.0,  # Reduced from 0.10 to 0.02
+            "tfsa_preference_penalty": 0.10 if source == "tfsa" else 0.0,
             "total_effective_cost": total_cost,
             "available": available
         }
@@ -955,32 +823,7 @@ def calculate_gis_optimization_withdrawal(
 
     # Step 6: Calculate final GIS benefit after all withdrawals
     total_withdrawal = sum(withdrawals.values())
-
-    # CRITICAL FIX: Calculate taxable income additions properly
-    # TFSA withdrawals do NOT count toward GIS income calculation
-    # Only count the taxable portion of each withdrawal type
-    taxable_income_from_withdrawals = 0.0
-
-    # TFSA: $0 taxable income (tax-free withdrawal)
-    # Already correctly set to 0.0
-
-    # NonReg: Only capital gains portion counts (50% inclusion rate)
-    if withdrawals["nonreg"] > 0:
-        acb_ratio = person.nonreg_acb / max(person.nonreg_balance, 1.0)
-        gain_ratio = max(0.0, 1.0 - acb_ratio)
-        nonreg_taxable = withdrawals["nonreg"] * gain_ratio * 0.50
-        taxable_income_from_withdrawals += nonreg_taxable
-
-    # RRIF: 100% taxable income
-    # CRITICAL: net_income_before_withdrawal already includes RRIF minimum (passed at line 1276)
-    # So we only add the ADDITIONAL RRIF withdrawal beyond the minimum that was already enforced
-    rrif_additional = max(0.0, withdrawals["rrif"] - rrif_min)
-    taxable_income_from_withdrawals += rrif_additional
-
-    # Corp: 100% taxable (dividend income)
-    taxable_income_from_withdrawals += withdrawals["corp"]
-
-    final_net_income = net_income_before_withdrawal + taxable_income_from_withdrawals
+    final_net_income = net_income_before_withdrawal + total_withdrawal
     final_gis = calculate_gis(
         final_net_income, age, gis_config, oas_amount, is_couple, other_person_gis_income
     )
@@ -1015,7 +858,7 @@ def calculate_gis_optimization_withdrawal(
     return withdrawals, effective_rate, analysis
 
 
-def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params, add_pension_delta=0.0) -> tuple[float, float, float]:
+def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params) -> tuple[float, float, float]:
     bd       = taxd.get("breakdown", {})
     ordinary = float(bd.get("nr_interest", 0.0))
     eligd    = float(bd.get("nr_elig_div", 0.0))
@@ -1024,7 +867,6 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
 
     oas     = float(taxd.get("oas", 0.0))
     cpp_amt = float(taxd.get("cpp", 0.0))
-    employer_pension = float(taxd.get("employer_pension", 0.0))
 
     # Add corporate dividends actually paid to THIS person in the recompute path
     corp_cash = float(wself.get("corp", 0.0))
@@ -1034,8 +876,7 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
         else:
             noneligd += corp_cash
 
-    # Pension income includes RRIF, employer pension, CPP, and any income splitting adjustments
-    pension_income_local = float(rrif_amt) + float(add_rrif_delta) + employer_pension + float(add_pension_delta) + cpp_amt
+    pension_income_local = float(rrif_amt) + float(add_rrif_delta) + cpp_amt
 
     fed_res = progressive_tax(
         fed_params, age,
@@ -1067,47 +908,29 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
     return total, fed_tax, prov_tax
 
 
-def _get_strategy_order(strategy_name: str, has_corp_balance: bool = False) -> List[str]:
+def _get_strategy_order(strategy_name: str) -> List[str]:
     """
     Get the withdrawal order for a given strategy name.
 
     Used as a fallback when TaxOptimizer is disabled or fails.
-    Uses the strategy object's get_withdrawal_order() method to ensure consistency.
-
-    Args:
-        strategy_name: Name of the withdrawal strategy
-        has_corp_balance: Whether the person has a corporate balance
-
-    Returns:
-        List of account types in withdrawal priority order
     """
-    try:
-        # Use the strategy object to get the correct withdrawal order
-        strategy_obj = get_strategy(strategy_name)
-        order = strategy_obj.get_withdrawal_order(has_corp_balance=has_corp_balance)
-        return order
-    except Exception as e:
-        logger.debug(f"  WARNING: Could not get strategy order from object ({str(e)}), using hardcoded fallback")
-        # Hardcoded fallback for legacy compatibility
-        if strategy_name == "NonReg->RRIF->Corp->TFSA":
-            return ["nonreg", "rrif", "corp", "tfsa"]
-        elif strategy_name == "RRIF->Corp->NonReg->TFSA":
-            return ["rrif", "corp", "nonreg", "tfsa"]
-        elif strategy_name.startswith("Hybrid"):
-            return ["nonreg", "corp", "tfsa"]  # already added RRIF top-up
-        elif strategy_name == "Corp->RRIF->NonReg->TFSA":
-            return ["corp", "rrif", "nonreg", "tfsa"]
-        elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-            # RRIF-Frontload: Prioritize tax-efficient sources to avoid OAS clawback
-            # Order: NonReg first (50% capital gains), then TFSA (tax-free), Corp last (100% taxable)
-            # This preserves TFSA for later while using tax-efficient NonReg to avoid clawback
-            return ["nonreg", "tfsa", "corp"]
-        elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
-            return ["corp", "rrif", "nonreg", "tfsa"]
-        elif "TFSA" in strategy_name and strategy_name.startswith("TFSA"):
-            return ["tfsa", "corp", "rrif", "nonreg"]
-        else:
-            return ["nonreg", "rrif", "corp", "tfsa"]
+    if strategy_name == "NonReg->RRIF->Corp->TFSA":
+        return ["nonreg", "rrif", "corp", "tfsa"]
+    elif strategy_name == "RRIF->Corp->NonReg->TFSA":
+        return ["rrif", "corp", "nonreg", "tfsa"]
+    elif strategy_name.startswith("Hybrid"):
+        return ["nonreg", "corp", "tfsa"]  # already added RRIF top-up
+    elif strategy_name == "Corp->RRIF->NonReg->TFSA":
+        return ["corp", "rrif", "nonreg", "tfsa"]
+    elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
+        # For balanced strategy: prioritize Corp (tax-credited), then RRIF (100% taxable at death - deplete early!),
+        # then NonReg (ACB-protected), then TFSA (preserve for last)
+        # RRIF is placed SECOND (after Corp) because it's 100% fully taxable when inherited at death.
+        # Better to deplete RRIF during life than leave it for death tax shock.
+        # NonReg is placed THIRD because ACB protection means most of it is not taxable.
+        return ["corp", "rrif", "nonreg", "tfsa"]  # RRIF second (after Corp), before NonReg, TFSA last
+    else:
+        return ["nonreg", "rrif", "corp", "tfsa"]
 
 
 def simulate_year(person: Person, age: int, after_tax_target: float,
@@ -1162,27 +985,18 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log if CPP is unexpectedly 0 (only if person should be eligible)
     if person.cpp_annual_at_start > 0 and cpp == 0 and age >= person.cpp_start_age:
-        logger.debug(f"DEBUG simulate_year(): {person.name} CPP unexpectedly 0! "
+        print(f"DEBUG simulate_year(): {person.name} CPP unexpectedly 0! "
               f"cpp_annual_at_start={person.cpp_annual_at_start}, cpp_start_age={person.cpp_start_age}, age={age}")
 
     oas = 0.0
     if age >= person.oas_start_age:
         oas = person.oas_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)
 
-    # Employer pension (DB/DC) - starts immediately, grows with inflation
-    employer_pension = 0.0
-    if hasattr(person, 'employer_pension_annual') and person.employer_pension_annual > 0:
-        employer_pension = person.employer_pension_annual * ((1 + hh.general_inflation) ** years_since_start)
+    # Get rental income from real estate properties
+    rental_income = real_estate.get_rental_income(person)
 
-    # Rental income - starts immediately, grows with inflation
-    rental_income = 0.0
-    if hasattr(person, 'rental_income_annual') and person.rental_income_annual > 0:
-        rental_income = person.rental_income_annual * ((1 + hh.general_inflation) ** years_since_start)
-
-    # Other income (employment, business, investment) - starts immediately, grows with inflation
-    other_income = 0.0
-    if hasattr(person, 'other_income_annual') and person.other_income_annual > 0:
-        other_income = person.other_income_annual * ((1 + hh.general_inflation) ** years_since_start)
+    # Get downsizing capital gains for this year (if any)
+    downsizing_capgains = getattr(person, "downsizing_capital_gains_this_year", 0.0)
 
     # Convert  RRSP to RRIF if needed (this may be zero RRSP and add RRIF)
     if rrsp_to_rrif and person.rrsp_balance > 0:
@@ -1205,18 +1019,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # -----  RRIF minimum must be defined before withdrawals for this age -----
     rrif_min = rrif_minimum(person.rrif_balance, age)
 
-    # -----  Calculate early RRIF withdrawals (before age 71) -----
-    # These are voluntary withdrawals for tax planning
-    early_rrif = calculate_early_rrif_withdrawal(person, age)
-
-    # Total RRIF withdrawal requirement is MAX of minimum or early withdrawal
-    # (early withdrawals only apply before age 71, minimums after)
-    rrif_min = max(rrif_min, early_rrif)
-
-    # Log if early withdrawals are active
-    if early_rrif > 0:
-        logger.info(f"{person.name} age {age}: Early RRIF withdrawal ${early_rrif:,.0f}")
-
     # FIX: RRIF minimum is MANDATORY by Canadian tax law, but should be enforced
     # AFTER the withdrawal strategy order is applied, not BEFORE.
     # This allows:
@@ -1224,85 +1026,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # 2. RRIF->NonReg strategy to use RRIF first (including minimum)
     # 3. But in all cases, RRIF minimum is GUARANTEED to be withdrawn
 
-    # ===== RRIF FRONT-LOADING STRATEGY =====
-    # This strategy withdraws 15% of RRIF annually BEFORE OAS/CPP start,
-    # then switches to 8-10% after government benefits kick in.
-    # This smooths the tax curve and avoids the age 70 tax spike.
-    #
-    # ENHANCED: OAS Clawback Avoidance
-    # When approaching the OAS clawback threshold ($90,997 in 2025), the strategy
-    # automatically reduces RRIF withdrawals and switches to TFSA/NonReg to avoid
-    # losing 15% of income to OAS clawback.
-    rrif_frontload_target = 0.0
-    rrif_frontload_use_clawback_order = False  # Flag to switch withdrawal order
-
-    if "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-        # Determine OAS start age (use the earlier of p1 or p2)
-        oas_start = min(hh.p1.oas_start_age, hh.p2.oas_start_age) if hasattr(hh, 'p2') else person.oas_start_age
-
-        # OAS clawback threshold (2025 base, inflated for current year)
-        oas_clawback_threshold_base = 90997.0
-        oas_clawback_threshold = oas_clawback_threshold_base * ((1.0 + hh.general_inflation) ** years_since_start)
-        oas_clawback_buffer = 3000.0  # Stay $3k below threshold for safety margin
-
-        if age < oas_start:
-            # PHASE 1: BEFORE OAS/CPP - Front-load at 15% annually
-            rrif_frontload_target = person.rrif_balance * 0.15
-            logger.debug(f"RRIF-Frontload Phase 1 (age {age} < OAS {oas_start}): "
-                        f"Target 15% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
-        else:
-            # PHASE 2: AFTER OAS/CPP - OAS-clawback-aware with INTELLIGENT ESTATE TAX OPTIMIZATION
-            # Standard target: 8% of RRIF balance
-            rrif_frontload_target_standard = person.rrif_balance * 0.08
-
-            # Calculate current taxable income components (before RRIF withdrawal)
-            # Taxable income includes: CPP + OAS + Employer Pension + Rental + Other Income + NonReg distributions + planned RRIF
-            base_taxable_income = cpp + oas + employer_pension + rental_income + other_income + (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist)
-            projected_taxable_income_rrif_only = base_taxable_income + rrif_frontload_target_standard
-
-            # Check if we're approaching OAS clawback threshold
-            threshold_with_buffer = oas_clawback_threshold - oas_clawback_buffer
-
-            # INTELLIGENT ESTATE TAX OPTIMIZATION
-            # Default strategy: Use Corporate first to minimize estate taxes
-            #
-            # Rationale: Estate tax on Corporate (17.5%) typically exceeds OAS clawback (15%)
-            # So it's usually better to ACCEPT some OAS clawback during life to avoid
-            # larger estate taxes at death.
-            #
-            # This preserves TFSA (0% tax at death) for tax-free legacy.
-            corporate_balance = person.corporate_balance
-
-            # Default to standard order (Corporate preferred for estate tax optimization)
-            rrif_frontload_target = rrif_frontload_target_standard
-            rrif_frontload_use_clawback_order = False
-
-            if age >= person.oas_start_age and oas > 0 and corporate_balance > 10000:
-                # Log the intelligent strategy decision
-                logger.info(f"💰 ESTATE TAX OPTIMIZATION (age {age}):")
-                logger.info(f"   Corporate balance: ${corporate_balance:,.0f}")
-                logger.info(f"   Estate tax rate on Corporate: ~17.5% (vs OAS clawback: 15%)")
-                logger.info(f"   ✓ Decision: USE CORPORATE FIRST (accept clawback, minimize estate tax)")
-                logger.info(f"   → Withdrawal order: Corp → NonReg → TFSA")
-                logger.info(f"   → This preserves TFSA for tax-free legacy")
-            elif age < person.oas_start_age:
-                logger.debug(f"RRIF-Frontload Phase 2 (age {age} >= OAS {oas_start}): "
-                            f"Target 8% = ${rrif_frontload_target:,.0f} (min: ${rrif_min:,.0f})")
-                logger.debug(f"  Projected taxable income: ${projected_taxable_income_rrif_only:,.0f} "
-                            f"(threshold: ${oas_clawback_threshold:,.0f}) - No clawback risk")
-
-        # Always respect CRA minimum as floor
-        rrif_frontload_target = max(rrif_frontload_target, rrif_min)
-
     # For non-Balanced strategies, start with zero and let strategy order determine it
     # For Balanced strategy, defer RRIF minimum enforcement until after other logic
     if "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
         rrif_min_deferred = rrif_min  # Enforce minimum for Balanced strategy at the end
         rrif_min_initial = 0.0
-    elif "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-        # For RRIF-Frontload strategy, use the frontload target as the initial withdrawal
-        rrif_min_deferred = 0.0
-        rrif_min_initial = rrif_frontload_target
     else:
         rrif_min_deferred = 0.0  # Non-Balanced strategies enforce minimum immediately after strategy
         rrif_min_initial = 0.0  # Don't lock RRIF withdrawal before strategy runs
@@ -1345,13 +1073,13 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # Normal mode: distributions are available for spending
         dist_for_cash = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
-    pre_tax_cash = (cpp + oas + employer_pension + rental_income + other_income + dist_for_cash + withdrawals["rrif"])
+    pre_tax_cash = (cpp + oas + dist_for_cash + withdrawals["rrif"])
 
     # Compute that person's tax bill on the *base* withdrawal mix
     # NOTE: Distributions are ALWAYS passed to tax_for() for taxation,
     # regardless of the reinvest_nonreg_dist flag. This ensures phantom income
     # is properly captured even when distributions are reinvested.
-    base_tax, base_fed_tax, base_prov_tax, base_fed_oas_clawback, base_prov_oas_clawback, taxable_income = tax_for_detailed(
+    base_tax, base_fed_tax, base_prov_tax, base_fed_oas_clawback, base_prov_oas_clawback = tax_for_detailed(
         add_nonreg = withdrawals["nonreg"],   # they're selling this much non-reg principal
         add_rrif   = 0.0,                     # no EXTRA RRIF beyond withdrawals["rrif"] yet
         add_corp_dividend = withdrawals["corp"],
@@ -1368,13 +1096,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         withdrawals_rrif_base = withdrawals["rrif"],
         cpp_income          = cpp,
         oas_income          = oas,
-        employer_pension    = employer_pension,
-        rental_income       = rental_income,
-        other_income        = other_income,
         age                 = age,
 
         fed_params          = fed,
         prov_params         = prov,
+        rental_income       = rental_income,   # Real estate rental income (fully taxable)
+        downsizing_capital_gains = downsizing_capgains,  # Capital gains from property sale this year
     )
     # Store base OAS clawback amounts for later use
     base_oas_clawback = base_fed_oas_clawback + base_prov_oas_clawback
@@ -1406,7 +1133,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             person=person,
             after_tax_target=shortfall,
             age=age,
-            net_income_before_withdrawal=(cpp + oas + employer_pension + rental_income + other_income + nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist + withdrawals["rrif"]),
+            net_income_before_withdrawal=(cpp + oas + nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist + withdrawals["rrif"]),
             gis_config=gis_config,
             oas_amount=oas,
             is_couple=False,
@@ -1439,68 +1166,28 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # PHASE 5a: Call TaxOptimizer to get intelligent withdrawal order
     # The optimizer will return a withdrawal order that minimizes lifetime taxes
     # (retirement + death), taking into account GIS/OAS clawback, TFSA strategic placement, etc.
-    #
-    # IMPORTANT: For RRIF-Frontload and TFSA-First strategies, SKIP the optimizer
-    # and use the explicit strategy-defined order. These strategies have specific
-    # user-requested withdrawal orders that should not be overridden.
-    #
-    # ENHANCED: When OAS clawback is detected, switch to clawback-aware order
-    # (tfsa → nonreg → corp) to avoid triggering additional taxable income.
-    if "RRIF-Frontload" in strategy_name or "rrif-frontload" in strategy_name.lower():
-        # Check if we're using clawback-aware order
-        if rrif_frontload_use_clawback_order:
-            # OAS clawback avoidance: Use tax-efficient sources that don't increase taxable income
-            # NonReg first (50% taxable - capital gains), TFSA second (tax-free), Corp last
-            if corporate_balance_start > 1e-9:
-                order = ["nonreg", "tfsa", "corp"]
-            else:
-                order = ["nonreg", "tfsa"]
-            if shortfall > 1e-6:
-                logger.info(f"  RRIF-Frontload (Clawback Avoidance): using order {order}")
-                logger.info(f"    NonReg first (50% taxable), TFSA second (tax-free), Corp last")
-        else:
-            # Standard order: Corporate preferred after RRIF (deplete Corporate, preserve TFSA)
-            # This is the default strategy when no clawback risk
-            if corporate_balance_start > 1e-9:
-                order = ["corp", "nonreg", "tfsa"]
-            else:
-                order = ["nonreg", "tfsa"]
-            if shortfall > 1e-6:
-                logger.debug(f"  RRIF-Frontload (Standard): using order {order}")
-                logger.debug(f"    Corporate preferred to deplete, TFSA preserved for legacy")
-    elif "TFSA" in strategy_name and strategy_name.startswith("TFSA"):
-        # TFSA-First strategy: User explicitly requested TFSA withdrawals first
-        # Don't let TaxOptimizer override this - respect user's strategy choice
-        # Order: TFSA → Corp → RRIF → NonReg
-        if corporate_balance_start > 1e-9:
-            order = ["tfsa", "corp", "rrif", "nonreg"]
-        else:
-            order = ["tfsa", "rrif", "nonreg"]
-        if shortfall > 1e-6:
-            logger.info(f"  TFSA-First: using user-requested order {order}")
-            logger.info(f"    Respecting explicit TFSA-first strategy (no optimizer override)")
-    else:
-        # For all other strategies, use TaxOptimizer
-        try:
-            optimizer_plan = tax_optimizer.optimize_withdrawals(
-                person=person,
-                household=hh,
-                year=year
-            )
-            optimizer_order = optimizer_plan.withdrawal_order
+    try:
+        optimizer_plan = tax_optimizer.optimize_withdrawals(
+            person=person,
+            household=hh,
+            year=year
+        )
+        optimizer_order = optimizer_plan.withdrawal_order
 
-            # Use optimizer order if it returned a valid list
-            if optimizer_order and len(optimizer_order) > 0:
-                order = optimizer_order
-                if shortfall > 1e-6:
-                    logger.debug(f"  TaxOptimizer selected order: {order}")
-            else:
-                # Fallback to strategy-based order if optimizer returned empty
-                order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
-        except Exception as e:
-            # Fallback to strategy-based order on any optimizer error
-            logger.debug(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order")
-            order = _get_strategy_order(strategy_name, has_corp_balance=(corporate_balance_start > 1e-9))
+        # Use optimizer order if it returned a valid list
+        if optimizer_order and len(optimizer_order) > 0:
+            order = optimizer_order
+            if shortfall > 1e-6:
+                import sys
+                print(f"  TaxOptimizer selected order: {order}", file=sys.stderr)
+        else:
+            # Fallback to strategy-based order if optimizer returned empty
+            order = _get_strategy_order(strategy_name)
+    except Exception as e:
+        # Fallback to strategy-based order on any optimizer error
+        import sys
+        print(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order", file=sys.stderr)
+        order = _get_strategy_order(strategy_name)
 
     if "GIS-Optimized" in strategy_name:
         # GIS optimization already handled withdrawals above
@@ -1511,15 +1198,14 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log initial shortfall and available balances
     if shortfall > 1e-6:
-        logger.debug(f"\nDEBUG WITHDRAWAL [{person.name}] Age {age} Year {year if year else '?'}:")
-        logger.debug(f"  Strategy: {strategy_name}")
-        logger.debug(f"  After-tax target: ${after_tax_target:,.0f}")
-        logger.debug(f"  Base after-tax: ${base_after_tax:,.0f}")
-        logger.debug(f"  Initial shortfall: ${shortfall:,.0f}")
-        logger.debug(f"  NonReg distributions: interest=${nr_interest:,.0f}, elig_div=${nr_elig_div:,.0f}, capg=${nr_capg_dist:,.0f}")
-        logger.debug(f"  Reinvest NonReg dist: {hh.reinvest_nonreg_dist}")
-        logger.debug(f"  Order: {order}")
-        logger.debug(f"  Starting balances: RRIF=${person.rrif_balance:,.0f} CORP=${corporate_balance_start:,.0f} NONREG=${person.nonreg_balance:,.0f} TFSA=${person.tfsa_balance:,.0f}")
+        import sys
+        print(f"\nDEBUG WITHDRAWAL [{person.name}] Age {age} Year {year if year else '?'}:", file=sys.stderr)
+        print(f"  Strategy: {strategy_name}", file=sys.stderr)
+        print(f"  After-tax target: ${after_tax_target:,.0f}", file=sys.stderr)
+        print(f"  Base after-tax: ${base_after_tax:,.0f}", file=sys.stderr)
+        print(f"  Initial shortfall: ${shortfall:,.0f}", file=sys.stderr)
+        print(f"  Order: {order}", file=sys.stderr)
+        print(f"  Starting balances: RRIF=${person.rrif_balance:,.0f} CORP=${corporate_balance_start:,.0f} NONREG=${person.nonreg_balance:,.0f} TFSA=${person.tfsa_balance:,.0f}", file=sys.stderr)
 
     extra = {"nonreg": 0.0, "rrif": 0.0, "corp": 0.0, "tfsa": 0.0}
 
@@ -1539,11 +1225,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # Determine available balance from the current source
         if k == "rrif":
-            # RRIF strategy includes both RRIF and RRSP (before age 71, use RRSP; after 71, use RRIF)
-            # This allows "RRIF-first" strategies to work before mandatory conversion age
-            rrif_available = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
-            rrsp_available = max(getattr(person, "rrsp_balance", 0.0), 0.0)
-            available = rrif_available + rrsp_available
+            available = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
         elif k == "corp":
             # CDA-aware Corp withdrawal: prioritize CDA (zero-tax) before paid-up capital
             # For Balanced strategy specifically, we want to take CDA first as it's zero-tax
@@ -1566,68 +1248,59 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
             # For Balanced strategy, provide DEBUG info about ACB timing
             if available > 1e-6 and ("Balanced" in strategy_name or "tax efficiency" in strategy_name.lower()):
-                logger.debug(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}")
+                import sys
+                print(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}", file=sys.stderr)
         elif k == "tfsa":
-            # PRIORITY HIERARCHY FIX:
-            # 1. FIRST: Fund spending requirement (withdraw from TFSA if needed)
-            # 2. SECOND: Tax efficiency (follow strategy order)
-            # 3. THIRD: Legacy (only preserve TFSA if spending is fully met)
-            #
-            # TFSA should be used when:
-            # - There's a spending shortfall, OR
-            # - All prior sources in the withdrawal order are depleted
-
+            # TFSA-last guard: only allow TFSA if all other sources are tapped
+            # FIX: Use the ORIGINAL starting balance, not current balance minus what we already withdrew
+            # This ensures we respect the withdrawal strategy order even if other sources still have funds
             rrif_left   = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
             corp_left   = max(corporate_balance_start - (withdrawals["corp"] + extra["corp"]), 0.0)
             nonreg_left = max(person.nonreg_balance - (withdrawals["nonreg"] + extra["nonreg"]), 0.0)
 
-            # DEBUG: Log TFSA decision
+            # DEBUG: Log TFSA guard check
             if shortfall > 1e-6:
-                logger.debug(f"  TFSA check - shortfall=${shortfall:,.0f}, rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}")
+                import sys
+                print(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}", file=sys.stderr)
 
-            # TFSA WITHDRAWAL LOGIC FOR MINIMIZE-INCOME STRATEGY:
-            # TFSA is tax-free and doesn't affect GIS eligibility - it's the PERFECT source
-            # for minimize-income strategy to meet spending needs without triggering clawbacks
-            #
-            # Priority:
-            # 1. If there's a shortfall -> ALWAYS use TFSA (tax-free, no GIS impact)
-            # 2. If no shortfall but TFSA is first in strategy order -> use it per strategy
-            # 3. Only preserve TFSA if both: (a) no shortfall AND (b) other tax-free sources available
-
-            if shortfall > 1e-6:
-                # There's a spending shortfall - TFSA MUST be used to meet spending needs
-                # This is the PRIMARY OBJECTIVE - funding retirement spending
-                # TFSA is ideal for minimize-income since it's tax-free (no GIS clawback)
-                logger.debug(f"  -> TFSA withdrawal needed (shortfall=${shortfall:,.0f}, tax-free, preserves GIS)")
-                available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
-            else:
-                # No current shortfall, but TFSA should still be available for minimize-income strategy
-                # Since TFSA is tax-free, using it doesn't hurt GIS eligibility
-                # Only skip if there are literally no funds available
-                available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
-                if available > 1e-6:
-                    logger.debug(f"  -> TFSA available=${available:,.0f} (tax-free, safe for GIS strategy)")
+            # CRITICAL FIX: TFSA should ONLY be used if ALL other sources in the withdrawal order
+            # that come BEFORE TFSA have been fully depleted
+            if (nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9):
+                # Skip TFSA for now; other sources still have funds
+                if shortfall > 1e-6:
+                    import sys
+                    print(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})", file=sys.stderr)
+                continue
+            available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
         else:
             available = 0.0
 
         if available <= 0.0:
             if shortfall > 1e-6 and k != "tfsa":
-                logger.debug(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)")
+                import sys
+                print(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)", file=sys.stderr)
             continue
+
+        # DEBUG: Log withdrawal source being processed
+        if shortfall > 1e-6:
+            import sys
+            print(f"  {k.upper()}: available=${available:,.0f}, shortfall=${shortfall:,.0f}", file=sys.stderr)
 
         # TFSA is tax-free: just take what you need and continue
         if k == "tfsa":
             take = min(shortfall, available)
             extra["tfsa"] += take
             shortfall -= take
+            # DEBUG: Log TFSA withdrawal
             if take > 1e-6:
-                logger.debug(f"  -> TFSA withdrawal: ${take:,.0f}")
+                import sys
+                print(f"  -> TFSA withdrawal: ${take:,.0f}", file=sys.stderr)
             continue
 
         # --- For taxable sources (nonreg / rrif / corp), compute tax-aware sizing ---
         def person_tax_for(candidate_nonreg, candidate_rrif, candidate_corp,
                         *, person, age, fed_params, prov_params,
-                        cpp_income, oas_income, employer_pension, rental_income, other_income,
+                        cpp_income, oas_income,
                         nr_interest, nr_elig_div, nr_nonelig_div, nr_capg_dist,
                         rrif_base_already_taken):
             return tax_for(
@@ -1647,13 +1320,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals_rrif_base = float(rrif_base_already_taken),
                 cpp_income          = float(cpp_income),
                 oas_income          = float(oas_income),
-                employer_pension    = float(employer_pension),
-                rental_income       = float(rental_income),
-                other_income        = float(other_income),
                 age                 = int(age),
 
                 fed_params          = fed_params,
                 prov_params         = prov_params,
+                rental_income       = rental_income,  # Real estate rental income from outer scope
+                downsizing_capital_gains = downsizing_capgains,  # Capital gains from downsizing from outer scope
             )
 
         # Binary search: find the minimum withdrawal needed to net the shortfall after tax
@@ -1667,8 +1339,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals["rrif"]   + extra["rrif"]   + (mid if k == "rrif"   else 0.0),
                 withdrawals["corp"]   + extra["corp"]   + (mid if k == "corp"   else 0.0),
                 person=person, age=age_cur, fed_params=fed, prov_params=prov,
-                cpp_income=cpp_cur, oas_income=oas_cur, employer_pension=employer_pension,
-                rental_income=rental_income, other_income=other_income,
+                cpp_income=cpp_cur, oas_income=oas_cur,
                 nr_interest=nr_interest, nr_elig_div=nr_elig_div,
                 nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
                 rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
@@ -1687,7 +1358,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             extra[k] += take
             # DEBUG: Log withdrawal amount
             if shortfall > 1e-6:
-                logger.debug(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)")
+                import sys
+                print(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)", file=sys.stderr)
             # Recompute base_tax and total after-tax cash with the new withdrawal
             # CRITICAL FIX: Pass the TOTAL withdrawal amounts (base + extra), not just extra
             # This ensures tax calculation correctly computes marginal tax rates on total income
@@ -1696,8 +1368,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 withdrawals["rrif"] + extra["rrif"],
                 withdrawals["corp"] + extra["corp"],
                 person=person, age=age_cur, fed_params=fed, prov_params=prov,
-                cpp_income=cpp_cur, oas_income=oas_cur, employer_pension=employer_pension,
-                rental_income=rental_income, other_income=other_income,
+                cpp_income=cpp_cur, oas_income=oas_cur,
                 nr_interest=nr_interest, nr_elig_div=nr_elig_div,
                 nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
                 rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
@@ -1715,10 +1386,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                             extra["rrif"] + extra["nonreg"] + extra["corp"] + extra["tfsa"] - t_new)
             shortfall = max(after_tax_target - new_after_tax, 0.0)
             base_tax = t_new
-
-            # DEBUG: Log shortfall recalculation
-            if k == "corp" and (year == 2039 or (year and year >= 2038)):
-                logger.debug(f"  -> After {k.upper()}: new_after_tax=${new_after_tax:,.0f}, shortfall=${shortfall:,.0f}, dist=${dist_in_available_cash:,.0f}")
 
 # -----  Apply the extra withdrawals decided above -----
     for k in extra:
@@ -1752,37 +1419,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # Note: This additional RRIF withdrawal will increase taxable income,
         # but it's mandatory by law and cannot be avoided
 
-    # -----  RECALCULATE FINAL TAX AND TAXABLE INCOME with actual withdrawal amounts -----
-    # The initial tax calculation (line 1081) happened BEFORE the withdrawal strategy ran,
-    # so it had corp=0 and potentially incorrect RRIF/NonReg amounts.
-    # Now that we have the FINAL withdrawal amounts, recalculate to get accurate taxable_income.
-    base_tax, base_fed_tax, base_prov_tax, base_fed_oas_clawback, base_prov_oas_clawback, taxable_income = tax_for_detailed(
-        add_nonreg = withdrawals["nonreg"],
-        add_rrif   = 0.0,
-        add_corp_dividend = withdrawals["corp"],
-
-        nonreg_balance      = person.nonreg_balance,
-        nonreg_acb          = getattr(person, "nonreg_acb", 0.0),
-        corp_dividend_type  = getattr(person, "corp_dividend_type", "non-eligible"),
-
-        nr_interest         = nr_interest,
-        nr_elig_div         = nr_elig_div,
-        nr_nonelig_div      = nr_nonelig_div,
-        nr_capg_dist        = nr_capg_dist,
-
-        withdrawals_rrif_base = withdrawals["rrif"],
-        cpp_income          = cpp,
-        oas_income          = oas,
-        employer_pension    = employer_pension,
-        rental_income       = rental_income,
-        other_income        = other_income,
-        age                 = age,
-
-        fed_params          = fed,
-        prov_params         = prov,
-    )
-    base_oas_clawback = base_fed_oas_clawback + base_prov_oas_clawback
-
     # -----  Track realized ACB/Capital Gain for non-reg principal sale  -----
     # realized_cg = withdrawals["nonreg"] * clamp(0.0 if person.nonreg_balance<=0 else (1.0 - person.nonreg_acb/max(person.nonreg_balance,1e-9)), 0.0, 1.0)
     if person.nonreg_balance > 1e-9:
@@ -1806,7 +1442,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # DEBUG: Log CDA withdrawal
         if corp_cda_withdrawn > 1e-6:
-            logger.debug(f"DEBUG CDA [{person.name}]: Withdrew ${corp_cda_withdrawn:,.0f} from CDA (zero-tax), ${corp_other_withdrawn:,.0f} from paid-up capital")
+            import sys
+            print(f"DEBUG CDA [{person.name}]: Withdrew ${corp_cda_withdrawn:,.0f} from CDA (zero-tax), ${corp_other_withdrawn:,.0f} from paid-up capital", file=sys.stderr)
     else:
         # Non-Balanced strategy: just deduct from paid-up capital
         person.corp_paid_up_capital = max(getattr(person, "corp_paid_up_capital", 0.0) - withdrawals["corp"], 0.0)
@@ -1820,7 +1457,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # CRITICAL: GIS requires receiving OAS (oas > 0) but OAS is EXCLUDED from income test
     # This fix complies with official CRA guidelines
     gis_net_income = (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist * 0.5 +  # Capital gains 50% inclusion
-                      withdrawals["rrif"] + withdrawals["corp"] + cpp + employer_pension + rental_income + other_income)  # NOTE: OAS is EXCLUDED per CRA
+                      withdrawals["rrif"] + withdrawals["corp"] + cpp)  # NOTE: OAS is EXCLUDED per CRA
 
     # IMPORTANT: Inside simulate_year(), we don't have access to the other person's data.
     # For couples, GIS will be recalculated at the household level (in simulate() function)
@@ -1830,11 +1467,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log GIS calculation when values are non-zero
     if gis_benefit > 0 or gis_net_income > 15000:
-        logger.debug(f"DEBUG GIS [{person.name}] Age {age}:")
-        logger.debug(f"  nr_interest={nr_interest:.0f}, nr_elig_div={nr_elig_div:.0f}, nr_capg_dist={nr_capg_dist:.0f}")
-        logger.debug(f"  rrif_wd={withdrawals['rrif']:.0f}, corp_wd={withdrawals['corp']:.0f}")
-        logger.debug(f"  cpp={cpp:.0f}, oas={oas:.0f}")
-        logger.debug(f"  GIS_NET_INCOME={gis_net_income:.0f}, GIS_BENEFIT={gis_benefit:.0f}")
+        import sys
+        print(f"DEBUG GIS [{person.name}] Age {age}:", file=sys.stderr)
+        print(f"  nr_interest={nr_interest:.0f}, nr_elig_div={nr_elig_div:.0f}, nr_capg_dist={nr_capg_dist:.0f}", file=sys.stderr)
+        print(f"  rrif_wd={withdrawals['rrif']:.0f}, corp_wd={withdrawals['corp']:.0f}", file=sys.stderr)
+        print(f"  cpp={cpp:.0f}, oas={oas:.0f}", file=sys.stderr)
+        print(f"  GIS_NET_INCOME={gis_net_income:.0f}, GIS_BENEFIT={gis_benefit:.0f}", file=sys.stderr)
 
     # -----  REINVEST SURPLUS: Handle excess withdrawals beyond spending need -----
     # STRATEGY: Protect TFSA as emergency fund
@@ -1856,22 +1494,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # When not reinvesting: distributions are paid out and available for spending
         total_available_distributions = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
-    total_after_tax_cash = (cpp + oas + gis_benefit + employer_pension + rental_income + other_income +  # Government benefits & other income (all calculated by now)
+    total_after_tax_cash = (cpp + oas + gis_benefit +  # Government benefits (all calculated by now)
                            total_withdrawals + total_available_distributions - base_tax)  # Account withdrawals + distributions (if not reinvested) minus taxes
 
     # Calculate surplus: how much exceeds the spending target
-    # CRITICAL FIX: When NonReg distributions are NOT reinvested (reinvest_nonreg_dist=False),
-    # they should be used for spending only and NOT create surplus for TFSA reinvestment.
-    # Only withdrawals beyond spending needs should create surplus for reinvestment.
-    if hh.reinvest_nonreg_dist:
-        # When reinvesting distributions: all surplus can be reinvested
-        surplus = max(total_after_tax_cash - after_tax_target, 0.0)
-    else:
-        # When distributions are for spending: exclude them from surplus calculation
-        # Only withdrawals in excess of spending needs should be reinvested
-        total_after_tax_cash_excluding_dist = (cpp + oas + gis_benefit + employer_pension + rental_income + other_income +
-                                                total_withdrawals - base_tax)
-        surplus = max(total_after_tax_cash_excluding_dist - after_tax_target, 0.0)
+    surplus = max(total_after_tax_cash - after_tax_target, 0.0)
 
     # NOTE: Surplus reinvestment happens AFTER all withdrawals and growth are applied
     # (see lines ~1863-1985 below) to avoid double-applying growth to reinvested amounts.
@@ -1883,16 +1510,13 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # DEBUG: Log tax calculation values
     dist_sum = nr_interest + nr_elig_div + nr_nonelig_div
     if abs(base_tax - dist_sum) < 0.01 and dist_sum > 1:
-        logger.debug(f"⚠️  WARNING in simulate_year(): base_tax ({base_tax:.2f}) equals distribution sum ({dist_sum:.2f})")
-        logger.debug(f"    This indicates the tax calculation may be using distributions instead of proper tax_for()")
-        logger.debug(f"    nr_interest={nr_interest:.2f}, nr_elig_div={nr_elig_div:.2f}, nr_nonelig_div={nr_nonelig_div:.2f}")
-        logger.debug(f"    withdrawals: rrif={withdrawals['rrif']:.2f}, nonreg={withdrawals['nonreg']:.2f}, corp={withdrawals['corp']:.2f}")
+        print(f"⚠️  WARNING in simulate_year(): base_tax ({base_tax:.2f}) equals distribution sum ({dist_sum:.2f})")
+        print(f"    This indicates the tax calculation may be using distributions instead of proper tax_for()")
+        print(f"    nr_interest={nr_interest:.2f}, nr_elig_div={nr_elig_div:.2f}, nr_nonelig_div={nr_nonelig_div:.2f}")
+        print(f"    withdrawals: rrif={withdrawals['rrif']:.2f}, nonreg={withdrawals['nonreg']:.2f}, corp={withdrawals['corp']:.2f}")
 
-    tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "employer_pension": employer_pension,
-                  "rental_income": rental_income, "other_income": other_income,
-                  "gis": gis_benefit,
+    tax_detail = {"tax": base_tax, "oas": oas, "cpp": cpp, "gis": gis_benefit,
                   "oas_clawback": base_oas_clawback,  # NEW: OAS clawback amount
-                  "taxable_income": taxable_income,  # NEW: Taxable income for this person
                   "breakdown": {"nr_interest": nr_interest, "nr_elig_div": nr_elig_div, "nr_nonelig_div": nr_nonelig_div,
                                 "nr_capg_dist": nr_capg_dist, "rrif": withdrawals["rrif"], "corp_div": withdrawals["corp"],
                                 "cg_from_sale": realized_cg}}
@@ -1920,9 +1544,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         "gis_benefit": gis_benefit,  # GIS calculated for this person
         "cpp": cpp,  # CPP income
         "oas": oas,  # OAS income
-        "employer_pension": employer_pension,  # Employer pension (DB/DC) income
-        "rental_income": rental_income,  # Rental income (NET)
-        "other_income": other_income,  # Other income (employment/business)
         "oas_clawback": base_oas_clawback,  # NEW: OAS clawback for this person
     }
     return withdrawals, tax_detail, info
@@ -2045,18 +1666,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     # Negative: deficit that needs to be made up
     cash_buffer = 0.0
 
-    # FIX: Calculate birth years so ages are consistent across different start years
-    # If Rafael is 72 in 2026, his birth year is 1954, so he's 82 in 2036 regardless of start_year
-    # Assume start_age represents current age in year 2026 (current year)
-    CURRENT_YEAR = 2026
-    birth_year_p1 = CURRENT_YEAR - hh.p1.start_age
-    birth_year_p2 = CURRENT_YEAR - hh.p2.start_age
-
-    # Calculate actual ages in the simulation start year
-    year = hh.start_year
-    age1 = year - birth_year_p1
-    age2 = year - birth_year_p2
-
+    year = hh.start_year; age1 = hh.p1.start_age; age2 = hh.p2.start_age
     p1 = hh.p1; p2 = hh.p2
     rows = []
     tfsa_room1 = p1.tfsa_room_start
@@ -2066,16 +1676,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     rrsp_to_rrif1 = (age1 >= 71)
     rrsp_to_rrif2 = (age2 >= 71)
 
-    # Track if this is the first year (to avoid double-adding room growth)
-    is_first_year = True
-
     while age1 <= hh.end_age or age2 <= hh.end_age:
         # At start of year: Add annual room growth + last year's withdrawals
-        # EXCEPT in first year, where tfsa_room_start already includes initial room
-        if not is_first_year:
-            tfsa_room1 += p1.tfsa_room_annual_growth + tfsa_withdraw_last_year1
-            tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
-        is_first_year = False
+        tfsa_room1 += p1.tfsa_room_annual_growth + tfsa_withdraw_last_year1
+        tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
         max_age = max(age1, age2)
 
         base_spend = (
@@ -2129,8 +1733,35 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # RRSP growth then conversion at 71
         p1.rrsp_balance *= (1 + p1.yield_rrsp_growth)
         p2.rrsp_balance *= (1 + p2.yield_rrsp_growth)
-        rrsp_to_rrif1 = (age1 >= 71) 
+        rrsp_to_rrif1 = (age1 >= 71)
         rrsp_to_rrif2 = (age2 >= 71)
+
+        # ===== REAL ESTATE: Downsizing and Property Appreciation =====
+        # Clear previous year's downsizing capital gains
+        p1.downsizing_capital_gains_this_year = 0.0
+        p2.downsizing_capital_gains_this_year = 0.0
+
+        # Handle property sales/downsizing first (before appreciation)
+        downsize_p1 = real_estate.handle_downsizing(p1, year, hh)
+        downsize_p2 = real_estate.handle_downsizing(p2, year, hh)
+
+        # Add net proceeds from downsizing to non-registered accounts
+        if downsize_p1["net_cash"] > 0:
+            p1.nonreg_balance += downsize_p1["net_cash"]
+            p1.nonreg_acb += downsize_p1["net_cash"]  # New cash injection increases ACB
+            # Store taxable gains for tax calculation this year
+            p1.downsizing_capital_gains_this_year = downsize_p1["taxable_gains"]
+
+        if downsize_p2["net_cash"] > 0:
+            p2.nonreg_balance += downsize_p2["net_cash"]
+            p2.nonreg_acb += downsize_p2["net_cash"]  # New cash injection increases ACB
+            # Store taxable gains for tax calculation this year
+            p2.downsizing_capital_gains_this_year = downsize_p2["taxable_gains"]
+
+        # Appreciate remaining property values with general inflation
+        real_estate.appreciate_property(p1, hh.general_inflation)
+        real_estate.appreciate_property(p2, hh.general_inflation)
+
         #Capture starting balances for growth reporting and clamps
         corp_start1 = float(p1.corporate_balance)
         corp_start2 = float(p2.corporate_balance)
@@ -2148,23 +1779,14 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         target_p1_adjusted = target_each
         target_p2_adjusted = target_each
 
-        # ===== ADD TFSA CONTRIBUTIONS TO WITHDRAWAL TARGETS =====
-        # CRITICAL: TFSA contributions must be IN ADDITION to spending targets
-        # We need to withdraw: spending target + TFSA contribution amount
-        # Estimate contributions based on configured amount, TFSA room, and NonReg balance
-        if hh.tfsa_contribution_each > 0:
-            # Contribute the configured amount, up to available room and NonReg balance
-            estimated_tfsa_contrib_p1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance, 0.0), tfsa_room1)
-            estimated_tfsa_contrib_p2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance, 0.0), tfsa_room2)
-        else:
-            estimated_tfsa_contrib_p1 = 0.0
-            estimated_tfsa_contrib_p2 = 0.0
-
-        target_p1_adjusted += estimated_tfsa_contrib_p1
-        target_p2_adjusted += estimated_tfsa_contrib_p2
+        # Add mortgage payments to after-tax spending targets (not tax-deductible in Canada for principal residences)
+        mortgage_p1 = real_estate.calculate_annual_mortgage_payment(p1)
+        mortgage_p2 = real_estate.calculate_annual_mortgage_payment(p2)
+        target_p1_adjusted += mortgage_p1
+        target_p2_adjusted += mortgage_p2
 
         # Track original targets for buffer update calculation later
-        original_target_total = spend  # Total household spending target (NOT including TFSA contributions)
+        original_target_total = spend + mortgage_p1 + mortgage_p2  # Total household spending target including mortgage payments
 
         # Then call simulate_year with fed_y/prov_y (not the base fed/prov):
         w1, t1, info1 = simulate_year(
@@ -2211,7 +1833,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                logger.debug(f"DEBUG HH GIS CASE1 (Both OAS) [{year}]: P1_income=${gis_income_p1:,.0f} P2_income=${gis_income_p2:,.0f} Combined=${combined_gis_income:,.0f} threshold=${couple_threshold:,.0f}")
+                import sys
+                print(f"DEBUG HH GIS CASE1 (Both OAS) [{year}]: P1_income=${gis_income_p1:,.0f} P2_income=${gis_income_p2:,.0f} Combined=${combined_gis_income:,.0f} threshold=${couple_threshold:,.0f}", file=sys.stderr)
 
             # Apply couple clawback logic
             if combined_gis_income >= couple_threshold:
@@ -2219,11 +1842,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 clawback_per_person = total_clawback / 2.0
                 gis_benefit = max(0.0, max_benefit_per_person - clawback_per_person)
                 if year >= 2025:
-                    logger.debug(f"DEBUG HH GIS CASE1 CLAWBACK [{year}]: excess=${combined_gis_income - couple_threshold:,.0f} gis_benefit=${gis_benefit:,.2f}")
+                    print(f"DEBUG HH GIS CASE1 CLAWBACK [{year}]: excess=${combined_gis_income - couple_threshold:,.0f} gis_benefit=${gis_benefit:,.2f}", file=sys.stderr)
             else:
                 gis_benefit = max_benefit_per_person
                 if year >= 2025:
-                    logger.debug(f"DEBUG HH GIS CASE1 BELOW_THRESHOLD [{year}]: gis_benefit=${gis_benefit:,.2f}")
+                    print(f"DEBUG HH GIS CASE1 BELOW_THRESHOLD [{year}]: gis_benefit=${gis_benefit:,.2f}", file=sys.stderr)
 
             t1["gis"] = gis_benefit
             t2["gis"] = gis_benefit
@@ -2242,7 +1865,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                logger.debug(f"DEBUG HH GIS CASE2 (One OAS) [{year}]: P1_income=${gis_income_p1:,.0f} (OAS=${oas_p1_current:,.0f}) P2_income=${gis_income_p2:,.0f} (OAS=${oas_p2_current:,.0f}) Combined=${combined_gis_income:,.0f} threshold=${one_oas_threshold:,.0f}")
+                import sys
+                print(f"DEBUG HH GIS CASE2 (One OAS) [{year}]: P1_income=${gis_income_p1:,.0f} (OAS=${oas_p1_current:,.0f}) P2_income=${gis_income_p2:,.0f} (OAS=${oas_p2_current:,.0f}) Combined=${combined_gis_income:,.0f} threshold=${one_oas_threshold:,.0f}", file=sys.stderr)
 
             # Person 1 (check if receiving OAS this year)
             if oas_p1_current > 0:
@@ -2250,11 +1874,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     total_clawback = (combined_gis_income - one_oas_threshold) * clawback_rate
                     gis_p1 = max(0.0, max_benefit_couple - total_clawback)
                     if year >= 2025:
-                        logger.debug(f"DEBUG HH GIS CASE2 P1 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p1=${gis_p1:,.2f}")
+                        print(f"DEBUG HH GIS CASE2 P1 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p1=${gis_p1:,.2f}", file=sys.stderr)
                 else:
                     gis_p1 = max_benefit_couple
                     if year >= 2025:
-                        logger.debug(f"DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [{year}]: gis_p1=${gis_p1:,.2f}")
+                        print(f"DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [{year}]: gis_p1=${gis_p1:,.2f}", file=sys.stderr)
                 t1["gis"] = gis_p1
             else:
                 t1["gis"] = 0.0
@@ -2266,17 +1890,18 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     total_clawback = (combined_gis_income - one_oas_threshold) * clawback_rate
                     gis_p2 = max(0.0, max_benefit_couple - total_clawback)
                     if year >= 2025:
-                        logger.debug(f"DEBUG HH GIS CASE2 P2 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p2=${gis_p2:,.2f}")
+                        print(f"DEBUG HH GIS CASE2 P2 CLAWBACK [{year}]: excess=${combined_gis_income - one_oas_threshold:,.0f} gis_p2=${gis_p2:,.2f}", file=sys.stderr)
                 else:
                     gis_p2 = max_benefit_couple
                     if year >= 2025:
-                        logger.debug(f"DEBUG HH GIS CASE2 P2 BELOW_THRESHOLD [{year}]: gis_p2=${gis_p2:,.2f}")
+                        print(f"DEBUG HH GIS CASE2 P2 BELOW_THRESHOLD [{year}]: gis_p2=${gis_p2:,.2f}", file=sys.stderr)
                 t2["gis"] = gis_p2
             else:
                 t2["gis"] = 0.0
 
         if year >= 2025:
-            logger.debug(f"DEBUG HH GIS FINAL [{year}]: t1[gis]=${t1.get('gis', 0):,.2f} t2[gis]=${t2.get('gis', 0):,.2f}")
+            import sys
+            print(f"DEBUG HH GIS FINAL [{year}]: t1[gis]=${t1.get('gis', 0):,.2f} t2[gis]=${t2.get('gis', 0):,.2f}", file=sys.stderr)
 
         # Household-level funding gap in this year
         hh_gap = float(info1.get("unmet_after_tax", 0.0) + info2.get("unmet_after_tax", 0.0))
@@ -2295,36 +1920,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         split = clamp(hh.income_split_rrif_fraction, 0.0, 0.5)
         transfer12 = split * w1["rrif"] if age1 >= 65 else 0.0
         transfer21 = split * w2["rrif"] if age2 >= 65 else 0.0
-
-        # Employer pension income splitting (up to 50% if age >=65)
-        # CRA rules: Only split from higher to lower earner to optimize tax
-        pension_split = clamp(hh.income_split_pension_fraction, 0.0, 0.5)
-        employer_pension_p1 = float(t1.get("employer_pension", 0.0))
-        employer_pension_p2 = float(t2.get("employer_pension", 0.0))
-
-        # Only split if both are 65+ and there's a pension imbalance
-        if age1 >= 65 and age2 >= 65:
-            if employer_pension_p1 > employer_pension_p2:
-                # P1 has more, split from P1 to P2
-                pension_transfer12 = pension_split * employer_pension_p1
-                pension_transfer21 = 0.0
-            elif employer_pension_p2 > employer_pension_p1:
-                # P2 has more, split from P2 to P1
-                pension_transfer12 = 0.0
-                pension_transfer21 = pension_split * employer_pension_p2
-            else:
-                # Equal pensions, no benefit to splitting
-                pension_transfer12 = 0.0
-                pension_transfer21 = 0.0
-        else:
-            # Not eligible (under 65)
-            pension_transfer12 = 0.0
-            pension_transfer21 = 0.0
-
+      
         # == After calling recompute_tax for each person ==
-        # Pass both RRIF split and employer pension split amounts
-        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y, -pension_transfer12 + pension_transfer21)
-        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, -pension_transfer21 + pension_transfer12)
+        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y)
+        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y)
 
 
         # Rebuild per-person and household totals ONLY from recompute outputs
@@ -2356,33 +1955,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         if not _rel_tol_check(sum_parts, total_tax_after_split, rel_tol=1e-12):
             total_tax_after_split = sum_parts
 
-        # Update balances: subtract withdrawals, then grow
-        # RRIF withdrawals can come from RRSP (before age 71) or RRIF (after age 71)
-        # Prioritize withdrawing from RRSP first if available, then RRIF
-        rrif_withdrawal_p1 = w1["rrif"]
-        rrif_withdrawal_p2 = w2["rrif"]
-
-        # Person 1: withdraw from RRSP first, then RRIF
-        rrsp_available_p1 = max(getattr(p1, "rrsp_balance", 0.0), 0.0)
-        if rrif_withdrawal_p1 > 0:
-            rrsp_taken_p1 = min(rrif_withdrawal_p1, rrsp_available_p1)
-            rrif_taken_p1 = rrif_withdrawal_p1 - rrsp_taken_p1
-            p1.rrsp_balance = max(getattr(p1, "rrsp_balance", 0.0) - rrsp_taken_p1, 0.0)
-            p1.rrif_balance = max(p1.rrif_balance - rrif_taken_p1, 0.0)
-        # Apply growth to both RRSP and RRIF
-        p1.rrsp_balance *= (1 + p1.yield_rrsp_growth)
-        p1.rrif_balance *= (1 + p1.yield_rrif_growth)
-
-        # Person 2: withdraw from RRSP first, then RRIF
-        rrsp_available_p2 = max(getattr(p2, "rrsp_balance", 0.0), 0.0)
-        if rrif_withdrawal_p2 > 0:
-            rrsp_taken_p2 = min(rrif_withdrawal_p2, rrsp_available_p2)
-            rrif_taken_p2 = rrif_withdrawal_p2 - rrsp_taken_p2
-            p2.rrsp_balance = max(getattr(p2, "rrsp_balance", 0.0) - rrsp_taken_p2, 0.0)
-            p2.rrif_balance = max(p2.rrif_balance - rrif_taken_p2, 0.0)
-        # Apply growth to both RRSP and RRIF
-        p2.rrsp_balance *= (1 + p2.yield_rrsp_growth)
-        p2.rrif_balance *= (1 + p2.yield_rrif_growth)
+        # Update balances: subtract withdrawals, then grow  
+        p1.rrif_balance = max(p1.rrif_balance - w1["rrif"], 0.0) * (1 + p1.yield_rrif_growth)
+        p2.rrif_balance = max(p2.rrif_balance - w2["rrif"], 0.0) * (1 + p2.yield_rrif_growth)
         p1.tfsa_balance = max(p1.tfsa_balance - w1["tfsa"], 0.0) * (1 + p1.yield_tfsa_growth)
         p2.tfsa_balance = max(p2.tfsa_balance - w2["tfsa"], 0.0) * (1 + p2.yield_tfsa_growth)
 
@@ -2433,18 +2008,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Use TOTAL return on investments (not average of three separate yields)
         p1_yr_invest = float(getattr(p1, "y_nr_inv_total_return", 0.04))
 
-        # Calculate distributions as a percentage of the investment balance
-        # Distributions = dividends + realized capital gains
-        p1_dist_rate = float(getattr(p1, "y_nr_inv_elig_div", 0.0) +
-                            getattr(p1, "y_nr_inv_nonelig_div", 0.0) +
-                            getattr(p1, "y_nr_inv_capg", 0.0))
-        # Capital appreciation = total return - distributions
-        p1_yr_invest_cap_app = p1_yr_invest - p1_dist_rate
-
         p1_nr_cash_new = p1_nr_cash_after_wd * (1 + p1_yr_cash)
         p1_nr_gic_new = p1_nr_gic_after_wd * (1 + p1_yr_gic)
-        # Investment balance grows at capital appreciation rate only (distributions handled separately)
-        p1_nr_invest_new = p1_nr_invest_after_wd * (1 + p1_yr_invest_cap_app)
+        # Investment balance grows at the total return rate
+        p1_nr_invest_new = p1_nr_invest_after_wd * (1 + p1_yr_invest)
 
         # Update buckets and total balance
         p1.nr_cash = p1_nr_cash_new
@@ -2469,17 +2036,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Use TOTAL return on investments (not average of three separate yields)
         p2_yr_invest = float(getattr(p2, "y_nr_inv_total_return", 0.04))
 
-        # Calculate distributions as a percentage of the investment balance
-        p2_dist_rate = float(getattr(p2, "y_nr_inv_elig_div", 0.0) +
-                            getattr(p2, "y_nr_inv_nonelig_div", 0.0) +
-                            getattr(p2, "y_nr_inv_capg", 0.0))
-        # Capital appreciation = total return - distributions
-        p2_yr_invest_cap_app = p2_yr_invest - p2_dist_rate
-
         p2_nr_cash_new = p2_nr_cash_after_wd * (1 + p2_yr_cash)
         p2_nr_gic_new = p2_nr_gic_after_wd * (1 + p2_yr_gic)
-        # Investment balance grows at capital appreciation rate only (distributions handled separately)
-        p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest_cap_app)
+        # Investment balance grows at the total return rate
+        p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest)
 
         # Update buckets and total balance
         p2.nr_cash = p2_nr_cash_new
@@ -2526,16 +2086,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # We need to recalculate as: (start - withdrawal) * (1 + growth) + contributions + surplus
 
         # First, calculate contributions needed
-        # Contribute the configured amount (hh.tfsa_contribution_each) per person
-        # Limited by: (1) configured contribution amount, (2) available NonReg balance, (3) available TFSA room
-        if hh.tfsa_contribution_each > 0:
-            # Contribute the configured amount, up to available room and NonReg balance
-            c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance, 0.0), tfsa_room1)
-            c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance, 0.0), tfsa_room2)
-        else:
-            # If contributions disabled (set to $0), don't contribute
-            c1 = 0.0
-            c2 = 0.0
+        c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance,0.0), tfsa_room1)
+        c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance,0.0), tfsa_room2)
 
         # REINVEST SURPLUS: Surplus is added AFTER growth but BEFORE year-end balance
         # Get surplus from both people's simulate_year() calls (use household total)
@@ -2671,103 +2223,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         buffer_end_year = cash_buffer
         buffer_flow_year = year_cash_flow
 
-        # Calculate underfunded amount (spending shortfall)
-        # Positive when spending needs exceed available funds
-        underfunded_amount = max(0.0, original_target_total - total_available_after_tax)
-
-        # ===== HOUSEHOLD-LEVEL SHORTFALL REBALANCING =====
-        # CRITICAL FIX: If there's a household shortfall but assets remain in either person's accounts,
-        # attempt additional withdrawals from the person with remaining capacity.
-        # This prevents the paradox where the plan fails despite having substantial assets.
-        if underfunded_amount > 1.0:
-            # Check remaining balances for each person
-            p1_total_balance = p1.tfsa_balance + p1.rrif_balance + p1.nonreg_balance + p1.corporate_balance
-            p2_total_balance = p2.tfsa_balance + p2.rrif_balance + p2.nonreg_balance + p2.corporate_balance
-
-            # Only attempt rebalancing if there are significant assets remaining
-            if p1_total_balance > 1000 or p2_total_balance > 1000:
-                logger.info(f"\n💡 HOUSEHOLD REBALANCING [{year}]: Shortfall=${underfunded_amount:,.0f}")
-                logger.info(f"   P1 remaining: ${p1_total_balance:,.0f} | P2 remaining: ${p2_total_balance:,.0f}")
-
-                # NEW APPROACH: For TFSA-First strategy, directly withdraw from household TFSA balances
-                # This is simpler and more correct than trying to manipulate simulate_year()
-                # TFSA is tax-free, so we can withdraw the exact shortfall amount without tax calculations
-                shortfall_remaining = underfunded_amount
-
-                # Try TFSA first (tax-free, ideal for household rebalancing)
-                p1_tfsa_available = p1.tfsa_balance
-                p2_tfsa_available = p2.tfsa_balance
-                total_tfsa_available = p1_tfsa_available + p2_tfsa_available
-
-                if total_tfsa_available > 1e-6 and shortfall_remaining > 1e-6:
-                    tfsa_withdrawal_needed = min(shortfall_remaining, total_tfsa_available)
-                    logger.info(f"   💰 TFSA available for rebalancing: P1=${p1_tfsa_available:,.0f}, P2=${p2_tfsa_available:,.0f}")
-
-                    # Withdraw from person with larger TFSA balance first
-                    if p1_tfsa_available >= p2_tfsa_available:
-                        # Withdraw from P1 first
-                        p1_tfsa_withdrawal = min(tfsa_withdrawal_needed, p1_tfsa_available)
-                        p1.tfsa_balance -= p1_tfsa_withdrawal
-                        w1["tfsa"] += p1_tfsa_withdrawal
-                        shortfall_remaining -= p1_tfsa_withdrawal
-                        logger.info(f"   ✓ Withdrew ${p1_tfsa_withdrawal:,.0f} from P1 TFSA (tax-free)")
-
-                        # If still short and P2 has TFSA, withdraw from P2
-                        if shortfall_remaining > 1e-6 and p2_tfsa_available > 1e-6:
-                            p2_tfsa_withdrawal = min(shortfall_remaining, p2_tfsa_available)
-                            p2.tfsa_balance -= p2_tfsa_withdrawal
-                            w2["tfsa"] += p2_tfsa_withdrawal
-                            shortfall_remaining -= p2_tfsa_withdrawal
-                            logger.info(f"   ✓ Withdrew ${p2_tfsa_withdrawal:,.0f} from P2 TFSA (tax-free)")
-                    else:
-                        # Withdraw from P2 first
-                        p2_tfsa_withdrawal = min(tfsa_withdrawal_needed, p2_tfsa_available)
-                        p2.tfsa_balance -= p2_tfsa_withdrawal
-                        w2["tfsa"] += p2_tfsa_withdrawal
-                        shortfall_remaining -= p2_tfsa_withdrawal
-                        logger.info(f"   ✓ Withdrew ${p2_tfsa_withdrawal:,.0f} from P2 TFSA (tax-free)")
-
-                        # If still short and P1 has TFSA, withdraw from P1
-                        if shortfall_remaining > 1e-6 and p1_tfsa_available > 1e-6:
-                            p1_tfsa_withdrawal = min(shortfall_remaining, p1_tfsa_available)
-                            p1.tfsa_balance -= p1_tfsa_withdrawal
-                            w1["tfsa"] += p1_tfsa_withdrawal
-                            shortfall_remaining -= p1_tfsa_withdrawal
-                            logger.info(f"   ✓ Withdrew ${p1_tfsa_withdrawal:,.0f} from P1 TFSA (tax-free)")
-
-                # If TFSA didn't cover everything, try other accounts
-                # For now, skip complex taxable withdrawal logic - TFSA should handle most cases
-                if shortfall_remaining > 1e-6:
-                    logger.info(f"   ⚠️  Shortfall still remaining after TFSA: ${shortfall_remaining:,.0f}")
-                    logger.info(f"   ℹ️  Complex taxable rebalancing not yet implemented")
-
-                # Recalculate total available cash after rebalancing
-                total_account_withdrawals = (
-                    w1["nonreg"] + w1["rrif"] + w1["tfsa"] + w1["corp"] +
-                    w2["nonreg"] + w2["rrif"] + w2["tfsa"] + w2["corp"]
-                )
-                total_tax_after_split = t1["tax"] + t2["tax"]
-
-                # CRITICAL FIX: Recalculate per-person tax values after rebalancing
-                # The tax values were updated at lines 2520/2535, but the split values were not
-                tax1_after = t1["tax"]
-                tax2_after = t2["tax"]
-                tax_fed_total = t1.get("fed_tax", 0.0) + t2.get("fed_tax", 0.0)
-                tax_prov_total = t1.get("prov_tax", 0.0) + t2.get("prov_tax", 0.0)
-
-                total_available_after_tax = (
-                    cpp_total + oas_total + gis_total +
-                    total_account_withdrawals + nr_distributions_total - total_tax_after_split
-                )
-                underfunded_amount = max(0.0, original_target_total - total_available_after_tax)
-                if underfunded_amount > 1e-6:
-                    logger.info(f"   📊 After rebalancing: shortfall still ${underfunded_amount:,.0f}")
-
         rows.append(YearResult(
             year=year, age_p1=age1, age_p2=age2, years_since_start=years_since_start,
             spend_target_after_tax=spend,
-            underfunded_after_tax=underfunded_amount,
-            is_underfunded=(underfunded_amount >= 1.0),
             # base taxes + per person after split
             tax_p1=t1["tax"], tax_p2=t2["tax"],
             tax_after_split_p1=tax1_after, tax_after_split_p2=tax2_after,
@@ -2777,13 +2235,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             #Pensions
             oas_p1=t1["oas"], oas_p2=t2["oas"], cpp_p1=t1["cpp"], cpp_p2=t2["cpp"],
             gis_p1=t1["gis"], gis_p2=t2["gis"],
-            employer_pension_p1=t1["employer_pension"], employer_pension_p2=t2["employer_pension"],
-            rental_income_p1=t1["rental_income"], rental_income_p2=t2["rental_income"],
-            other_income_p1=t1["other_income"], other_income_p2=t2["other_income"],
             #OAS Clawback
             oas_clawback_p1=float(t1.get("oas_clawback", 0.0)), oas_clawback_p2=float(t2.get("oas_clawback", 0.0)),
-            #Taxable income per person
-            taxable_inc_p1=float(t1.get("taxable_income", 0.0)), taxable_inc_p2=float(t2.get("taxable_income", 0.0)),
             #withdrawls
             withdraw_nonreg_p1=w1["nonreg"], withdraw_nonreg_p2=w2["nonreg"],
             withdraw_rrif_p1=w1["rrif"], withdraw_rrif_p2=w2["rrif"],
@@ -2865,12 +2318,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Stop if underfunded and stop_on_fail is set
         if hh.stop_on_fail and is_fail:
             break
-
-        # FIX: Recalculate ages from birth year instead of incrementing
-        # This ensures ages are consistent regardless of start_year
-        year += 1
-        age1 = year - birth_year_p1
-        age2 = year - birth_year_p2
+         
+        year += 1; age1 += 1; age2 += 1
         if age1 > hh.end_age and age2 > hh.end_age:
             break
 

@@ -19,27 +19,10 @@ class PersonInput(BaseModel):
     start_age: int = Field(default=65, ge=50, le=90, description="Starting age for simulation")
 
     # Government benefits
-    cpp_start_age: int = Field(default=65, ge=60, le=70, description="Age to start CPP (must be between 60 and 70)")
+    cpp_start_age: int = Field(default=65, ge=60, le=70, description="Age to start CPP")
     cpp_annual_at_start: float = Field(default=0, ge=0, le=20000, description="Annual CPP at start age")
-    oas_start_age: int = Field(default=65, ge=65, le=70, description="Age to start OAS (must be between 65 and 70)")
+    oas_start_age: int = Field(default=65, ge=65, le=70, description="Age to start OAS")
     oas_annual_at_start: float = Field(default=0, ge=0, le=15000, description="Annual OAS at start age")
-
-    # Employer pension
-    employer_pension_annual: float = Field(default=0, ge=0, le=200000, description="Annual employer pension (DB/DC)")
-
-    # Other income sources
-    rental_income_annual: float = Field(
-        default=0,
-        ge=0,
-        le=500000,
-        description="Annual NET rental income after expenses (property tax, insurance, mortgage interest, repairs). Amount from T776 line 8230."
-    )
-    other_income_annual: float = Field(
-        default=0,
-        ge=0,
-        le=500000,
-        description="Annual employment or business income (salary, consulting, freelance). Excludes investment income (handled via non-registered accounts)."
-    )
 
     # Account balances
     tfsa_balance: float = Field(default=0, ge=0, description="TFSA balance")
@@ -94,6 +77,22 @@ class PersonInput(BaseModel):
     # TFSA room
     tfsa_room_start: float = Field(default=7000, ge=0, description="TFSA contribution room at start")
     tfsa_room_annual_growth: float = Field(default=7000, ge=0, description="Annual TFSA room increase")
+
+    # Real estate - rental income and property details
+    rental_income_annual: float = Field(default=0, ge=0, description="Annual rental income from properties")
+
+    # Primary residence for downsizing scenario
+    has_primary_residence: bool = Field(default=False, description="Has a primary residence")
+    primary_residence_value: float = Field(default=0, ge=0, description="Current value of primary residence")
+    primary_residence_purchase_price: float = Field(default=0, ge=0, description="Original purchase price")
+    primary_residence_mortgage: float = Field(default=0, ge=0, description="Outstanding mortgage balance")
+    primary_residence_monthly_payment: float = Field(default=0, ge=0, description="Monthly mortgage payment")
+
+    # Downsizing plan
+    plan_to_downsize: bool = Field(default=False, description="Planning to downsize/sell property")
+    downsize_year: int | None = Field(default=None, description="Year to downsize (None if no plan)")
+    downsize_new_home_cost: float = Field(default=0, ge=0, description="Cost of new (smaller) home")
+    downsize_is_principal_residence: bool = Field(default=True, description="Is this the principal residence (0% cap gains)")
 
     @field_validator('nr_invest_pct')
     @classmethod
@@ -175,7 +174,6 @@ class HouseholdInput(BaseModel):
         "capital-gains-optimized",
         "tfsa-first",
         "balanced",
-        "rrif-frontload",
         "manual"
     ] = Field(default="corporate-optimized", description="Withdrawal strategy")
 
@@ -212,12 +210,6 @@ class HouseholdInput(BaseModel):
         ge=0,
         le=0.5,
         description="Fraction of RRIF income to split (0-50%)"
-    )
-    income_split_pension_fraction: float = Field(
-        default=0.0,
-        ge=0,
-        le=0.5,
-        description="Fraction of employer pension income to split (0-50%, ages 65+)"
     )
     hybrid_rrif_topup_per_person: float = Field(
         default=0,

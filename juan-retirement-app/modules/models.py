@@ -72,11 +72,6 @@ class Person:
     cpp_start_age: int = 70
     oas_annual_at_start: float = 0.0
     oas_start_age: int = 70
-    employer_pension_annual: float = 0.0  # Annual employer pension (DB/DC pension income)
-
-    # Other income sources
-    rental_income_annual: float = 0.0  # Annual rental income (net after expenses)
-    other_income_annual: float = 0.0  # Other regular income (employment, business, investment)
 
     # Registered accounts
     rrsp_balance: float = 0.0
@@ -116,14 +111,6 @@ class Person:
     yield_tfsa_growth: float = 0.05
     yield_rrsp_growth: float = 0.05
 
-    # Early RRIF/RRSP withdrawal customization (before age 71)
-    enable_early_rrif_withdrawal: bool = False
-    early_rrif_withdrawal_start_age: int = 65
-    early_rrif_withdrawal_end_age: int = 70
-    early_rrif_withdrawal_annual: float = 20000.0
-    early_rrif_withdrawal_percentage: float = 5.0
-    early_rrif_withdrawal_mode: str = "fixed"  # "fixed" or "percentage"
-
     # Bucketed non-registered accounts
     nr_cash: float = 0.0      # bank/high interest savings
     nr_gic: float = 0.0       # term deposits
@@ -161,6 +148,25 @@ class Person:
     y_corp_inv_elig_div: float = 0.03
     y_corp_inv_capg: float = 0.00
 
+    # Real estate - rental income and property details
+    rental_income_annual: float = 0.0
+
+    # Primary residence for downsizing scenario
+    has_primary_residence: bool = False
+    primary_residence_value: float = 0.0
+    primary_residence_purchase_price: float = 0.0
+    primary_residence_mortgage: float = 0.0
+    primary_residence_monthly_payment: float = 0.0
+
+    # Downsizing plan
+    plan_to_downsize: bool = False
+    downsize_year: int | None = None
+    downsize_new_home_cost: float = 0.0
+    downsize_is_principal_residence: bool = True
+
+    # Temporary field for current year's downsizing capital gains (cleared each year)
+    downsizing_capital_gains_this_year: float = 0.0
+
     def total_liquid_balance(self) -> float:
         """Return total balance across all accounts."""
         return (
@@ -191,7 +197,6 @@ class Household:
     strategy: str = "NonReg->RRIF->Corp->TFSA"
     hybrid_rrif_topup_per_person: float = 0.0
     income_split_rrif_fraction: float = 0.5
-    income_split_pension_fraction: float = 0.0  # Split employer pension income (0-0.5, age 65+). Set to 0.5 when pension income is heavily imbalanced and both spouses are in similar tax brackets.
     reinvest_nonreg_dist: bool = False  # Reinvest non-reg distributions instead of using for spending
 
     # Asset-aware withdrawal strategy
@@ -225,12 +230,6 @@ class YearResult:
     cpp_p2: float
     gis_p1: float
     gis_p2: float
-    employer_pension_p1: float
-    employer_pension_p2: float
-    rental_income_p1: float
-    rental_income_p2: float
-    other_income_p1: float
-    other_income_p2: float
 
     # RRIF withdrawals
     withdraw_rrif_p1: float
@@ -283,10 +282,6 @@ class YearResult:
     # OAS Clawback (recovery tax)
     oas_clawback_p1: float = 0.0
     oas_clawback_p2: float = 0.0
-
-    # Taxable income per person
-    taxable_inc_p1: float = 0.0
-    taxable_inc_p2: float = 0.0
 
     # Non-registered income breakdown
     nr_interest_p1: float = 0.0
