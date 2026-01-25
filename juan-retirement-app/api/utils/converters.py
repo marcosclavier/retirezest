@@ -927,3 +927,25 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         ))
 
     return ChartData(data_points=data_points)
+
+def get_strategy_display_name(strategy_key: str) -> str:
+    """
+    Convert strategy key to user-friendly display name.
+
+    Args:
+        strategy_key: Strategy identifier (e.g., "corporate-optimized")
+
+    Returns:
+        Human-readable strategy name
+    """
+    strategy_names = {
+        "corporate-optimized": "Corporate Optimized",
+        "minimize-income": "Minimize Income",
+        "rrif-splitting": "RRIF Splitting",
+        "capital-gains-optimized": "Capital Gains Optimized",
+        "tfsa-first": "TFSA First",
+        "balanced": "Balanced",
+        "manual": "Manual"
+    }
+
+    return strategy_names.get(strategy_key.lower(), strategy_key.title())
