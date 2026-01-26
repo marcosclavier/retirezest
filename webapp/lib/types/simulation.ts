@@ -484,7 +484,7 @@ export const defaultHouseholdInput: HouseholdInput = {
   p2: { ...defaultPersonInput, name: 'Partner' },
 
   province: 'AB',
-  start_year: 2025,
+  start_year: 2026,
   end_age: 95,
 
   strategy: 'corporate-optimized',

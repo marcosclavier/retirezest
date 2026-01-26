@@ -622,11 +622,26 @@ def calculate_gis_optimization_withdrawal(
             "corp": max(0, getattr(person, "corporate_balance", 0.0)),
         }
 
-    # Step 1: Calculate baseline GIS benefit
+    # Step 1: Calculate baseline GIS benefit and threshold
     baseline_gis = calculate_gis(
         net_income_before_withdrawal, age, gis_config,
         oas_amount, is_couple, other_person_gis_income
     )
+
+    # Determine GIS threshold for this person/couple
+    gis_threshold = gis_config.get("threshold_single", 22272)
+    if is_couple:
+        gis_threshold = gis_config.get("threshold_couple", 29424)
+
+    # Calculate "room" before hitting GIS threshold
+    # This is how much taxable income we can add before losing max GIS
+    gis_income_room = max(0.0, gis_threshold - net_income_before_withdrawal)
+
+    # Strategic GIS targeting: If we're eligible for significant GIS,
+    # prioritize staying below threshold to maximize benefits
+    # BUT: Never sacrifice retirement funding for GIS preservation
+    # First objective is ALWAYS to fund retirement, then optimize for GIS
+    preserve_gis = baseline_gis > 5000  # If getting >$5k GIS, prefer low-tax sources
 
     # Step 2: Calculate effective cost per dollar for each source
     withdrawal_costs = {}
@@ -754,22 +769,39 @@ def calculate_gis_optimization_withdrawal(
     # Step 4: Enforce RRIF minimum - must be met FIRST
     rrif_min = rrif_minimum(account_balances.get("rrif", 0.0), age)
 
-    # Step 5: Greedily select sources in cost order
+    # Step 5: Greedily select sources in cost order while respecting GIS thresholds
     withdrawals = {"nonreg": 0.0, "rrif": 0.0, "tfsa": 0.0, "corp": 0.0}
     remaining_needed = after_tax_target
     total_tax = 0.0
     gis_impact_details = {}
+    current_income_addition = 0.0  # Track how much income we've added
 
     # FIRST PASS: Enforce RRIF minimum (mandatory by law, non-negotiable)
     if rrif_min > 0.001 and account_balances.get("rrif", 0.0) >= rrif_min:
         withdrawals["rrif"] = rrif_min
         rrif_after_tax_value = rrif_min * (1.0 - withdrawal_costs.get("rrif", 0.50))
         remaining_needed -= rrif_after_tax_value
+        current_income_addition += rrif_min  # RRIF is 100% taxable income
 
-    # SECOND PASS: Greedy withdrawal from remaining sources
+    # SECOND PASS: Prioritize TFSA if we're trying to preserve GIS
+    # TFSA doesn't add to taxable income, so it's ideal for staying below threshold
+    if preserve_gis and remaining_needed > 0 and account_balances.get("tfsa", 0) > 0:
+        tfsa_available = account_balances.get("tfsa", 0.0)
+        # Use TFSA FIRST to meet needs without triggering GIS clawback
+        tfsa_to_use = min(tfsa_available, remaining_needed * 1.05)  # Account for minimal tax
+        if tfsa_to_use > 0:
+            withdrawals["tfsa"] = tfsa_to_use
+            remaining_needed -= tfsa_to_use  # TFSA is tax-free
+            # Note: TFSA does NOT add to current_income_addition (it's not taxable)
+
+    # THIRD PASS: Greedy withdrawal from remaining sources, respecting GIS threshold
     for source, cost_per_dollar in sorted_sources:
         if remaining_needed <= 0.001 or cost_per_dollar == float('inf'):
             break
+
+        # Skip TFSA if we already used it in SECOND PASS
+        if source == "tfsa" and withdrawals["tfsa"] > 0:
+            continue
 
         # Skip RRIF if we already met the minimum
         if source == "rrif" and withdrawals["rrif"] >= rrif_min:
@@ -796,10 +828,53 @@ def calculate_gis_optimization_withdrawal(
             # Normal case: withdrawal amount scaled for tax/GIS impact
             withdraw_amount = min(available, remaining_needed / (1.0 - cost))
 
+        # GIS THRESHOLD GUIDANCE: Track income impact but NEVER limit withdrawals
+        # if it means underfunding retirement. First objective is to FUND RETIREMENT.
+        # GIS optimization is SECONDARY and only used for choosing between sources.
+        #
+        # The old logic would REFUSE to withdraw enough money if it exceeded GIS threshold,
+        # leaving retirement underfunded. This violated the fundamental principle:
+        # "the first objective is to fund retirement" - user feedback 2026-01-25
+        #
+        # New logic: Just track the GIS impact for reporting, but always meet spending needs
+        if preserve_gis and source != "tfsa":  # TFSA doesn't count toward income
+            # Calculate how much income this withdrawal would add (for tracking only)
+            if source == "nonreg":
+                acb_ratio = person.nonreg_acb / max(person.nonreg_balance, 1.0)
+                gain_ratio = max(0.0, 1.0 - acb_ratio)
+                income_per_dollar = gain_ratio * 0.50  # Capital gains: 50% inclusion
+            elif source == "rrif":
+                income_per_dollar = 1.0  # 100% taxable
+            elif source == "corp":
+                income_per_dollar = 1.0  # Dividend income
+            else:
+                income_per_dollar = 0.0
+
+            # Track income addition for reporting/analysis purposes
+            income_this_would_add = withdraw_amount * income_per_dollar
+            remaining_gis_room = max(0.0, gis_income_room - current_income_addition)
+
+            # NOTE: We do NOT limit withdraw_amount here anymore
+            # The withdrawal order is already optimized (TFSA first when preserve_gis=True)
+            # to minimize GIS impact. But we will NEVER refuse to withdraw if needed
+            # to meet the spending target, even if it costs GIS benefits.
+            # Funding retirement comes FIRST, GIS optimization comes SECOND.
+
         if withdraw_amount < 0.01:
             continue
 
         withdrawals[source] += withdraw_amount
+
+        # Track income addition for GIS threshold management
+        if source == "nonreg":
+            acb_ratio = person.nonreg_acb / max(person.nonreg_balance, 1.0)
+            gain_ratio = max(0.0, 1.0 - acb_ratio)
+            current_income_addition += withdraw_amount * gain_ratio * 0.50
+        elif source == "rrif":
+            current_income_addition += withdraw_amount
+        elif source == "corp":
+            current_income_addition += withdraw_amount
+        # TFSA does not add to income
 
         # Update remaining needed after-tax amount
         # After-tax impact = withdrawal - (tax + GIS loss)
@@ -822,8 +897,28 @@ def calculate_gis_optimization_withdrawal(
         gis_impact_details[source]["gis_loss"] += est_gis_loss
 
     # Step 6: Calculate final GIS benefit after all withdrawals
-    total_withdrawal = sum(withdrawals.values())
-    final_net_income = net_income_before_withdrawal + total_withdrawal
+    # CRITICAL: Only certain withdrawals add to taxable income (GIS income test)
+    # - TFSA: Does NOT add to income (tax-free)
+    # - NonReg: Only capital gains portion adds (at 50% inclusion rate)
+    # - RRIF: 100% adds to income
+    # - Corp: Dividend amount adds to income
+
+    # Calculate the income addition from each source
+    income_from_nonreg = 0.0
+    if withdrawals["nonreg"] > 0:
+        acb_ratio = person.nonreg_acb / max(person.nonreg_balance, 1.0)
+        gain_ratio = max(0.0, 1.0 - acb_ratio)
+        # Capital gains: 50% inclusion rate
+        income_from_nonreg = withdrawals["nonreg"] * gain_ratio * 0.50
+
+    income_from_rrif = withdrawals["rrif"]  # 100% taxable
+    income_from_corp = withdrawals["corp"]  # Dividend income (100% of amount)
+    income_from_tfsa = 0.0  # TFSA does NOT count as income
+
+    # Total taxable income addition
+    total_income_addition = income_from_nonreg + income_from_rrif + income_from_corp + income_from_tfsa
+
+    final_net_income = net_income_before_withdrawal + total_income_addition
     final_gis = calculate_gis(
         final_net_income, age, gis_config, oas_amount, is_couple, other_person_gis_income
     )
@@ -838,11 +933,17 @@ def calculate_gis_optimization_withdrawal(
             "gis_loss": gis_benefit_loss,
             "net_income_before": net_income_before_withdrawal,
             "net_income_after": final_net_income,
+            "gis_threshold": gis_threshold,
+            "gis_income_room": gis_income_room,
+            "income_added": current_income_addition,
+            "stayed_below_threshold": final_net_income < gis_threshold,
+            "preserve_gis_mode": preserve_gis,
         },
         "withdrawal_details": gis_impact_details,
     }
 
     # Calculate effective marginal rate (weighted by amount withdrawn from each source)
+    total_withdrawal = sum(withdrawals.values())
     if total_withdrawal > 0.001:
         weighted_cost = 0.0
         for s in ["nonreg", "rrif", "tfsa", "corp"]:
@@ -1113,7 +1214,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     gis_opt_effective_rate = 0.0
     gis_opt_analysis = {}
 
-    if "GIS-Optimized" in strategy_name and shortfall > 1e-6:
+    if ("GIS-Optimized" in strategy_name or "minimize-income" in strategy_name.lower() or "minimize_income" in strategy_name.lower()) and shortfall > 1e-6:
         # For GIS-optimized strategy, use sophisticated withdrawal optimization
         # that minimizes GIS clawback while meeting spending targets
 
@@ -1159,8 +1260,14 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         withdrawals["tfsa"] += gis_opt_withdrawals.get("tfsa", 0.0)
         withdrawals["corp"] += gis_opt_withdrawals.get("corp", 0.0)
 
-        # Mark that GIS optimization was used
-        shortfall = 0.0  # GIS optimization handles all remaining shortfall
+        # CRITICAL FIX: Recalculate shortfall after GIS withdrawals
+        # The GIS optimization function tries its best to meet the target, but may fail
+        # if accounts run low or costs are prohibitive. We MUST recalculate the shortfall
+        # to verify that the target was actually met.
+        #
+        # Calculate new tax based on updated withdrawals
+        new_after_tax = pre_tax_cash + withdrawals["nonreg"] + withdrawals["corp"] + withdrawals["tfsa"] - base_tax
+        shortfall = max(after_tax_target - new_after_tax, 0.0)
 
     # ----- Decide Order for topping up to meet the shortfall  -----
     # PHASE 5a: Call TaxOptimizer to get intelligent withdrawal order
@@ -1189,9 +1296,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         print(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order", file=sys.stderr)
         order = _get_strategy_order(strategy_name)
 
-    if "GIS-Optimized" in strategy_name:
+    if "GIS-Optimized" in strategy_name or "minimize-income" in strategy_name.lower() or "minimize_income" in strategy_name.lower():
         # GIS optimization already handled withdrawals above
-        order = []  # Skip the loop below since GIS optimization handled it
+        # BUT: Only skip the withdrawal loop if GIS optimization actually met the target
+        # If there's still a shortfall, we MUST continue with the fallback withdrawal order
+        if shortfall < 1e-6:
+            order = []  # Skip the loop below only if target was met
+        else:
+            # GIS optimization didn't meet target - continue with strategy order to fill gap
+            import sys
+            print(f"  WARNING: GIS optimization left ${shortfall:,.0f} shortfall, using fallback order", file=sys.stderr)
 
     if corporate_balance_start <= 1e-9:
         order = [x for x in order if x != "corp"]
@@ -2383,4 +2497,24 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             row.lifetime_tax_at_death = lifetime_tax_at_death
             row.lifetime_tax_efficiency = lifetime_tax_efficiency
 
-    return pd.DataFrame([r.__dict__ for r in rows])
+    # Convert to DataFrame
+    df = pd.DataFrame([r.__dict__ for r in rows])
+
+    # Generate AI-powered insights for minimize-income strategy
+    # Do this check using the strategy stored in the original household object
+    strategy_check = hh.strategy if hasattr(hh, 'strategy') else ""
+
+    if "minimize-income" in strategy_check.lower() or "minimize_income" in strategy_check.lower() or "GIS-Optimized" in strategy_check:
+        from modules.strategy_insights import generate_minimize_income_insights
+
+        # Note: We need to calculate feasibility BEFORE generating insights
+        # But the household p1/p2 balances have been modified during simulation
+        # So we pass None for feasibility and let it calculate based on simulation results
+        insights = generate_minimize_income_insights(hh, df, tax_cfg, gis_feasibility=None)
+
+        # Add insights as metadata to DataFrame
+        df.attrs['strategy_insights'] = insights
+        if 'gis_feasibility' in insights:
+            df.attrs['gis_feasibility'] = insights.get('gis_feasibility')
+
+    return df

@@ -2,7 +2,7 @@
 
 import { SimulationResponse } from '@/lib/types/simulation';
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, AlertTriangle, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, AlertCircle, TrendingDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface ResultsHeroSectionProps {
@@ -19,6 +19,14 @@ interface ResultsHeroSectionProps {
  * - At-a-glance success indicators
  */
 export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
+  // Debug logging - check if household_input exists
+  console.log('=== RESULTS HERO SECTION DEBUG ===');
+  console.log('result.household_input:', result.household_input);
+  console.log('p1 name:', result.household_input?.p1?.name);
+  console.log('p2 name:', result.household_input?.p2?.name);
+  console.log('strategy:', result.household_input?.strategy);
+  console.log('==================================');
+
   if (!result.success || !result.summary) {
     return null;
   }
@@ -106,16 +114,42 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
   // Limit to 3-4 key insights
   const topInsights = insights.slice(0, 4);
 
+  // Get person names for title
+  const p1Name = result.household_input?.p1?.name || 'Person 1';
+  const p2Name = result.household_input?.p2?.name || 'Person 2';
+  const hasP2 = result.household_input?.p2 && result.household_input.p2.name;
+
+  // Get strategy name (convert API format to display format)
+  const strategyMap: Record<string, string> = {
+    'minimize-income': 'Minimize Income',
+    'balanced': 'Balanced',
+    'rrif-splitting': 'RRIF Splitting',
+    'corporate-optimized': 'Corporate Optimized',
+    'capital-gains-optimized': 'Capital Gains Optimized',
+    'tfsa-first': 'TFSA First',
+    'manual': 'Manual'
+  };
+  const strategyName = result.household_input?.strategy
+    ? strategyMap[result.household_input.strategy] || result.household_input.strategy
+    : '';
+
+  // Create title with names
+  const simulationTitle = hasP2
+    ? `Retirement Simulation for ${p1Name} and ${p2Name}`
+    : `Retirement Simulation for ${p1Name}`;
+
+  console.log('📝 Title variables:', { p1Name, p2Name, hasP2, strategyName, simulationTitle });
+
   return (
     <Card className={`${healthLevel.lightBg} ${healthLevel.borderColor} border-2 overflow-hidden`}>
       <div className="p-8 md:p-12">
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Your Retirement Plan Health Score
+            {simulationTitle}
           </h2>
           <p className="text-sm md:text-base text-gray-600">
-            Based on your inputs and projected retirement timeline
+            {strategyName && `Strategy: ${strategyName} • `}Health Score: Based on your inputs and projected retirement timeline
           </p>
         </div>
 

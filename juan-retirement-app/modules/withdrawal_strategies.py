@@ -342,7 +342,7 @@ class GISOptimizedStrategy(WithdrawalStrategy):
     """
     GIS-optimized withdrawal strategy for maximum government benefits.
 
-    Priority Order: NonReg → Corp → TFSA → RRIF (minimize RRIF to preserve GIS)
+    Priority Order: NonReg → Corp → RRIF (min only) → TFSA (minimize taxable income)
 
     This strategy is specifically designed to maximize Guaranteed Income Supplement (GIS)
     benefits while sustaining retirement spending. GIS is income-tested and provides up to
@@ -351,51 +351,53 @@ class GISOptimizedStrategy(WithdrawalStrategy):
     Algorithm:
     1. Withdraw NonReg FIRST (lower immediate tax impact, use up ACB)
     2. Then Corp (capital dividends if available)
-    3. Then TFSA (preserve emergency fund but use before RRIF)
-    4. Only use RRIF as ABSOLUTE LAST RESORT (minimizes taxable income)
+    3. Then RRIF minimum (mandatory by law, must be withdrawn anyway)
+    4. Use TFSA as LAST RESORT (preserve tax-free growth and legacy)
     5. Mandatory RRIF minimums still enforced by law
 
     Why this works:
     - NonReg withdrawals: Spread tax over multiple years via ACB recovery
     - Corp withdrawals: More tax-efficient than RRIF
-    - TFSA withdrawals: Better than RRIF (no tax impact on GIS calculation)
+    - RRIF minimum: Mandatory by law, relatively tax-efficient with GIS credits
+    - TFSA last: Preserves tax-free growth and 0% tax at death (legacy benefit)
     - RRIF deferrals: Minimize taxable income → maximize GIS benefits
 
-    Expected benefits vs. Strategy B (RRIF first):
-    - 50-100% higher GIS benefits ($30-33k vs $12-15k early years)
-    - Plan extends 2-3 additional years (total withdrawal capacity)
-    - Total household tax savings: $100-150k over lifetime
-    - Better cash flow during critical early retirement years (65-80)
+    Expected benefits vs. old TFSA-before-RRIF approach:
+    - Preserves TFSA for tax-free legacy ($50K-100K+ at death vs $0)
+    - RRIF minimum is withdrawn efficiently (only what's required by law)
+    - Plan longevity improved (TFSA provides emergency buffer in later years)
+    - Better estate planning (TFSA passes 100% tax-free to heirs)
 
     This strategy optimizes for:
     - GIS benefit maximization ($100-200K+ over lifetime)
-    - Early retirement sustainability (age 65-85)
+    - Tax-free legacy planning (preserve TFSA for heirs)
     - Minimum tax burden (preserve GIS eligibility)
     - Plan longevity extension (2-3 additional years)
     """
 
     def name(self) -> str:
         """Return strategy name."""
-        return "GIS-Optimized (NonReg->Corp->TFSA->RRIF)"
+        return "GIS-Optimized (NonReg->Corp->RRIF->TFSA)"
 
     def get_withdrawal_order(self, has_corp_balance: bool) -> List[str]:
         """
         Return withdrawal order for GIS-optimized strategy.
 
         NonReg first to minimize taxable income and preserve GIS benefits.
-        RRIF is last resort to keep taxable income as low as possible.
+        RRIF minimum is used before TFSA to preserve tax-free legacy.
+        TFSA is last resort to keep it for emergency/legacy purposes.
 
         Examples:
             >>> strategy = GISOptimizedStrategy()
             >>> strategy.get_withdrawal_order(has_corp=True)
-            ["nonreg", "corp", "tfsa", "rrif"]
+            ["nonreg", "corp", "rrif", "tfsa"]
             >>> strategy.get_withdrawal_order(has_corp=False)
-            ["nonreg", "tfsa", "rrif"]
+            ["nonreg", "rrif", "tfsa"]
         """
         if has_corp_balance:
-            return ["nonreg", "corp", "tfsa", "rrif"]
+            return ["nonreg", "corp", "rrif", "tfsa"]
         else:
-            return ["nonreg", "tfsa", "rrif"]
+            return ["nonreg", "rrif", "tfsa"]
 
     def get_hybrid_topup(self, person: Person, hh: Household) -> float:
         """No hybrid adjustment for this strategy."""
@@ -473,7 +475,7 @@ _STRATEGY_MAP = {
     "Corp->RRIF->NonReg->TFSA": CorpFirstStrategy,
     "Hybrid (RRIF top-up first) -> NonReg -> Corp -> TFSA": HybridStrategy,
     "TFSA->Corp->RRIF->NonReg": TFSAFirstStrategy,
-    "GIS-Optimized (NonReg->Corp->TFSA->RRIF)": GISOptimizedStrategy,
+    "GIS-Optimized (NonReg->Corp->RRIF->TFSA)": GISOptimizedStrategy,
     "Balanced (Optimized for tax efficiency)": BalancedStrategy,
 }
 

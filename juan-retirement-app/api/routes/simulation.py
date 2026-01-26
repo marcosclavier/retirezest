@@ -218,6 +218,73 @@ async def run_simulation(
         key_assumptions = extract_key_assumptions(household_input, df)
         chart_data = extract_chart_data(df)
 
+        # Extract AI-powered insights (if generated)
+        strategy_insights = None
+        if 'strategy_insights' in df.attrs:
+            logger.debug("Extracting AI-powered strategy insights")
+            insights_dict = df.attrs['strategy_insights']
+
+            # Convert nested dicts to Pydantic models
+            from api.models.responses import StrategyInsights, GISFeasibility, StrategyRecommendation, StrategyMilestone
+
+            gis_feas_dict = insights_dict['gis_feasibility']
+            gis_feasibility = GISFeasibility(
+                status=gis_feas_dict['status'],
+                eligible_years=gis_feas_dict['eligible_years'],
+                total_projected_gis=gis_feas_dict['total_projected_gis'],
+                combined_rrif=gis_feas_dict['combined_rrif'],
+                max_rrif_for_gis_at_71=gis_feas_dict['max_rrif_for_gis_at_71'],
+                why_gis_ends=gis_feas_dict.get('why_gis_ends', 'GIS eligibility analysis complete'),
+                base_income_at_start=gis_feas_dict.get('base_income_at_start', 0),
+                gis_income_threshold=gis_feas_dict.get('gis_income_threshold', 0)
+            )
+
+            recommendations = [
+                StrategyRecommendation(
+                    priority=rec['priority'],
+                    action=rec['action'],
+                    expected_benefit=rec['expected_benefit']
+                )
+                for rec in insights_dict['recommendations']
+            ]
+
+            milestones = [
+                StrategyMilestone(age=str(m['age']), event=m['event'])
+                for m in insights_dict['key_milestones']
+            ]
+
+            # Extract GIS analysis fields (they're nested in 'gis_analysis')
+            gis_analysis = insights_dict['gis_analysis']
+
+            # Convert optimization opportunities to strings
+            opt_opps = insights_dict.get('optimization_opportunities', [])
+            opt_strings = []
+            for opp in opt_opps:
+                if isinstance(opp, dict):
+                    years = opp.get('years', '')
+                    opportunity = opp.get('opportunity', '')
+                    opt_strings.append(f"{years}: {opportunity}")
+                else:
+                    opt_strings.append(str(opp))
+
+            strategy_insights = StrategyInsights(
+                gis_feasibility=gis_feasibility,
+                strategy_effectiveness=insights_dict['strategy_effectiveness'],
+                main_message=gis_analysis['message'],
+                gis_eligibility_summary=f"Status: {gis_analysis['status']} | {gis_analysis['eligible_years']} eligible years | ${gis_analysis['actual_gis']:,.0f} total GIS",
+                gis_eligibility_explanation=gis_analysis.get('gis_end_reason', 'GIS eligibility complete'),
+                recommendations=recommendations,
+                optimization_opportunities=opt_strings,
+                key_milestones=milestones,
+                summary_metrics=insights_dict['summary_metrics']
+            )
+
+            logger.info(
+                f"💡 Insights: GIS status={gis_feasibility.status}, "
+                f"rating={insights_dict['strategy_effectiveness']['rating']}/10, "
+                f"eligible_years={gis_feasibility.eligible_years}"
+            )
+
         logger.info(
             f"📈 Results: success_rate={summary.success_rate:.1%}, "
             f"final_estate=${summary.final_estate_gross:,.0f}, "
@@ -237,6 +304,7 @@ async def run_simulation(
             spending_analysis=spending_analysis,
             key_assumptions=key_assumptions,
             chart_data=chart_data,
+            strategy_insights=strategy_insights,
             warnings=warnings
         )
 

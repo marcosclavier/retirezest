@@ -280,6 +280,71 @@ class ChartData(BaseModel):
     data_points: list[ChartDataPoint] = Field(default_factory=list, description="Year-by-year chart data")
 
 
+class GISFeasibility(BaseModel):
+    """GIS eligibility feasibility analysis."""
+
+    status: str = Field(description="GIS eligibility status (excellent/good/marginal/poor/not-eligible)")
+    eligible_years: int = Field(description="Number of years eligible for GIS")
+    total_projected_gis: float = Field(description="Total projected GIS benefits over eligible period")
+    combined_rrif: float = Field(description="Combined RRIF balance at start")
+    max_rrif_for_gis_at_71: float = Field(description="Maximum RRIF balance to maintain GIS eligibility at age 71")
+    why_gis_ends: str = Field(description="Explanation of why GIS eligibility ends")
+    base_income_at_start: float = Field(description="Base income (CPP+OAS) at retirement start")
+    gis_income_threshold: float = Field(description="GIS income threshold for household type")
+
+
+class StrategyRecommendation(BaseModel):
+    """Individual strategy recommendation."""
+
+    priority: str = Field(description="Priority level: high/medium/low")
+    action: str = Field(description="Recommended action")
+    expected_benefit: str = Field(description="Expected benefit from taking this action")
+
+
+class StrategyMilestone(BaseModel):
+    """Key milestone in the retirement plan."""
+
+    age: str = Field(description="Age when milestone occurs (can be a range like '65-70')")
+    event: str = Field(description="Description of the milestone event")
+
+
+class StrategyInsights(BaseModel):
+    """AI-powered insights for minimize-income strategy."""
+
+    # GIS Feasibility
+    gis_feasibility: GISFeasibility = Field(description="GIS eligibility analysis")
+
+    # Strategy Effectiveness
+    strategy_effectiveness: dict[str, Any] = Field(
+        description="Strategy effectiveness rating with level, rating (0-10), and good_fit flag"
+    )
+
+    # Main insights text
+    main_message: str = Field(description="Primary insight message about strategy suitability")
+    gis_eligibility_summary: str = Field(description="Summary of GIS eligibility analysis")
+    gis_eligibility_explanation: str = Field(description="Detailed explanation of GIS eligibility")
+
+    # Recommendations
+    recommendations: list[StrategyRecommendation] = Field(description="Prioritized action items")
+
+    # Optimization opportunities
+    optimization_opportunities: list[str] = Field(
+        default_factory=list,
+        description="Specific improvements identified from simulation"
+    )
+
+    # Key milestones
+    key_milestones: list[StrategyMilestone] = Field(
+        default_factory=list,
+        description="Important ages and events in the plan"
+    )
+
+    # Summary metrics
+    summary_metrics: dict[str, Any] = Field(
+        description="Key financial metrics (total_gis, final_net_worth, total_tax, years_with_gis)"
+    )
+
+
 class SimulationResponse(BaseModel):
     """Response from simulation endpoint."""
 
@@ -300,6 +365,9 @@ class SimulationResponse(BaseModel):
     spending_analysis: SpendingAnalysis | None = Field(default=None, description="Spending coverage analysis")
     key_assumptions: KeyAssumptions | None = Field(default=None, description="Key simulation assumptions")
     chart_data: ChartData | None = Field(default=None, description="Pre-computed chart data")
+
+    # AI-powered strategy insights
+    strategy_insights: StrategyInsights | None = Field(default=None, description="AI-powered insights for minimize-income strategy")
 
     warnings: list[str] = Field(default_factory=list)
     error: str | None = None

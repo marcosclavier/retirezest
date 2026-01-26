@@ -745,8 +745,27 @@ export default function SimulationPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-blue-600">Retirement Simulation</h1>
+            <h1 className="text-3xl font-bold text-blue-600">
+              {result?.household_input?.p1?.name && result?.household_input?.p2?.name
+                ? `Retirement Simulation for ${result.household_input.p1.name} and ${result.household_input.p2.name}`
+                : result?.household_input?.p1?.name
+                ? `Retirement Simulation for ${result.household_input.p1.name}`
+                : 'Retirement Simulation'}
+            </h1>
             <p className="text-gray-700">
+              {result?.household_input?.strategy && (() => {
+                const strategyMap: Record<string, string> = {
+                  'minimize-income': 'Minimize Income',
+                  'balanced': 'Balanced',
+                  'rrif-splitting': 'RRIF Splitting',
+                  'corporate-optimized': 'Corporate Optimized',
+                  'capital-gains-optimized': 'Capital Gains Optimized',
+                  'tfsa-first': 'TFSA First',
+                  'manual': 'Manual'
+                };
+                const strategyName = strategyMap[result.household_input.strategy] || result.household_input.strategy;
+                return `Strategy: ${strategyName} • `;
+              })()}
               Run comprehensive retirement projections with tax optimization
             </p>
           </div>

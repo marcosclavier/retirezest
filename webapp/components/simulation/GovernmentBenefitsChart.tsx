@@ -19,18 +19,14 @@ interface GovernmentBenefitsChartProps {
 }
 
 export function GovernmentBenefitsChart({ chartData, reinvestNonregDist = true }: GovernmentBenefitsChartProps) {
-  // Prepare data for chart
-  // Only show NonReg distributions when they are NOT being reinvested (i.e., when they're available for spending)
-  const showDistributions = !reinvestNonregDist;
-
+  // Prepare data for chart - only show government benefits (CPP, OAS, GIS)
   const data = chartData.map((point) => ({
     year: point.year,
     age: point.age_p1,
     CPP: point.cpp_total || 0,
     OAS: point.oas_total || 0,
     GIS: point.gis_total || 0,
-    ...(showDistributions && { 'NonReg Distributions': point.nonreg_distributions || 0 }),
-    Total: (point.government_benefits_total || 0) + (showDistributions ? (point.nonreg_distributions || 0) : 0),
+    Total: point.government_benefits_total || 0,
   }));
 
   // Custom tooltip formatter
@@ -65,12 +61,10 @@ export function GovernmentBenefitsChart({ chartData, reinvestNonregDist = true }
     <Card>
       <CardHeader>
         <CardTitle style={{ color: '#111827' }}>
-          {showDistributions ? 'Income Sources Over Time' : 'Government Benefits Over Time'}
+          Government Benefits Over Time
         </CardTitle>
         <CardDescription style={{ color: '#111827' }}>
-          {showDistributions
-            ? 'Government benefits and passive income throughout retirement'
-            : 'CPP, OAS, and GIS benefits throughout retirement'}
+          CPP, OAS, and GIS benefits throughout retirement
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -123,16 +117,6 @@ export function GovernmentBenefitsChart({ chartData, reinvestNonregDist = true }
               fill="#f59e0b"
               fillOpacity={0.8}
             />
-            {showDistributions && (
-              <Area
-                type="monotone"
-                dataKey="NonReg Distributions"
-                stackId="1"
-                stroke="#8b5cf6"
-                fill="#8b5cf6"
-                fillOpacity={0.8}
-              />
-            )}
           </AreaChart>
         </ResponsiveContainer>
       </CardContent>

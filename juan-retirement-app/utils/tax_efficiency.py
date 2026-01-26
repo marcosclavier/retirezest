@@ -163,10 +163,12 @@ class TaxEfficiencyCalculator:
             sources[3].priority = 4  # TFSA last
 
         elif strategy == "minimize-income":
-            # RRIF(min) → NonReg → Corporate → TFSA
-            sources[0].priority = 1  # RRIF minimum
-            sources[1].priority = 3  # Corporate (less efficient)
-            sources[2].priority = 2  # Non-Reg (capital gains more efficient)
+            # NonReg → Corporate → RRIF(min) → TFSA
+            # NonReg first (only 50% of gains taxable), Corp second (dividend credit),
+            # RRIF minimum third (mandatory), TFSA last (preserve for legacy)
+            sources[0].priority = 3  # RRIF minimum third
+            sources[1].priority = 2  # Corporate (dividend credit benefits)
+            sources[2].priority = 1  # Non-Reg FIRST (capital gains more efficient)
             sources[3].priority = 4  # TFSA last
 
         elif strategy == "capital-gains-optimized":
