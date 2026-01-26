@@ -1162,6 +1162,35 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         extra_up = apply_hybrid_topup(person.rrif_balance, rrif_min, hybrid_topup_amt)
         withdrawals["rrif"] += extra_up
 
+    # -----  RRIF Frontload strategy: 15% before OAS, 8% after OAS starts -----
+    # This strategy frontloads RRIF withdrawals to reduce RRIF balance before OAS clawback risk
+    # and to smooth tax burden across retirement years.
+    if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
+        # Determine frontload percentage based on whether person has started OAS
+        if age < person.oas_start_age:
+            # Before OAS: withdraw 15% of RRIF balance
+            frontload_pct = 0.15
+        else:
+            # After OAS starts: withdraw 8% of RRIF balance
+            frontload_pct = 0.08
+
+        # Calculate frontload amount (percentage of RRIF balance)
+        # This is in ADDITION to the minimum withdrawal requirement
+        frontload_amount = person.rrif_balance * frontload_pct
+
+        # Cap at available RRIF balance (don't exceed what's available)
+        frontload_amount = min(frontload_amount, person.rrif_balance)
+
+        # Add to withdrawals
+        withdrawals["rrif"] += frontload_amount
+
+        if frontload_amount > 1e-6:
+            import sys
+            print(f"DEBUG RRIF-FRONTLOAD [{person.name}] Age {age}: "
+                  f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS, "
+                  f"{frontload_pct*100:.0f}% of ${person.rrif_balance:,.0f} = ${frontload_amount:,.0f}",
+                  file=sys.stderr)
+
     # -----  Cash available before extra top-ups -----
     # When reinvesting non-reg distributions, they are NOT available for spending
     # (they are automatically reinvested into the account instead).

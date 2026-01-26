@@ -298,13 +298,15 @@ class RRIFFrontloadOASProtectionStrategy(WithdrawalStrategy):
     Priority Order: NonReg → RRIF → TFSA → Corp
 
     This strategy is specifically designed for the RRIF-Frontload approach to:
-    1. Prioritize NonReg withdrawals (50% capital gains inclusion = tax-efficient)
-    2. Allow additional RRIF withdrawals if needed (beyond mandatory 15%/8%)
-    3. Use TFSA before Corporate (tax-free vs 100% taxable)
-    4. Use Corporate LAST to avoid triggering OAS clawback
+    1. Frontload RRIF withdrawals: 15% before OAS, 8% after OAS starts
+    2. Prioritize NonReg withdrawals (50% capital gains inclusion = tax-efficient)
+    3. Allow additional RRIF withdrawals if needed (beyond mandatory frontload %)
+    4. Use TFSA before Corporate (tax-free vs 100% taxable)
+    5. Use Corporate LAST to avoid triggering OAS clawback
 
     Why this order avoids OAS clawback:
     - NonReg first: Only 50% of capital gains are taxable (most tax-efficient)
+    - RRIF frontload: Reduces RRIF balance before OAS clawback becomes an issue
     - TFSA third: Tax-free withdrawals don't increase taxable income
     - Corporate LAST: 100% taxable income → only used when absolutely necessary
 
@@ -334,7 +336,21 @@ class RRIFFrontloadOASProtectionStrategy(WithdrawalStrategy):
             return ["nonreg", "rrif", "tfsa"]
 
     def get_hybrid_topup(self, person: Person, hh: Household) -> float:
-        """No hybrid adjustment for this strategy."""
+        """
+        Calculate RRIF frontload amount: 15% before OAS, 8% after OAS.
+
+        This method is called by simulate_year() but doesn't receive age context.
+        The actual age-based logic needs to be implemented in simulate_year() itself.
+
+        For now, this returns a marker value that simulate_year() will interpret.
+        The real implementation will be in simulation.py where age is available.
+
+        Returns:
+            float: Marker value (will be overridden by simulation logic)
+        """
+        # NOTE: This method can't determine age since it's not passed as a parameter
+        # The actual 15%/8% logic will be implemented in simulate_year() in simulation.py
+        # by detecting the "rrif-frontload" strategy name
         return 0.0
 
 

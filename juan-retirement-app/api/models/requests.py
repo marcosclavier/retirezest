@@ -202,7 +202,7 @@ class HouseholdInput(BaseModel):
         description="Annual TFSA contribution per person"
     )
     reinvest_nonreg_dist: bool = Field(
-        default=True,
+        default=False,
         description="Reinvest non-registered distributions"
     )
     income_split_rrif_fraction: float = Field(
