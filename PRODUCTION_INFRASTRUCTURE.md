@@ -17,22 +17,35 @@ RetireZest is built using a modern, scalable cloud infrastructure leveraging bes
                             │
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
+│                       Cloudflare CDN                         │
+│         (DNS, DDoS Protection, WAF, SSL/TLS)                │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  • Global CDN & Caching                                 ││
+│  │  • DDoS Protection                                      ││
+│  │  • Web Application Firewall (WAF)                      ││
+│  │  • DNS Management                                       ││
+│  │  • SSL/TLS Encryption                                   ││
+│  └─────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
 │                    Vercel Edge Network                       │
 │                   (Next.js Frontend)                         │
 │  ┌─────────────────────────────────────────────────────────┐│
-│  │  • Global CDN                                           ││
-│  │  • Automatic SSL/TLS                                    ││
+│  │  • Next.js 15 Application                               ││
 │  │  • Edge Functions                                       ││
+│  │  • API Routes                                           ││
 │  │  • Static Asset Optimization                           ││
 │  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
                             │
-            ┌───────────────┼───────────────┐
-            ↓               ↓               ↓
-    ┌──────────────┐ ┌─────────────┐ ┌─────────────┐
-    │   Railway    │ │   Stripe    │ │   Resend    │
-    │  (Backend)   │ │ (Payments)  │ │   (Email)   │
-    └──────────────┘ └─────────────┘ └─────────────┘
+            ┌───────────────┼───────────────────┐
+            ↓               ↓                   ↓
+    ┌──────────────┐ ┌─────────────┐   ┌─────────────┐
+    │   Railway    │ │   Stripe    │   │   Resend    │
+    │  (Backend)   │ │ (Payments)  │   │   (Email)   │
+    └──────────────┘ └─────────────┘   └─────────────┘
             │
             ↓
     ┌──────────────┐
@@ -43,7 +56,148 @@ RetireZest is built using a modern, scalable cloud infrastructure leveraging bes
 
 ---
 
-## 1. GitHub (Source Control)
+## 1. Cloudflare (CDN & Security)
+
+### Platform Details
+
+**Service**: Cloudflare
+**Website**: https://cloudflare.com
+**Purpose**: DNS management, CDN, DDoS protection, WAF, and SSL/TLS
+
+### Features Enabled
+
+**CDN & Performance**:
+- Global content delivery network (300+ locations)
+- Automatic caching of static assets
+- HTTP/2 and HTTP/3 support
+- Brotli compression
+- Image optimization (Polish)
+- Minification (HTML, CSS, JavaScript)
+
+**Security**:
+- DDoS protection (automatic mitigation)
+- Web Application Firewall (WAF)
+- Rate limiting
+- Bot protection
+- SSL/TLS encryption (Full Strict mode)
+- Always Use HTTPS
+- HSTS (HTTP Strict Transport Security)
+
+**DNS**:
+- Authoritative DNS hosting
+- Fast DNS resolution (< 20ms globally)
+- DNSSEC support
+- Custom DNS records for email authentication
+
+### DNS Configuration
+
+**Domain Records**:
+```
+A     @               [Vercel IP]
+CNAME www             cname.vercel-dns.com
+CNAME api             [Railway domain]
+
+# Email Authentication (SPF, DKIM, DMARC)
+TXT   @               "v=spf1 include:resend.com ~all"
+TXT   resend._domainkey    "[DKIM-value-from-Resend]"
+TXT   _dmarc              "v=DMARC1; p=quarantine; rua=mailto:dmarc@retirezest.com"
+
+# Email verification
+TXT   @               "[verification-token]"
+
+# Security headers
+TXT   @               "[security-policy]"
+```
+
+### Page Rules
+
+**Custom Page Rules**:
+1. **Always Use HTTPS**: Force HTTPS for all traffic
+2. **Cache Everything**: Cache static assets at the edge
+3. **Security Level**: Medium (challenges suspicious traffic)
+4. **Browser Cache TTL**: 4 hours for static assets
+5. **Edge Cache TTL**: 2 hours
+
+### Firewall Rules
+
+**WAF Rules**:
+```
+# Block common attack patterns
+- SQL injection attempts
+- XSS (Cross-Site Scripting) attempts
+- Path traversal attempts
+- Known malicious IPs/ASNs
+
+# Rate Limiting
+- Max 100 requests per minute per IP for API routes
+- Max 10 requests per minute for authentication endpoints
+- Max 5 requests per minute for password reset
+
+# Geographic Restrictions (optional)
+- Allow: North America, Europe, Australia
+- Challenge: Asia, South America
+- Block: Known high-risk countries
+```
+
+### SSL/TLS Configuration
+
+**SSL Mode**: Full (Strict)
+- Cloudflare encrypts traffic between browser and Cloudflare
+- Cloudflare verifies Vercel's SSL certificate
+- End-to-end encryption guaranteed
+
+**Minimum TLS Version**: TLS 1.2
+**TLS 1.3**: Enabled
+**Automatic HTTPS Rewrites**: Enabled
+**Always Use HTTPS**: Enabled
+
+**Edge Certificates**:
+- Universal SSL (free, automatic)
+- Custom certificates (if needed)
+- Dedicated certificates with custom hostname
+
+### Analytics & Monitoring
+
+**Cloudflare Analytics**:
+- Traffic overview (requests, bandwidth, threats)
+- Geographic distribution
+- Threat intelligence
+- Performance metrics (time to first byte)
+- Cache hit ratio
+
+**Security Analytics**:
+- Blocked threats by type
+- Rate limiting events
+- Firewall rules triggered
+- Bot traffic analysis
+
+### Email Routing (Optional)
+
+**Cloudflare Email Routing**:
+- Forward emails to `info@retirezest.com` → your inbox
+- Catch-all addresses
+- Email forwarding rules
+- No cost for basic email forwarding
+
+**MX Records** (if using Cloudflare Email Routing):
+```
+MX  @  10  isaac.mx.cloudflare.net
+MX  @  20  linda.mx.cloudflare.net
+MX  @  30  amir.mx.cloudflare.net
+```
+
+### Cost
+
+**Plan**: Pro ($20/month) or Business ($200/month)
+- **Free Plan**: Suitable for development
+- **Pro Plan**: Advanced DDoS, WAF, image optimization
+- **Business Plan**: Advanced security, PCI compliance, 100% uptime SLA
+
+**Recommended**: Pro Plan ($20/month) for production
+
+---
+
+## 2. GitHub (Source Control)
 
 ### Repository Configuration
 
@@ -111,7 +265,7 @@ marcosclavier/retirezest/
 
 ---
 
-## 2. Vercel (Frontend Hosting)
+## 3. Vercel (Frontend Hosting)
 
 ### Platform Details
 
@@ -197,7 +351,7 @@ NODE_ENV="production"
 
 ---
 
-## 3. Railway (Backend Hosting)
+## 4. Railway (Backend Hosting)
 
 ### Platform Details
 
@@ -264,7 +418,7 @@ LOG_LEVEL=info
 
 ---
 
-## 4. Stripe (Payment Processing)
+## 5. Stripe (Payment Processing)
 
 ### Platform Details
 
@@ -340,7 +494,7 @@ model User {
 
 ---
 
-## 5. Resend (Email Service)
+## 6. Resend (Email Service)
 
 ### Platform Details
 
@@ -410,7 +564,275 @@ await resend.emails.send({
 
 ---
 
-## 6. PostgreSQL (Database)
+## 7. Email Authentication & Deliverability
+
+### Overview
+
+Email authentication is critical for ensuring emails from RetireZest reach users' inboxes and aren't marked as spam. We implement industry-standard authentication protocols: SPF, DKIM, and DMARC.
+
+### SPF (Sender Policy Framework)
+
+**Purpose**: Specifies which mail servers are authorized to send email on behalf of your domain.
+
+**DNS Record** (via Cloudflare):
+```
+Type:  TXT
+Name:  @
+Value: v=spf1 include:resend.com ~all
+TTL:   Auto
+```
+
+**Explanation**:
+- `v=spf1` - SPF version 1
+- `include:resend.com` - Authorize Resend's mail servers
+- `~all` - Soft fail for unauthorized servers (marks as spam but doesn't reject)
+
+**Alternative** (if using multiple email services):
+```
+v=spf1 include:resend.com include:_spf.google.com ~all
+```
+
+### DKIM (DomainKeys Identified Mail)
+
+**Purpose**: Adds a digital signature to emails, proving they weren't tampered with in transit.
+
+**Setup Process**:
+1. Log in to Resend dashboard
+2. Go to Domains → Your Domain → DKIM Settings
+3. Copy the DKIM record values
+4. Add to Cloudflare DNS
+
+**DNS Record** (via Cloudflare):
+```
+Type:  TXT
+Name:  resend._domainkey.retirezest.com
+Value: [Long DKIM value provided by Resend]
+TTL:   Auto
+```
+
+**Example DKIM Value**:
+```
+v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC... (truncated)
+```
+
+**Verification**:
+- Resend will automatically verify the DKIM record
+- Status shown in Resend dashboard: ✅ Verified
+
+### DMARC (Domain-based Message Authentication, Reporting & Conformance)
+
+**Purpose**: Tells receiving mail servers what to do if SPF or DKIM checks fail, and provides reporting.
+
+**DNS Record** (via Cloudflare):
+```
+Type:  TXT
+Name:  _dmarc
+Value: v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@retirezest.com; pct=100; adkim=s; aspf=s
+TTL:   Auto
+```
+
+**Parameters Explained**:
+- `v=DMARC1` - DMARC version 1
+- `p=quarantine` - Quarantine emails that fail checks (don't reject completely)
+- `rua=mailto:dmarc-reports@retirezest.com` - Send aggregate reports to this email
+- `pct=100` - Apply policy to 100% of failing messages
+- `adkim=s` - Strict DKIM alignment
+- `aspf=s` - Strict SPF alignment
+
+**Policy Options**:
+- `p=none` - Monitor only (recommended for testing)
+- `p=quarantine` - Send failing emails to spam (recommended for production)
+- `p=reject` - Reject failing emails completely (use with caution)
+
+**Progressive Rollout**:
+```
+Week 1-2:  p=none (monitor reports)
+Week 3-4:  p=quarantine; pct=50 (apply to 50% of emails)
+Week 5+:   p=quarantine; pct=100 (full enforcement)
+```
+
+### Email Verification Setup
+
+**Step 1: Add Domain to Resend**
+1. Log in to Resend: https://resend.com/domains
+2. Click "Add Domain"
+3. Enter: `retirezest.com`
+4. Resend provides verification records
+
+**Step 2: Add Verification TXT Record**
+```
+Type:  TXT
+Name:  @ (or root domain)
+Value: resend-verification=[unique-token]
+TTL:   Auto
+```
+
+**Step 3: Wait for Verification**
+- DNS propagation: 5-60 minutes
+- Resend checks automatically
+- Status will change to "Verified" ✅
+
+### DNS Records Summary
+
+**Complete DNS Configuration in Cloudflare**:
+```
+# Domain pointing
+A     @                      [Vercel IP]
+CNAME www                    cname.vercel-dns.com
+
+# Email Authentication
+TXT   @                      "v=spf1 include:resend.com ~all"
+TXT   resend._domainkey      "[DKIM-value-from-Resend]"
+TXT   _dmarc                 "v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@retirezest.com; pct=100"
+
+# Domain Verification
+TXT   @                      "resend-verification=[token]"
+
+# Email Routing (optional - if using Cloudflare Email Routing)
+MX    @   10                 isaac.mx.cloudflare.net
+MX    @   20                 linda.mx.cloudflare.net
+MX    @   30                 amir.mx.cloudflare.net
+```
+
+### Testing Email Deliverability
+
+**Tools**:
+1. **Mail-Tester**: https://www.mail-tester.com
+   - Send test email to provided address
+   - Get deliverability score (aim for 10/10)
+   - Shows SPF, DKIM, DMARC status
+
+2. **MXToolbox**: https://mxtoolbox.com/SuperTool.aspx
+   - Check SPF: `mxtoolbox.com/spf.aspx`
+   - Check DKIM: `mxtoolbox.com/dkim.aspx`
+   - Check DMARC: `mxtoolbox.com/dmarc.aspx`
+
+3. **Google Admin Toolbox**: https://toolbox.googleapps.com/apps/checkmx/
+   - Comprehensive email server test
+   - Verifies DNS records
+
+**Test Email Code**:
+```typescript
+// Send test email from Resend
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+await resend.emails.send({
+  from: 'RetireZest <noreply@retirezest.com>',
+  to: 'test@mail-tester.com',
+  subject: 'Email Deliverability Test',
+  html: '<p>Testing SPF, DKIM, and DMARC configuration.</p>'
+});
+```
+
+### DMARC Reporting
+
+**Aggregate Reports** (rua):
+- Sent daily by receiving mail servers
+- XML format with authentication statistics
+- Shows pass/fail rates for SPF and DKIM
+
+**Forensic Reports** (ruf) - Optional:
+```
+v=DMARC1; p=quarantine; rua=mailto:dmarc-agg@retirezest.com; ruf=mailto:dmarc-forensic@retirezest.com
+```
+
+**DMARC Report Analyzers**:
+- Postmark DMARC Digests (free): https://dmarc.postmarkapp.com
+- Dmarcian: https://dmarcian.com
+- URIports: https://www.uriports.com
+
+### Email Best Practices
+
+**Sender Reputation**:
+- Use consistent "From" address: `noreply@retirezest.com`
+- Use recognizable "From" name: `RetireZest`
+- Avoid frequent IP changes (Resend handles this)
+- Maintain low complaint rate (< 0.1%)
+
+**Content Guidelines**:
+- Avoid spam trigger words ("free money", "act now")
+- Include unsubscribe link in all marketing emails
+- Use plain text + HTML versions
+- Keep email size < 100KB
+- Include physical mailing address (CAN-SPAM requirement)
+
+**Bounce Handling**:
+- Monitor bounce rates (hard bounces vs soft bounces)
+- Remove hard bounces from mailing list immediately
+- Retry soft bounces with exponential backoff
+
+**List Hygiene**:
+- Use double opt-in for subscriptions
+- Remove inactive subscribers (> 6 months no opens)
+- Segment lists by engagement
+- Honor unsubscribe requests immediately
+
+### Monitoring Email Health
+
+**Metrics to Track**:
+- Delivery rate (target: > 95%)
+- Open rate (target: > 20%)
+- Click-through rate (target: > 2%)
+- Bounce rate (target: < 5%)
+- Spam complaint rate (target: < 0.1%)
+- Unsubscribe rate (target: < 0.5%)
+
+**Resend Dashboard**:
+- Real-time email status
+- Delivery analytics
+- Bounce tracking
+- Webhook events
+
+**Webhook Configuration**:
+```typescript
+// webapp/app/api/webhooks/resend/route.ts
+export async function POST(req: Request) {
+  const event = await req.json();
+
+  switch (event.type) {
+    case 'email.delivered':
+      // Track successful delivery
+      break;
+    case 'email.bounced':
+      // Handle bounce (remove from list)
+      break;
+    case 'email.complained':
+      // Handle spam complaint (immediate removal)
+      break;
+  }
+}
+```
+
+### Troubleshooting
+
+**Emails Going to Spam**:
+1. Verify SPF, DKIM, DMARC are all passing
+2. Check sender reputation: mxtoolbox.com/blacklists.aspx
+3. Review email content for spam triggers
+4. Ensure proper authentication headers
+5. Check if domain is on any blacklists
+
+**SPF Failures**:
+- Verify SPF record includes Resend: `include:resend.com`
+- Check for SPF record conflicts (max 10 DNS lookups)
+- Use SPF record checker: mxtoolbox.com/spf.aspx
+
+**DKIM Failures**:
+- Verify DKIM record is correctly added to DNS
+- Check for typos in DKIM value
+- Ensure DKIM selector matches: `resend._domainkey`
+- Wait for DNS propagation (up to 48 hours)
+
+**DMARC Issues**:
+- Start with `p=none` to monitor without blocking
+- Review DMARC aggregate reports
+- Gradually increase to `p=quarantine` then `p=reject`
+
+---
+
+## 8. PostgreSQL (Database)
 
 ### Platform Details
 
@@ -482,7 +904,7 @@ npx prisma migrate deploy
 
 ---
 
-## 7. Monitoring & Observability
+## 9. Monitoring & Observability
 
 ### Vercel Analytics
 
@@ -520,7 +942,7 @@ npx prisma migrate deploy
 
 ---
 
-## 8. Security
+## 10. Security
 
 ### SSL/TLS
 
@@ -559,7 +981,7 @@ const allowedOrigins = [
 
 ---
 
-## 9. CI/CD Pipeline
+## 11. CI/CD Pipeline
 
 ### Continuous Integration
 
@@ -594,7 +1016,7 @@ Production     Production     Notify Team
 
 ---
 
-## 10. Cost Breakdown
+## 12. Cost Breakdown
 
 ### Monthly Estimates (Production)
 
@@ -616,15 +1038,21 @@ Production     Production     Notify Team
 - $20/month for 50,000 emails
 - First 3,000 emails free
 
-**Domain & DNS** (Namecheap/Cloudflare):
-- Domain: ~$15/year
-- DNS: Free (Cloudflare)
+**Cloudflare** (Pro Plan):
+- $20/month for advanced security and performance
+- Free plan available for basic usage
 
-**Total Estimated Monthly Cost**: $70-120/month
+**Domain & DNS**:
+- Domain: ~$15/year
+- DNS: Free (included with Cloudflare)
+
+**Total Estimated Monthly Cost**: $90-140/month
+- **Minimum** (Free Cloudflare): ~$70/month
+- **Recommended** (Pro Cloudflare): ~$90-140/month
 
 ---
 
-## 11. Disaster Recovery
+## 13. Disaster Recovery
 
 ### Backup Strategy
 
@@ -660,9 +1088,17 @@ Production     Production     Notify Team
 
 ---
 
-## 12. Getting Started Checklist
+## 14. Getting Started Checklist
 
 ### Initial Setup
+
+- [ ] **Cloudflare**
+  - [ ] Create account
+  - [ ] Add domain to Cloudflare
+  - [ ] Update nameservers at domain registrar
+  - [ ] Enable SSL/TLS (Full Strict mode)
+  - [ ] Configure firewall rules
+  - [ ] Set up page rules for caching
 
 - [ ] **GitHub**
   - [ ] Fork or clone repository
@@ -691,9 +1127,21 @@ Production     Production     Notify Team
 
 - [ ] **Resend**
   - [ ] Create account
-  - [ ] Verify domain
-  - [ ] Configure DNS records (SPF, DKIM)
+  - [ ] Add domain
+  - [ ] Configure SPF record in Cloudflare
+  - [ ] Configure DKIM record in Cloudflare
+  - [ ] Configure DMARC record in Cloudflare
+  - [ ] Verify domain in Resend
   - [ ] Set API key in Vercel
+  - [ ] Test email deliverability
+
+- [ ] **Email Authentication**
+  - [ ] Verify SPF record: mxtoolbox.com/spf.aspx
+  - [ ] Verify DKIM record: mxtoolbox.com/dkim.aspx
+  - [ ] Verify DMARC record: mxtoolbox.com/dmarc.aspx
+  - [ ] Test with Mail-Tester (aim for 10/10 score)
+  - [ ] Set up DMARC reporting email
+  - [ ] Monitor deliverability metrics
 
 - [ ] **Database**
   - [ ] Run Prisma migrations
@@ -702,7 +1150,7 @@ Production     Production     Notify Team
 
 ---
 
-## 13. Support & Resources
+## 15. Support & Resources
 
 ### Documentation
 
@@ -727,14 +1175,15 @@ Production     Production     Notify Team
 
 RetireZest leverages a modern, scalable infrastructure:
 
+- **Cloudflare** for DNS, CDN, DDoS protection, and Web Application Firewall
 - **GitHub** for version control and CI/CD triggers
 - **Vercel** for blazing-fast frontend hosting with edge functions
 - **Railway** for reliable Python backend hosting
 - **Stripe** for secure payment processing
-- **Resend** for transactional email delivery
+- **Resend** for transactional email delivery with SPF, DKIM, and DMARC authentication
 - **PostgreSQL** for reliable data persistence
 
-All services are integrated via environment variables and webhooks, providing automatic deployments and seamless user experiences.
+All services are integrated via environment variables and webhooks, providing automatic deployments, security, and seamless user experiences.
 
 **Total Setup Time**: ~2-3 hours (first time)
 **Maintenance**: Minimal (automatic deployments)
