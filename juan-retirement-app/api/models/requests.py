@@ -168,18 +168,14 @@ class HouseholdInput(BaseModel):
 
     # Withdrawal strategy
     strategy: Literal[
+        "rrif-frontload",
         "corporate-optimized",
         "minimize-income",
         "rrif-splitting",
         "capital-gains-optimized",
         "tfsa-first",
         "balanced",
-        "manual",
-        "rrif-frontload",
-        "hybrid",
-        "nonreg-first",
-        "rrif-first",
-        "corp-first"
+        "manual"
     ] = Field(default="corporate-optimized", description="Withdrawal strategy")
 
     # Spending phases (annual amounts in CAD)
