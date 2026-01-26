@@ -174,7 +174,12 @@ class HouseholdInput(BaseModel):
         "capital-gains-optimized",
         "tfsa-first",
         "balanced",
-        "manual"
+        "manual",
+        "rrif-frontload",
+        "hybrid",
+        "nonreg-first",
+        "rrif-first",
+        "corp-first"
     ] = Field(default="corporate-optimized", description="Withdrawal strategy")
 
     # Spending phases (annual amounts in CAD)
