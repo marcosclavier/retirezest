@@ -194,6 +194,14 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 corporate_withdrawal_p1=float(row.get('withdraw_corp_p1', row.get('corporate_withdrawal_p1', 0))),
                 corporate_withdrawal_p2=float(row.get('withdraw_corp_p2', row.get('corporate_withdrawal_p2', 0))),
 
+                # Non-registered distributions (passive income)
+                nonreg_distributions=float(
+                    row.get('nr_interest_p1', 0) + row.get('nr_interest_p2', 0) +
+                    row.get('nr_elig_div_p1', 0) + row.get('nr_elig_div_p2', 0) +
+                    row.get('nr_nonelig_div_p1', 0) + row.get('nr_nonelig_div_p2', 0) +
+                    row.get('nr_capg_dist_p1', 0) + row.get('nr_capg_dist_p2', 0)
+                ),
+
                 # Balances
                 tfsa_balance_p1=float(row.get('end_tfsa_p1', row.get('tfsa_balance_p1', 0))),
                 tfsa_balance_p2=float(row.get('end_tfsa_p2', row.get('tfsa_balance_p2', 0))),
