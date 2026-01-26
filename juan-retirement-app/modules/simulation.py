@@ -1023,6 +1023,11 @@ def _get_strategy_order(strategy_name: str) -> List[str]:
         return ["nonreg", "corp", "tfsa"]  # already added RRIF top-up
     elif strategy_name == "Corp->RRIF->NonReg->TFSA":
         return ["corp", "rrif", "nonreg", "tfsa"]
+    elif "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
+        # RRIF-Frontload: RRIF is pre-withdrawn at frontload amount (15% before OAS, 8% after)
+        # Then fill remaining shortfall with Corp -> NonReg -> TFSA
+        # Priority: Corp first (capital gains treatment), then NonReg (distributions + withdrawals), then TFSA last
+        return ["corp", "nonreg", "tfsa"]
     elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
         # For balanced strategy: prioritize Corp (tax-credited), then RRIF (100% taxable at death - deplete early!),
         # then NonReg (ACB-protected), then TFSA (preserve for last)
@@ -1127,9 +1132,38 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # 2. RRIF->NonReg strategy to use RRIF first (including minimum)
     # 3. But in all cases, RRIF minimum is GUARANTEED to be withdrawn
 
+    # -----  RRIF Frontload strategy: Calculate frontload target BEFORE setting initial withdrawals -----
+    # This strategy frontloads RRIF withdrawals to reduce RRIF balance before OAS clawback risk
+    # Priority: 15% RRIF (before OAS) or 8% RRIF (after OAS), then Corp -> NonReg -> TFSA
+    if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
+        # Determine frontload percentage based on whether person has started OAS
+        if age < person.oas_start_age:
+            frontload_pct = 0.15  # Phase 1: Before OAS starts
+        else:
+            frontload_pct = 0.08  # Phase 2: After OAS starts
+
+        # Calculate frontload target (percentage of RRIF balance)
+        rrif_frontload_target = person.rrif_balance * frontload_pct
+
+        # Ensure frontload meets minimum withdrawal requirement
+        rrif_frontload_target = max(rrif_frontload_target, rrif_min)
+
+        # Cap at available RRIF balance
+        rrif_frontload_target = min(rrif_frontload_target, person.rrif_balance)
+
+        # Set initial RRIF withdrawal to frontload target
+        rrif_min_initial = rrif_frontload_target
+        rrif_min_deferred = 0.0  # Don't enforce minimum again (already included in frontload)
+
+        if rrif_frontload_target > 1e-6:
+            import sys
+            print(f"DEBUG RRIF-FRONTLOAD [{person.name}] Age {age}: "
+                  f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS, "
+                  f"RRIF {frontload_pct*100:.0f}% of ${person.rrif_balance:,.0f} = ${rrif_frontload_target:,.0f}",
+                  file=sys.stderr)
     # For non-Balanced strategies, start with zero and let strategy order determine it
     # For Balanced strategy, defer RRIF minimum enforcement until after other logic
-    if "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
+    elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
         rrif_min_deferred = rrif_min  # Enforce minimum for Balanced strategy at the end
         rrif_min_initial = 0.0
     else:
@@ -1161,35 +1195,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     if strategy_name.startswith("Hybrid"):
         extra_up = apply_hybrid_topup(person.rrif_balance, rrif_min, hybrid_topup_amt)
         withdrawals["rrif"] += extra_up
-
-    # -----  RRIF Frontload strategy: 15% before OAS, 8% after OAS starts -----
-    # This strategy frontloads RRIF withdrawals to reduce RRIF balance before OAS clawback risk
-    # and to smooth tax burden across retirement years.
-    if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
-        # Determine frontload percentage based on whether person has started OAS
-        if age < person.oas_start_age:
-            # Before OAS: withdraw 15% of RRIF balance
-            frontload_pct = 0.15
-        else:
-            # After OAS starts: withdraw 8% of RRIF balance
-            frontload_pct = 0.08
-
-        # Calculate frontload amount (percentage of RRIF balance)
-        # This is in ADDITION to the minimum withdrawal requirement
-        frontload_amount = person.rrif_balance * frontload_pct
-
-        # Cap at available RRIF balance (don't exceed what's available)
-        frontload_amount = min(frontload_amount, person.rrif_balance)
-
-        # Add to withdrawals
-        withdrawals["rrif"] += frontload_amount
-
-        if frontload_amount > 1e-6:
-            import sys
-            print(f"DEBUG RRIF-FRONTLOAD [{person.name}] Age {age}: "
-                  f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS, "
-                  f"{frontload_pct*100:.0f}% of ${person.rrif_balance:,.0f} = ${frontload_amount:,.0f}",
-                  file=sys.stderr)
 
     # -----  Cash available before extra top-ups -----
     # When reinvesting non-reg distributions, they are NOT available for spending
