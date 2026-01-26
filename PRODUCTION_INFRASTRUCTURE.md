@@ -317,6 +317,12 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_live_[public]"
 RESEND_API_KEY="re_[secret]"
 RESEND_FROM_EMAIL="noreply@retirezest.com"
 
+# Error Tracking (Sentry)
+NEXT_PUBLIC_SENTRY_DSN="https://[key]@[org-id].ingest.us.sentry.io/[project-id]"
+SENTRY_AUTH_TOKEN="[secret-token]"
+SENTRY_ORG="[org-slug]"
+SENTRY_PROJECT="retirezest"
+
 # App Configuration
 NEXT_PUBLIC_APP_URL="https://[production-domain]"
 NODE_ENV="production"
@@ -904,7 +910,474 @@ npx prisma migrate deploy
 
 ---
 
-## 9. Monitoring & Observability
+## 9. Sentry (Error Tracking & Performance Monitoring)
+
+### Platform Details
+
+**Service**: Sentry
+**Website**: https://sentry.io
+**Purpose**: Real-time error tracking, performance monitoring, and session replay for production applications
+
+### Why Sentry?
+
+**Problem**: Production applications inevitably encounter errors that may not be caught during development or testing. Without proper error tracking:
+- Bugs go unnoticed until users complain
+- Debugging production issues requires user reports (often incomplete)
+- No visibility into error frequency or patterns
+- Performance issues are hard to identify
+- User experience suffers from unmonitored failures
+
+**Solution**: Sentry provides:
+- **Real-time error tracking**: Captures all JavaScript errors, API failures, and crashes
+- **Stack traces with source maps**: See exact line numbers in original TypeScript code
+- **Performance monitoring**: Track slow API calls, database queries, and page loads
+- **Session replay**: Watch video-like recordings of user sessions where errors occurred
+- **Alerting**: Get notified via email/Slack when critical errors spike
+- **Release tracking**: Compare error rates across deployments
+- **User context**: See which users are affected by specific errors
+
+### Integration
+
+**Package**: `@sentry/nextjs` v10.29.0
+
+**Configuration Files**:
+- `webapp/sentry.client.config.ts` - Browser/client-side error tracking
+- `webapp/sentry.server.config.ts` - Server-side API route error tracking
+- `webapp/sentry.edge.config.ts` - Edge function error tracking
+
+### Client-Side Configuration
+
+**Purpose**: Track errors in user's browsers (React components, client-side API calls, etc.)
+
+**Key Features Enabled**:
+```typescript
+// webapp/sentry.client.config.ts
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  environment: 'production',
+
+  // Performance monitoring (10% of transactions in production to reduce costs)
+  tracesSampleRate: 0.1,
+
+  // Session replay (record user sessions when errors occur)
+  replaysOnErrorSampleRate: 1.0,  // 100% of error sessions
+  replaysSessionSampleRate: 0.1,   // 10% of normal sessions
+
+  integrations: [
+    Sentry.browserTracingIntegration(),  // Track performance
+    Sentry.replayIntegration({
+      maskAllText: true,      // Privacy: mask sensitive text
+      blockAllMedia: true,    // Privacy: block images/videos
+    }),
+  ],
+
+  // Filter sensitive data before sending to Sentry
+  beforeSend(event) {
+    // Remove auth tokens, cookies, passwords
+    if (event.request?.headers) {
+      delete event.request.headers['authorization'];
+      delete event.request.headers['cookie'];
+    }
+    return event;
+  }
+});
+```
+
+**What It Captures**:
+- Unhandled JavaScript exceptions
+- React component errors (via Error Boundaries)
+- Failed API requests (fetch/axios)
+- Console errors and warnings
+- Performance metrics (page load, Time to First Byte, etc.)
+
+### Server-Side Configuration
+
+**Purpose**: Track errors in Next.js API routes and server-side rendering
+
+**What It Captures**:
+- API route exceptions
+- Database query failures
+- Authentication errors
+- External API call failures
+- Server-side rendering errors
+
+### Environment Variables
+
+**Required Environment Variables** (Vercel):
+```bash
+# Sentry DSN (Data Source Name) - from Sentry dashboard
+NEXT_PUBLIC_SENTRY_DSN="https://[key]@[org-id].ingest.us.sentry.io/[project-id]"
+
+# Sentry Auth Token (for uploading source maps during build)
+SENTRY_AUTH_TOKEN="[secret-token]"
+
+# Sentry Organization and Project
+SENTRY_ORG="[org-slug]"
+SENTRY_PROJECT="retirezest"
+```
+
+### Setup Process
+
+**Step 1: Create Sentry Account**
+1. Sign up at https://sentry.io
+2. Create a new project
+3. Select "Next.js" as the platform
+4. Copy the DSN provided
+
+**Step 2: Configure Environment Variables**
+```bash
+# Add to Vercel project settings
+NEXT_PUBLIC_SENTRY_DSN="https://..."
+SENTRY_AUTH_TOKEN="[from Sentry Settings → Auth Tokens]"
+SENTRY_ORG="your-org-slug"
+SENTRY_PROJECT="retirezest"
+```
+
+**Step 3: Deploy**
+- Next build automatically uploads source maps to Sentry
+- Errors in production will include exact line numbers from TypeScript source
+
+### Features in Production
+
+**1. Error Tracking**
+- Every unhandled exception is logged to Sentry
+- Grouped by error type for easy triage
+- Stack traces show original TypeScript code (not compiled JavaScript)
+
+**2. Performance Monitoring**
+- Track slow API endpoints
+- Monitor page load times
+- Identify slow database queries
+- Track Core Web Vitals
+
+**3. Session Replay**
+- Video-like replay of user sessions where errors occurred
+- See exactly what the user did before the error
+- All sensitive data is masked for privacy
+
+**4. Alerts**
+- Email/Slack notifications for new errors
+- Alerts when error rate spikes
+- Notify on deployment issues
+
+**5. Release Tracking**
+- Compare error rates before/after deployments
+- Track which releases introduced bugs
+- Automatic release creation via CI/CD
+
+### Privacy & Security
+
+**Data Filtering** (configured in `sentry.client.config.ts`):
+- Strips authorization headers
+- Removes cookies and session tokens
+- Redacts passwords and API keys from URLs
+- Masks user-entered text in session replays
+- Blocks images and videos in replays
+
+**Sensitive Data Never Sent to Sentry**:
+- User passwords
+- Credit card information (handled by Stripe)
+- Session tokens
+- API keys
+- Personal financial data
+
+### Cost
+
+**Free Tier**:
+- 5,000 errors/month
+- 10,000 performance transactions/month
+- 50 session replays/month
+
+**Paid Plans** (if growth requires):
+- Team Plan: $26/month (50,000 errors, 100,000 transactions)
+- Business Plan: $80/month (unlimited errors, better support)
+
+**Current Configuration**: Free tier suitable for MVP and early growth
+
+### Monitoring Dashboard
+
+**Sentry Dashboard**: https://sentry.io/organizations/[org]/issues/
+
+**Key Metrics to Monitor**:
+- Total errors in last 24 hours
+- Most common errors
+- Affected users
+- Error trend (increasing/decreasing)
+- Performance bottlenecks
+
+### Example: How Sentry Helps
+
+**Scenario**: User reports "simulation not loading"
+
+**Without Sentry**:
+- User provides vague description
+- Can't reproduce locally
+- Spend hours debugging
+- No visibility into production state
+
+**With Sentry**:
+- See exact error: "TypeError: Cannot read property 'strategies' of undefined"
+- Stack trace shows error in `SimulationResults.tsx:142`
+- Session replay shows user's exact steps
+- Error occurred after API returned 500 from `/api/simulation/run`
+- 12 users affected in last hour
+- Fix deployed in 15 minutes
+
+---
+
+## 10. TypeScript (Type Safety & Developer Experience)
+
+### Overview
+
+**Language**: TypeScript 5.9.3
+**Purpose**: Strongly-typed superset of JavaScript for improved code quality, developer experience, and maintainability
+
+### Why TypeScript?
+
+**Problem**: JavaScript is dynamically typed, leading to runtime errors that could have been caught at development time:
+- `Cannot read property 'x' of undefined`
+- Function called with wrong argument types
+- Typos in object property names
+- Refactoring breaks code in unexpected places
+- No autocomplete or IntelliSense in IDE
+
+**Solution**: TypeScript provides:
+- **Compile-time type checking**: Catch errors before code runs
+- **IDE autocomplete**: IntelliSense shows available properties/methods
+- **Refactoring safety**: Rename variables across entire codebase
+- **Self-documenting code**: Types serve as inline documentation
+- **Better collaboration**: Team members see function signatures and types
+- **Fewer bugs**: Studies show 15-30% fewer bugs with TypeScript
+
+### Configuration
+
+**TypeScript Config** (`webapp/tsconfig.json`):
+```json
+{
+  "compilerOptions": {
+    "strict": true,              // Enable all strict type-checking options
+    "target": "ES2017",          // Compile to ES2017 (modern browsers)
+    "lib": ["dom", "esnext"],    // Include DOM and latest JS APIs
+    "module": "esnext",          // Use latest module system
+    "jsx": "preserve",           // Keep JSX for Next.js to process
+    "esModuleInterop": true,     // Better CommonJS/ESM interop
+    "skipLibCheck": true,        // Skip type checking of .d.ts files
+    "paths": {
+      "@/*": ["./*"]             // Path alias for imports
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+```
+
+**Key Settings Explained**:
+- `strict: true` - Enables all strict type-checking options (prevents null/undefined issues)
+- `target: "ES2017"` - Compiles to modern JavaScript (async/await support)
+- `paths: {"@/*": ["./*"]}` - Allows `import { foo } from '@/lib/utils'` instead of `'../../../lib/utils'`
+
+### Type Safety Throughout the Codebase
+
+**1. API Routes (Type-Safe Request/Response)**:
+```typescript
+// webapp/app/api/simulation/run/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { SimulationInput, SimulationResult } from '@/types/simulation';
+
+export async function POST(req: NextRequest): Promise<NextResponse<SimulationResult>> {
+  const input: SimulationInput = await req.json();
+
+  // TypeScript ensures 'input' has correct shape
+  const result = await runSimulation(input);
+
+  // TypeScript ensures 'result' matches SimulationResult type
+  return NextResponse.json(result);
+}
+```
+
+**2. React Components (Type-Safe Props)**:
+```typescript
+// webapp/components/SimulationResults.tsx
+interface SimulationResultsProps {
+  data: SimulationResult;
+  onExport: (format: 'pdf' | 'csv') => void;
+  loading?: boolean;
+}
+
+export function SimulationResults({ data, onExport, loading = false }: SimulationResultsProps) {
+  // TypeScript ensures 'data' has all required properties
+  // Autocomplete works for data.strategies, data.projections, etc.
+  return <div>{data.projections.map(...)}</div>;
+}
+```
+
+**3. Database Models (Type-Safe Prisma)**:
+```typescript
+// Prisma automatically generates TypeScript types
+import { PrismaClient, User, RetirementProfile } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+// TypeScript knows exact shape of User and RetirementProfile
+const user: User = await prisma.user.findUnique({ where: { id: '123' } });
+```
+
+**4. Business Logic (Type-Safe Calculations)**:
+```typescript
+// webapp/lib/calculations/projection.ts
+interface ProjectionInput {
+  age: number;
+  rrsp: number;
+  tfsa: number;
+  nonRegistered: number;
+  strategy: 'balanced' | 'rrif-frontload' | 'tfsa-first';
+}
+
+interface YearlyProjection {
+  year: number;
+  age: number;
+  withdrawals: number;
+  taxes: number;
+  balance: number;
+}
+
+export function calculateProjection(input: ProjectionInput): YearlyProjection[] {
+  // TypeScript ensures all fields are provided
+  // Return type is enforced
+  return projections;
+}
+```
+
+### Benefits in RetireZest
+
+**1. Prevented Bugs**:
+- API response missing field → Caught at compile time
+- Function called with wrong argument types → Error before runtime
+- Typo in property name → Immediate IDE error
+
+**2. Better Developer Experience**:
+- IDE autocomplete shows all available properties
+- Hover over function to see parameters and return type
+- Rename variable across entire codebase safely
+- Jump to definition works reliably
+
+**3. Easier Onboarding**:
+- New developers see types as documentation
+- No need to guess function signatures
+- IDE guides you through code
+
+**4. Refactoring Confidence**:
+- Change data structure → TypeScript shows all affected code
+- Update API response → Frontend errors show immediately
+- Rename function → All call sites updated
+
+**5. Integration with Tools**:
+- **Next.js**: First-class TypeScript support
+- **Prisma**: Generates types from database schema
+- **Sentry**: Type-safe error tracking configuration
+- **ESLint**: Type-aware linting rules
+
+### Type Definitions
+
+**Custom Types** (`webapp/types/`):
+```
+webapp/types/
+├── simulation.ts          # Simulation input/output types
+├── user.ts               # User profile types
+├── retirement.ts         # Retirement data types
+└── api.ts                # API request/response types
+```
+
+**Example Type Definition**:
+```typescript
+// webapp/types/simulation.ts
+export interface SimulationInput {
+  person1: PersonInput;
+  person2?: PersonInput;
+  strategy: WithdrawalStrategy;
+  assumptions: AssumptionSet;
+}
+
+export interface SimulationResult {
+  projections: YearlyProjection[];
+  summary: SummaryStats;
+  charts: ChartData[];
+}
+
+export type WithdrawalStrategy =
+  | 'balanced'
+  | 'rrif-frontload'
+  | 'tfsa-first'
+  | 'capital-gains-optimized'
+  | 'corporate-optimized'
+  | 'minimize-income'
+  | 'rrif-splitting';
+```
+
+### Build-Time Type Checking
+
+**TypeScript Compilation**:
+```bash
+# Check for type errors (runs during npm run build)
+npx tsc --noEmit
+
+# Output (if errors found):
+webapp/app/api/simulation/route.ts:42:15 - error TS2339:
+  Property 'strategies' does not exist on type 'SimulationResult'.
+```
+
+**CI/CD Integration**:
+- Vercel runs `npm run build` which includes TypeScript compilation
+- Build fails if type errors exist
+- No broken code reaches production
+
+### Comparison: JavaScript vs TypeScript
+
+**JavaScript** (Error at Runtime):
+```javascript
+// No type checking - error only appears when code runs
+function calculateTax(income) {
+  return income * 0.25;
+}
+
+calculateTax("50000");  // Returns "500000" (string concatenation bug!)
+```
+
+**TypeScript** (Error at Development Time):
+```typescript
+function calculateTax(income: number): number {
+  return income * 0.25;
+}
+
+calculateTax("50000");  // ERROR: Argument of type 'string' is not assignable to parameter of type 'number'
+```
+
+### Migration Strategy
+
+**Current State**: 100% TypeScript codebase
+- All `.js` files converted to `.ts`
+- All `.jsx` files converted to `.tsx`
+- Strict mode enabled
+- No `any` types (except third-party libraries)
+
+**Maintenance**:
+- New files must be TypeScript (`.ts` or `.tsx`)
+- Strict type checking enforced
+- Type definitions updated when data structures change
+
+### Cost
+
+**Free**: TypeScript is open-source and free to use
+
+### Resources
+
+- **TypeScript Handbook**: https://www.typescriptlang.org/docs/handbook/
+- **TypeScript Playground**: https://www.typescriptlang.org/play
+- **Next.js + TypeScript**: https://nextjs.org/docs/app/building-your-application/configuring/typescript
+
+---
+
+## 11. Monitoring & Observability
 
 ### Vercel Analytics
 
@@ -942,7 +1415,7 @@ npx prisma migrate deploy
 
 ---
 
-## 10. Security
+## 12. Security
 
 ### SSL/TLS
 
@@ -981,7 +1454,7 @@ const allowedOrigins = [
 
 ---
 
-## 11. CI/CD Pipeline
+## 13. CI/CD Pipeline
 
 ### Continuous Integration
 
@@ -1016,7 +1489,7 @@ Production     Production     Notify Team
 
 ---
 
-## 12. Cost Breakdown
+## 14. Cost Breakdown
 
 ### Monthly Estimates (Production)
 
@@ -1042,17 +1515,25 @@ Production     Production     Notify Team
 - $20/month for advanced security and performance
 - Free plan available for basic usage
 
+**Sentry** (Error Tracking):
+- Free tier: 5,000 errors/month, 10,000 transactions/month
+- Team Plan: $26/month (if growth requires)
+
+**TypeScript**:
+- Free (open-source)
+
 **Domain & DNS**:
 - Domain: ~$15/year
 - DNS: Free (included with Cloudflare)
 
 **Total Estimated Monthly Cost**: $90-140/month
-- **Minimum** (Free Cloudflare): ~$70/month
-- **Recommended** (Pro Cloudflare): ~$90-140/month
+- **Minimum** (Free Cloudflare, Free Sentry): ~$70/month
+- **Recommended** (Pro Cloudflare, Free Sentry): ~$90-140/month
+- **Scale-up** (Pro Cloudflare, Paid Sentry): ~$116-166/month
 
 ---
 
-## 13. Disaster Recovery
+## 15. Disaster Recovery
 
 ### Backup Strategy
 
@@ -1088,7 +1569,7 @@ Production     Production     Notify Team
 
 ---
 
-## 14. Getting Started Checklist
+## 16. Getting Started Checklist
 
 ### Initial Setup
 
@@ -1143,6 +1624,21 @@ Production     Production     Notify Team
   - [ ] Set up DMARC reporting email
   - [ ] Monitor deliverability metrics
 
+- [ ] **Sentry** (Error Tracking)
+  - [ ] Create account at sentry.io
+  - [ ] Create Next.js project
+  - [ ] Copy DSN and add to Vercel environment variables
+  - [ ] Create auth token for source maps
+  - [ ] Configure SENTRY_AUTH_TOKEN in Vercel
+  - [ ] Deploy and verify errors are being tracked
+  - [ ] Set up alert rules (email/Slack)
+
+- [ ] **TypeScript** (Built-in)
+  - [ ] Verify tsconfig.json is properly configured
+  - [ ] Run `npx tsc --noEmit` to check for type errors
+  - [ ] Ensure all files are `.ts` or `.tsx`
+  - [ ] Configure IDE for TypeScript support
+
 - [ ] **Database**
   - [ ] Run Prisma migrations
   - [ ] Verify connection
@@ -1150,14 +1646,17 @@ Production     Production     Notify Team
 
 ---
 
-## 15. Support & Resources
+## 17. Support & Resources
 
 ### Documentation
 
+- **Cloudflare**: https://developers.cloudflare.com
 - **Vercel**: https://vercel.com/docs
 - **Railway**: https://docs.railway.app
 - **Stripe**: https://stripe.com/docs
 - **Resend**: https://resend.com/docs
+- **Sentry**: https://docs.sentry.io
+- **TypeScript**: https://www.typescriptlang.org/docs
 - **Prisma**: https://www.prisma.io/docs
 
 ### Support Channels
@@ -1165,9 +1664,11 @@ Production     Production     Notify Team
 - **GitHub Issues**: https://github.com/marcosclavier/retirezest/issues
 - **Email**: support@retirezest.com (configure via Resend)
 - **Status Pages**:
+  - Cloudflare: https://www.cloudflarestatus.com
   - Vercel: https://vercel-status.com
   - Railway: https://railway.app/status
   - Stripe: https://status.stripe.com
+  - Sentry: https://status.sentry.io
 
 ---
 
@@ -1181,9 +1682,11 @@ RetireZest leverages a modern, scalable infrastructure:
 - **Railway** for reliable Python backend hosting
 - **Stripe** for secure payment processing
 - **Resend** for transactional email delivery with SPF, DKIM, and DMARC authentication
+- **Sentry** for real-time error tracking, performance monitoring, and session replay
+- **TypeScript** for type safety, better developer experience, and fewer bugs
 - **PostgreSQL** for reliable data persistence
 
-All services are integrated via environment variables and webhooks, providing automatic deployments, security, and seamless user experiences.
+All services are integrated via environment variables and webhooks, providing automatic deployments, comprehensive monitoring, security, and seamless user experiences.
 
 **Total Setup Time**: ~2-3 hours (first time)
 **Maintenance**: Minimal (automatic deployments)
