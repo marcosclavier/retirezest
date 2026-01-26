@@ -1176,4 +1176,257 @@ try {
 
 ---
 
+## Production Deployment Architecture
+
+### Repository Configuration
+
+**GitHub Repository**: https://github.com/marcosclavier/retirezest
+- **Production Branch**: `main`
+- **Deployment Method**: Auto-deploy via GitHub webhooks
+
+### Deployment Infrastructure
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    GitHub Repository                          │
+│              marcosclavier/retirezest (main)                  │
+└──────────────────────────────────────────────────────────────┘
+                             │
+                             │ Push to main
+                             ↓
+┌──────────────────────────────────────────────────────────────┐
+│                     GitHub Webhook                            │
+│              (Triggers on push to main)                       │
+└──────────────────────────────────────────────────────────────┘
+                             │
+                ┌────────────┴────────────┐
+                ↓                         ↓
+    ┌───────────────────┐     ┌──────────────────┐
+    │   Vercel Build    │     │  Backend Deploy  │
+    │   (Frontend)      │     │  (Python API)    │
+    │                   │     │                  │
+    │  - Build webapp/  │     │  - Railway/      │
+    │  - Next.js 15     │     │    Render/Other  │
+    │  - Auto-deploy    │     │  - FastAPI       │
+    └───────────────────┘     └──────────────────┘
+                │                       │
+                ↓                       ↓
+    ┌───────────────────┐     ┌──────────────────┐
+    │  Production URL   │     │  API Endpoints   │
+    │  (Vercel)         │     │  /api/*          │
+    └───────────────────┘     └──────────────────┘
+```
+
+### Frontend Deployment (Vercel)
+
+**Configuration**:
+- **Platform**: Vercel
+- **Project Name**: `webapp`
+- **Project ID**: `prj_o95HAbwz9ARD1NIVNshKr4vN3WW3`
+- **Root Directory**: `webapp/`
+- **Framework**: Next.js 15
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+
+**Auto-Deploy Triggers**:
+1. Push to `main` branch
+2. Pull request merge to `main`
+3. Manual trigger via Vercel dashboard
+
+**Environment Variables (Vercel)**:
+```
+DATABASE_URL=postgresql://[connection-string]
+JWT_SECRET=[secret-key]
+NEXT_PUBLIC_APP_URL=[production-url]
+PYTHON_API_URL=[backend-api-url]
+```
+
+### Backend Deployment (Python FastAPI)
+
+**Configuration**:
+- **Framework**: FastAPI
+- **Entry Point**: `juan-retirement-app/api/main.py`
+- **Server**: Uvicorn
+- **Port**: 8000 (configurable via PORT env variable)
+
+**Deployment Options**:
+
+1. **Railway** (Recommended):
+   - Auto-deploy from GitHub
+   - Dockerfile: Use production Dockerfile
+   - Environment variables configured in Railway dashboard
+
+2. **Render**:
+   - Auto-deploy from GitHub
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT`
+
+3. **Other** (Heroku/Google Cloud Run/AWS):
+   - Manual deployment or CI/CD pipeline
+   - Follow platform-specific configuration
+
+**Environment Variables (Backend)**:
+```
+PORT=8000
+PYTHON_ENV=production
+DATABASE_URL=[if needed]
+```
+
+### Deployment Workflow
+
+**Standard Deployment**:
+```bash
+# 1. Ensure you're on main branch
+git checkout main
+
+# 2. Pull latest changes
+git pull origin main
+
+# 3. Make changes and test locally
+# ... development work ...
+
+# 4. Commit changes
+git add .
+git commit -m "feat: Your feature description"
+
+# 5. Push to GitHub (triggers auto-deploy)
+git push origin main
+
+# 6. Monitor deployment
+# - Frontend: Check Vercel dashboard
+# - Backend: Check hosting platform dashboard
+```
+
+**Emergency Rollback**:
+```bash
+# Option 1: Git revert (recommended)
+git revert HEAD
+git push origin main
+
+# Option 2: Vercel instant rollback
+# Go to Vercel dashboard → Deployments
+# Find previous working deployment
+# Click "Promote to Production"
+
+# Option 3: Reset to specific commit
+git reset --hard <commit-hash>
+git push origin main --force
+```
+
+### Monitoring Production
+
+**Frontend (Vercel)**:
+- Dashboard: https://vercel.com/dashboard
+- Logs: Real-time deployment logs
+- Analytics: Performance and usage metrics
+
+**Backend (API)**:
+- Health endpoint: `GET /api/health`
+- Logs: Platform-specific logging (Railway/Render/etc.)
+- Monitoring: Check response times and error rates
+
+**Health Check**:
+```bash
+# Frontend
+curl https://[production-url]
+
+# Backend
+curl https://[api-url]/api/health
+
+# Expected response:
+{
+  "status": "ok",
+  "ready": true,
+  "tax_config_loaded": true
+}
+```
+
+### Production Testing Checklist
+
+After deployment, verify:
+
+- [ ] Frontend loads at production URL
+- [ ] Backend API responds to `/api/health`
+- [ ] Simulation endpoint works (`POST /api/run-simulation`)
+- [ ] Database connections are successful
+- [ ] All withdrawal strategies available
+- [ ] No console errors in browser
+- [ ] Charts render correctly
+- [ ] Year-by-year data displays properly
+
+### Repository Structure for Deployment
+
+```
+marcosclavier/retirezest/
+├── webapp/                          # Frontend (→ Vercel)
+│   ├── app/                         # Next.js App Router
+│   ├── components/                  # React components
+│   ├── lib/                         # Utilities
+│   ├── prisma/                      # Database schema
+│   └── package.json                 # Frontend dependencies
+│
+├── juan-retirement-app/             # Backend (→ Railway/Render)
+│   ├── api/                         # FastAPI application
+│   ├── modules/                     # Simulation engine
+│   ├── requirements.txt             # Python dependencies
+│   └── Dockerfile                   # Container config
+│
+└── README.md                        # Main documentation
+```
+
+### CI/CD Pipeline
+
+**Automatic Steps**:
+1. GitHub receives push to `main`
+2. Vercel webhook triggers
+3. Vercel builds frontend (`webapp/`)
+4. Backend platform (Railway/etc.) rebuilds API
+5. Both deploy to production simultaneously
+6. Health checks verify deployment success
+
+**Manual Verification**:
+- Run production test suite
+- Verify key user flows
+- Check error monitoring dashboards
+- Review deployment logs
+
+### Security Considerations
+
+**Production Environment**:
+- All secrets stored as environment variables
+- No `.env` files in repository
+- HTTPS enforced on all endpoints
+- CORS configured for production domains
+- Database credentials rotated regularly
+
+**Access Control**:
+- GitHub: Team members only
+- Vercel: Admin access restricted
+- Backend Platform: Limit access to production
+- Database: IP whitelist + authentication
+
+### Troubleshooting Production Issues
+
+**Frontend Not Updating**:
+1. Check Vercel deployment logs
+2. Verify build succeeded
+3. Clear CDN cache if needed
+4. Check for TypeScript errors
+
+**Backend Not Responding**:
+1. Check backend platform logs
+2. Verify environment variables set
+3. Test health endpoint directly
+4. Check database connectivity
+
+**Data Issues**:
+1. Verify API response structure
+2. Check for missing fields in converter
+3. Test with known good data
+4. Review recent code changes
+
+---
+
 This architecture document provides a comprehensive technical reference for developers working on RetireZest. For practical development tasks, see the [Developer Guide](./DEVELOPER_GUIDE.md).
+
+**Production Repository**: https://github.com/marcosclavier/retirezest

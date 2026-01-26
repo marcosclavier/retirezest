@@ -187,13 +187,33 @@ npx prisma migrate deploy
 - **[MVP-COMPLETION-TASKS.md](MVP-COMPLETION-TASKS.md)** - Development tasks
 - **[MANUAL-TESTING-CHECKLIST.md](MANUAL-TESTING-CHECKLIST.md)** - Testing guide
 
+## Production Deployment
+
+### GitHub Repository
+- **Repository**: https://github.com/marcosclavier/retirezest
+- **Branch**: `main` (production branch)
+- **Auto-Deploy**: Vercel connected to GitHub for automatic deployments
+
+### Deployment Flow
+1. Push changes to `main` branch
+2. GitHub webhook triggers Vercel build
+3. Vercel builds and deploys automatically
+4. Production URL updates on successful build
+
+### Vercel Configuration
+- **Project**: `webapp`
+- **Root Directory**: `webapp/`
+- **Framework**: Next.js 15
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+
 ## Contributing
 
-1. Fork the repository
+1. Fork the repository at https://github.com/marcosclavier/retirezest
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+5. Open a Pull Request to marcosclavier/retirezest
 
 ## License
 
