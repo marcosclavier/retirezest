@@ -494,60 +494,101 @@ def calculate_health_score(
 
     Returns:
         tuple: (score 0-100, rating string, criteria dict)
+
+    Frontend expects this format for each criterion:
+        {
+            "score": number,      // Points earned (0-20)
+            "max_score": number,  // Maximum points (20)
+            "status": string,     // "Excellent", "Good", "Fair", "At Risk", "Poor"
+            "description": string // Human-readable description
+        }
     """
     criteria = {}
     score = 0
 
+    def get_status(met: bool, points: int, max_points: int = 20) -> str:
+        """Determine status based on points earned."""
+        if points == max_points:
+            return "Excellent"
+        elif points >= max_points * 0.75:
+            return "Good"
+        elif points >= max_points * 0.5:
+            return "Fair"
+        elif points > 0:
+            return "At Risk"
+        else:
+            return "Poor"
+
     # Criterion 1: Full period funded
     # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
     full_period_funded = bool(success_rate >= 1.0)
+    points_earned = 20 if full_period_funded else 0
     criteria['full_period_funded'] = {
+        'score': points_earned,
+        'max_score': 20,
+        'status': get_status(full_period_funded, points_earned),
+        'description': 'Plan funds all years',
+        # Legacy fields for backwards compatibility
         'met': full_period_funded,
-        'points': 20 if full_period_funded else 0,
-        'description': 'Plan funds all years'
+        'points': points_earned,
     }
-    if full_period_funded:
-        score += 20
+    score += points_earned
 
     # Criterion 2: Adequate funding reserve (80%+ of period)
     adequate_reserve = bool(success_rate >= 0.80)
+    points_earned = 20 if adequate_reserve else 0
     criteria['adequate_reserve'] = {
+        'score': points_earned,
+        'max_score': 20,
+        'status': get_status(adequate_reserve, points_earned),
+        'description': 'Plan funds 80%+ of years',
+        # Legacy fields for backwards compatibility
         'met': adequate_reserve,
-        'points': 20 if adequate_reserve else 0,
-        'description': 'Plan funds 80%+ of years'
+        'points': points_earned,
     }
-    if adequate_reserve:
-        score += 20
+    score += points_earned
 
     # Criterion 3: Good tax efficiency (<25% effective rate)
     good_tax_efficiency = bool(avg_effective_tax_rate < 0.25)
+    points_earned = 20 if good_tax_efficiency else 0
     criteria['good_tax_efficiency'] = {
+        'score': points_earned,
+        'max_score': 20,
+        'status': get_status(good_tax_efficiency, points_earned),
+        'description': 'Effective tax rate under 25%',
+        # Legacy fields for backwards compatibility
         'met': good_tax_efficiency,
-        'points': 20 if good_tax_efficiency else 0,
-        'description': 'Effective tax rate under 25%'
+        'points': points_earned,
     }
-    if good_tax_efficiency:
-        score += 20
+    score += points_earned
 
     # Criterion 4: Government benefits available
     has_benefits = bool(total_government_benefits > 0)
+    points_earned = 20 if has_benefits else 0
     criteria['government_benefits'] = {
+        'score': points_earned,
+        'max_score': 20,
+        'status': get_status(has_benefits, points_earned),
+        'description': 'Receiving government benefits (CPP/OAS/GIS)',
+        # Legacy fields for backwards compatibility
         'met': has_benefits,
-        'points': 20 if has_benefits else 0,
-        'description': 'Receiving government benefits (CPP/OAS/GIS)'
+        'points': points_earned,
     }
-    if has_benefits:
-        score += 20
+    score += points_earned
 
     # Criterion 5: Growing or stable net worth
     growing_net_worth = bool(final_net_worth >= initial_net_worth * 0.9)  # Allow 10% decline
+    points_earned = 20 if growing_net_worth else 0
     criteria['growing_net_worth'] = {
+        'score': points_earned,
+        'max_score': 20,
+        'status': get_status(growing_net_worth, points_earned),
+        'description': 'Net worth maintained or growing',
+        # Legacy fields for backwards compatibility
         'met': growing_net_worth,
-        'points': 20 if growing_net_worth else 0,
-        'description': 'Net worth maintained or growing'
+        'points': points_earned,
     }
-    if growing_net_worth:
-        score += 20
+    score += points_earned
 
     # Determine rating based on score
     if score >= 80:
