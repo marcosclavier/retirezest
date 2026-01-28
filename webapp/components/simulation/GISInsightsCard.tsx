@@ -90,8 +90,8 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-2xl font-bold">GIS Strategy Assessment</CardTitle>
-              <CardDescription className="mt-2">
+              <CardTitle className="text-2xl font-bold text-gray-900">GIS Strategy Assessment</CardTitle>
+              <CardDescription className="mt-2 text-gray-700">
                 AI-powered analysis for your Minimize Income strategy
               </CardDescription>
             </div>
@@ -104,8 +104,8 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
           {/* Main Message */}
           <Alert className={`${getStatusColor(gis_feasibility.status)} border-2`}>
             <CheckCircle2 className="h-5 w-5" />
-            <AlertTitle className="text-lg font-semibold">{main_message}</AlertTitle>
-            <AlertDescription className="mt-2 text-base">
+            <AlertTitle className="text-lg font-semibold text-gray-900">{main_message}</AlertTitle>
+            <AlertDescription className="mt-2 text-base text-gray-800">
               {gis_eligibility_summary}
             </AlertDescription>
           </Alert>
@@ -165,11 +165,11 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
       {recommendations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Lightbulb className="h-5 w-5 text-yellow-600" />
               Personalized Recommendations
             </CardTitle>
-            <CardDescription>Action items to optimize your retirement plan</CardDescription>
+            <CardDescription className="text-gray-700">Action items to optimize your retirement plan</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {recommendations.map((rec, index) => (
@@ -203,11 +203,11 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
       {optimization_opportunities.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Target className="h-5 w-5 text-orange-600" />
               Optimization Opportunities
             </CardTitle>
-            <CardDescription>Additional improvements identified from your simulation</CardDescription>
+            <CardDescription className="text-gray-700">Additional improvements identified from your simulation</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
@@ -226,11 +226,11 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
       {key_milestones.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Calendar className="h-5 w-5 text-purple-600" />
               Key Milestones
             </CardTitle>
-            <CardDescription>Important ages and events in your retirement plan</CardDescription>
+            <CardDescription className="text-gray-700">Important ages and events in your retirement plan</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
