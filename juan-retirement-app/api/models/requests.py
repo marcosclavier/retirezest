@@ -175,7 +175,7 @@ class HouseholdInput(BaseModel):
         "capital-gains-optimized",
         "tfsa-first",
         "balanced"
-    ] = Field(default="corporate-optimized", description="Withdrawal strategy")
+    ] = Field(default="minimize-income", description="Withdrawal strategy")
 
     # Spending phases (annual amounts in CAD)
     spending_go_go: float = Field(default=120000, ge=0, le=500000, description="Annual spending in go-go years")
