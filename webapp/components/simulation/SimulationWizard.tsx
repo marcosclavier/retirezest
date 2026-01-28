@@ -656,14 +656,16 @@ export function SimulationWizard({
                 <h4 className="font-semibold text-gray-900 mb-3">👤 Your Profile</h4>
                 <div className="space-y-2 text-sm">
                   <p>
-                    <span className="text-gray-600">Name:</span> {household.p1.name}
+                    <span className="text-gray-600">Name:</span>{' '}
+                    <span className="text-gray-900">{household.p1.name || 'Not set'}</span>
                   </p>
                   <p>
-                    <span className="text-gray-600">Age:</span> {household.p1.start_age || 0} -{' '}
-                    {household.end_age || 95}
+                    <span className="text-gray-600">Age:</span>{' '}
+                    <span className="text-gray-900">{household.p1.start_age || 65} - {household.end_age || 95}</span>
                   </p>
                   <p>
-                    <span className="text-gray-600">Province:</span> {household.province}
+                    <span className="text-gray-600">Province:</span>{' '}
+                    <span className="text-gray-900">{household.province}</span>
                   </p>
                 </div>
               </div>
@@ -691,14 +693,18 @@ export function SimulationWizard({
                 <h4 className="font-semibold text-gray-900 mb-3">🏛️ Government Benefits</h4>
                 <div className="space-y-2 text-sm">
                   <p>
-                    <span className="text-gray-600">CPP:</span> $
-                    {(household.p1.cpp_annual_at_start || 0).toLocaleString()}/year at age{' '}
-                    {household.p1.cpp_start_age || 65}
+                    <span className="text-gray-600">CPP:</span>{' '}
+                    <span className="text-gray-900">
+                      ${(household.p1.cpp_annual_at_start || 0).toLocaleString()}/year at age{' '}
+                      {household.p1.cpp_start_age || 65}
+                    </span>
                   </p>
                   <p>
-                    <span className="text-gray-600">OAS:</span> $
-                    {(household.p1.oas_annual_at_start || 0).toLocaleString()}/year at age{' '}
-                    {household.p1.oas_start_age || 65}
+                    <span className="text-gray-600">OAS:</span>{' '}
+                    <span className="text-gray-900">
+                      ${(household.p1.oas_annual_at_start || 0).toLocaleString()}/year at age{' '}
+                      {household.p1.oas_start_age || 65}
+                    </span>
                   </p>
                 </div>
               </div>

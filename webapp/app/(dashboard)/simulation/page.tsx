@@ -781,12 +781,27 @@ export default function SimulationPage() {
               <span className="text-sm text-gray-600">View:</span>
               <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                 <button
-                  onClick={() => setIsWizardMode(true)}
+                  onClick={async () => {
+                    // Ensure prefill data is loaded before opening wizard
+                    if (!prefillAttempted || prefillLoading) {
+                      console.log('⏳ Waiting for prefill data to load...');
+                      return;
+                    }
+
+                    // If no prefill data available, try loading it again
+                    if (!prefillAvailable) {
+                      console.log('🔄 Loading prefill data for wizard...');
+                      await loadPrefillData(csrfToken);
+                    }
+
+                    setIsWizardMode(true);
+                  }}
+                  disabled={prefillLoading}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                     isWizardMode
                       ? 'bg-white text-indigo-600 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  } ${prefillLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   🧭 Guided
                 </button>
