@@ -20,6 +20,7 @@ import { generatePDF } from '@/lib/reports/generatePDF';
 import { KeyInsightsCard } from '@/components/simulation/KeyInsightsCard';
 import { ResultsHeroSection } from '@/components/simulation/ResultsHeroSection';
 import { WhatIfSliders } from '@/components/simulation/WhatIfSliders';
+import { GISInsightsCard } from '@/components/simulation/GISInsightsCard';
 
 interface ResultsDashboardProps {
   result: SimulationResponse;
@@ -179,6 +180,11 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
 
       {/* Hero Section with Health Score */}
       <ResultsHeroSection result={result} />
+
+      {/* GIS Strategy Insights (only for minimize-income strategy) */}
+      {result.strategy_insights && (
+        <GISInsightsCard insights={result.strategy_insights} />
+      )}
 
       {/* What-If Sliders */}
       <WhatIfSliders result={result} />

@@ -389,6 +389,59 @@ export interface ValidationError {
   input?: any;
 }
 
+// GIS Strategy Insights Types
+export interface GISFeasibility {
+  status: 'not_eligible' | 'limited' | 'moderate' | 'good';
+  rating: number; // 0-10
+  eligible_years: number;
+  total_projected_gis: number;
+  max_rrif_for_gis_at_71: number;
+  current_rrif_p1: number;
+  current_rrif_p2: number;
+  combined_rrif: number;
+}
+
+export interface StrategyRecommendation {
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  action: string;
+  expected_benefit: string;
+}
+
+export interface StrategyMilestone {
+  age: string;
+  event: string;
+  description: string;
+  status: 'active' | 'upcoming' | 'critical' | 'future' | 'past';
+}
+
+export interface StrategyInsights {
+  gis_feasibility: GISFeasibility;
+  strategy_effectiveness: {
+    rating: number; // 0-10
+    level: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+    message: string;
+    is_good_fit: boolean;
+    reasons: string[];
+  };
+  main_message: string;
+  gis_eligibility_summary: string;
+  gis_eligibility_explanation: string;
+  recommendations: StrategyRecommendation[];
+  optimization_opportunities: string[];
+  key_milestones: StrategyMilestone[];
+  summary_metrics: {
+    total_gis: number;
+    years_with_gis: number;
+    final_net_worth: number;
+    total_tax: number;
+    plan_years: number;
+    tfsa_usage: number;
+    rrif_usage: number;
+  };
+}
+
 export interface SimulationResponse {
   success: boolean;
   message: string;
@@ -405,6 +458,9 @@ export interface SimulationResponse {
   spending_analysis?: SpendingAnalysis;
   key_assumptions?: KeyAssumptions;
   chart_data?: ChartData;
+
+  // AI-powered strategy insights (for minimize-income strategy)
+  strategy_insights?: StrategyInsights;
 
   warnings: string[];
   error?: string;
