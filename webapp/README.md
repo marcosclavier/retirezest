@@ -1,44 +1,77 @@
-# Canadian Retirement Planning App - MVP
+# RetireZest - Canadian Retirement Planning Platform
 
-A web application for Canadian seniors to plan their retirement, calculate government benefits (CPP, OAS, GIS), and project retirement income.
+A comprehensive web application for Canadian seniors to plan their retirement, calculate government benefits (CPP, OAS, GIS), and project retirement income with advanced withdrawal strategies.
 
 ## Project Status
 
-🚧 **In Development** - MVP Phase
+🚀 **Production** - Active Users: 67
 
-### Completed
-✅ Next.js 15 with TypeScript initialized
-✅ Tailwind CSS configured
-✅ Prisma ORM configured with SQLite
-✅ Database schema created (Users, Income, Assets, Expenses, Debts, Scenarios, Projections)
-✅ Authentication utilities (JWT, bcrypt)
-✅ TypeScript types defined
-✅ Utility functions created
+### Production Features
+✅ Next.js 15 with TypeScript
+✅ Tailwind CSS with responsive design
+✅ PostgreSQL database (Neon) with Prisma ORM
+✅ Authentication & email verification (Resend)
+✅ Couples planning support
+✅ Complete onboarding wizard (7-11 steps)
+✅ Government benefits calculators (CPP, OAS, GIS)
+✅ Advanced retirement projection engine (Python backend)
+✅ Multiple withdrawal strategies (5 strategies including RRIF Frontload)
+✅ Tax calculations (federal + provincial)
+✅ Interactive dashboards & visualizations
+✅ PDF report generation
+✅ Premium subscriptions (Stripe)
+✅ Re-engagement email campaigns
+✅ User analytics & tracking
+✅ Cloudflare Turnstile (bot protection)
+✅ Vercel Analytics & Speed Insights
+✅ Google Analytics 4 integration
+
+### Recently Completed (Jan 2026)
+✅ Re-engagement email campaign system
+✅ User segmentation & analytics
+✅ Email automation with Resend
+✅ Audit logging for user actions
+✅ RRIF Frontload strategy validation
+✅ AI-powered GIS Strategy Assessment (for minimize-income strategy)
+✅ Enhanced UI contrast and accessibility improvements
 
 ### In Progress
-🔄 Installing dependencies
-🔄 Creating authentication pages
-🔄 Building dashboard layout
+🔄 User acquisition tracking (UTM parameters)
+🔄 Conversion tracking in Google Analytics
 
 ### Upcoming
-📋 Financial profile forms
-📋 Government benefits calculators (CPP, OAS, GIS)
-📋 Retirement projection engine
-📋 Tax calculations
-📋 Data visualizations
-📋 PDF report generation
+📋 Additional withdrawal strategies
+📋 Enhanced tax optimization
+📋 Multi-scenario comparison improvements
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** Next.js 15, React 18, TypeScript 5
-- **Styling:** Tailwind CSS
-- **Database:** SQLite (Prisma ORM)
-- **Authentication:** JWT with httpOnly cookies
+### Frontend
+- **Framework:** Next.js 15 (App Router), React 18, TypeScript 5
+- **Styling:** Tailwind CSS with custom components
+- **UI Components:** Radix UI primitives
 - **Charts:** Recharts
-- **Forms:** React Hook Form + Zod
-- **Date Utilities:** date-fns
+- **Forms:** React Hook Form + Zod validation
+- **PDF Generation:** jsPDF, html2canvas
+- **Analytics:** Google Analytics 4, Vercel Analytics, Speed Insights
+- **Security:** Cloudflare Turnstile (bot protection)
+
+### Backend
+- **Database:** PostgreSQL (Neon serverless)
+- **ORM:** Prisma Client
+- **Authentication:** JWT with httpOnly cookies, bcryptjs
+- **Email:** Resend API
+- **Payments:** Stripe (subscriptions)
+- **Python Backend:** FastAPI + uvicorn (simulation engine)
+
+### Infrastructure
+- **Hosting:** Vercel (frontend), Railway (Python backend)
+- **Database:** Neon PostgreSQL
+- **Email Service:** Resend
+- **CDN:** Vercel Edge Network
+- **Environment:** Node.js 20+, Python 3.11+
 
 ---
 
@@ -173,37 +206,58 @@ The application uses the following database models:
 
 ```bash
 # Development
-npm run dev          # Start development server
+npm run dev          # Start Next.js development server (port 3001)
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
+npm run analyze      # Analyze bundle size
+
+# Testing
+npm run test                   # Run calculation tests
+npm run test:e2e              # Run end-to-end tests (Playwright)
+npm run test:e2e:ui           # Run E2E tests in UI mode
+npm run test:e2e:strategies   # Test withdrawal strategies
+npm run test:e2e:edge-cases   # Test edge cases
 
 # Database
-npx prisma studio              # Open database GUI
+npx prisma studio              # Open database GUI (port 5555)
 npx prisma migrate dev         # Create and apply migration
 npx prisma migrate reset       # Reset database
 npx prisma generate            # Generate Prisma client
 npx prisma db push             # Push schema without migration
+
+# Analytics & User Management
+npm run analytics              # Run user analytics script
+node get_reengagement_segments.js    # Generate user segments
+node send_reengagement_emails.js <segment> [--send]  # Send re-engagement emails
+node test_email.js             # Test email configuration
+
+# Python Backend (from juan-retirement-app/)
+python3 -m uvicorn api.main:app --reload  # Start Python simulation server (port 8000)
 ```
 
 ---
 
 ## Features
 
-### Phase 1: Authentication ✅
-- User registration
-- Login/logout
-- JWT-based session management
-- Password hashing with bcrypt
+### Authentication & User Management ✅
+- User registration with email verification
+- Login/logout with JWT session management
+- Password reset functionality
+- Email verification with Resend
+- Cloudflare Turnstile bot protection
+- Account soft-delete with 30-day grace period
 
-### Phase 2: Financial Profile (In Progress)
-- Income management (employment, pension, investment)
-- Asset tracking (RRSP, TFSA, non-registered)
+### Financial Profile ✅
+- Income management (employment, pension, investment, rental, other)
+- Asset tracking (RRSP, TFSA, non-registered, corporate)
+- Real estate assets (primary, rental, cottage)
 - Expense categorization
 - Debt tracking
+- Couples planning (partner assets, income, joint assets)
 - Net worth calculation
 
-### Phase 3: Government Benefits (Upcoming)
+### Government Benefits Calculators ✅
 - **CPP Calculator**
   - Contribution history input
   - Estimate based on average YMPE
@@ -219,25 +273,67 @@ npx prisma db push             # Push schema without migration
   - Income-tested eligibility
   - Single vs married calculations
 
-### Phase 4: Retirement Projection (Upcoming)
+### Retirement Projection Engine ✅
 - Year-by-year projections (to age 95)
-- Tax calculations (federal + provincial)
-- RRIF minimum withdrawals
+- Advanced tax calculations (federal + provincial, all provinces)
+- RRIF minimum withdrawals (CRA tables)
 - Asset depletion analysis
+- Multiple withdrawal strategies:
+  1. **Constant Percentage** - Fixed withdrawal rate
+  2. **RRIF Minimum** - CRA minimum withdrawals only
+  3. **RRIF Frontload** - 15% before OAS, 8% after OAS (tax-optimized)
+  4. **RRIF Frontload with OAS Protection** - Avoids OAS clawback
+  5. **Tax-Optimized** - Minimizes lifetime taxes
+  6. **Minimize Income** - Designed to maximize GIS eligibility
+- OAS clawback avoidance
+- Government benefits integration (CPP, OAS, GIS)
+- Corporate account support with dividend tax credits
 - Multiple scenario comparison
+- **AI-Powered Strategy Insights** (for minimize-income strategy):
+  - GIS eligibility analysis with 30-year projection
+  - Strategy effectiveness rating (0-10)
+  - Personalized recommendations with priority levels
+  - Optimization opportunities identification
+  - Key milestones timeline
+  - Visual GIS feasibility assessment
 
-### Phase 5: Visualizations (Upcoming)
-- Interactive dashboard
+### Visualizations & Dashboard ✅
+- Interactive retirement dashboard
 - Income breakdown charts
-- Cash flow projections
-- Asset balance charts
-- Tax visualization
+- Cash flow projections (30 years)
+- Asset balance trajectories
+- Tax visualization by source
+- Estate value projections
+- Government benefits timeline
 
-### Phase 6: Reports (Upcoming)
-- PDF report generation
+### Reports & Export ✅
+- PDF report generation (jsPDF)
 - Executive summary
-- Detailed projections
-- Recommendations
+- Year-by-year detailed projections
+- Tax breakdown analysis
+- Account balance charts
+- Customizable branding (company name/logo)
+
+### User Engagement & Analytics ✅
+- **Re-engagement Email System**
+  - Automated user segmentation (5 priority segments)
+  - Personalized email templates
+  - Dry-run testing mode
+  - Email delivery via Resend API
+  - Audit logging for campaign tracking
+- **Analytics**
+  - Google Analytics 4 integration
+  - Vercel Analytics (page views, performance)
+  - User growth tracking
+  - Geographic distribution (province-level)
+  - Conversion funnel monitoring
+
+### Subscription & Payments ✅
+- Stripe integration for premium subscriptions
+- Free tier with rate limiting
+- Premium tier with unlimited simulations
+- Subscription management dashboard
+- Webhook handling for payment events
 
 ---
 
