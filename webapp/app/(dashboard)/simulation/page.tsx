@@ -339,7 +339,7 @@ export default function SimulationPage() {
         const data = await response.json();
         console.log('🔄 Merging fresh profile data with saved custom settings...');
 
-        // Asset balance fields that should ALWAYS come from the database
+        // Asset balance fields and government benefits that should ALWAYS come from the database
         const assetFields = [
           'tfsa_balance',
           'rrsp_balance',
@@ -354,13 +354,18 @@ export default function SimulationPage() {
           'corp_cash_bucket',
           'corp_gic_bucket',
           'corp_invest_bucket',
+          // Government benefits - always sync with Income Sources profile
+          'cpp_start_age',
+          'cpp_annual_at_start',
+          'oas_start_age',
+          'oas_annual_at_start',
         ];
 
         // Helper to merge person data: use fresh assets, preserve custom settings
         const mergePerson = (savedPerson: PersonInput, freshPerson: PersonInput): PersonInput => {
           const merged = { ...savedPerson };
 
-          // Update asset balances from database (always fresh)
+          // Update asset balances and government benefits from database (always fresh)
           assetFields.forEach(field => {
             if (field in freshPerson) {
               // TypeScript: using any here is safe because we're copying values from PersonInput to PersonInput
