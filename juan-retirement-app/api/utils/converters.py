@@ -268,7 +268,13 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         )
 
     years_simulated = len(df)
-    years_funded = len(df[df['net_worth_end'] > 0]) if 'net_worth_end' in df.columns else years_simulated
+    # Use plan_success field to count years where spending was fully met (not just net worth > 0)
+    if 'plan_success' in df.columns:
+        years_funded = len(df[df['plan_success'] == True])
+    elif 'net_worth_end' in df.columns:
+        years_funded = len(df[df['net_worth_end'] > 0])
+    else:
+        years_funded = years_simulated
     success_rate = years_funded / years_simulated if years_simulated > 0 else 0.0
 
     # === Government Benefits Totals ===
@@ -519,29 +525,59 @@ def calculate_health_score(
         else:
             return "Poor"
 
-    # Criterion 1: Full period funded
+    # Criterion 1: Full period funded (graduated scoring based on success_rate)
     # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
     full_period_funded = bool(success_rate >= 1.0)
-    points_earned = 20 if full_period_funded else 0
+
+    # Graduated scoring: penalize based on how short the plan falls
+    if success_rate >= 1.0:
+        points_earned = 20  # Perfect
+    elif success_rate >= 0.95:
+        points_earned = 18  # 1-2 years short
+    elif success_rate >= 0.90:
+        points_earned = 15  # 2-3 years short
+    elif success_rate >= 0.85:
+        points_earned = 12  # 3-5 years short
+    elif success_rate >= 0.80:
+        points_earned = 8   # 5-7 years short
+    elif success_rate >= 0.70:
+        points_earned = 4   # 7-10 years short
+    else:
+        points_earned = 0   # >10 years short
+
     criteria['full_period_funded'] = {
         'score': points_earned,
         'max_score': 20,
         'status': get_status(full_period_funded, points_earned),
-        'description': 'Plan funds all years',
+        'description': f'Plan funds {success_rate*100:.0f}% of years ({years_funded}/{years_simulated})',
         # Legacy fields for backwards compatibility
         'met': full_period_funded,
         'points': points_earned,
     }
     score += points_earned
 
-    # Criterion 2: Adequate funding reserve (80%+ of period)
+    # Criterion 2: Adequate funding reserve (80%+ of period) - graduated scoring
     adequate_reserve = bool(success_rate >= 0.80)
-    points_earned = 20 if adequate_reserve else 0
+
+    # Graduated scoring for reserve adequacy
+    if success_rate >= 0.95:
+        points_earned = 20  # Excellent reserve
+    elif success_rate >= 0.90:
+        points_earned = 17  # Good reserve
+    elif success_rate >= 0.85:
+        points_earned = 14  # Fair reserve
+    elif success_rate >= 0.80:
+        points_earned = 10  # Minimal acceptable reserve
+    elif success_rate >= 0.70:
+        points_earned = 5   # Insufficient reserve
+    else:
+        points_earned = 0   # Critically low
+
     criteria['adequate_reserve'] = {
         'score': points_earned,
         'max_score': 20,
         'status': get_status(adequate_reserve, points_earned),
-        'description': 'Plan funds 80%+ of years',
+        'description': f'Funding reserve: {success_rate*100:.0f}% (target: 80%+)',
         # Legacy fields for backwards compatibility
         'met': adequate_reserve,
         'points': points_earned,

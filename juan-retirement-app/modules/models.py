@@ -337,8 +337,10 @@ class YearResult:
     cash_buffer_end: float = 0.0     # Cumulative buffer at end of year
 
     # Underfunding tracking
+    spending_gap: float = 0.0  # Dollar amount of unmet spending need (0 if fully funded)
     underfunded_after_tax: float = 0.0
-    is_underfunded: bool = False
+    is_underfunded: bool = False  # True if spending gap exceeds tolerance
+    plan_success: bool = True  # True if year is fully funded (used for status badge)
 
     # Terminal tax at death (added in final year only)
     terminal_tax: float = 0.0

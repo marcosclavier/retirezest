@@ -2456,6 +2456,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             tax_accumulated=cumulative_retirement_taxes,  # Will be updated below after append
             lifetime_tax_at_death=0.0,  # Will be calculated at end of simulation
             lifetime_tax_efficiency=0.0,  # Will be calculated at end of simulation
+
+            # Underfunding tracking
+            spending_gap=hh_gap,  # Dollar amount of unmet spending (0 if fully funded)
+            is_underfunded=is_fail,  # True if gap exceeds tolerance
+            plan_success=not is_fail,  # True if year is fully funded
         ))
 
         # Update cumulative retirement taxes for this year
