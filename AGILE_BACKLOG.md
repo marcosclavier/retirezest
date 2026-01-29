@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026 (Added US-025, US-026, US-027, US-028: Withdrawal Strategy UX & Educational Guidance)
+**Last Updated**: January 29, 2026 (Added US-035: E2E Testing - All Withdrawal Strategies)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -310,6 +310,19 @@
 
 ---
 
+| **US-035** | **E2E Testing - All Withdrawal Strategies** | **8** | **P2** | **📋 To Do** |
+| **Description** | As a developer, I want comprehensive end-to-end tests for all 6 withdrawal strategies so that I can ensure each strategy produces correct results and behaves as documented |
+| **Acceptance Criteria** | **Test Coverage:**<br>- [ ] All 6 withdrawal strategies tested end-to-end<br>- [ ] Each strategy tested with multiple household profiles<br>- [ ] Tax calculations verified for each strategy<br>- [ ] Withdrawal order validated for each strategy<br>- [ ] Edge cases tested (zero balances, high income, low income)<br>- [ ] Cross-strategy comparison validates differences<br><br>**Test Quality:**<br>- [ ] Tests run in CI/CD pipeline<br>- [ ] Tests are deterministic (no flaky tests)<br>- [ ] Clear assertions with meaningful error messages<br>- [ ] Test data represents realistic scenarios<br>- [ ] Performance benchmarks established<br><br>**Documentation:**<br>- [ ] Each strategy's expected behavior documented<br>- [ ] Test scenarios described in detail<br>- [ ] Known limitations documented<br>- [ ] Comparison matrix created (when to use each strategy) |
+| **Tasks** | **Test Infrastructure:**<br>- [ ] Set up Playwright E2E test framework (if not already)<br>- [ ] Create test fixtures for 6 household profiles<br>- [ ] Create utility functions for strategy testing<br>- [ ] Set up test database with known data<br><br>**Strategy Tests (6 strategies):**<br><br>1. **Corporate Optimized** (US-035-1)<br>   - [ ] Test with corporate account ($100K)<br>   - [ ] Verify corporate accounts drawn first<br>   - [ ] Verify corporate tax minimization<br>   - [ ] Test with no corporate accounts (fallback behavior)<br><br>2. **Income Minimization (GIS-Optimized)** (US-035-2)<br>   - [ ] Test with low-income senior (GIS eligible)<br>   - [ ] Verify TFSA/capital gains prioritized<br>   - [ ] Verify taxable income stays below GIS clawback<br>   - [ ] Test with high income (GIS not applicable)<br>   - [ ] Verify OAS clawback avoided if possible<br><br>3. **RRIF Splitting** (US-035-3)<br>   - [ ] Test with couple (both >65)<br>   - [ ] Verify pension income splitting applied<br>   - [ ] Verify tax reduction vs no splitting<br>   - [ ] Test with single person (no splitting)<br>   - [ ] Test with age <65 (ineligible)<br><br>4. **Capital Gains Optimized** (US-035-4)<br>   - [ ] Test with large non-reg account ($200K+)<br>   - [ ] Verify capital gains drawn first<br>   - [ ] Verify 50% inclusion rate applied<br>   - [ ] Compare tax vs RRIF withdrawals<br>   - [ ] Test with zero non-reg balance<br><br>5. **TFSA First** (US-035-5)<br>   - [ ] Test with $50K TFSA balance<br>   - [ ] Verify TFSA fully depleted before RRIF<br>   - [ ] Verify zero tax on TFSA withdrawals<br>   - [ ] Test with zero TFSA balance<br>   - [ ] Verify flexibility benefit (no tax impact)<br><br>6. **Balanced** (US-035-6)<br>   - [ ] Test with all account types<br>   - [ ] Verify proportional withdrawals<br>   - [ ] Compare results to other strategies<br>   - [ ] Verify tax optimization is moderate<br>   - [ ] Confirm it's the default strategy<br><br>**Cross-Strategy Tests:**<br>- [ ] Same household, all 6 strategies, compare results<br>- [ ] Verify health scores differ appropriately<br>- [ ] Verify final estates differ<br>- [ ] Verify tax totals differ<br>- [ ] Document which strategy is best for which profile<br><br>**Regression Tests:**<br>- [ ] Test against known-good simulation results<br>- [ ] Verify Python backend changes don't break strategies<br>- [ ] Test with production data (anonymized)<br><br>**Documentation:**<br>- [ ] Create WITHDRAWAL_STRATEGIES_TEST_REPORT.md<br>- [ ] Document expected behavior for each strategy<br>- [ ] Create strategy selection guide<br>- [ ] Add test examples to documentation |
+| **Technical Notes** | **Withdrawal Strategies (6 total):**<br><br>1. **Corporate Optimized** (`corporate-optimized`)<br>   - Prioritizes corporate account withdrawals<br>   - Minimizes corporate tax<br>   - Best for: Business owners with corporate accounts<br><br>2. **Income Minimization** (`minimize-income`)<br>   - Prioritizes TFSA and capital gains<br>   - Preserves GIS eligibility<br>   - Avoids OAS clawback<br>   - Best for: Low-income seniors, GIS recipients<br><br>3. **RRIF Splitting** (`rrif-splitting`)<br>   - Uses pension income splitting for couples<br>   - Requires both partners >65<br>   - Reduces household tax burden<br>   - Best for: Couples with large RRIF balances<br><br>4. **Capital Gains Optimized** (`capital-gains-optimized`)<br>   - Prioritizes non-registered accounts<br>   - Leverages 50% inclusion rate<br>   - Best for: High net worth, large non-reg accounts<br><br>5. **TFSA First** (`tfsa-first`)<br>   - Depletes TFSA before taxable accounts<br>   - Maximizes flexibility (no tax reporting)<br>   - Best for: Users wanting zero-tax withdrawals first<br><br>6. **Balanced** (`balanced`) - DEFAULT<br>   - Proportional withdrawals across accounts<br>   - Moderate tax optimization<br>   - Best for: Most users, simple approach<br><br>**Test Framework:**<br>- Use Playwright for E2E tests (`e2e/` directory)<br>- Test household profiles stored in `e2e/fixtures/`<br>- Simulation API: `/api/simulation/run`<br>- Python backend validation: `juan-retirement-app/modules/withdrawal_strategies.py`<br><br>**Test Data:**<br>Each test profile should include:<br>- Household info (names, ages, province)<br>- Assets (TFSA, RRSP, RRIF, NonReg, Corporate, RealEstate)<br>- Income (CPP, OAS, pensions, employment)<br>- Expenses (Go-Go, Slow-Go, No-Go)<br>- Expected results (for regression testing)<br><br>**Validation:**<br>- Compare health score (success_rate)<br>- Compare final estate<br>- Compare total taxes paid<br>- Compare withdrawal amounts by year<br>- Compare tax by year<br>- Verify correct account depletion order<br><br>**Related Code:**<br>- Frontend: `webapp/lib/types/simulation.ts` (strategyOptions)<br>- Backend: `juan-retirement-app/modules/withdrawal_strategies.py`<br>- Tests: `webapp/e2e/withdrawal-strategies.spec.ts` (to be created) |
+| **User Impact** | **High** - Withdrawal strategy choice significantly impacts retirement outcomes. Incorrect strategy behavior leads to suboptimal plans, tax overpayment, or benefit loss. Users trust these strategies for critical financial decisions. |
+| **Known Issues** | - No comprehensive E2E tests for strategies currently<br>- Strategy behavior not fully documented<br>- Users may not understand when to use each strategy<br>- No visual comparison tool for strategies<br>- Python backend changes may break strategies without detection<br>- RRIF Splitting strategy recently implemented (needs validation)<br>- Corporate Optimized strategy may have edge cases<br>- Income Minimization GIS calculations complex |
+| **Success Metrics** | - [ ] 100% of 6 strategies have E2E tests<br>- [ ] All tests pass in CI/CD<br>- [ ] Zero strategy-related bugs in production<br>- [ ] Test coverage >90% for withdrawal logic<br>- [ ] Regression test suite catches breaking changes<br>- [ ] Strategy selection guide created<br>- [ ] User complaints about strategy behavior <1% |
+| **Dependencies** | - Python backend (`juan-retirement-app/`) functional<br>- Simulation API (`/api/simulation/run`) working<br>- Playwright E2E framework set up<br>- Test fixtures and utilities created<br>- Access to anonymized production data for realistic tests |
+| **Related Stories** | US-013 (RRIF Strategy Validation), US-022 (What-If Slider Testing), US-027 (Educational Guidance) |
+
+---
+
 #### Epic 7: Performance & Optimization
 
 | ID | User Story | Story Points | Priority | Status |
@@ -459,9 +472,9 @@
 
 ### Epic 6: Testing & Quality
 **Goal**: Achieve >80% test coverage and prevent regression bugs
-**Total Story Points**: 26
+**Total Story Points**: 34
 **Status**: 📋 Backlog
-**User Stories**: US-014, US-015, US-022
+**User Stories**: US-014, US-015, US-022, US-035
 
 ### Epic 7: Performance & Optimization
 **Goal**: Improve app performance and mobile experience
@@ -625,15 +638,15 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 32 ⬆️ New: US-034 (Premium Features Review & Monetization)
-**Completed**: 5 (16%)
+**Total User Stories**: 33 ⬆️ New: US-035 (E2E Testing - All Withdrawal Strategies)
+**Completed**: 5 (15%)
 **In Progress**: 0 (0%) - Sprint 2 complete
-**To Do**: 27 (84%)
+**To Do**: 28 (85%)
 
 **By Priority**:
 - P0 (Critical): 3 stories (2 done, 1 to do)
 - P1 (High): 13 stories (2 done, 11 to do) ⬆️ New: US-034 (Monetization)
-- P2 (Medium): 7 stories (1 done, 6 to do)
+- P2 (Medium): 8 stories (1 done, 7 to do) ⬆️ New: US-035 (E2E Testing)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
 - P5 (Icebox): 2 stories
@@ -644,7 +657,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
 - Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do)
 - Epic 5 (Simulation): 6 stories, 52 pts (2 done, 4 to do) ⬆️ New: US-031 (Early Retirement Eval)
-- Epic 6 (Testing): 3 stories, 26 pts (all backlog)
+- Epic 6 (Testing): 4 stories, 34 pts (all backlog) ⬆️ New: US-035 (E2E Testing)
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
 - Epic 9 (Security): 1 story, 13 pts (all to do) ⬆️ NEW EPIC
