@@ -35,6 +35,38 @@
 **Total Story Points**: 31 / 40 (Sprint Capacity)
 **Velocity**: TBD (first sprint)
 
+**Sprint Board**: [SPRINT_BOARD.md](SPRINT_BOARD.md)
+
+---
+
+## 🎯 Next Sprint: Sprint 2 - Feb 12 - Feb 25, 2026
+
+**Sprint Goal**: Enable premium monetization and improve withdrawal strategy UX to reduce user churn
+
+### Sprint 2 Backlog
+
+| ID | User Story | Story Points | Priority | Epic |
+|----|------------|--------------|----------|------|
+| US-024 | Premium Account Verification & Payment Testing | 8 | P0 🔴 | Epic 9: Monetization |
+| US-021 | Configurable Investment Yields (TFSA/RRSP/RRIF) | 8 | P1 🟡 | Epic 3: Investment |
+| US-025 | Improve Withdrawal Strategy Discoverability | 3 | P1 🟡 | Epic 4: UX |
+| US-026 | Display Current Strategy Selection | 2 | P1 🟡 | Epic 4: UX |
+| US-027 | Educational Guidance - Withdrawal Order | 5 | P1 🟡 | Epic 4: UX |
+| US-022 | What-If Scenario Slider Testing & Fixes | 5 | P1 🟡 | Epic 6: Testing |
+| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX |
+
+**Total Story Points**: 34 / 40 (Sprint Capacity - 85% utilization)
+**Estimated Velocity**: Will be based on Sprint 1 completion
+
+**Sprint Board**: [SPRINT_2_BOARD.md](SPRINT_2_BOARD.md)
+
+**Key Focus Areas**:
+- ✅ Revenue: Verify premium subscription system works (US-024)
+- ✅ User Control: Allow custom investment return assumptions (US-021)
+- ✅ Churn Prevention: Make withdrawal strategies more discoverable (US-025, US-026, US-027)
+- ✅ Quality: Ensure What-If scenarios work correctly (US-022)
+- ✅ Onboarding: Remove friction for users without real estate (US-009)
+
 ---
 
 ## 📚 Product Backlog
