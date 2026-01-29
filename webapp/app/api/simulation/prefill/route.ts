@@ -477,7 +477,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate smart default withdrawal strategy based on asset mix and profile
-    let recommendedStrategy = 'balanced'; // Default fallback
+    let recommendedStrategy = 'minimize-income'; // Default fallback - GIS optimization benefits most Canadian retirees
 
     if (totalNetWorth > 0) {
       const totalRRIF = person1Totals.rrif_balance + person2Totals.rrif_balance;
@@ -518,11 +518,11 @@ export async function GET(request: NextRequest) {
         // Large non-registered balance (>50%) - optimize for capital gains
         recommendedStrategy = 'capital-gains-optimized';
       } else if (age < 65) {
-        // Under 65 - balanced approach for flexibility
-        recommendedStrategy = 'balanced';
+        // Under 65 - income minimization helps preserve flexibility and benefits
+        recommendedStrategy = 'minimize-income';
       } else {
-        // Default for typical retiree with mixed assets
-        recommendedStrategy = 'balanced';
+        // Default for typical retiree with mixed assets - GIS optimization benefits most Canadians
+        recommendedStrategy = 'minimize-income';
       }
 
       logger.info('Smart strategy recommendation', {

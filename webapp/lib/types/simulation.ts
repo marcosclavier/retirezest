@@ -562,7 +562,7 @@ export const defaultHouseholdInput: HouseholdInput = {
   start_year: 2026,
   end_age: 95,
 
-  strategy: 'corporate-optimized',
+  strategy: 'minimize-income',
 
   spending_go_go: 120000,
   go_go_end_age: 75,
