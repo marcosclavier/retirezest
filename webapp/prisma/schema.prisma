@@ -151,6 +151,14 @@ model Asset {
   earlyRrifPercentage       Float?   // Or percentage of balance (0-100)
   earlyRrifMode             String?  // 'fixed' or 'percentage'
 
+  // GIC-specific fields (only populated when type="gic")
+  gicMaturityDate           DateTime?  // When GIC matures
+  gicTermMonths             Int?       // Original term (12, 24, 36, 60, etc.)
+  gicInterestRate           Float?     // Fixed interest rate (e.g., 4.5 for 4.5%)
+  gicCompoundingFrequency   String?    // "annual", "semi-annual", "monthly", "at-maturity"
+  gicReinvestStrategy       String?    // "auto-renew", "cash-out", "transfer-to-tfsa", "transfer-to-nonreg"
+  gicIssuer                 String?    // Bank/institution name (e.g., "TD Bank", "Tangerine")
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
