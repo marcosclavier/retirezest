@@ -2165,7 +2165,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p1.nr_cash = p1_nr_cash_new
         p1.nr_gic = p1_nr_gic_new
         p1.nr_invest = p1_nr_invest_new
-        p1.nonreg_balance = p1_nr_cash_new + p1_nr_gic_new + p1_nr_invest_new + nr_reinvest_p1
+        p1.nonreg_balance = max(0.0, p1_nr_cash_new + p1_nr_gic_new + p1_nr_invest_new + nr_reinvest_p1)
 
         # Person 2 non-registered bucket growth
         if (p2.nr_cash + p2.nr_gic + p2.nr_invest) > 1e-9:
@@ -2193,7 +2193,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p2.nr_cash = p2_nr_cash_new
         p2.nr_gic = p2_nr_gic_new
         p2.nr_invest = p2_nr_invest_new
-        p2.nonreg_balance = p2_nr_cash_new + p2_nr_gic_new + p2_nr_invest_new + nr_reinvest_p2
+        p2.nonreg_balance = max(0.0, p2_nr_cash_new + p2_nr_gic_new + p2_nr_invest_new + nr_reinvest_p2)
 
         # --- Account growths this year (household by account; use same yields you configured) ---
         g_rrif_p1 = max(rrif_start1 - w1["rrif"], 0.0) * p1.yield_rrif_growth
@@ -2263,11 +2263,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Now update balances:
         # TFSA: add contributions and surplus (these are added year-end, don't grow this year)
-        p1.nonreg_balance -= c1
+        p1.nonreg_balance = max(0.0, p1.nonreg_balance - c1)  # Prevent negative balance
         p1.tfsa_balance += c1 + tfsa_reinvest_p1  # Contributions and TFSA surplus
         tfsa_room1 -= (c1 + tfsa_reinvest_p1)
 
-        p2.nonreg_balance -= c2
+        p2.nonreg_balance = max(0.0, p2.nonreg_balance - c2)  # Prevent negative balance
         p2.tfsa_balance += c2 + tfsa_reinvest_p2  # Contributions and TFSA surplus
         tfsa_room2 -= (c2 + tfsa_reinvest_p2)
 

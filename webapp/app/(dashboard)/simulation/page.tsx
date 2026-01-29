@@ -839,10 +839,15 @@ export default function SimulationPage() {
               <Button
                 size="lg"
                 onClick={handleRunSimulation}
-                disabled={isLoading}
+                disabled={isLoading || prefillLoading}
                 className="text-lg font-semibold !bg-white !text-blue-600 hover:!bg-blue-50"
               >
-                {isLoading ? (
+                {prefillLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Loading Profile...
+                  </>
+                ) : isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Running...
@@ -1143,11 +1148,17 @@ export default function SimulationPage() {
       <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
         <Button
           onClick={handleRunSimulation}
-          disabled={isLoading || apiHealthy === false}
+          disabled={isLoading || prefillLoading || apiHealthy === false}
           size="lg"
           className="w-full sm:w-auto sm:min-w-[200px]"
         >
-          {isLoading ? (
+          {prefillLoading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <span className="hidden sm:inline">Loading Profile...</span>
+              <span className="sm:hidden">Loading...</span>
+            </>
+          ) : isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               <span className="hidden sm:inline">Running Simulation...</span>
