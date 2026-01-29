@@ -57,7 +57,15 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
   const handleAdjustmentChange = (field: keyof ScenarioAdjustments, value: number) => {
     const newAdjustments = { ...adjustments, [field]: value };
     setAdjustments(newAdjustments);
-    setHasChanges(checkHasChanges());
+
+    // Check if new adjustments have changes (using newAdjustments, not old state)
+    const hasAnyChanges = (
+      newAdjustments.spendingMultiplier !== 1.0 ||
+      newAdjustments.retirementAgeShift !== 0 ||
+      newAdjustments.cppStartAgeShift !== 0 ||
+      newAdjustments.oasStartAgeShift !== 0
+    );
+    setHasChanges(hasAnyChanges);
 
     // Clear previous What-If result when adjustments change
     setWhatIfResult(null);
