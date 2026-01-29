@@ -386,6 +386,19 @@
 
 ---
 
+| **US-032** | **Premium Benefits Verification & End-to-End Testing** | **8** | **P1** | **📋 To Do** |
+| **Description** | As a product owner, I want to verify that all premium features work correctly end-to-end and that the premium value proposition is clear to users, so that premium subscribers get full value for their subscription |
+| **Acceptance Criteria** | **Premium Feature Testing:**<br>- [ ] Early retirement calculator accessible only to premium users<br>- [ ] Multiple market scenarios (pessimistic, neutral, optimistic) work correctly<br>- [ ] CSV export functionality works for all data types<br>- [ ] PDF report generation works and includes all sections<br>- [ ] Full data export includes all user data<br>- [ ] Interactive retirement age slider functions correctly<br>- [ ] Detailed year-by-year projections display properly<br>- [ ] Advanced charts render correctly<br>- [ ] Priority email support auto-routes correctly<br><br>**Feature Gating:**<br>- [ ] Free users see upgrade prompts for premium features<br>- [ ] Premium users see no upgrade prompts<br>- [ ] Feature gate UI is clear and non-intrusive<br>- [ ] Upgrade flow from feature gate works seamlessly<br><br>**User Experience:**<br>- [ ] Premium badge shows on account page<br>- [ ] Premium features highlighted in UI<br>- [ ] Value proposition clear on subscription page<br>- [ ] Premium benefits documented in help section<br><br>**Edge Cases:**<br>- [ ] Subscription expiration handled gracefully<br>- [ ] Downgrade from premium to free works<br>- [ ] Mid-use feature access revoked correctly<br>- [ ] Premium features persist across sessions |
+| **Tasks** | **E2E Premium User Journey:**<br>- [ ] Test signup → subscribe → use premium features flow<br>- [ ] Test free user → hit feature gate → upgrade → access feature<br>- [ ] Test premium user → cancel → downgrade → restricted access<br>- [ ] Test premium user → subscription expires → grace period → downgrade<br><br>**Individual Feature Testing:**<br>- [ ] Early retirement calculator (calculations accurate)<br>- [ ] Market scenarios (3 scenarios generate different results)<br>- [ ] CSV export (all columns present, data accurate)<br>- [ ] PDF report (all sections render, data matches dashboard)<br>- [ ] Data export (JSON structure complete, no PII leaks)<br>- [ ] Retirement age slider (smooth interaction, recalculates correctly)<br>- [ ] Year-by-year projections (accurate, complete, formatted)<br>- [ ] Advanced charts (responsive, interactive, data-driven)<br><br>**Feature Gate UI Testing:**<br>- [ ] Audit all premium feature gates in codebase<br>- [ ] Test each gate with free and premium accounts<br>- [ ] Verify upgrade modal appearance and messaging<br>- [ ] Test "Upgrade to Premium" button flows<br><br>**Documentation:**<br>- [ ] Create premium features testing checklist<br>- [ ] Document expected vs actual behavior for each feature<br>- [ ] Screenshot all premium features for reference<br>- [ ] Create premium feature demo video |
+| **Technical Notes** | **Premium Features List:**<br>1. Early retirement calculator (`/early-retirement`)<br>2. Multiple market scenarios (pessimistic, neutral, optimistic)<br>3. CSV export (`/api/simulation/export/csv`)<br>4. PDF report generation (html2pdf.js)<br>5. Full data export (`/api/account/export`)<br>6. Interactive retirement age slider<br>7. Detailed year-by-year projections<br>8. Advanced charts (all chart components)<br>9. Priority email support<br><br>**Feature Gate Components:**<br>- `components/modals/UpgradeModal.tsx`<br>- Feature checks: `isPremium` flag in session<br>- Premium routes: Check `/app/(dashboard)` for premium-only pages<br><br>**Test Accounts Needed:**<br>- Free account (to test gates)<br>- Premium account (to test features)<br>- Expired premium account (to test downgrade)<br><br>**Data to Verify:**<br>- CSV: All account types, income sources, expenses<br>- PDF: Health score, charts, action plan, year-by-year<br>- Export: Complete user profile without sensitive data |
+| **User Impact** | **High** - Premium users pay for features and expect them to work. Feature gates must not frustrate free users. Clear value proposition increases conversion rate. |
+| **Known Issues** | - Premium features implemented incrementally<br>- No comprehensive E2E test suite for premium flow<br>- Feature gates may be inconsistent across app<br>- PDF generation may have formatting issues<br>- CSV export columns may be incomplete<br>- No automated testing for premium features<br>- Upgrade modal styling may vary across pages |
+| **Success Metrics** | - [ ] 100% of premium features functional<br>- [ ] Zero critical bugs in premium features<br>- [ ] <5% premium support tickets about feature access<br>- [ ] 10%+ conversion rate from free to premium (via feature gates)<br>- [ ] 90%+ premium subscriber satisfaction (feature quality)<br>- [ ] <1% churn due to feature issues |
+| **Dependencies** | - US-024 completed (payment system working)<br>- Premium Stripe subscription active for testing<br>- Access to Stripe test environment<br>- PDF generation library (html2pdf.js) functional<br>- CSV export tested with real user data |
+| **Related Stories** | US-024 (Premium Payment Testing), US-008 (Wizard Pre-fill) |
+
+---
+
 ## 🎯 Epics
 
 ### Epic 1: User Retention & Engagement
@@ -443,10 +456,10 @@
 **User Stories**: US-030
 
 ### Epic 10: Monetization & Revenue
-**Goal**: Ensure reliable payment processing and subscription management
-**Total Story Points**: 8
+**Goal**: Ensure reliable payment processing, subscription management, and premium feature delivery
+**Total Story Points**: 16
 **Status**: 📋 To Do
-**User Stories**: US-024
+**User Stories**: US-024, US-032
 
 ---
 
