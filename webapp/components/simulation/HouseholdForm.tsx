@@ -15,6 +15,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { HelpTooltip } from '@/components/ui/HelpTooltip';
 import { simulationTooltips } from '@/lib/help-text/simulation-tooltips';
+import { Target } from 'lucide-react';
 
 // Helper component for labels with optional tooltips
 function LabelWithTooltip({ htmlFor, children, tooltip }: { htmlFor: string; children: React.ReactNode; tooltip?: string }) {
@@ -183,31 +184,45 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
             </div>
           </div>
 
-          <div className="space-y-2">
-            <LabelWithTooltip
-              htmlFor="strategy"
-              tooltip={simulationTooltips.household.strategy.description}
-            >
-              {simulationTooltips.household.strategy.label}
-            </LabelWithTooltip>
+          {/* Withdrawal Strategy - Enhanced Section */}
+          <div className="space-y-3 p-4 border-2 border-blue-200 bg-blue-50/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              <div className="flex-1">
+                <LabelWithTooltip
+                  htmlFor="strategy"
+                  tooltip={simulationTooltips.household.strategy.description}
+                >
+                  <span className="text-base font-semibold text-gray-900">
+                    {simulationTooltips.household.strategy.label}
+                  </span>
+                </LabelWithTooltip>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Critical decision: How to withdraw from accounts to optimize taxes and benefits
+                </p>
+              </div>
+            </div>
             <Select
               value={household.strategy}
               onValueChange={(value: WithdrawalStrategy) => onChange('strategy', value)}
             >
-              <SelectTrigger id="strategy">
-                <SelectValue placeholder="Select strategy" />
+              <SelectTrigger id="strategy" className="h-auto min-h-[48px] bg-white">
+                <SelectValue placeholder="Select withdrawal strategy" />
               </SelectTrigger>
               <SelectContent>
                 {strategyOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                  <SelectItem key={option.value} value={option.value} className="py-3">
                     <div>
-                      <div className="font-medium">{option.label}</div>
-                      <div className="text-xs text-gray-600">{option.description}</div>
+                      <div className="font-medium text-base">{option.label}</div>
+                      <div className="text-xs text-gray-600 mt-1">{option.description}</div>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-sm text-blue-700">
+              💡 Tip: "Income Minimization (GIS-Optimized)" preserves government benefits
+            </p>
           </div>
         </CardContent>
       </Card>
