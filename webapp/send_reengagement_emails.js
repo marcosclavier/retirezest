@@ -7,20 +7,23 @@
  * Prerequisites:
  * 1. Vercel deployment completed and verified
  * 2. All fixes tested in production
- * 3. RESEND_API_KEY environment variable set
+ * 3. RESEND_API_KEY in .env.local
  *
  * Usage:
- *   RESEND_API_KEY=re_xxxxx node send_reengagement_emails.js
+ *   node send_reengagement_emails.js
  *
  * See REENGAGEMENT_EMAILS.md for full documentation
  */
+
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' });
 
 const { Resend } = require('resend');
 
 // Check for API key
 if (!process.env.RESEND_API_KEY) {
-  console.error('❌ ERROR: RESEND_API_KEY environment variable not set');
-  console.error('Usage: RESEND_API_KEY=re_xxxxx node send_reengagement_emails.js');
+  console.error('❌ ERROR: RESEND_API_KEY not found in .env.local');
+  console.error('Please ensure RESEND_API_KEY is set in .env.local file');
   process.exit(1);
 }
 
