@@ -245,6 +245,17 @@
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
+| **US-029** | **Modularize Simulation Routine** | **13** | **P2** | **📋 Backlog** |
+| **Description** | As a developer, I want the simulation routine refactored into smaller, modular functions so that the code is easier to maintain, test, and extend |
+| **Acceptance Criteria** | - [ ] simulation.py refactored into logical modules (tax calculations, withdrawals, benefits, cash flow)<br>- [ ] Each module has clear single responsibility<br>- [ ] Module interfaces well-defined with type hints<br>- [ ] Unit tests added for each module (>80% coverage)<br>- [ ] No change in simulation output (regression tests pass)<br>- [ ] Code complexity reduced (cyclomatic complexity <10 per function)<br>- [ ] Documentation added for each module |
+| **Tasks** | - [ ] Analyze current simulation.py structure (~2800 lines)<br>- [ ] Design modular architecture (modules: taxes, withdrawals, benefits, cash_flow, strategy)<br>- [ ] Extract tax calculation logic into taxes.py module<br>- [ ] Extract withdrawal logic into withdrawals.py module<br>- [ ] Extract government benefits logic into benefits.py module<br>- [ ] Extract cash flow calculations into cash_flow.py module<br>- [ ] Extract strategy logic into strategy.py module<br>- [ ] Create comprehensive regression test suite<br>- [ ] Refactor simulation.py to use new modules<br>- [ ] Run regression tests (compare old vs new output)<br>- [ ] Fix any discrepancies found<br>- [ ] Update unit tests for each module<br>- [ ] Update documentation and code comments<br>- [ ] Performance benchmark (ensure no slowdown) |
+| **Technical Notes** | **Current State:**<br>- `juan-retirement-app/modules/simulation.py` is ~2800 lines<br>- Contains tax calculations, withdrawal strategies, GIS logic, RRIF calculations, cash flow, all in one file<br>- High cyclomatic complexity makes testing difficult<br>- Adding new features requires navigating large monolithic file<br><br>**Proposed Modular Architecture:**<br>```<br>juan-retirement-app/modules/<br>├── simulation.py (orchestrator, main run_simulation function)<br>├── taxes.py (federal/provincial tax calculations)<br>├── withdrawals.py (TFSA, RRSP, RRIF, NonReg withdrawal logic)<br>├── benefits.py (CPP, OAS, GIS calculations)<br>├── cash_flow.py (annual cash flow, balance tracking)<br>├── strategy.py (withdrawal strategy implementations)<br>└── types.py (shared type definitions)<br>```<br><br>**Key Functions to Extract:**<br>1. Tax Calculations (~300 lines)<br>   - calculate_federal_tax()<br>   - calculate_provincial_tax()<br>   - calculate_total_tax()<br><br>2. Withdrawal Logic (~500 lines)<br>   - withdraw_from_tfsa()<br>   - withdraw_from_rrsp()<br>   - withdraw_from_rrif()<br>   - withdraw_from_nonreg()<br>   - apply_withdrawal_strategy()<br><br>3. Government Benefits (~400 lines)<br>   - calculate_cpp()<br>   - calculate_oas()<br>   - calculate_gis()<br>   - apply_oas_clawback()<br><br>4. Cash Flow (~300 lines)<br>   - calculate_annual_cash_flow()<br>   - update_account_balances()<br>   - track_withdrawals()<br><br>5. Strategy Logic (~400 lines)<br>   - minimize_income_strategy()<br>   - balanced_income_strategy()<br>   - early_rrif_strategy()<br>   - max_tfsa_first_strategy()<br><br>**Benefits:**<br>- Easier to write unit tests for isolated functions<br>- Reduced cognitive load when reading code<br>- Easier to add new withdrawal strategies<br>- Easier to fix bugs (smaller search space)<br>- Better code reusability<br>- Easier onboarding for new developers<br><br>**Risks:**<br>- Regression bugs if refactoring introduces subtle changes<br>- Must maintain exact same simulation output<br>- Need comprehensive test coverage before refactoring |
+| **User Impact** | **Low (Direct)** - No user-facing changes<br>**High (Indirect)** - Improved code quality enables faster feature development, fewer bugs, easier bug fixes |
+| **Dependencies** | - US-015 (Unit Test Coverage) - should establish test baseline first<br>- US-013 (RRIF Strategy Validation) - ensures strategies work correctly before refactoring |
+| **Success Metrics** | - [ ] All regression tests pass (100% output match)<br>- [ ] Code complexity reduced by 50%+<br>- [ ] Unit test coverage increased from <20% to >80%<br>- [ ] Average function length reduced from ~150 lines to <50 lines<br>- [ ] Developer velocity increases in Sprint 4+ (faster feature development) |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
 | **US-023** | **AI-Powered GIS Enhancement - Testing, Verification & Deployment** | **13** | **P1** | **📋 To Do** |
 | **Description** | As a product owner, I want comprehensive testing, verification, and production deployment of the AI-powered GIS strategy enhancements so that low-income retirees receive accurate, trustworthy advice |
 | **Acceptance Criteria** | - [ ] All GIS calculation logic verified against CRA 2026 rates<br>- [ ] TFSA prioritization strategy tested with multiple scenarios<br>- [ ] GIS threshold targeting validated (single vs couple thresholds)<br>- [ ] GIS income room calculations accurate<br>- [ ] Strategy effectiveness ratings (0-10) validated<br>- [ ] AI-generated recommendations reviewed for accuracy<br>- [ ] Key milestone timeline verified for correctness<br>- [ ] GISInsightsCard UI renders correctly with all data<br>- [ ] Edge cases tested (zero RRIF, high assets, age transitions)<br>- [ ] Production deployment completed with monitoring<br>- [ ] User acceptance testing with real scenarios<br>- [ ] Performance benchmarks met (<500ms for insights generation) |
@@ -540,15 +551,15 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 28 ⬆️ New: US-025, US-026, US-027, US-028
-**Completed**: 5 (18%)
+**Total User Stories**: 29 ⬆️ New: US-029 (Modularization)
+**Completed**: 5 (17%)
 **In Progress**: 2 (7%)
-**To Do**: 21 (75%)
+**To Do**: 22 (76%)
 
 **By Priority**:
-- P0 (Critical): 4 stories (2 done, 1 in progress, 1 to do) ⬆️ New: US-024
-- P1 (High): 11 stories (2 done, 9 to do) ⬆️ New: US-021, US-022, US-023, US-025, US-026, US-027
-- P2 (Medium): 6 stories (1 done, 5 to do) ⬆️ New: US-028
+- P0 (Critical): 4 stories (2 done, 1 in progress, 1 to do)
+- P1 (High): 11 stories (2 done, 9 to do)
+- P2 (Medium): 7 stories (1 done, 6 to do) ⬆️ New: US-029
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
 - P5 (Icebox): 2 stories
@@ -557,12 +568,12 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 1 (User Retention): 5 stories, 31 pts (1 done, 1 in progress)
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
-- Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do) ⬆️ New: US-025, US-026, US-027, US-028
-- Epic 5 (Simulation): 4 stories, 34 pts (2 done, 2 to do) ⬆️ New: US-023
-- Epic 6 (Testing): 3 stories, 26 pts (all backlog) ⬆️ New: US-022
+- Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do)
+- Epic 5 (Simulation): 5 stories, 47 pts (2 done, 3 to do) ⬆️ New: US-029 (Modularization)
+- Epic 6 (Testing): 3 stories, 26 pts (all backlog)
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
-- Epic 9 (Monetization): 1 story, 8 pts (all to do) ⬆️ NEW EPIC: US-024
+- Epic 9 (Monetization): 1 story, 8 pts (all to do)
 
 ---
 
