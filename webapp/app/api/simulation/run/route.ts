@@ -19,22 +19,33 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
+  // CRITICAL DEBUG: Log that request was received
+  console.log('🎯 /api/simulation/run RECEIVED REQUEST at', new Date().toISOString());
+
   try {
     // Authentication check
+    console.log('🔍 Checking session...');
     const session = await getSession();
 
     if (!session) {
+      console.log('❌ No session found');
       throw new AuthenticationError('You must be logged in to run simulations');
     }
 
+    console.log('✅ Session found:', session.email);
+
     // Email verification check
+    console.log('🔍 Checking email verification...');
     const { prisma } = await import('@/lib/prisma');
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: { emailVerified: true },
     });
 
+    console.log('✅ User found, emailVerified:', user?.emailVerified);
+
     if (!user?.emailVerified) {
+      console.log('❌ Email not verified');
       logger.info('Simulation blocked - email not verified', {
         user: session.email,
       });

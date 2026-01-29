@@ -4,12 +4,9 @@
   },
   "permissions": {
     "allow": [
-      "mcp__ide__getDiagnostics",
-      "Bash(node test_whatif_sliders.js:*)",
-      "Bash(if [ -f .env.local ])",
-      "Bash(then echo \"=== Environment Variables Check ===\" echo \"\" echo \"Stripe Secret Key:\" grep -q \"STRIPE_SECRET_KEY=\" .env.local)",
-      "Bash(node verify_premium_payment_system.js:*)",
-      "Bash(evaluate monetization\". It will help us:\n\n1. Understand which features drive value\n2. Optimize pricing strategy\n3. Identify opportunities for growth\n4. Reduce premium churn\n5. Increase conversion rate\n6. Make data-driven product decisions\n\nCritical for long-term business viability and growth.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

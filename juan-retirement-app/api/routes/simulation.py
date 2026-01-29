@@ -95,9 +95,9 @@ async def run_simulation(
         tax_cfg = request.app.state.tax_cfg
 
         # DEBUG: Check API input balances
-        print(f"🔎 API Input Received:")
-        print(f"   p1.name={household_input.p1.name}, p1.tfsa_balance=${household_input.p1.tfsa_balance:,.0f}")
-        print(f"   p2.name={household_input.p2.name}, p2.tfsa_balance=${household_input.p2.tfsa_balance:,.0f}")
+        logger.debug(f"🔎 API Input Received:")
+        logger.debug(f"   p1.name={household_input.p1.name}, p1.tfsa_balance=${household_input.p1.tfsa_balance:,.0f}")
+        logger.debug(f"   p2.name={household_input.p2.name}, p2.tfsa_balance=${household_input.p2.tfsa_balance:,.0f}")
 
         # Convert API model to internal Household
         logger.debug("Converting API input to internal models")
@@ -127,17 +127,17 @@ async def run_simulation(
         logger.debug("Analyzing asset composition (before simulation)")
 
         # DEBUG: Inspect household object before AssetAnalyzer
-        print(f"🔍 DEBUG: About to call AssetAnalyzer.analyze()")
-        print(f"   household type: {type(household)}")
-        print(f"   household.p1 type: {type(household.p1)}")
-        print(f"   household.p1.name: {household.p1.name}")
-        print(f"   household.p1.tfsa_balance: ${household.p1.tfsa_balance:,.2f}")
-        print(f"   household.p1.rrif_balance: ${household.p1.rrif_balance:,.2f}")
-        print(f"   household.p1.nonreg_balance: ${household.p1.nonreg_balance:,.2f}")
-        print(f"   household.p2.name: {household.p2.name}")
-        print(f"   household.p2.tfsa_balance: ${household.p2.tfsa_balance:,.2f}")
-        print(f"   household.p2.rrif_balance: ${household.p2.rrif_balance:,.2f}")
-        print(f"   household.p2.nonreg_balance: ${household.p2.nonreg_balance:,.2f}")
+        logger.debug(f"🔍 DEBUG: About to call AssetAnalyzer.analyze()")
+        logger.debug(f"   household type: {type(household)}")
+        logger.debug(f"   household.p1 type: {type(household.p1)}")
+        logger.debug(f"   household.p1.name: {household.p1.name}")
+        logger.debug(f"   household.p1.tfsa_balance: ${household.p1.tfsa_balance:,.2f}")
+        logger.debug(f"   household.p1.rrif_balance: ${household.p1.rrif_balance:,.2f}")
+        logger.debug(f"   household.p1.nonreg_balance: ${household.p1.nonreg_balance:,.2f}")
+        logger.debug(f"   household.p2.name: {household.p2.name}")
+        logger.debug(f"   household.p2.tfsa_balance: ${household.p2.tfsa_balance:,.2f}")
+        logger.debug(f"   household.p2.rrif_balance: ${household.p2.rrif_balance:,.2f}")
+        logger.debug(f"   household.p2.nonreg_balance: ${household.p2.nonreg_balance:,.2f}")
 
         composition = AssetAnalyzer.analyze(household)
 

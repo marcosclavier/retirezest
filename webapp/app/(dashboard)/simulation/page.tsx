@@ -694,6 +694,8 @@ export default function SimulationPage() {
   };
 
   const handleRunSimulation = async () => {
+    console.log('🎯 RUN SIMULATION BUTTON CLICKED');
+    console.log('🔍 Button state - isLoading:', isLoading, 'prefillLoading:', prefillLoading, 'apiHealthy:', apiHealthy);
     setIsLoading(true);
     setResult(null);
 
@@ -706,7 +708,18 @@ export default function SimulationPage() {
         };
 
     try {
+      console.log('📡 Calling runSimulation...');
       const response = await runSimulation(simulationData, csrfToken);
+      console.log('📥 Received response from runSimulation:', response.success ? 'SUCCESS' : 'FAILED');
+      console.log('📊 Response object:', response);
+
+      if (!response.success) {
+        console.error('❌ SIMULATION FAILED');
+        console.error('Error message:', response.message);
+        console.error('Error details:', response.error);
+        console.error('Error_details:', response.error_details);
+        console.error('Full response:', JSON.stringify(response, null, 2));
+      }
 
       // Debug logging
       if (response.success && response.year_by_year && response.year_by_year.length > 0) {

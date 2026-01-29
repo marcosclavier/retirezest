@@ -91,13 +91,17 @@ export async function runSimulation(
       }
     });
 
+    console.log('🌐 Sending fetch request to /api/simulation/run...');
     const response = await fetch('/api/simulation/run', {
       method: 'POST',
       headers,
       body: JSON.stringify(backendInput),
     });
 
+    console.log('✅ Fetch completed. Status:', response.status, response.statusText);
+    console.log('📦 Parsing JSON response...');
     const data: SimulationResponse = await response.json();
+    console.log('✅ JSON parsed successfully:', data.success ? 'SUCCESS' : 'FAILED');
 
     // Even if HTTP status is not ok, the response body may contain useful error info
     if (!response.ok) {
