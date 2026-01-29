@@ -341,7 +341,24 @@
 
 ---
 
-#### Epic 9: Monetization & Revenue
+#### Epic 9: Security & Compliance
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-030** | **Comprehensive Security Controls Audit** | **13** | **P1** | **📋 To Do** |
+| **Description** | As a product owner, I want a comprehensive security audit of the application to identify and remediate vulnerabilities so that user data remains protected and we comply with industry best practices |
+| **Acceptance Criteria** | - [ ] Authentication security reviewed (password hashing, session management)<br>- [ ] Authorization controls audited (role-based access, admin controls)<br>- [ ] Input validation reviewed (SQL injection, XSS prevention)<br>- [ ] API security assessed (CSRF protection, rate limiting)<br>- [ ] Data encryption verified (at rest and in transit)<br>- [ ] Environment variable security confirmed (no secrets in code)<br>- [ ] Third-party dependencies audited (npm audit, known CVEs)<br>- [ ] OWASP Top 10 checklist completed<br>- [ ] Security headers configured (CSP, HSTS, X-Frame-Options)<br>- [ ] File upload security reviewed (if applicable)<br>- [ ] Logging and monitoring for security events<br>- [ ] Incident response plan documented |
+| **Tasks** | - [ ] Authentication Audit:<br>  - [ ] Review password hashing (bcrypt/argon2)<br>  - [ ] Check session token security<br>  - [ ] Verify password reset flow security<br>  - [ ] Test for session fixation vulnerabilities<br>  - [ ] Audit email verification process<br><br>- [ ] Authorization Audit:<br>  - [ ] Review admin access controls (requireAdmin)<br>  - [ ] Test for privilege escalation vulnerabilities<br>  - [ ] Verify user data isolation (users can't access others' data)<br>  - [ ] Check API endpoint authorization<br>  - [ ] Review premium feature gating security<br><br>- [ ] Input Validation:<br>  - [ ] Test all forms for XSS vulnerabilities<br>  - [ ] Review SQL injection prevention (Prisma parameterization)<br>  - [ ] Check for command injection risks<br>  - [ ] Validate file upload security (if any)<br>  - [ ] Test for path traversal vulnerabilities<br><br>- [ ] API Security:<br>  - [ ] Verify CSRF protection on all POST/PUT/DELETE routes<br>  - [ ] Implement rate limiting on sensitive endpoints<br>  - [ ] Review CORS configuration<br>  - [ ] Check for API enumeration vulnerabilities<br>  - [ ] Audit webhook security (Stripe webhooks)<br><br>- [ ] Data Protection:<br>  - [ ] Verify database encryption at rest (Neon/Vercel Postgres)<br>  - [ ] Confirm TLS/SSL for all connections<br>  - [ ] Review PII handling (email, financial data)<br>  - [ ] Check for sensitive data in logs<br>  - [ ] Audit account deletion flow (GDPR compliance)<br><br>- [ ] Infrastructure Security:<br>  - [ ] Review Vercel security settings<br>  - [ ] Audit environment variable management<br>  - [ ] Check for secrets in git history<br>  - [ ] Review deployment access controls<br>  - [ ] Verify database access restrictions<br><br>- [ ] Dependency Security:<br>  - [ ] Run npm audit and fix vulnerabilities<br>  - [ ] Review critical dependencies (Next.js, Prisma, Stripe)<br>  - [ ] Check for outdated packages with known CVEs<br>  - [ ] Implement Dependabot or Snyk monitoring<br><br>- [ ] Security Headers:<br>  - [ ] Configure Content-Security-Policy<br>  - [ ] Enable HSTS (Strict-Transport-Security)<br>  - [ ] Set X-Frame-Options to prevent clickjacking<br>  - [ ] Configure X-Content-Type-Options<br>  - [ ] Set Referrer-Policy<br><br>- [ ] Logging & Monitoring:<br>  - [ ] Log authentication failures (brute force detection)<br>  - [ ] Monitor admin access (audit trail)<br>  - [ ] Alert on suspicious activity (rate limit violations)<br>  - [ ] Log payment failures and webhook errors<br>  - [ ] Set up Sentry or similar error monitoring<br><br>- [ ] Compliance:<br>  - [ ] OWASP Top 10 checklist review<br>  - [ ] GDPR compliance verification (account deletion, data export)<br>  - [ ] PCI DSS considerations (Stripe handles cards, but verify)<br>  - [ ] Privacy policy review<br>  - [ ] Terms of service review |
+| **Technical Notes** | **Critical Areas to Audit:**<br><br>**1. Authentication (app/api/auth/):**<br>- Login: `app/api/auth/login/route.ts`<br>- Register: `app/api/auth/register/route.ts`<br>- Password reset: `app/api/auth/forgot-password/route.ts`, `app/api/auth/reset-password/route.ts`<br>- Email verification: `app/api/auth/verify-email/route.ts`<br>- Session management: Cookie-based or JWT?<br><br>**2. Authorization (lib/admin-auth.ts, middleware):**<br>- `requireAdmin()` function security<br>- User data isolation in Prisma queries<br>- Premium feature gating logic<br><br>**3. Sensitive Endpoints:**<br>- `/api/admin/*` - Admin-only access<br>- `/api/profile/*` - User data CRUD<br>- `/api/subscription/*` - Payment processing<br>- `/api/simulation/*` - Financial calculations<br>- `/api/webhooks/stripe` - Stripe webhook handler<br><br>**4. CSRF Protection:**<br>- `/api/csrf` endpoint provides token<br>- Verify all mutating operations validate CSRF token<br><br>**5. Environment Variables:**<br>- DATABASE_URL (should not be in code)<br>- STRIPE_SECRET_KEY (must be secure)<br>- RESEND_API_KEY (email service)<br>- JWT_SECRET or SESSION_SECRET<br><br>**6. Known Issues from Build:**<br>- 25 npm vulnerabilities (1 low, 14 moderate, 8 high, 2 critical)<br>- Need to prioritize and remediate<br><br>**7. Security Headers (next.config.js or middleware):**<br>```typescript<br>const securityHeaders = [<br>  { key: 'X-Frame-Options', value: 'DENY' },<br>  { key: 'X-Content-Type-Options', value: 'nosniff' },<br>  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },<br>  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },<br>  { key: 'Content-Security-Policy', value: "default-src 'self'; ..." }<br>];<br>```<br><br>**8. Rate Limiting (consider implementing):**<br>- Login attempts: 5 per 15 minutes<br>- Password reset: 3 per hour<br>- API calls: 100 per minute per user<br>- Admin endpoints: 50 per minute |
+| **User Impact** | **Critical** - Security breaches can result in:<br>- Loss of user trust and reputation damage<br>- Financial liability (GDPR fines, legal costs)<br>- User data exposure (PII, financial data)<br>- Service disruption from attacks<br>- Regulatory compliance issues |
+| **Known Security Features (to verify):**<br>- ✅ CSRF protection exists (`/api/csrf`)<br>- ✅ Admin access control (`requireAdmin`)<br>- ✅ Prisma ORM (SQL injection protection)<br>- ✅ HTTPS enforced (Vercel)<br>- ⚠️ Rate limiting: Unknown<br>- ⚠️ Security headers: Unknown<br>- ⚠️ Input validation: Needs review<br>- ⚠️ Session security: Needs review |
+| **Success Metrics** | - [ ] Zero critical vulnerabilities found<br>- [ ] All OWASP Top 10 risks mitigated<br>- [ ] 100% of npm critical/high vulnerabilities fixed<br>- [ ] Security headers score A+ on securityheaders.com<br>- [ ] Penetration testing completed (manual or automated)<br>- [ ] Security incident response plan documented<br>- [ ] All team members trained on security best practices |
+| **Dependencies** | - Access to production environment (for header testing)<br>- Security testing tools (OWASP ZAP, Burp Suite, or similar)<br>- npm audit and Snyk/Dependabot setup<br>- Security expert review (internal or external consultant) |
+| **References** | - OWASP Top 10: https://owasp.org/www-project-top-ten/<br>- Next.js Security: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy<br>- Vercel Security: https://vercel.com/docs/security<br>- Prisma Security: https://www.prisma.io/docs/concepts/components/prisma-client/security |
+
+---
+
+#### Epic 10: Monetization & Revenue
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -407,7 +424,13 @@
 **Status**: 📋 Icebox
 **User Stories**: US-018, US-019, US-020
 
-### Epic 9: Monetization & Revenue
+### Epic 9: Security & Compliance
+**Goal**: Ensure application security and protect user data
+**Total Story Points**: 13
+**Status**: 📋 To Do
+**User Stories**: US-030
+
+### Epic 10: Monetization & Revenue
 **Goal**: Ensure reliable payment processing and subscription management
 **Total Story Points**: 8
 **Status**: 📋 To Do
@@ -551,29 +574,30 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 29 ⬆️ New: US-029 (Modularization)
+**Total User Stories**: 30 ⬆️ New: US-030 (Security Audit)
 **Completed**: 5 (17%)
-**In Progress**: 2 (7%)
-**To Do**: 22 (76%)
+**In Progress**: 0 (0%) - Sprint 1 complete
+**To Do**: 25 (83%)
 
 **By Priority**:
-- P0 (Critical): 4 stories (2 done, 1 in progress, 1 to do)
-- P1 (High): 11 stories (2 done, 9 to do)
-- P2 (Medium): 7 stories (1 done, 6 to do) ⬆️ New: US-029
+- P0 (Critical): 3 stories (2 done, 1 to do)
+- P1 (High): 12 stories (2 done, 10 to do) ⬆️ New: US-030 (Security)
+- P2 (Medium): 7 stories (1 done, 6 to do)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
 - P5 (Icebox): 2 stories
 
 **By Epic**:
-- Epic 1 (User Retention): 5 stories, 31 pts (1 done, 1 in progress)
+- Epic 1 (User Retention): 5 stories, 31 pts (✅ 5 done - Sprint 1 complete)
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
 - Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do)
-- Epic 5 (Simulation): 5 stories, 47 pts (2 done, 3 to do) ⬆️ New: US-029 (Modularization)
+- Epic 5 (Simulation): 5 stories, 47 pts (2 done, 3 to do)
 - Epic 6 (Testing): 3 stories, 26 pts (all backlog)
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
-- Epic 9 (Monetization): 1 story, 8 pts (all to do)
+- Epic 9 (Security): 1 story, 13 pts (all to do) ⬆️ NEW EPIC
+- Epic 10 (Monetization): 1 story, 8 pts (all to do)
 
 ---
 
