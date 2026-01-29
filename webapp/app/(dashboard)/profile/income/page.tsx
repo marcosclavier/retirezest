@@ -11,6 +11,7 @@ interface IncomeSource {
   startAge?: number;
   owner?: string;
   notes?: string;
+  inflationIndexed?: boolean;
 }
 
 export default function IncomePage() {
@@ -36,6 +37,7 @@ export default function IncomePage() {
     startAge: undefined,
     owner: 'person1',
     notes: '',
+    inflationIndexed: true, // Default to true for pensions
   });
 
   useEffect(() => {
@@ -157,6 +159,7 @@ export default function IncomePage() {
           startAge: undefined,
           owner: 'person1',
           notes: '',
+          inflationIndexed: true,
         });
       } else {
         const error = await res.json();
@@ -519,25 +522,49 @@ export default function IncomePage() {
               </div>
 
               {(formData.type === 'cpp' || formData.type === 'oas' || formData.type === 'pension') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Age
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.startAge || ''}
-                    onChange={(e) => setFormData({ ...formData, startAge: parseInt(e.target.value) || undefined })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    placeholder={formData.type === 'cpp' ? '65 (or 60-70)' : formData.type === 'oas' ? '65 (or 65-70)' : 'e.g., 65'}
-                    min="1"
-                    max="100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.type === 'cpp' && 'CPP can start between ages 60-70'}
-                    {formData.type === 'oas' && 'OAS can start between ages 65-70 (deferral increases benefits)'}
-                    {formData.type === 'pension' && 'Age when pension payments begin'}
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Age
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.startAge || ''}
+                      onChange={(e) => setFormData({ ...formData, startAge: parseInt(e.target.value) || undefined })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      placeholder={formData.type === 'cpp' ? '65 (or 60-70)' : formData.type === 'oas' ? '65 (or 65-70)' : 'e.g., 65'}
+                      min="1"
+                      max="100"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.type === 'cpp' && 'CPP can start between ages 60-70'}
+                      {formData.type === 'oas' && 'OAS can start between ages 65-70 (deferral increases benefits)'}
+                      {formData.type === 'pension' && 'Age when pension payments begin'}
+                    </p>
+                  </div>
+
+                  {/* Inflation Indexing Checkbox */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.inflationIndexed !== false}
+                        onChange={(e) => setFormData({ ...formData, inflationIndexed: e.target.checked })}
+                        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <div className="flex-1">
+                        <span className="block text-sm font-medium text-gray-900">
+                          Inflation Indexed
+                        </span>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {formData.type === 'cpp' && 'CPP is automatically indexed to inflation each year'}
+                          {formData.type === 'oas' && 'OAS is automatically indexed to inflation each year'}
+                          {formData.type === 'pension' && 'Check this if your pension increases with inflation each year (most Canadian DB pensions are indexed)'}
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </>
               )}
 
               <div>
@@ -572,6 +599,7 @@ export default function IncomePage() {
                       startAge: undefined,
                       owner: 'person1',
                       notes: '',
+                      inflationIndexed: true,
                     });
                   }}
                   className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium"

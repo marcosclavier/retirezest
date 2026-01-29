@@ -407,6 +407,20 @@ export interface StrategyRecommendation {
   description: string;
   action: string;
   expected_benefit: string;
+
+  // New fields for improved recommendations
+  confidence?: 'high' | 'medium' | 'low';
+  feasibility?: 'confirmed' | 'limited' | 'uncertain';
+  feasibility_note?: string;
+  timing_appropriateness?: boolean;
+  timing_note?: string;
+  benefit_range?: {
+    lower: number;
+    upper: number;
+    estimate: number;
+  };
+  caveats?: string[];
+  assumptions?: string[];
 }
 
 export interface StrategyMilestone {
@@ -440,6 +454,11 @@ export interface StrategyInsights {
     tfsa_usage: number;
     rrif_usage: number;
   };
+
+  // New fields for disclaimers and data sources
+  disclaimer?: string;
+  last_updated?: string;
+  data_sources?: string[];
 }
 
 export interface SimulationResponse {
@@ -597,8 +616,8 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
   },
   {
     value: 'rrif-frontload',
-    label: 'RRIF Front-Load (Tax Smoothing + OAS Protection)',
-    description: 'Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
+    label: 'Early RRIF Withdrawals (Income Splitting)',
+    description: 'Ideal for couples with income imbalance. Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
   },
 ];
 

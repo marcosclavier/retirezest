@@ -763,6 +763,7 @@ export default function SimulationPage() {
                   'minimize-income': 'Minimize Income',
                   'balanced': 'Balanced',
                   'rrif-splitting': 'RRIF Splitting',
+                  'rrif-frontload': 'Early RRIF Withdrawals (Income Splitting)',
                   'corporate-optimized': 'Corporate Optimized',
                   'capital-gains-optimized': 'Capital Gains Optimized',
                   'tfsa-first': 'TFSA First',

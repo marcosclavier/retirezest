@@ -31,6 +31,11 @@ export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountMod
       return;
     }
 
+    if (!reason || reason.trim().length === 0) {
+      setError('Please tell us why you\'re leaving. Your feedback helps us improve.');
+      return;
+    }
+
     try {
       setIsDeleting(true);
 
@@ -136,20 +141,24 @@ export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountMod
             />
           </div>
 
-          {/* Reason (Optional) */}
+          {/* Reason (Required) */}
           <div>
             <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
-              Reason for leaving (optional)
+              Why are you leaving? <span className="text-red-600">*</span>
             </label>
             <textarea
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              placeholder="Help us improve by telling us why you're leaving..."
+              placeholder="Please tell us what we could improve or what features you need..."
               rows={3}
               disabled={isDeleting}
+              required
             />
+            <p className="text-xs text-gray-600 mt-1">
+              Your feedback is valuable and helps us improve RetireZest for everyone
+            </p>
           </div>
         </div>
 

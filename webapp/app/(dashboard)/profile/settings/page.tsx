@@ -189,13 +189,15 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Include Partner Toggle */}
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-              <div className="space-y-0.5">
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+              <div className="space-y-0.5 flex-1">
                 <Label htmlFor="include-partner" className="text-base font-medium">
-                  Planning for a Couple?
+                  {settings.includePartner ? '👫 Couples Planning Active' : '👤 Single Person Planning'}
                 </Label>
                 <p className="text-sm text-gray-600">
-                  Enable if you want to plan retirement with a partner or spouse
+                  {settings.includePartner
+                    ? 'Turn off to switch to single person retirement planning'
+                    : 'Turn on to plan retirement with a partner or spouse'}
                 </p>
               </div>
               <Switch
@@ -204,6 +206,23 @@ export default function SettingsPage() {
                 onCheckedChange={(checked) => setSettings({ ...settings, includePartner: checked })}
               />
             </div>
+
+            {/* Warning when disabling partner */}
+            {!settings.includePartner && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h4 className="font-semibold text-green-900 text-sm">Single Person Mode</h4>
+                    <p className="text-xs text-green-800 mt-1">
+                      All calculations will be for one person only. Partner data will be ignored (not deleted).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Person 1 Information */}
             <div className="border-t pt-6 space-y-4">
