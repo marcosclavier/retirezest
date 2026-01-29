@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026 (Added US-022: What-If Scenario Slider Testing & Fixes)
+**Last Updated**: January 29, 2026 (Added US-023: AI-Powered GIS Enhancement - Testing & Deployment)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -165,6 +165,18 @@
 | **Tasks** | - [ ] Create test scenarios for each strategy<br>- [ ] Run simulations and validate outputs<br>- [ ] Compare against manual calculations<br>- [ ] Document validation results<br>- [ ] Fix any discrepancies found |
 | **Reference** | See RRIF_STRATEGY_VALIDATION_REPORT.md |
 
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-023** | **AI-Powered GIS Enhancement - Testing, Verification & Deployment** | **13** | **P1** | **📋 To Do** |
+| **Description** | As a product owner, I want comprehensive testing, verification, and production deployment of the AI-powered GIS strategy enhancements so that low-income retirees receive accurate, trustworthy advice |
+| **Acceptance Criteria** | - [ ] All GIS calculation logic verified against CRA 2026 rates<br>- [ ] TFSA prioritization strategy tested with multiple scenarios<br>- [ ] GIS threshold targeting validated (single vs couple thresholds)<br>- [ ] GIS income room calculations accurate<br>- [ ] Strategy effectiveness ratings (0-10) validated<br>- [ ] AI-generated recommendations reviewed for accuracy<br>- [ ] Key milestone timeline verified for correctness<br>- [ ] GISInsightsCard UI renders correctly with all data<br>- [ ] Edge cases tested (zero RRIF, high assets, age transitions)<br>- [ ] Production deployment completed with monitoring<br>- [ ] User acceptance testing with real scenarios<br>- [ ] Performance benchmarks met (<500ms for insights generation) |
+| **Tasks** | - [ ] Review strategy_insights.py logic for accuracy<br>- [ ] Create comprehensive test suite (unit + integration)<br>- [ ] Test GIS feasibility calculation (30-year projection)<br>- [ ] Validate RRIF minimum percentage tables<br>- [ ] Test single vs couple threshold logic<br>- [ ] Test "preserve_gis" mode activation ($5K+ GIS)<br>- [ ] Verify TFSA prioritization in minimize-income strategy<br>- [ ] Test GIS impact analysis tracking<br>- [ ] Validate AI-generated recommendations quality<br>- [ ] Test GISInsightsCard component rendering<br>- [ ] Performance testing (load testing, response times)<br>- [ ] Create production deployment plan<br>- [ ] Deploy to production with feature flag<br>- [ ] Monitor production metrics (usage, errors, performance)<br>- [ ] Collect user feedback on insights quality<br>- [ ] Document deployment results and lessons learned |
+| **Technical Notes** | **Backend Components:**<br>- `juan-retirement-app/modules/strategy_insights.py` - AI insights generation<br>- `juan-retirement-app/modules/simulation.py` - GIS optimization logic<br>- `juan-retirement-app/api/models/responses.py` - Data models<br><br>**Frontend Components:**<br>- `webapp/components/simulation/GISInsightsCard.tsx` - Insights UI<br>- `webapp/lib/types/simulation.ts` - TypeScript types<br><br>**Key Features to Validate:**<br>1. GIS feasibility calculation (lines 12-200 in strategy_insights.py)<br>2. TFSA prioritization (lines 784-793 in simulation.py)<br>3. GIS threshold targeting (lines 625-642 in simulation.py)<br>4. Income addition calculations (lines 824-850 in simulation.py)<br>5. Recommendation generation logic<br>6. Milestone timeline accuracy<br><br>**CRA 2026 Rates to Verify:**<br>- GIS threshold single: $22,272<br>- GIS threshold couple (both OAS): $29,424<br>- GIS threshold couple (one OAS): $53,808<br>- RRIF minimum percentages by age (65-95) |
+| **User Impact** | **Critical** - This feature directly impacts financial decisions for low-income retirees. Incorrect GIS advice could cost users thousands of dollars in lost benefits. AI-generated insights must be accurate, trustworthy, and validated. |
+| **Known Issues** | - Current implementation already deployed (Jan 2026) but needs comprehensive testing<br>- Test scripts exist: test_gis_improvements.py, run-gis-tests.js<br>- Documentation exists: GIS_STRATEGY_ASSESSMENT.md, GIS_STRATEGY_ENHANCEMENT_SUMMARY.md<br>- No formal verification against CRA calculations yet<br>- No user acceptance testing conducted<br>- Performance benchmarks not established |
+| **Success Metrics** | - [ ] 100% accuracy on 20+ test scenarios vs CRA calculations<br>- [ ] AI recommendations rated 4.5/5+ by subject matter expert review<br>- [ ] Zero critical bugs in production for 30 days<br>- [ ] 95th percentile response time <500ms<br>- [ ] Positive user feedback (>80% find insights helpful)<br>- [ ] No user reports of incorrect GIS advice |
+| **Dependencies** | - US-013 (RRIF Strategy Validation) - should complete first<br>- Access to CRA 2026 GIS benefit calculator for validation<br>- Subject matter expert (SME) review of AI recommendations<br>- Production monitoring infrastructure |
+
 ---
 
 ### Medium Priority (Sprints 3-4)
@@ -240,6 +252,22 @@
 
 ---
 
+#### Epic 9: Monetization & Revenue
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-024** | **Premium Account Verification & Payment Acceptance Testing** | **8** | **P0** | **📋 To Do** |
+| **Description** | As a product owner, I want comprehensive testing and verification of the Stripe premium subscription system so that users can successfully subscribe and access premium features without payment failures |
+| **Acceptance Criteria** | - [ ] Stripe checkout session creation works (monthly & yearly plans)<br>- [ ] Payment processing completes successfully for test cards<br>- [ ] Webhook handlers process subscription events correctly<br>- [ ] User account upgraded to premium after successful payment<br>- [ ] Premium features unlock immediately after payment<br>- [ ] Billing portal allows users to manage subscriptions<br>- [ ] Cancellation flow works correctly<br>- [ ] Failed payment handling works (retry logic, notifications)<br>- [ ] Subscription renewal works for existing subscribers<br>- [ ] Edge cases tested (promo codes, refunds, disputes)<br>- [ ] Production Stripe credentials configured correctly<br>- [ ] Monitoring and alerting set up for payment failures |
+| **Tasks** | - [ ] Test monthly subscription ($5.99/month)<br>- [ ] Test yearly subscription ($47.00/year)<br>- [ ] Test Stripe Checkout redirect flow<br>- [ ] Verify webhook endpoint receives events<br>- [ ] Test checkout.session.completed webhook<br>- [ ] Test customer.subscription.created webhook<br>- [ ] Test customer.subscription.updated webhook<br>- [ ] Test customer.subscription.deleted webhook<br>- [ ] Test invoice.payment_succeeded webhook<br>- [ ] Test invoice.payment_failed webhook<br>- [ ] Verify user isPremium flag updates correctly<br>- [ ] Test premium feature gating (early retirement, scenarios, reports)<br>- [ ] Test billing portal redirect<br>- [ ] Test subscription cancellation<br>- [ ] Test subscription reactivation<br>- [ ] Test failed payment retry logic<br>- [ ] Load test checkout flow (100+ concurrent users)<br>- [ ] Verify Stripe Dashboard shows correct data<br>- [ ] Document common payment issues and resolutions<br>- [ ] Create monitoring dashboard for payment metrics |
+| **Technical Notes** | **Frontend Components:**<br>- `app/(dashboard)/subscribe/page.tsx` - Subscription page<br>- `app/(dashboard)/subscribe/success/page.tsx` - Success page<br>- `app/(dashboard)/account/billing/page.tsx` - Billing portal<br><br>**Backend API Routes:**<br>- `app/api/subscription/create-checkout/route.ts` - Checkout session creation<br>- `app/api/subscription/billing-portal/route.ts` - Billing portal access<br>- `app/api/webhooks/stripe/route.ts` - Webhook event handling<br><br>**Stripe Configuration:**<br>- `lib/stripe.ts` - Stripe client and utilities<br>- Environment variables: STRIPE_SECRET_KEY, STRIPE_PREMIUM_MONTHLY_PRICE_ID, STRIPE_PREMIUM_YEARLY_PRICE_ID<br><br>**Price IDs to Verify:**<br>- Monthly: $5.99/month<br>- Yearly: $47.00/year (saves $25/year)<br><br>**Test Cards:**<br>- Success: 4242 4242 4242 4242<br>- Decline: 4000 0000 0000 0002<br>- Requires Auth: 4000 0025 0000 3155 |
+| **User Impact** | **Critical** - Revenue depends on working payment system. Payment failures result in lost subscriptions and revenue. Users expect seamless checkout experience. |
+| **Known Issues** | - Stripe integration already deployed to production<br>- Monthly/yearly plans configured<br>- Webhook endpoint exists but needs comprehensive testing<br>- No load testing conducted yet<br>- No monitoring dashboard for payment metrics<br>- Unclear if production credentials are configured correctly<br>- Test scripts exist: check-production-stripe.ts, get-stripe-prices.ts |
+| **Success Metrics** | - [ ] 100% success rate on test card transactions<br>- [ ] <2% payment failure rate in production<br>- [ ] 100% of webhooks processed within 5 seconds<br>- [ ] Zero missed subscription activations<br>- [ ] 95% uptime for payment infrastructure<br>- [ ] <1% customer support tickets related to payment issues |
+| **Dependencies** | - Stripe account with production access<br>- Production environment variables configured<br>- Webhook endpoint registered with Stripe<br>- Test credit cards for various scenarios |
+
+---
+
 ## 🎯 Epics
 
 ### Epic 1: User Retention & Engagement
@@ -268,9 +296,9 @@
 
 ### Epic 5: Simulation Accuracy & Features
 **Goal**: Ensure simulation results are accurate and trustworthy
-**Total Story Points**: 21
+**Total Story Points**: 34
 **Status**: 🔄 In Progress
-**User Stories**: US-011 (✅), US-012 (✅), US-013
+**User Stories**: US-011 (✅), US-012 (✅), US-013, US-023
 
 ### Epic 6: Testing & Quality
 **Goal**: Achieve >80% test coverage and prevent regression bugs
@@ -289,6 +317,12 @@
 **Total Story Points**: 68
 **Status**: 📋 Icebox
 **User Stories**: US-018, US-019, US-020
+
+### Epic 9: Monetization & Revenue
+**Goal**: Ensure reliable payment processing and subscription management
+**Total Story Points**: 8
+**Status**: 📋 To Do
+**User Stories**: US-024
 
 ---
 
@@ -428,14 +462,14 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 22
-**Completed**: 5 (23%)
-**In Progress**: 2 (9%)
-**To Do**: 15 (68%)
+**Total User Stories**: 24
+**Completed**: 5 (21%)
+**In Progress**: 2 (8%)
+**To Do**: 17 (71%)
 
 **By Priority**:
-- P0 (Critical): 3 stories (2 done, 1 in progress)
-- P1 (High): 6 stories (2 done, 4 to do) ⬆️ New: US-021, US-022
+- P0 (Critical): 4 stories (2 done, 1 in progress, 1 to do) ⬆️ New: US-024
+- P1 (High): 7 stories (2 done, 5 to do) ⬆️ New: US-021, US-022, US-023
 - P2 (Medium): 5 stories (1 done, 4 to do)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
@@ -446,10 +480,11 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
 - Epic 4 (UX): 3 stories, 10 pts (2 done, 1 to do)
-- Epic 5 (Simulation): 3 stories, 21 pts (2 done, 1 to do)
+- Epic 5 (Simulation): 4 stories, 34 pts (2 done, 2 to do) ⬆️ New: US-023
 - Epic 6 (Testing): 3 stories, 26 pts (all backlog) ⬆️ New: US-022
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
+- Epic 9 (Monetization): 1 story, 8 pts (all to do) ⬆️ NEW EPIC: US-024
 
 ---
 
