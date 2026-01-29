@@ -145,9 +145,8 @@ export async function GET(request: NextRequest) {
           cpp_annual_at_start: null,
           oas_start_age: null,
           oas_annual_at_start: null,
-          employer_pension_annual: 0,
-          rental_income_annual: 0,
-          other_income_annual: 0,
+          pension_incomes: [],
+          other_incomes: [],
         };
       }
 
@@ -179,12 +178,31 @@ export async function GET(request: NextRequest) {
         acc[owner].oas_start_age = income.startAge;
         acc[owner].oas_annual_at_start = annualAmount;
       } else if (type === 'pension') {
-        acc[owner].employer_pension_annual += annualAmount;
+        // Add pension to list (preserve startAge for Python backend)
+        acc[owner].pension_incomes.push({
+          name: (income as any).description || 'Pension',
+          amount: annualAmount,
+          startAge: income.startAge || 65,
+          inflationIndexed: (income as any).inflationIndexed !== false,
+        });
       } else if (type === 'rental') {
-        acc[owner].rental_income_annual += annualAmount;
+        // Rental from Income table (not real estate properties)
+        acc[owner].other_incomes.push({
+          type: 'rental',
+          name: (income as any).description || 'Rental Income',
+          amount: annualAmount,
+          startAge: income.startAge || undefined,
+          inflationIndexed: (income as any).inflationIndexed !== false,
+        });
       } else if (['employment', 'business', 'investment', 'other'].includes(type)) {
-        // Combine all other income types into other_income_annual
-        acc[owner].other_income_annual += annualAmount;
+        // Add to other_incomes list (preserve startAge for Python backend)
+        acc[owner].other_incomes.push({
+          type,
+          name: (income as any).description || type.charAt(0).toUpperCase() + type.slice(1),
+          amount: annualAmount,
+          startAge: income.startAge || undefined,
+          inflationIndexed: (income as any).inflationIndexed !== false,
+        });
       }
 
       return acc;
@@ -193,9 +211,8 @@ export async function GET(request: NextRequest) {
       cpp_annual_at_start: number | null;
       oas_start_age: number | null;
       oas_annual_at_start: number | null;
-      employer_pension_annual: number;
-      rental_income_annual: number;
-      other_income_annual: number;
+      pension_incomes: Array<{name: string; amount: number; startAge: number; inflationIndexed: boolean}>;
+      other_incomes: Array<{type: string; name: string; amount: number; startAge?: number; inflationIndexed: boolean}>;
     }>);
 
     // Add rental income from real estate properties
@@ -212,14 +229,19 @@ export async function GET(request: NextRequest) {
             cpp_annual_at_start: null,
             oas_start_age: null,
             oas_annual_at_start: null,
-            employer_pension_annual: 0,
-            rental_income_annual: 0,
-            other_income_annual: 0,
+            pension_incomes: [],
+            other_incomes: [],
           };
         }
 
-        // Add property rental income to total
-        incomeByOwner[owner].rental_income_annual += ownershipShare;
+        // Add property rental income to other_incomes list
+        // Real estate rental income has no startAge (active from ownership)
+        incomeByOwner[owner].other_incomes.push({
+          type: 'rental',
+          name: `Rental: ${property.propertyType || 'Property'}`,
+          amount: ownershipShare,
+          inflationIndexed: true,
+        });
       }
     });
 
@@ -319,10 +341,9 @@ export async function GET(request: NextRequest) {
       oas_start_age: person1Income.oas_start_age ?? Math.max(age, 65),
       oas_annual_at_start: person1Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
-      // Other income sources from database
-      employer_pension_annual: person1Income.employer_pension_annual ?? 0,
-      rental_income_annual: person1Income.rental_income_annual ?? 0,
-      other_income_annual: person1Income.other_income_annual ?? 0,
+      // Pension and other income lists (with startAge support)
+      pension_incomes: person1Income.pension_incomes ?? [],
+      other_incomes: person1Income.other_incomes ?? [],
 
       // Account balances from assets (person 1's share)
       tfsa_balance: person1Totals.tfsa_balance,
@@ -368,10 +389,9 @@ export async function GET(request: NextRequest) {
         oas_start_age: person2Income.oas_start_age ?? Math.max(partnerAge, 65),
         oas_annual_at_start: person2Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
-        // Other income sources from database
-        employer_pension_annual: person2Income.employer_pension_annual ?? 0,
-        rental_income_annual: person2Income.rental_income_annual ?? 0,
-        other_income_annual: person2Income.other_income_annual ?? 0,
+        // Pension and other income lists (with startAge support)
+        pension_incomes: person2Income.pension_incomes ?? [],
+        other_incomes: person2Income.other_incomes ?? [],
 
         // Account balances from assets (person 2's share)
         tfsa_balance: person2Totals.tfsa_balance,
@@ -493,12 +513,15 @@ export async function GET(request: NextRequest) {
       const corporatePct = totalCorporate / totalNetWorth;
 
       // Get total other income (pension, rental, employment, etc.)
-      const person1OtherIncome = (person1Income?.employer_pension_annual || 0) +
-                                  (person1Income?.rental_income_annual || 0) +
-                                  (person1Income?.other_income_annual || 0);
-      const person2OtherIncome = (incomeByOwner.person2?.employer_pension_annual || 0) +
-                                  (incomeByOwner.person2?.rental_income_annual || 0) +
-                                  (incomeByOwner.person2?.other_income_annual || 0);
+      // Sum up all pension and other income (regardless of startAge - for current planning context)
+      const person1PensionIncome = (person1Income?.pension_incomes || []).reduce((sum, p) => sum + p.amount, 0);
+      const person1OtherIncomeTotal = (person1Income?.other_incomes || []).reduce((sum, i) => sum + i.amount, 0);
+      const person1OtherIncome = person1PensionIncome + person1OtherIncomeTotal;
+
+      const person2PensionIncome = (incomeByOwner.person2?.pension_incomes || []).reduce((sum, p) => sum + p.amount, 0);
+      const person2OtherIncomeTotal = (incomeByOwner.person2?.other_incomes || []).reduce((sum, i) => sum + i.amount, 0);
+      const person2OtherIncome = person2PensionIncome + person2OtherIncomeTotal;
+
       const totalOtherIncome = person1OtherIncome + person2OtherIncome;
 
       // Smart strategy selection logic

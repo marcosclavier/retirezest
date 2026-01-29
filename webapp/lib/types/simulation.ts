@@ -14,10 +14,9 @@ export interface PersonInput {
   oas_start_age: number;
   oas_annual_at_start: number;
 
-  // Other income sources
-  employer_pension_annual: number;
-  rental_income_annual: number;
-  other_income_annual: number;
+  // Pension and other income lists (with startAge support)
+  pension_incomes: Array<{name: string; amount: number; startAge: number; inflationIndexed: boolean}>;
+  other_incomes: Array<{type: string; name: string; amount: number; startAge?: number; inflationIndexed: boolean}>;
 
   // Account balances
   tfsa_balance: number;
@@ -497,9 +496,8 @@ export const defaultPersonInput: PersonInput = {
   oas_start_age: 65,
   oas_annual_at_start: 8500,
 
-  employer_pension_annual: 0,
-  rental_income_annual: 0,
-  other_income_annual: 0,
+  pension_incomes: [],
+  other_incomes: [],
 
   tfsa_balance: 0,
   rrif_balance: 0,
