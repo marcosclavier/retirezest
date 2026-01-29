@@ -15,6 +15,13 @@ interface Asset {
   returnRate: number | null;
   owner: string | null;
   notes: string | null;
+  // GIC-specific fields
+  gicMaturityDate: string | null;
+  gicTermMonths: number | null;
+  gicInterestRate: number | null;
+  gicCompoundingFrequency: string | null;
+  gicReinvestStrategy: string | null;
+  gicIssuer: string | null;
 }
 
 export default function AssetsPage() {
@@ -34,6 +41,13 @@ export default function AssetsPage() {
     returnRate: '',
     owner: 'person1',
     notes: '',
+    // GIC-specific fields
+    gicMaturityDate: '',
+    gicTermMonths: '',
+    gicInterestRate: '',
+    gicCompoundingFrequency: 'annual',
+    gicReinvestStrategy: 'cash-out',
+    gicIssuer: '',
   });
 
   useEffect(() => {
@@ -117,6 +131,12 @@ export default function AssetsPage() {
           returnRate: '',
           owner: 'person1',
           notes: '',
+          gicMaturityDate: '',
+          gicTermMonths: '',
+          gicInterestRate: '',
+          gicCompoundingFrequency: 'annual',
+          gicReinvestStrategy: 'cash-out',
+          gicIssuer: '',
         });
       } else {
         const error = await res.json();
@@ -138,6 +158,12 @@ export default function AssetsPage() {
       returnRate: asset.returnRate?.toString() || '',
       owner: asset.owner || 'person1',
       notes: asset.notes || '',
+      gicMaturityDate: asset.gicMaturityDate || '',
+      gicTermMonths: asset.gicTermMonths?.toString() || '',
+      gicInterestRate: asset.gicInterestRate?.toString() || '',
+      gicCompoundingFrequency: asset.gicCompoundingFrequency || 'annual',
+      gicReinvestStrategy: asset.gicReinvestStrategy || 'cash-out',
+      gicIssuer: asset.gicIssuer || '',
     });
     setEditingId(asset.id);
     setShowForm(true);
@@ -213,6 +239,12 @@ export default function AssetsPage() {
               returnRate: '',
               owner: 'person1',
               notes: '',
+              gicMaturityDate: '',
+              gicTermMonths: '',
+              gicInterestRate: '',
+              gicCompoundingFrequency: 'annual',
+              gicReinvestStrategy: 'cash-out',
+              gicIssuer: '',
             });
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -279,11 +311,19 @@ export default function AssetsPage() {
                   onChange={(e) => {
                     const newType = e.target.value;
                     // Clear contribution room if switching to account type that doesn't support it
-                    if (newType !== 'tfsa' && newType !== 'rrsp') {
-                      setFormData({ ...formData, type: newType, contributionRoom: '' });
-                    } else {
-                      setFormData({ ...formData, type: newType });
-                    }
+                    // Also clear GIC fields if switching away from GIC type
+                    const baseUpdate = {
+                      ...formData,
+                      type: newType,
+                      contributionRoom: (newType === 'tfsa' || newType === 'rrsp') ? formData.contributionRoom : '',
+                      gicMaturityDate: (newType === 'gic') ? formData.gicMaturityDate : '',
+                      gicTermMonths: (newType === 'gic') ? formData.gicTermMonths : '',
+                      gicInterestRate: (newType === 'gic') ? formData.gicInterestRate : '',
+                      gicCompoundingFrequency: (newType === 'gic') ? formData.gicCompoundingFrequency : 'annual',
+                      gicReinvestStrategy: (newType === 'gic') ? formData.gicReinvestStrategy : 'cash-out',
+                      gicIssuer: (newType === 'gic') ? formData.gicIssuer : '',
+                    };
+                    setFormData(baseUpdate);
                   }}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
                   required
@@ -377,6 +417,151 @@ export default function AssetsPage() {
                       : 'Your available RRSP contribution room (18% of income limit)'}
                   </p>
                 </div>
+              )}
+
+              {/* GIC-specific fields */}
+              {formData.type === 'gic' && (
+                <>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Maturity Date *
+                      </label>
+                      <TooltipHelp
+                        content="The date when your GIC matures and funds become available. Interest is calculated from purchase date to maturity date."
+                        learnMoreUrl="/help"
+                      />
+                    </div>
+                    <input
+                      type="date"
+                      value={formData.gicMaturityDate}
+                      onChange={(e) => setFormData({ ...formData, gicMaturityDate: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                      required={formData.type === 'gic'}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        GIC Interest Rate (% per year) *
+                      </label>
+                      <TooltipHelp
+                        content="The fixed interest rate guaranteed by the GIC. Current rates: 1-year 4-5%, 3-year 4.5-5.5%, 5-year 4-5%."
+                        learnMoreUrl="/help"
+                      />
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="20"
+                      value={formData.gicInterestRate}
+                      onChange={(e) => setFormData({ ...formData, gicInterestRate: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                      placeholder="e.g., 4.5"
+                      required={formData.type === 'gic'}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Term (months) *
+                      </label>
+                      <TooltipHelp
+                        content="The original GIC term in months. Common terms: 12, 24, 36, 48, 60 months."
+                        learnMoreUrl="/help"
+                      />
+                    </div>
+                    <select
+                      value={formData.gicTermMonths}
+                      onChange={(e) => setFormData({ ...formData, gicTermMonths: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                      required={formData.type === 'gic'}
+                    >
+                      <option value="">Select term...</option>
+                      <option value="3">3 months</option>
+                      <option value="6">6 months</option>
+                      <option value="12">1 year (12 months)</option>
+                      <option value="18">18 months</option>
+                      <option value="24">2 years (24 months)</option>
+                      <option value="36">3 years (36 months)</option>
+                      <option value="48">4 years (48 months)</option>
+                      <option value="60">5 years (60 months)</option>
+                      <option value="84">7 years (84 months)</option>
+                      <option value="120">10 years (120 months)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Compounding Frequency *
+                      </label>
+                      <TooltipHelp
+                        content="How often interest is calculated and added to principal. More frequent compounding = higher returns."
+                        learnMoreUrl="/help"
+                      />
+                    </div>
+                    <select
+                      value={formData.gicCompoundingFrequency}
+                      onChange={(e) => setFormData({ ...formData, gicCompoundingFrequency: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                      required={formData.type === 'gic'}
+                    >
+                      <option value="annual">Annual (once per year)</option>
+                      <option value="semi-annual">Semi-Annual (twice per year)</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="at-maturity">At Maturity (simple interest)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Reinvestment Strategy *
+                      </label>
+                      <TooltipHelp
+                        content="What to do with funds when GIC matures: Cash out for spending, auto-renew to continue growing, or transfer to TFSA/non-registered."
+                        learnMoreUrl="/help"
+                      />
+                    </div>
+                    <select
+                      value={formData.gicReinvestStrategy}
+                      onChange={(e) => setFormData({ ...formData, gicReinvestStrategy: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                      required={formData.type === 'gic'}
+                    >
+                      <option value="cash-out">Cash Out (add to liquid assets)</option>
+                      <option value="auto-renew">Auto-Renew (same term)</option>
+                      <option value="transfer-to-tfsa">Transfer to TFSA</option>
+                      <option value="transfer-to-nonreg">Transfer to Non-Registered</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Choose how to handle funds at maturity
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Issuer / Bank
+                      </label>
+                      <TooltipHelp
+                        content="The financial institution that issued the GIC (e.g., TD Bank, Tangerine, EQ Bank)."
+                        learnMoreUrl="/help"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.gicIssuer}
+                      onChange={(e) => setFormData({ ...formData, gicIssuer: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
+                      placeholder="e.g., TD Bank, Tangerine"
+                    />
+                  </div>
+                </>
               )}
 
               {includePartner && (
