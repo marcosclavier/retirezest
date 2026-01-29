@@ -12,8 +12,13 @@ import {
   Calendar,
   Lightbulb,
   Target,
-  Info
+  Info,
+  ShieldCheck,
+  ShieldAlert,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { useState } from 'react';
 
 interface GISInsightsCardProps {
   insights: StrategyInsights;
@@ -29,8 +34,14 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
     recommendations,
     optimization_opportunities,
     key_milestones,
-    summary_metrics
+    summary_metrics,
+    disclaimer,
+    last_updated,
+    data_sources
   } = insights;
+
+  // State for collapsible sections
+  const [expandedCaveats, setExpandedCaveats] = useState<{ [key: number]: boolean }>({});
 
   // Format currency
   const formatCurrency = (value: number): string => {
@@ -81,6 +92,50 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
       case 'upcoming': return <Calendar className="h-5 w-5 text-orange-600" />;
       default: return <Calendar className="h-5 w-5 text-gray-600" />;
     }
+  };
+
+  // Get confidence color
+  const getConfidenceColor = (confidence?: string) => {
+    switch (confidence) {
+      case 'high': return 'bg-green-50 text-green-700 border-green-200';
+      case 'medium': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'low': return 'bg-orange-50 text-orange-700 border-orange-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  // Get feasibility color and icon
+  const getFeasibilityDisplay = (feasibility?: string) => {
+    switch (feasibility) {
+      case 'confirmed':
+        return {
+          color: 'bg-green-50 border-green-200 text-green-800',
+          icon: <ShieldCheck className="h-4 w-4 text-green-600" />,
+          label: 'Feasible'
+        };
+      case 'limited':
+        return {
+          color: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+          icon: <ShieldAlert className="h-4 w-4 text-yellow-600" />,
+          label: 'Limited Feasibility'
+        };
+      case 'uncertain':
+        return {
+          color: 'bg-orange-50 border-orange-200 text-orange-800',
+          icon: <AlertTriangle className="h-4 w-4 text-orange-600" />,
+          label: 'Uncertain'
+        };
+      default:
+        return null;
+    }
+  };
+
+  // Toggle caveats expansion
+  const toggleCaveats = (index: number) => {
+    setExpandedCaveats(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   return (
@@ -176,21 +231,113 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
               <div key={index} className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
                 <div className="flex items-start gap-3">
                   <div className="mt-1">{getPriorityIcon(rec.priority)}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 space-y-3">
+                    {/* Header with badges */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <h4 className="font-semibold text-gray-900">{rec.title}</h4>
                       <Badge variant="outline" className="text-xs">
                         {rec.priority.toUpperCase()} PRIORITY
                       </Badge>
+                      {rec.confidence && (
+                        <Badge variant="outline" className={`text-xs border ${getConfidenceColor(rec.confidence)}`}>
+                          {rec.confidence.toUpperCase()} CONFIDENCE
+                        </Badge>
+                      )}
+                      {rec.feasibility && getFeasibilityDisplay(rec.feasibility) && (
+                        <Badge variant="outline" className={`text-xs border flex items-center gap-1 ${getFeasibilityDisplay(rec.feasibility)?.color}`}>
+                          {getFeasibilityDisplay(rec.feasibility)?.icon}
+                          {getFeasibilityDisplay(rec.feasibility)?.label}
+                        </Badge>
+                      )}
                     </div>
-                    <p className="text-gray-700 mb-3">{rec.description}</p>
+
+                    <p className="text-gray-700">{rec.description}</p>
+
+                    {/* Feasibility Note */}
+                    {rec.feasibility_note && (
+                      <Alert className={`${getFeasibilityDisplay(rec.feasibility)?.color || 'bg-blue-50 border-blue-200'} text-sm`}>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-gray-800">
+                          <strong>Feasibility:</strong> {rec.feasibility_note}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Timing Note */}
+                    {rec.timing_note && (
+                      <Alert className={`${rec.timing_appropriateness ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'} text-sm`}>
+                        <Calendar className="h-4 w-4" />
+                        <AlertDescription className="text-gray-800">
+                          <strong>Timing:</strong> {rec.timing_note}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Action Box */}
                     <div className="bg-white border border-blue-200 rounded-lg p-3 space-y-2">
                       <div className="text-sm font-medium text-gray-900">Action:</div>
                       <p className="text-sm text-gray-700">{rec.action}</p>
-                      <div className="text-sm font-medium text-green-700 mt-2">
-                        Expected Benefit: {rec.expected_benefit}
+
+                      {/* Benefit Display with Range */}
+                      <div className="mt-3 space-y-1">
+                        <div className="text-sm font-medium text-green-700">
+                          Expected Benefit: {rec.expected_benefit}
+                        </div>
+                        {rec.benefit_range && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            Range: {formatCurrency(rec.benefit_range.lower)} - {formatCurrency(rec.benefit_range.upper)}
+                            {' '}(estimate: {formatCurrency(rec.benefit_range.estimate)})
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* Assumptions */}
+                    {rec.assumptions && rec.assumptions.length > 0 && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="text-xs font-semibold text-gray-700 mb-2">Key Assumptions:</div>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {rec.assumptions.map((assumption, idx) => (
+                            <li key={idx} className="flex items-start gap-1">
+                              <span className="text-gray-400">•</span>
+                              <span>{assumption}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Collapsible Caveats */}
+                    {rec.caveats && rec.caveats.length > 0 && (
+                      <div className="border border-orange-200 rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => toggleCaveats(index)}
+                          className="w-full flex items-center justify-between bg-orange-50 hover:bg-orange-100 px-3 py-2 text-sm transition-colors"
+                        >
+                          <span className="font-semibold text-orange-800 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            Important Caveats ({rec.caveats.length})
+                          </span>
+                          {expandedCaveats[index] ? (
+                            <ChevronUp className="h-4 w-4 text-orange-600" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-orange-600" />
+                          )}
+                        </button>
+                        {expandedCaveats[index] && (
+                          <div className="bg-white p-3 border-t border-orange-200">
+                            <ul className="text-xs text-gray-700 space-y-2">
+                              {rec.caveats.map((caveat, idx) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="text-orange-600 mt-0.5">⚠</span>
+                                  <span>{caveat}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -253,6 +400,39 @@ export function GISInsightsCard({ insights }: GISInsightsCardProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* General Disclaimer */}
+      {disclaimer && (
+        <Alert className="bg-amber-50 border-2 border-amber-300">
+          <AlertCircle className="h-5 w-5 text-amber-600" />
+          <AlertTitle className="text-amber-900 font-semibold">Important Disclaimer</AlertTitle>
+          <AlertDescription className="text-amber-800 text-sm mt-2 leading-relaxed">
+            {disclaimer}
+          </AlertDescription>
+          {(last_updated || data_sources) && (
+            <div className="mt-4 pt-4 border-t border-amber-300">
+              {last_updated && (
+                <p className="text-xs text-amber-700">
+                  <strong>Last Updated:</strong> {last_updated}
+                </p>
+              )}
+              {data_sources && data_sources.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-amber-700 font-semibold mb-1">Data Sources:</p>
+                  <ul className="text-xs text-amber-700 space-y-0.5">
+                    {data_sources.map((source, idx) => (
+                      <li key={idx} className="flex items-start gap-1">
+                        <span>•</span>
+                        <span>{source}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </Alert>
       )}
     </div>
   );

@@ -247,6 +247,13 @@ def generate_minimize_income_insights(
             "rrif_usage": total_rrif_withdrawals,
         },
         "gis_feasibility": gis_feasibility,  # Include feasibility data
+        "disclaimer": GENERAL_DISCLAIMER,
+        "last_updated": "2025-01-01",  # Date of GIS thresholds
+        "data_sources": [
+            "Canada Revenue Agency (CRA) - RRIF minimum rates",
+            "Service Canada - GIS thresholds and maximum amounts (2025)",
+            "User-provided financial data",
+        ],
     }
 
     return insights
@@ -366,7 +373,7 @@ def _generate_recommendations(
     household,
     simulation_results: pd.DataFrame
 ) -> List[Dict[str, Any]]:
-    """Generate personalized recommendations."""
+    """Generate personalized recommendations with feasibility and timing checks."""
     recommendations = []
 
     # Recommendation 1: Early RRIF depletion if balance is too high
@@ -375,24 +382,105 @@ def _generate_recommendations(
 
     if current_rrif > max_rrif and max_rrif > 0:
         excess_rrif = current_rrif - max_rrif
+
+        # Check timing appropriateness
+        timing = assess_recommendation_timing(household, "rrif_acceleration")
+
+        # Check feasibility
+        feasibility_check = check_recommendation_feasibility(
+            household, "rrif_acceleration", simulation_results
+        )
+
+        # Estimate GIS benefit with confidence interval
+        # Rough estimate: 5 years of excess RRIF could capture $15k-$25k/year in GIS
+        eligible_years = feasibility["eligible_years"]
+        estimated_gis_benefit = excess_rrif * 0.30  # Conservative 30% GIS capture rate
+
+        confidence = calculate_confidence_interval(
+            estimated_gis_benefit,
+            {
+                "gis_years": eligible_years,
+                "rrif_size": current_rrif,
+                "income_variability": 0.12,
+            }
+        )
+
+        # Create assumptions list
+        assumptions = [
+            f"Assumes RRIF balance of ${current_rrif:,.0f} at retirement",
+            f"Assumes CPP income of ${household.p1.cpp_annual_at_start:,.0f}/year",
+            f"Assumes OAS starts at age {household.p1.oas_start_age}",
+            f"Assumes {timing['years_available']} years available before age 71",
+        ]
+
+        # Adjust action based on feasibility
+        if feasibility_check['feasible'] and timing['appropriate']:
+            action = (
+                f"{timing['timing_note']} "
+                f"Consider converting RRSP to RRIF and making voluntary "
+                f"withdrawals of ${excess_rrif/5:,.0f}/year for 5 years. "
+                f"This strategy could extend GIS eligibility significantly."
+            )
+        elif not timing['appropriate']:
+            action = (
+                f"{timing['timing_note']} "
+                f"RRIF acceleration is not recommended at your current age. "
+                f"Focus on optimizing mandatory RRIF withdrawals after age 71."
+            )
+        else:  # Not feasible
+            action = (
+                f"{feasibility_check['reason']} "
+                f"Consider a modified acceleration strategy with smaller annual withdrawals "
+                f"that align with your available liquid assets."
+            )
+
         recommendations.append({
-            "priority": "high",
+            "priority": timing['priority'],
             "title": "Early RRIF Depletion Strategy",
             "description": (
                 f"Your RRIF balance (${current_rrif:,.0f}) exceeds the maximum "
                 f"(${max_rrif:,.0f}) that allows GIS eligibility at age 71."
             ),
-            "action": (
-                f"Consider converting RRSP to RRIF at age 65 and making voluntary "
-                f"withdrawals of ${excess_rrif/5:,.0f}/year for 5 years. This could "
-                f"extend GIS eligibility and capture an additional $80,000-$120,000 in benefits."
+            "action": action,
+            "expected_benefit": (
+                f"Estimated GIS benefit: {confidence['display']} "
+                f"(confidence: {confidence['confidence']})"
             ),
-            "expected_benefit": "Additional $80,000-$120,000 in lifetime GIS",
+            "confidence": confidence['confidence'],
+            "feasibility": "confirmed" if feasibility_check['feasible'] else "limited",
+            "feasibility_note": feasibility_check['reason'],
+            "timing_appropriateness": timing['appropriate'],
+            "timing_note": timing['timing_note'],
+            "benefit_range": {
+                "lower": confidence['lower_bound'],
+                "upper": confidence['upper_bound'],
+                "estimate": confidence['estimate'],
+            },
+            "caveats": RECOMMENDATION_CAVEATS['rrif_acceleration'],
+            "assumptions": assumptions,
         })
 
     # Recommendation 2: TFSA optimization
     tfsa_balance = household.p1.tfsa_balance + (household.p2.tfsa_balance if household.p2 else 0)
     if tfsa_balance < 100000:
+        # Estimate TFSA contribution benefit
+        tfsa_room = household.p1.tfsa_room_start + (household.p2.tfsa_room_start if household.p2 else 0)
+        estimated_tfsa_benefit = tfsa_room * 0.20  # 20% benefit from preserving GIS eligibility
+
+        tfsa_confidence = calculate_confidence_interval(
+            estimated_tfsa_benefit,
+            {
+                "gis_years": feasibility["eligible_years"],
+                "rrif_size": current_rrif,
+                "income_variability": 0.10,  # Lower variability for TFSA benefit
+            }
+        )
+
+        # Check if contribution is feasible
+        nonreg_available = household.p1.nonreg_balance + (household.p2.nonreg_balance if household.p2 else 0)
+        corp_available = household.p1.corporate_balance + (household.p2.corporate_balance if household.p2 else 0)
+        total_available = nonreg_available + corp_available
+
         recommendations.append({
             "priority": "medium",
             "title": "Maximize TFSA Contributions",
@@ -404,11 +492,53 @@ def _generate_recommendations(
                 "Maximize TFSA contributions before retirement. Transfer funds from "
                 "NonReg or Corporate accounts to TFSA if contribution room available."
             ),
-            "expected_benefit": "Preserve GIS eligibility longer, tax-free growth",
+            "expected_benefit": (
+                f"Estimated GIS preservation benefit: {tfsa_confidence['display']} "
+                f"(confidence: {tfsa_confidence['confidence']})"
+            ),
+            "confidence": tfsa_confidence['confidence'],
+            "feasibility": "confirmed" if total_available >= tfsa_room else "limited",
+            "feasibility_note": (
+                f"You have ${total_available:,.0f} available to transfer to TFSA"
+                if total_available >= tfsa_room
+                else f"Limited funds available (${total_available:,.0f}) vs contribution room (${tfsa_room:,.0f})"
+            ),
+            "timing_appropriateness": True,
+            "timing_note": "TFSA contributions are recommended as soon as possible to maximize tax-free growth",
+            "benefit_range": {
+                "lower": tfsa_confidence['lower_bound'],
+                "upper": tfsa_confidence['upper_bound'],
+                "estimate": tfsa_confidence['estimate'],
+            },
+            "caveats": RECOMMENDATION_CAVEATS['tfsa_maximization'],
+            "assumptions": [
+                f"Assumes current TFSA balance of ${tfsa_balance:,.0f}",
+                f"Assumes TFSA contribution room of ${tfsa_room:,.0f}",
+                "Assumes available funds in NonReg or Corporate accounts",
+            ],
         })
 
     # Recommendation 3: Alternative strategy consideration
     if feasibility["rating"] < 5:
+        # Estimate potential tax savings with confidence interval
+        estimated_tax_savings = 75000  # Mid-point estimate
+
+        confidence = calculate_confidence_interval(
+            estimated_tax_savings,
+            {
+                "gis_years": feasibility["eligible_years"],
+                "rrif_size": current_rrif,
+                "income_variability": 0.20,  # Higher variability for strategy comparison
+            }
+        )
+
+        # Assess timing and feasibility for strategy change
+        timing_alt = {
+            "appropriate": True,  # Strategy comparison is always appropriate
+            "priority": "high",
+            "timing_note": "Consider exploring alternative strategies at any time",
+        }
+
         recommendations.append({
             "priority": "high",
             "title": "Consider Alternative Strategy",
@@ -420,11 +550,55 @@ def _generate_recommendations(
                 "Compare with 'RRIF-Frontload with OAS Protection' or 'Balanced (Optimized for tax efficiency)' "
                 "strategies. These may reduce lifetime taxes and increase legacy."
             ),
-            "expected_benefit": "Potential tax savings of $50,000-$100,000",
+            "expected_benefit": (
+                f"Potential tax savings: {confidence['display']} "
+                f"(confidence: {confidence['confidence']})"
+            ),
+            "confidence": confidence['confidence'],
+            "feasibility": "confirmed",  # Strategy comparison is always feasible
+            "feasibility_note": "Switching strategies is straightforward - just requires re-running simulation",
+            "timing_appropriateness": timing_alt['appropriate'],
+            "timing_note": timing_alt['timing_note'],
+            "benefit_range": {
+                "lower": confidence['lower_bound'],
+                "upper": confidence['upper_bound'],
+                "estimate": confidence['estimate'],
+            },
+            "caveats": RECOMMENDATION_CAVEATS['alternative_strategy'],
+            "assumptions": [
+                f"Based on current GIS rating of {feasibility['rating']}/10",
+                "Comparison assumes similar risk tolerance and time horizon",
+            ],
         })
 
     # Recommendation 4: Income splitting for couples
     if household.p2 is not None:
+        # Estimate tax savings from income splitting with confidence interval
+        estimated_splitting_benefit = 5000  # Conservative annual estimate
+
+        splitting_confidence = calculate_confidence_interval(
+            estimated_splitting_benefit,
+            {
+                "gis_years": feasibility["eligible_years"],
+                "rrif_size": current_rrif,
+                "income_variability": 0.15,
+            }
+        )
+
+        # Assess timing for income splitting
+        current_age = household.p1.start_age
+        both_over_65 = current_age >= 65 and household.p2.start_age >= 65
+
+        timing_split = {
+            "appropriate": both_over_65,
+            "priority": "medium",
+            "timing_note": (
+                "Income splitting available now - both spouses are 65+"
+                if both_over_65
+                else f"Income splitting will be available when both spouses reach age 65"
+            ),
+        }
+
         recommendations.append({
             "priority": "medium",
             "title": "Pension Income Splitting",
@@ -435,7 +609,30 @@ def _generate_recommendations(
                 "After age 65, split RRIF withdrawals 50/50 between spouses. This can "
                 "reduce overall tax burden and may extend GIS eligibility."
             ),
-            "expected_benefit": "Potential tax savings and extended GIS eligibility",
+            "expected_benefit": (
+                f"Estimated tax savings: {splitting_confidence['display']}/year "
+                f"(confidence: {splitting_confidence['confidence']})"
+            ),
+            "confidence": splitting_confidence['confidence'],
+            "feasibility": "confirmed" if both_over_65 else "limited",
+            "feasibility_note": (
+                "Income splitting is available and straightforward to implement"
+                if both_over_65
+                else "Available once both spouses reach age 65"
+            ),
+            "timing_appropriateness": timing_split['appropriate'],
+            "timing_note": timing_split['timing_note'],
+            "benefit_range": {
+                "lower": splitting_confidence['lower_bound'],
+                "upper": splitting_confidence['upper_bound'],
+                "estimate": splitting_confidence['estimate'],
+            },
+            "caveats": RECOMMENDATION_CAVEATS['income_splitting'],
+            "assumptions": [
+                "Both spouses must have eligible pension income",
+                "Annual election required on tax return",
+                f"Based on current RRIF balance of ${current_rrif:,.0f}",
+            ],
         })
 
     return recommendations
@@ -630,3 +827,274 @@ def format_insights_for_display(insights: Dict[str, Any]) -> str:
     output.append(f"Plan duration: {metrics['plan_years']} years")
 
     return "\n".join(output)
+
+
+# =============================================================================
+# RECOMMENDATION CAVEATS AND DISCLAIMERS
+# =============================================================================
+
+RECOMMENDATION_CAVEATS = {
+    "rrif_acceleration": [
+        "Assumes continued GIS eligibility throughout retirement",
+        "Based on current 2025 GIS thresholds (subject to annual adjustments)",
+        "Does not account for unexpected income changes (inheritance, employment, etc.)",
+        "Tax calculations assume current tax rates and brackets",
+        "Consult a financial advisor before implementing major changes",
+    ],
+    "tfsa_maximization": [
+        "Assumes available TFSA contribution room",
+        "Based on current TFSA rules (subject to legislative changes)",
+        "Tax-free growth projections assume historical market returns",
+    ],
+    "alternative_strategy": [
+        "Comparison based on current simulation parameters",
+        "Actual results may vary based on market performance",
+        "Tax savings depend on future tax rates and income levels",
+    ],
+    "income_splitting": [
+        "Assumes both spouses meet CRA pension income splitting requirements",
+        "Subject to annual election on tax return",
+        "May affect other income-tested benefits",
+    ],
+}
+
+GENERAL_DISCLAIMER = (
+    "⚠️ **Important Disclaimer:** These recommendations are based on AI-powered analysis "
+    "of your current financial situation and government benefit rules as of 2025. "
+    "They are projections only and do not constitute financial advice. Actual results "
+    "may differ due to changes in legislation, tax rates, personal circumstances, or "
+    "market conditions. Always consult a qualified financial advisor before making "
+    "major retirement decisions."
+)
+
+
+# =============================================================================
+# IMPROVED RECOMMENDATION FUNCTIONS
+# =============================================================================
+
+def check_recommendation_feasibility(
+    household,
+    recommendation_type: str,
+    simulation_results: pd.DataFrame
+) -> Dict[str, Any]:
+    """
+    Check if user can afford to implement a recommendation.
+
+    Args:
+        household: Household object with financial details
+        recommendation_type: Type of recommendation (e.g., "rrif_acceleration")
+        simulation_results: Simulation results DataFrame
+
+    Returns:
+        Dictionary with feasibility assessment:
+        {
+            "feasible": bool,
+            "reason": str,
+            "assets_available": float,
+            "years_covered": int,
+        }
+    """
+    if recommendation_type == "rrif_acceleration":
+        # Calculate liquid assets (non-RRIF)
+        liquid_assets = (
+            household.p1.tfsa_balance +
+            household.p1.nonreg_balance +
+            household.p1.corporate_balance
+        )
+
+        if household.p2:
+            liquid_assets += (
+                household.p2.tfsa_balance +
+                household.p2.nonreg_balance +
+                household.p2.corporate_balance
+            )
+
+        # Get annual expenses from first year of simulation
+        first_year = simulation_results.iloc[0]
+        annual_expenses = first_year.get('expenses', 40000)  # Default to $40k if not available
+
+        # Calculate how many years liquid assets can cover
+        years_covered = liquid_assets / annual_expenses if annual_expenses > 0 else 0
+
+        # Need at least 5 years of liquid assets to accelerate RRIF withdrawals
+        feasible = years_covered >= 5
+
+        if feasible:
+            reason = (
+                f"You have ${liquid_assets:,.0f} in liquid assets (TFSA, NonReg, Corporate), "
+                f"covering {years_covered:.1f} years of expenses. Sufficient to support "
+                f"accelerated RRIF withdrawal strategy."
+            )
+        else:
+            reason = (
+                f"You have ${liquid_assets:,.0f} in liquid assets, covering only "
+                f"{years_covered:.1f} years of expenses. May not be sufficient to support "
+                f"5 years of accelerated RRIF withdrawals without impacting cash flow."
+            )
+
+        return {
+            "feasible": feasible,
+            "reason": reason,
+            "assets_available": liquid_assets,
+            "years_covered": years_covered,
+        }
+
+    # Default response for other recommendation types
+    return {
+        "feasible": True,
+        "reason": "Feasibility check not required for this recommendation type.",
+        "assets_available": 0,
+        "years_covered": 0,
+    }
+
+
+def assess_recommendation_timing(
+    household,
+    recommendation_type: str
+) -> Dict[str, Any]:
+    """
+    Assess if recommendation timing is appropriate for user's age.
+
+    Args:
+        household: Household object
+        recommendation_type: Type of recommendation (e.g., "rrif_acceleration")
+
+    Returns:
+        Dictionary with timing assessment:
+        {
+            "appropriate": bool,
+            "priority": str,
+            "timing_note": str,
+            "years_available": int,
+        }
+    """
+    current_age = household.p1.start_age
+
+    if recommendation_type == "rrif_acceleration":
+        years_until_71 = max(0, 71 - current_age)
+
+        if years_until_71 >= 6:
+            return {
+                "appropriate": True,
+                "priority": "high",
+                "timing_note": (
+                    f"You have {years_until_71} years before age 71. "
+                    f"Excellent timeframe to implement RRIF acceleration strategy."
+                ),
+                "years_available": years_until_71,
+            }
+        elif years_until_71 >= 3:
+            return {
+                "appropriate": True,
+                "priority": "medium",
+                "timing_note": (
+                    f"You have {years_until_71} years before age 71. "
+                    f"Limited time window - consider acting soon."
+                ),
+                "years_available": years_until_71,
+            }
+        elif years_until_71 > 0:
+            return {
+                "appropriate": False,
+                "priority": "low",
+                "timing_note": (
+                    f"You have only {years_until_71} year(s) before age 71. "
+                    f"RRIF acceleration may not be practical at this stage. "
+                    f"Focus on optimizing mandatory withdrawals instead."
+                ),
+                "years_available": years_until_71,
+            }
+        else:
+            return {
+                "appropriate": False,
+                "priority": "low",
+                "timing_note": (
+                    "You are already past age 71. RRIF acceleration is no longer possible. "
+                    "Focus on tax-efficient mandatory withdrawal strategies."
+                ),
+                "years_available": 0,
+            }
+
+    # Default response for other recommendation types
+    return {
+        "appropriate": True,
+        "priority": "medium",
+        "timing_note": "Standard recommendation timing.",
+        "years_available": 30,
+    }
+
+
+def calculate_confidence_interval(
+    estimated_benefit: float,
+    factors: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Calculate confidence interval for benefit estimates.
+
+    Args:
+        estimated_benefit: Central estimate of benefit
+        factors: Dictionary with factors affecting confidence:
+            - gis_years: Number of years with GIS (more = higher confidence)
+            - rrif_size: RRIF balance (larger = lower confidence)
+            - income_variability: Expected income variability (higher = lower confidence)
+
+    Returns:
+        Dictionary with confidence interval:
+        {
+            "estimate": float,
+            "lower_bound": float,
+            "upper_bound": float,
+            "confidence": str,
+            "display": str,
+        }
+    """
+    # Base uncertainty: ±15%
+    base_uncertainty = 0.15
+
+    # Adjust uncertainty based on factors
+    gis_years = factors.get('gis_years', 10)
+    rrif_size = factors.get('rrif_size', 200000)
+    income_variability = factors.get('income_variability', 0.10)
+
+    # Increase uncertainty if GIS eligibility is short
+    if gis_years < 5:
+        base_uncertainty += 0.15  # Low predictability
+    elif gis_years < 10:
+        base_uncertainty += 0.08  # Moderate predictability
+
+    # Increase uncertainty for large RRIF balances (more volatile)
+    if rrif_size > 500000:
+        base_uncertainty += 0.10
+    elif rrif_size > 300000:
+        base_uncertainty += 0.05
+
+    # Add income variability factor
+    base_uncertainty += income_variability
+
+    # Cap maximum uncertainty at 40%
+    base_uncertainty = min(base_uncertainty, 0.40)
+
+    # Calculate bounds
+    lower_bound = estimated_benefit * (1 - base_uncertainty)
+    upper_bound = estimated_benefit * (1 + base_uncertainty)
+
+    # Determine confidence level
+    if base_uncertainty <= 0.15:
+        confidence = "high"
+    elif base_uncertainty <= 0.25:
+        confidence = "medium"
+    else:
+        confidence = "low"
+
+    # Create display string
+    uncertainty_pct = int(base_uncertainty * 100)
+    display = f"${estimated_benefit:,.0f} ± {uncertainty_pct}%"
+
+    return {
+        "estimate": estimated_benefit,
+        "lower_bound": lower_bound,
+        "upper_bound": upper_bound,
+        "confidence": confidence,
+        "uncertainty_pct": uncertainty_pct,
+        "display": display,
+    }

@@ -294,11 +294,23 @@ class GISFeasibility(BaseModel):
 
 
 class StrategyRecommendation(BaseModel):
-    """Individual strategy recommendation."""
+    """Individual strategy recommendation with enhanced AI-powered analysis."""
 
     priority: str = Field(description="Priority level: high/medium/low")
     action: str = Field(description="Recommended action")
     expected_benefit: str = Field(description="Expected benefit from taking this action")
+
+    # Enhanced fields for AI-powered GIS recommendations
+    title: str | None = Field(default=None, description="Recommendation title")
+    description: str | None = Field(default=None, description="Detailed description of the recommendation")
+    confidence: str | None = Field(default=None, description="Confidence level: high/medium/low")
+    feasibility: str | None = Field(default=None, description="Feasibility assessment: confirmed/limited/uncertain")
+    feasibility_note: str | None = Field(default=None, description="Explanation of feasibility assessment")
+    timing_appropriateness: bool | None = Field(default=None, description="Whether timing is appropriate for this recommendation")
+    timing_note: str | None = Field(default=None, description="Explanation of timing assessment")
+    benefit_range: dict[str, float] | None = Field(default=None, description="Benefit estimate range (lower, upper, estimate)")
+    caveats: list[str] | None = Field(default=None, description="Important caveats and limitations")
+    assumptions: list[str] | None = Field(default=None, description="Key assumptions underlying this recommendation")
 
 
 class StrategyMilestone(BaseModel):
@@ -343,6 +355,11 @@ class StrategyInsights(BaseModel):
     summary_metrics: dict[str, Any] = Field(
         description="Key financial metrics (total_gis, final_net_worth, total_tax, years_with_gis)"
     )
+
+    # Disclaimer and data sources
+    disclaimer: str | None = Field(default=None, description="Important disclaimer about recommendations")
+    last_updated: str | None = Field(default=None, description="Date when GIS thresholds were last updated")
+    data_sources: list[str] | None = Field(default=None, description="Data sources used for analysis")
 
 
 class SimulationResponse(BaseModel):

@@ -71,3 +71,6 @@ __pycache__/
 .Python
 venv/
 .venv/
+
+# Archive directory (temporary/historical docs)
+archive/
