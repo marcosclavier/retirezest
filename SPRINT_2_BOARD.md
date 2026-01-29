@@ -1,153 +1,90 @@
 # Sprint Board - RetireZest Sprint 2
 
 **Sprint**: Sprint 2
-**Duration**: February 12 - February 25, 2026 (2 weeks)
-**Sprint Goal**: Enable premium monetization and improve withdrawal strategy UX to reduce user churn
-**Team Capacity**: 40 story points
+**Duration**: January 30 - February 12, 2026 (2 weeks)
+**Sprint Goal**: Enable premium monetization and improve withdrawal strategy UX while eliminating technical debt
+**Team Capacity**: 20 story points (conservative estimate based on Sprint 1 learnings)
 
 ---
 
 ## 🎯 Sprint Progress
 
-**Committed**: 34 story points
+**Committed**: 20 story points
 **Completed**: 0 story points (0%)
 **In Progress**: 0 story points (0%)
-**To Do**: 34 story points (100%)
+**To Do**: 20 story points (100%)
+
+**Current Day**: Day 0 (Sprint Planning - Jan 29, 2026)
 
 ---
 
 ## 📊 Kanban Board
 
-### 📋 To Do (34 pts)
+### 📋 To Do (20 pts)
 
-#### US-024: Premium Account Verification & Payment Acceptance Testing [8 pts] 🔴 P0
-**Owner**: Full Stack Team
-**Blocked**: No
-**Epic**: Epic 9 - Monetization & Revenue
+#### US-024: Premium Account Verification & Payment Testing [8 pts] 🔴 P0
+**Owner**: Development Team
+**Priority**: Critical (P0)
 
-As a product owner, I want comprehensive testing and verification of the Stripe premium subscription system so that users can successfully subscribe and access premium features without payment failures.
-
-**Tasks**:
-- [ ] Test Stripe checkout session creation
-- [ ] Verify price IDs (monthly $5.99, yearly $47.00)
-- [ ] Test subscription webhook handling
-- [ ] Verify payment success flow
-- [ ] Test payment failure scenarios
-- [ ] Verify subscription status updates in database
-- [ ] Test premium feature access control
-- [ ] Verify cancellation flow
-- [ ] Test subscription renewal
-- [ ] Test invoice generation
-- [ ] Verify webhook retry logic
-- [ ] Document test results
-
-**Acceptance Criteria**:
-- [ ] Checkout session creates successfully
-- [ ] Payment succeeds with test card (4242 4242 4242 4242)
-- [ ] Payment fails with decline card (4000 0000 0000 0002)
-- [ ] Subscription status updates in database
-- [ ] Premium features unlock after payment
-- [ ] Webhooks handle all 10+ event types
-- [ ] Cancellation works correctly
-- [ ] Invoice emails sent
-- [ ] Error handling works for all failure modes
-- [ ] Production deployment verified
-
-**Technical Notes**:
-Files to test:
-- `webapp/app/(dashboard)/subscribe/page.tsx` - Checkout UI
-- `webapp/lib/stripe.ts` - Stripe utilities
-- `webapp/app/api/subscription/create-checkout/route.ts` - Session creation
-- `webapp/app/api/webhooks/stripe/route.ts` - Webhook handling
-
-**Why P0**: Revenue generation depends on working payment system. This is the most critical feature for business viability.
-
----
-
-#### US-021: Configurable Investment Yields (TFSA/RRSP/RRIF) [8 pts] 🟡 P1
-**Owner**: Full Stack Team
-**Blocked**: No
-**Epic**: Epic 3 - Investment & Account Configuration
-
-As a user, I want to configure custom interest rates for my TFSA, RRSP, and RRIF accounts so that my retirement projections reflect my actual investment strategy and risk tolerance.
+As a product owner, I want comprehensive testing of the Stripe premium subscription system so that users can successfully subscribe without payment failures.
 
 **Tasks**:
-- [ ] Update Prisma schema with yield fields
-- [ ] Create database migration
-- [ ] Add yield input fields to asset forms (UI)
-- [ ] Implement yield validation (range: -10% to 20%)
-- [ ] Update simulation.py to use custom yields
-- [ ] Add yield presets (Conservative 3%, Balanced 5%, Aggressive 7%)
-- [ ] Create help documentation explaining yields
-- [ ] Test with different yield scenarios
-- [ ] Update API routes (create/update assets)
-- [ ] Deploy to production
+- [ ] Test subscription checkout (monthly $5.99, yearly $47.00)
+- [ ] Test with multiple card types (success, decline, 3DS)
+- [ ] Test all webhook handlers (6 events)
+- [ ] Verify isPremium flag updates correctly
+- [ ] Test premium feature unlocking
+- [ ] Test billing portal (cancel, reactivate, invoices)
+- [ ] Test edge cases (failed payments, renewals, refunds)
+- [ ] Verify production Stripe credentials
+- [ ] Create payment monitoring dashboard
+- [ ] Document troubleshooting guide
 
 **Acceptance Criteria**:
-- [ ] UI allows setting yield % for TFSA accounts
-- [ ] UI allows setting yield % for RRSP accounts
-- [ ] UI allows setting yield % for RRIF accounts
-- [ ] Default yields pre-populated (5% balanced)
-- [ ] Yields saved per account type
-- [ ] Simulation engine uses custom yields
-- [ ] Validation enforces -10% to 20% range
-- [ ] Help text explains conservative vs aggressive yields
+- [ ] 100% success rate on test card transactions
+- [ ] All webhook events processed within 5 seconds
+- [ ] Premium features unlock immediately after payment
+- [ ] Billing portal works correctly
+- [ ] Production credentials verified
+- [ ] Monitoring dashboard created
 
-**Technical Notes**:
-Current system uses hardcoded 5% default in `simulation.py`. Need to:
-1. Add `yield_rate` field to Asset model
-2. Update withdrawal calculations to use custom rates
-3. Add preset buttons for quick selection
-
-**User Impact**: High - Users want control over return assumptions. Different users have different risk profiles.
+**Estimated Effort**: 12 hours
 
 ---
 
 #### US-025: Improve Withdrawal Strategy Discoverability [3 pts] 🟡 P1
-**Owner**: Frontend Team
-**Blocked**: No
-**Epic**: Epic 4 - UX Improvements
+**Owner**: Development Team
+**Priority**: High (P1)
 
-As a user, I want the withdrawal strategy selector to be more visible and prominent so that I understand it's an important decision that affects my retirement plan.
+As a user, I want the withdrawal strategy selector to be more visible and prominent so that I understand it's an important decision.
 
 **Tasks**:
 - [ ] Audit current strategy selector location and visibility
-- [ ] Design mockup for improved UI
-- [ ] Move selector to prominent location (above inputs or in hero section)
-- [ ] Add visual emphasis (icon 🎯, border, background color)
-- [ ] Update label to be clearer ("Withdrawal Strategy (Important)")
-- [ ] Add tooltip explaining why strategy matters
+- [ ] Design mockup for improved UI (icon, border, emphasis)
+- [ ] Move selector to prominent location
+- [ ] Add visual emphasis (🎯 icon, Card component)
+- [ ] Update label to be clearer
+- [ ] Add tooltip explaining importance
 - [ ] Test on mobile devices
-- [ ] Update analytics to track strategy changes
-- [ ] A/B test different UI approaches if possible
+- [ ] Cross-browser testing
 
 **Acceptance Criteria**:
-- [ ] Strategy selector moved to more prominent location
+- [ ] Strategy selector moved to prominent location
 - [ ] Visual hierarchy improved (larger, clearer label)
-- [ ] Help icon/tooltip added explaining importance
-- [ ] Strategy selector highlighted or emphasized
-- [ ] Mobile view optimized for easy access
+- [ ] Help icon/tooltip added
+- [ ] Mobile view optimized
 - [ ] User can easily find and change strategy
 - [ ] Strategy selection tracked in analytics
 
-**Technical Notes**:
-File: `webapp/app/(dashboard)/simulation/page.tsx`
-- Current strategy stored in `household.strategy`
-- Default: "minimize-income"
-- Suggested: Add Card component, icon, contextual help
-
-**Why Important**: Ian Crawford (deleted user) couldn't find RRIF withdrawal option. Better discoverability prevents churn.
-
-**Dependencies**: Works with US-026 and US-027 for complete UX improvement.
+**Estimated Effort**: 6 hours
 
 ---
 
-#### US-026: Display Current Strategy Selection in Strategy Selector [2 pts] 🟡 P1
-**Owner**: Frontend Team
-**Blocked**: No
-**Epic**: Epic 4 - UX Improvements
+#### US-026: Display Current Strategy Selection [2 pts] 🟡 P1
+**Owner**: Development Team
+**Priority**: High (P1)
 
-As a user, I want to clearly see which withdrawal strategy is currently selected (e.g., "minimize-income") so that I know what strategy my simulation will use.
+As a user, I want to clearly see which withdrawal strategy is currently selected so that I know what strategy my simulation will use.
 
 **Tasks**:
 - [ ] Verify strategy value binding in UI component
@@ -156,170 +93,90 @@ As a user, I want to clearly see which withdrawal strategy is currently selected
 - [ ] Add visual indicator for default vs custom strategy
 - [ ] Show current strategy in results header
 - [ ] Test strategy persistence across page refreshes
-- [ ] Update SimulationWizard if needed
 
 **Acceptance Criteria**:
-- [ ] Current strategy value visible in selector/dropdown
+- [ ] Current strategy value visible in selector
 - [ ] Default "minimize-income" shows as selected
 - [ ] User-selected strategy persists and displays correctly
 - [ ] Strategy name displayed in human-readable format
 - [ ] Visual confirmation when strategy is changed
 - [ ] Current strategy shown in simulation results summary
 
-**Technical Notes**:
-Strategy mapping (from `simulation/page.tsx:762-772`):
-```typescript
-const strategyMap: Record<string, string> = {
-  'minimize-income': 'Income Minimization (GIS-Optimized)',
-  'balanced-income': 'Balanced Income',
-  'early-rrif-withdrawal': 'Early RRIF Withdrawals (Income Splitting)',
-  'max-tfsa-first': 'Maximize TFSA First',
-};
-```
-
-**Dependencies**: Should implement together with US-025 for best UX.
-
----
-
-#### US-027: Educational Guidance - Withdrawal Order to Save Taxes & Avoid Clawback [5 pts] 🟡 P1
-**Owner**: Content Team + Frontend Team
-**Blocked**: No
-**Epic**: Epic 4 - UX Improvements
-
-As a user, I want clear educational guidance about the optimal account withdrawal order (TFSA/RRSP/RRIF/NonReg) so that I can minimize taxes and avoid OAS/GIS clawback throughout my retirement.
-
-**Tasks**:
-- [ ] Research optimal withdrawal order strategies
-- [ ] Create educational content outline
-- [ ] Design visual diagram for withdrawal order
-- [ ] Write clear explanations for each account type
-- [ ] Document OAS clawback threshold (2026: ~$90,997)
-- [ ] Document GIS income limits (2026: $22,272 single, $29,424 couple)
-- [ ] Create examples with real numbers (3 scenarios)
-- [ ] Design tooltip/modal component
-- [ ] Implement contextual help integration
-- [ ] Review content with tax professional or CPA
-- [ ] User testing for clarity and comprehension
-- [ ] Update documentation and help center
-
-**Acceptance Criteria**:
-- [ ] Educational tooltip/modal explains withdrawal order strategy
-- [ ] Visual diagram shows recommended withdrawal sequence
-- [ ] Explanation of tax implications for each account type
-- [ ] Guidance on OAS clawback threshold and avoidance
-- [ ] Guidance on GIS income limits and preservation
-- [ ] Examples showing tax savings from optimal order
-- [ ] Context-sensitive help based on user's assets
-- [ ] Mobile-friendly educational content
-- [ ] Links to CRA resources for verification
-- [ ] Accessible to users of all financial literacy levels
-
-**Technical Notes**:
-**Withdrawal Order Best Practices**:
-
-1. **Before Age 65 (Pre-OAS/GIS)**:
-   - TFSA first (tax-free, no impact on benefits)
-   - NonReg second (capital gains only 50% taxable)
-   - RRSP/RRIF last (100% taxable)
-
-2. **Age 65-71 (OAS Started, Pre-RRIF)**:
-   - TFSA first (preserves GIS eligibility)
-   - RRSP early withdrawals if income low (income splitting)
-   - NonReg carefully (watch OAS clawback threshold)
-
-3. **Age 72+ (RRIF Mandatory)**:
-   - RRIF minimum required
-   - TFSA to top up (avoid exceeding clawback threshold)
-   - NonReg as needed
-
-**Example Savings**:
-Scenario: Couple, $600K assets, low pension income
-- Poor order (RRSP first): $180K total tax, lose $45K GIS
-- Optimal order (TFSA first): $120K total tax, keep $42K GIS
-- **Savings: $60K + $42K = $102K over 30 years**
-
-**User Impact**: Very High - Empowers users to make informed decisions worth tens of thousands of dollars.
-
-**Dependencies**: Integrates with US-025 (strategy selector) and US-026 (current strategy display).
+**Estimated Effort**: 3 hours
 
 ---
 
 #### US-022: What-If Scenario Slider Testing & Fixes [5 pts] 🟡 P1
-**Owner**: QA Team + Frontend Team
-**Blocked**: No
-**Epic**: Epic 6 - Testing & Quality
+**Owner**: Development Team
+**Priority**: High (P1)
 
-As a user, I want the What-If scenario sliders to work correctly and provide accurate simulation comparisons so that I can confidently explore different retirement scenarios.
+As a user, I want the What-If scenario sliders to work correctly so that I can confidently explore different retirement scenarios.
 
 **Tasks**:
-- [ ] Test all 4 sliders (spending, retirement age, CPP age, OAS age)
-- [ ] Verify slider value mapping (e.g., spending 50-150%, age -5 to +5)
-- [ ] Test "Run What-If Scenario" button execution
-- [ ] Verify results display shows accurate comparison
-- [ ] Test health score delta calculation
-- [ ] Test final estate delta calculation
-- [ ] Test error handling for invalid scenarios
-- [ ] Test reset button functionality
-- [ ] Verify slider state persistence (no unexpected resets)
+- [ ] Audit WhatIfSliders.tsx component for bugs
+- [ ] Test slider value mapping (spending, retirement age, CPP age, OAS age)
+- [ ] Test /api/simulation/what-if endpoint with various adjustments
+- [ ] Verify adjustment calculations
 - [ ] Test edge cases (min/max values, boundary conditions)
-- [ ] Fix any bugs discovered during testing
-- [ ] Update documentation
+- [ ] Fix checkHasChanges() function if needed
+- [ ] Test error handling for failed API calls
+- [ ] Verify comparison UI renders correctly (health score, estate)
+- [ ] Create automated E2E test for What-If feature
+- [ ] Document known limitations
 
 **Acceptance Criteria**:
 - [ ] All sliders respond correctly to user input
 - [ ] Slider values map correctly to adjustments
 - [ ] "Run What-If Scenario" button executes successfully
-- [ ] Results display shows accurate comparison (original vs what-if)
+- [ ] Results display shows accurate comparison
 - [ ] Health score delta calculated correctly
 - [ ] Final estate delta calculated correctly
 - [ ] Error handling works for invalid scenarios
 - [ ] Reset button clears all adjustments
 - [ ] Slider state persists during interaction
 
-**Technical Notes**:
-File: `webapp/components/simulation/WhatIfSliders.tsx`
-
-Potential issues to investigate:
-- Lines 43-45: Calculated values based on adjustments
-- Lines 48-55: `checkHasChanges()` function accuracy
-- Lines 198-207: Slider value mapping uses +5 offset
-
-API endpoint: `/api/simulation/what-if`
-
-**Why Important**: Users need reliable scenario exploration to make informed retirement decisions.
+**Estimated Effort**: 12 hours
 
 ---
 
-#### US-009: Onboarding - Skip Real Estate Step [3 pts] 🟢 P2
-**Owner**: Frontend Team
-**Blocked**: No
-**Epic**: Epic 4 - UX Improvements
+#### BUILD-FIX: Fix Build Warnings & Vulnerabilities [2 pts] 🟡 P1
+**Owner**: Development Team
+**Priority**: High (P1)
 
-As a user without property, I want to skip the real estate onboarding step so that I can complete setup faster.
+As a developer, I want to fix all build warnings and npm vulnerabilities so that we maintain code quality and security.
 
 **Tasks**:
-- [ ] Add "Skip for now" button to Step 6 (Real Estate)
-- [ ] Implement skip logic (advance to next step)
-- [ ] Update progress bar to show step as optional
-- [ ] Ensure no validation errors when skipped
-- [ ] Allow user to return and add real estate later
-- [ ] Test skip flow end-to-end
-- [ ] Update onboarding documentation
+- [ ] Fix React Hook exhaustive-deps warning in admin/page.tsx (line 152)
+- [ ] Fix React Hook exhaustive-deps warning in admin/page.tsx (line 156)
+- [ ] Run `npm audit` and review vulnerabilities
+- [ ] Run `npm audit fix` for auto-fixable issues
+- [ ] Document remaining vulnerabilities and assess risk
+- [ ] Update outdated dependencies (run `npm outdated`)
+- [ ] Test application after updates
+- [ ] Verify all tests passing
+- [ ] Verify production build succeeds with zero warnings
 
 **Acceptance Criteria**:
-- [ ] "Skip for now" button visible on Step 6
-- [ ] Clicking skip advances to next step
-- [ ] Can return to add real estate later
-- [ ] Progress bar shows step as optional
-- [ ] No validation errors when skipped
+- [ ] Zero ESLint warnings in build
+- [ ] Zero critical/high npm vulnerabilities
+- [ ] All dependencies updated to latest safe versions
+- [ ] Production build succeeds
+- [ ] All tests passing after updates
+- [ ] Remaining vulnerabilities documented with risk assessment
 
-**Why Important**: 12 users currently stuck at Step 6 (86% complete). This is blocking conversions.
+**Estimated Effort**: 3.5 hours
 
-**Technical Notes**:
-Files to modify:
-- Onboarding wizard component
-- Real estate step validation logic
-- Progress tracking
+---
+
+### 🔄 In Progress (0 pts)
+
+**No stories in progress yet**
+
+---
+
+### ✅ Done (0 pts)
+
+**No stories completed yet**
 
 ---
 
@@ -328,13 +185,6 @@ Files to modify:
 ```
 Story Points Remaining
 
-34 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-32 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-30 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-28 |■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-26 |■■■■■■■■■■■■■■■■■■■■■■■■■■
-24 |■■■■■■■■■■■■■■■■■■■■■■■■
-22 |■■■■■■■■■■■■■■■■■■■■■■
 20 |■■■■■■■■■■■■■■■■■■■■
 18 |■■■■■■■■■■■■■■■■■■
 16 |■■■■■■■■■■■■■■■■
@@ -345,92 +195,82 @@ Story Points Remaining
  6 |■■■■■■
  4 |■■■■
  2 |■■
- 0 |
+ 0 | ← Target
    └─────────────────────────────────────────
    Day: 1  2  3  4  5  6  7  8  9  10
         ↑
-      Start (Feb 12)
+      Today (Day 0 - Planning)
 
-Ideal Burndown: 3.4 pts/day
-Target: Complete all 34 pts by Feb 25
+Ideal Burndown: 2 pts/day
+Target Completion: Day 10 (Feb 12, 2026)
 ```
-
----
-
-## 🔄 In Progress (0 pts)
-
-*Sprint starts Feb 12 - stories will be moved here as work begins*
-
----
-
-## ✅ Done (0 pts)
-
-*Completed stories will appear here during sprint*
 
 ---
 
 ## 🚧 Blockers & Risks
 
 ### Current Blockers
-**None** (Sprint not started yet)
+**None** (Sprint hasn't started yet)
 
-### Risks
+### Identified Risks
 
 | Risk | Probability | Impact | Mitigation |
 |------|------------|--------|------------|
-| Stripe API changes or issues | Low | High | Test thoroughly in sandbox, have rollback plan |
-| Tax/CRA content review delays (US-027) | Medium | Medium | Start content writing early, have backup reviewer |
-| Database migration issues (US-021) | Low | Medium | Test migration in staging first, have rollback script |
-| User testing delays | Medium | Low | Schedule testing sessions in advance |
+| Stripe testing complexity | Medium | High | Allocate extra time (12 hrs), use test mode extensively |
+| What-If slider bugs hard to fix | Medium | Medium | Timebox to 12 hours, defer if issues persist |
+| npm vulnerabilities can't be auto-fixed | Low | Medium | Document remaining issues, assess risk, create tickets for Sprint 3 |
+| Premium payment system breaks in production | Low | Critical | Extensive testing, rollback plan ready |
 
 ---
 
 ## 📅 Sprint Schedule
 
-### Week 1: Feb 12 - Feb 18
+### Week 1: Jan 30 - Feb 5
 
 | Day | Date | Focus | Events |
 |-----|------|-------|--------|
-| Wed | Feb 12 | Sprint Planning | Sprint 2 kickoff, team alignment |
-| Thu | Feb 13 | US-024: Stripe testing | Daily standup |
-| Fri | Feb 14 | US-021: Schema design | Daily standup |
-| Mon | Feb 17 | US-025 + US-026: Strategy UX | Daily standup |
-| Tue | Feb 18 | US-027: Content creation | Daily standup |
+| Thu | Jan 30 | Sprint Planning complete, start BUILD-FIX | Daily standup |
+| Fri | Jan 31 | Continue BUILD-FIX, start US-026 | Daily standup |
+| Mon | Feb 3 | Complete US-026, start US-025 | Daily standup, Backlog refinement |
+| Tue | Feb 4 | Complete US-025, start US-022 | Daily standup |
+| Wed | Feb 5 | Continue US-022 | Daily standup, Mid-sprint review |
 
-### Week 2: Feb 19 - Feb 25
+### Week 2: Feb 6 - Feb 12
 
 | Day | Date | Focus | Events |
 |-----|------|-------|--------|
-| Wed | Feb 19 | US-022: What-If testing | Daily standup, Backlog refinement |
-| Thu | Feb 20 | US-009: Skip button impl | Daily standup |
-| Fri | Feb 21 | Integration testing | Daily standup |
-| Mon | Feb 24 | Bug fixes & polish | Daily standup |
-| Tue | Feb 25 | Final testing & docs | Sprint Review, Retrospective |
+| Thu | Feb 6 | Continue US-022, start US-024 | Daily standup |
+| Fri | Feb 7 | US-024 payment testing | Daily standup |
+| Mon | Feb 10 | Continue US-024 | Daily standup |
+| Tue | Feb 11 | Complete US-024, final testing | Daily standup |
+| Wed | Feb 12 | Buffer day, documentation | Sprint Review, Retrospective |
 
 ---
 
 ## 💬 Daily Standup Notes
 
-### February 12, 2026
+### January 30, 2026 (Day 1)
 
-**Yesterday** (Sprint 1 ended):
-- [Team to fill in]
+**Yesterday**:
+- Sprint 1 retrospective completed
+- Sprint 2 planning completed
+- Committed to 20 story points (conservative)
 
-**Today** (Sprint 2 starts):
-- Sprint Planning
-- Review Sprint 2 goals and stories
-- Assign initial tasks
+**Today**:
+- Start BUILD-FIX (address ESLint warnings and npm vulnerabilities)
+- Review Sprint 1 action items
 
 **Blockers**:
 - None
 
 **Notes**:
-- Sprint 1 velocity will inform Sprint 3 planning
-- Focus on revenue (US-024) and UX improvements
+- Focus on quality this sprint (testing, bug fixes, tech debt)
+- Remember to use manual testing checklist (AI-2)
+- UAT admin dashboard this week (AI-7)
 
 ---
 
-### February 13, 2026
+### January 31, 2026 (Day 2)
 
 **Yesterday**:
 - [Team to fill in]
@@ -446,56 +286,91 @@ Target: Complete all 34 pts by Feb 25
 ## 📊 Sprint Metrics
 
 ### Velocity
-- **Committed**: 34 story points
-- **Completed**: TBD (will track during sprint)
-- **Sprint 1 Velocity**: [To be measured from Sprint 1 results]
+- **Committed**: 20 story points
+- **Completed**: 0 story points (TBD)
+- **Projected**: 20 story points (target 100%)
+- **Burn Rate**: TBD (ideal: 2 pts/day)
+- **Team Velocity**: Establishing baseline (Sprint 1 was deployment-focused)
 
 ### Quality Metrics
-- **Bugs Found**: 0
+- **Bugs Found**: 0 (TBD)
 - **Tests Written**: TBD
 - **Test Pass Rate**: TBD
 - **Code Review**: All changes to be reviewed
+- **Manual Testing**: Checklist to be completed for each story
 
 ### Team Happiness
-- **Morale**: TBD (check mid-sprint)
+- **Morale**: TBD (will track throughout sprint)
 - **Collaboration**: TBD
-- **Blockers**: 0 (as of planning)
+- **Blockers**: 0
 
 ---
 
 ## 🎯 Sprint Goals Review
 
 ### Primary Goal
-🎯 Enable premium monetization and verify payment system works
+✅ Enable premium monetization through comprehensive Stripe testing
+✅ Improve withdrawal strategy UX (discoverability + display)
 
 ### Secondary Goals
-🎯 Improve withdrawal strategy UX to reduce user churn
-🎯 Empower users with tax-saving educational guidance
-🎯 Remove onboarding friction (12 users stuck)
+✅ Fix What-If slider bugs
+✅ Eliminate technical debt (build warnings, vulnerabilities)
 
 ### Success Criteria
-- [ ] Premium subscription flow works end-to-end
-- [ ] All payment test cases pass (success, failure, webhooks)
-- [ ] Withdrawal strategy selector is prominent and clear
-- [ ] Educational guidance helps users understand withdrawal order
-- [ ] What-If sliders work reliably
-- [ ] Users can skip real estate step
-- [ ] All committed stories completed
+- [ ] Premium subscription system fully tested and verified
+- [ ] Withdrawal strategy selector more discoverable
+- [ ] What-If sliders work correctly
+- [ ] Zero ESLint warnings
+- [ ] Zero critical/high npm vulnerabilities
+- [ ] All committed stories completed (20/20 pts = 100%)
 - [ ] No critical bugs introduced
 - [ ] Team morale remains high
+- [ ] Manual testing checklist completed for each story
+- [ ] UAT performed on user-facing features
 
 ---
 
-## 📝 Sprint Retrospective (To be filled on Feb 25)
+## 📝 Definition of Done (Updated for Sprint 2)
 
-### What Went Well
-- [Team to fill in after sprint]
+A user story is "Done" when:
 
-### What Could Be Improved
-- [Team to fill in after sprint]
+### Code Quality
+- [x] Code written and committed to version control
+- [x] Code follows project style guidelines
+- [x] **No ESLint warnings** (updated from Sprint 1)
+- [x] No console errors in browser
 
-### Action Items for Sprint 3
-- [Team to fill in after sprint]
+### Testing
+- [x] Unit tests written and passing (where applicable)
+- [x] Integration tests passing (where applicable)
+- [x] **Manual testing checklist completed** (NEW)
+- [x] Edge cases tested
+- [x] **Performance tested with realistic data** (NEW)
+
+### Review
+- [x] Code review completed by peer
+- [x] Feedback addressed
+- [x] **User Acceptance Testing performed** (NEW)
+- [x] Product owner reviewed feature
+
+### Documentation
+- [x] README updated (if needed)
+- [x] API documentation updated (if needed)
+- [x] User-facing documentation updated (if needed)
+- [x] Code comments added for complex logic
+- [x] **Rollback procedure documented** (NEW)
+
+### Deployment
+- [x] Deployed to staging environment
+- [x] Smoke tests passed in staging
+- [x] Deployed to production
+- [x] Verified working in production
+
+### Acceptance
+- [x] All acceptance criteria met
+- [x] Product owner approved
+- [x] No critical bugs
+- [x] Performance acceptable
 
 ---
 
@@ -503,42 +378,47 @@ Target: Complete all 34 pts by Feb 25
 
 - **Product Backlog**: [AGILE_BACKLOG.md](AGILE_BACKLOG.md)
 - **Sprint 1 Board**: [SPRINT_BOARD.md](SPRINT_BOARD.md)
+- **Sprint 1 Retrospective**: [SPRINT_1_RETROSPECTIVE.md](SPRINT_1_RETROSPECTIVE.md)
 - **GitHub Repo**: https://github.com/marcosclavier/retirezest
+- **Vercel Dashboard**: https://vercel.com/juans-projects-f3cf093e/webapp
 - **Stripe Dashboard**: https://dashboard.stripe.com
-- **Vercel Dashboard**: https://vercel.com/dashboard
 
 ---
 
-## 📋 Story Dependencies
+## 📋 Sprint 2 Action Items from Sprint 1 Retrospective
 
-```
-US-024 (Premium Payments) - Independent, start immediately
-    ↓
-US-021 (Investment Yields) - Independent, can run parallel
-    ↓
-US-025 (Strategy Discoverability) ──┐
-                                    ├─→ All integrate together
-US-026 (Display Strategy) ──────────┤   for complete UX
-                                    │
-US-027 (Withdrawal Guidance) ───────┘
-    ↓
-US-022 (What-If Testing) - Independent, QA focus
-    ↓
-US-009 (Skip Real Estate) - Independent, quick win
-```
+These action items from Sprint 1 retrospective are incorporated into Sprint 2:
 
-**Recommended Execution Order**:
-1. Start US-024 and US-021 in parallel (different teams)
-2. Begin US-025, US-026, US-027 together (frontend/content collaboration)
-3. QA starts US-022 mid-sprint
-4. US-009 as quick win toward sprint end
+| ID | Action Item | Status | How Incorporated |
+|----|-------------|--------|------------------|
+| AI-1 | Improve sprint planning accuracy | ✅ Done | Used for Sprint 2 planning (20 pts vs 34 pts) |
+| AI-2 | Implement manual testing checklist | 🔄 In Progress | Added to Definition of Done |
+| AI-3 | Define monitoring schedule & alerts | 📋 To Do | Week 1 task (by Feb 3) |
+| AI-4 | Establish documentation lifecycle | 📋 To Do | Ongoing throughout sprint |
+| AI-5 | Fix build warnings & vulnerabilities | ✅ Committed | BUILD-FIX story (2 pts) |
+| AI-7 | UAT for admin dashboard | 🔄 In Progress | Week 1 (Jan 29 - Feb 5) |
+| AI-8 | Document rollback procedures | 📋 To Do | Added to Definition of Done |
+
+**Deferred to Sprint 3**:
+- AI-6: Add pagination to admin dashboard (5 hrs)
+- AI-9: Expand re-engagement criteria (4 hrs)
+- AI-10: Update Prisma to v7 (6 hrs)
 
 ---
 
-**Sprint Status**: 📋 **PLANNED - Starts Feb 12, 2026**
-**Total Stories**: 7
-**Total Points**: 34 / 40 capacity (85% utilization)
-**Last Updated**: January 29, 2026
-**Next Standup**: February 12, 2026 @ 9:00 AM
-**Sprint Review**: February 25, 2026 @ 2:00 PM
-**Retrospective**: February 25, 2026 @ 3:00 PM
+## 🎓 Sprint 2 Learning Goals
+
+Based on Sprint 1 retrospective, we want to learn:
+
+1. **Accurate Velocity for Development Work**: Sprint 1 was deployment-focused. Sprint 2 will establish baseline for new development.
+2. **Manual Testing Effectiveness**: Does the manual testing checklist catch bugs that automated tests miss?
+3. **UAT Value**: Does User Acceptance Testing reveal usability issues before production?
+4. **Realistic Estimation**: Is 20 story points the right capacity for a 2-week development sprint?
+
+---
+
+**Last Updated**: January 29, 2026 (Sprint Planning)
+**Next Standup**: January 30, 2026 @ 9:00 AM EST
+**Mid-Sprint Review**: February 5, 2026 @ 2:00 PM EST
+**Sprint Review**: February 12, 2026 @ 2:00 PM EST
+**Sprint Retrospective**: February 12, 2026 @ 3:00 PM EST

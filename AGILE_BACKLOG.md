@@ -245,6 +245,18 @@
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
+| **US-031** | **Evaluate Early Retirement Feature Value** | **5** | **P2** | **📋 To Do** |
+| **Description** | As a product owner, I want to evaluate whether the early retirement calculator provides meaningful value to users so that we can decide whether to invest in improving it or deprecate it |
+| **Acceptance Criteria** | - [ ] Usage analytics reviewed (how many users access early retirement feature?)<br>- [ ] User feedback collected (surveys, interviews with users who used it)<br>- [ ] Feature accuracy assessed (does it provide accurate results?)<br>- [ ] Value proposition clarified (what problem does it solve?)<br>- [ ] Comparison with main simulation feature (is it redundant?)<br>- [ ] Recommendation made (keep, improve, or deprecate)<br>- [ ] Decision documented with rationale |
+| **Tasks** | - [ ] Review analytics:<br>  - [ ] How many users access /early-retirement page?<br>  - [ ] Completion rate (how many fill out the form?)<br>  - [ ] Retention: Do users who use it stay longer?<br>  - [ ] Conversion: Does it lead to premium subscriptions?<br><br>- [ ] User research:<br>  - [ ] Survey users who used early retirement feature<br>  - [ ] Interview 3-5 users for qualitative feedback<br>  - [ ] Ask: "What value did you get from this feature?"<br>  - [ ] Ask: "How does it compare to the main simulation?"<br><br>- [ ] Technical assessment:<br>  - [ ] Review calculation accuracy<br>  - [ ] Compare with main simulation results<br>  - [ ] Identify any bugs or issues<br>  - [ ] Assess maintenance burden (code complexity)<br><br>- [ ] Feature comparison:<br>  - [ ] What does early retirement do that main simulation doesn't?<br>  - [ ] Is there overlap/redundancy?<br>  - [ ] Could main simulation replace it with minor changes?<br><br>- [ ] Recommendation:<br>  - [ ] Option A: Keep as-is (if high value, low maintenance)<br>  - [ ] Option B: Improve (if high potential, needs work)<br>  - [ ] Option C: Deprecate (if low value, high maintenance)<br>  - [ ] Document decision with data and rationale |
+| **Technical Notes** | **Current Implementation:**<br>- Route: `/early-retirement`<br>- API: `/api/early-retirement/calculate`, `/api/early-retirement/profile`<br>- Component: `app/(dashboard)/early-retirement/page.tsx`<br><br>**Questions to Answer:**<br>1. Usage: How many monthly active users?<br>2. Accuracy: Does it match main simulation results?<br>3. Uniqueness: What's different from main simulation?<br>4. Maintenance: How much code is dedicated to this?<br>5. Value: Would users miss it if we removed it?<br><br>**Data Sources:**<br>- Google Analytics or similar (page views, time on page)<br>- Database: Count users who hit `/api/early-retirement/*`<br>- User feedback: In-app surveys, email outreach<br>- Support tickets: Any issues reported with early retirement?<br><br>**Hypothesis:**<br>Early retirement feature may be redundant if main simulation can handle early retirement scenarios. Evaluate if consolidation makes sense. |
+| **User Impact** | **Medium** - If feature is low-value, deprecating it simplifies the product. If high-value, we should invest in improving it. Need data to decide. |
+| **Success Metrics** | - [ ] Usage data collected for last 90 days<br>- [ ] At least 5 users surveyed<br>- [ ] Feature accuracy verified (matches main simulation within 5%)<br>- [ ] Clear recommendation made (keep/improve/deprecate)<br>- [ ] Decision documented and shared with team |
+| **Dependencies** | - Analytics access (Google Analytics, Vercel Analytics, or similar)<br>- Database access to query API usage<br>- User contact list for surveys/interviews<br>- Product roadmap context (what else are we building?) |
+| **Possible Outcomes** | **Outcome 1: High Value → Keep & Improve**<br>- Evidence: High usage (>20% of users), positive feedback, unique value<br>- Action: Add to roadmap for improvements<br>- Investment: 8-13 story points for enhancements<br><br>**Outcome 2: Medium Value → Keep As-Is**<br>- Evidence: Moderate usage (5-20% of users), neutral feedback<br>- Action: Maintain but don't prioritize improvements<br>- Investment: Bug fixes only<br><br>**Outcome 3: Low Value → Deprecate**<br>- Evidence: Low usage (<5% of users), negative/no feedback, redundant with main simulation<br>- Action: Plan deprecation over 2-3 months<br>- Investment: 2-3 story points for graceful sunset (notifications, redirects) |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
 | **US-029** | **Modularize Simulation Routine** | **13** | **P2** | **📋 Backlog** |
 | **Description** | As a developer, I want the simulation routine refactored into smaller, modular functions so that the code is easier to maintain, test, and extend |
 | **Acceptance Criteria** | - [ ] simulation.py refactored into logical modules (tax calculations, withdrawals, benefits, cash flow)<br>- [ ] Each module has clear single responsibility<br>- [ ] Module interfaces well-defined with type hints<br>- [ ] Unit tests added for each module (>80% coverage)<br>- [ ] No change in simulation output (regression tests pass)<br>- [ ] Code complexity reduced (cyclomatic complexity <10 per function)<br>- [ ] Documentation added for each module |
@@ -574,10 +586,10 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 30 ⬆️ New: US-030 (Security Audit)
-**Completed**: 5 (17%)
+**Total User Stories**: 31 ⬆️ New: US-031 (Early Retirement Evaluation)
+**Completed**: 5 (16%)
 **In Progress**: 0 (0%) - Sprint 1 complete
-**To Do**: 25 (83%)
+**To Do**: 26 (84%)
 
 **By Priority**:
 - P0 (Critical): 3 stories (2 done, 1 to do)
@@ -592,7 +604,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
 - Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do)
-- Epic 5 (Simulation): 5 stories, 47 pts (2 done, 3 to do)
+- Epic 5 (Simulation): 6 stories, 52 pts (2 done, 4 to do) ⬆️ New: US-031 (Early Retirement Eval)
 - Epic 6 (Testing): 3 stories, 26 pts (all backlog)
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
