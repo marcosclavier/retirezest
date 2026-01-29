@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -146,16 +146,7 @@ export default function AdminDashboard() {
   const [deletionDays, setDeletionDays] = useState('30');
   const [feedbackFilter, setFeedbackFilter] = useState<string>('all');
 
-  useEffect(() => {
-    loadActivityData();
-    loadFeedbackData();
-  }, [days]);
-
-  useEffect(() => {
-    loadDeletionData();
-  }, [deletionDays]);
-
-  const loadActivityData = async () => {
+  const loadActivityData = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/activity?days=${days}`);
       if (response.status === 403) {
@@ -172,9 +163,9 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [days, router]);
 
-  const loadFeedbackData = async () => {
+  const loadFeedbackData = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (feedbackFilter !== 'all') {
@@ -189,9 +180,9 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Failed to load feedback data:', error);
     }
-  };
+  }, [feedbackFilter]);
 
-  const loadDeletionData = async () => {
+  const loadDeletionData = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/deletions?days=${deletionDays}`);
       if (response.status === 403) return;
@@ -202,7 +193,16 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Failed to load deletion data:', error);
     }
-  };
+  }, [deletionDays]);
+
+  useEffect(() => {
+    loadActivityData();
+    loadFeedbackData();
+  }, [loadActivityData, loadFeedbackData]);
+
+  useEffect(() => {
+    loadDeletionData();
+  }, [loadDeletionData]);
 
   const updateFeedbackStatus = async (feedbackId: string, newStatus: string) => {
     try {

@@ -1240,7 +1240,8 @@ export default function ScenariosPage() {
                   label={{ value: 'Avg Rate (%)', angle: 90, position: 'insideRight' }}
                 />
                 <Tooltip
-                  formatter={(value: number, name: string) => {
+                  formatter={(value: number | undefined, name: string | undefined) => {
+                    if (!value) return '0';
                     if (name === 'totalTax') return formatCurrency(value);
                     return formatPercent(value);
                   }}
@@ -1268,7 +1269,7 @@ export default function ScenariosPage() {
                   label={{ value: 'Estate Value ($)', angle: -90, position: 'insideLeft' }}
                   tickFormatter={(value) => formatCurrency(value)}
                 />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Tooltip formatter={(value: number | undefined) => value ? formatCurrency(value) : '0'} />
                 <Legend />
                 <Bar dataKey="estate" fill="#3b82f6" name="After-Tax Estate" />
               </BarChart>
@@ -1293,7 +1294,7 @@ export default function ScenariosPage() {
                   label={{ value: 'Benefits ($)', angle: -90, position: 'insideLeft' }}
                   tickFormatter={(value) => formatCurrency(value)}
                 />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Tooltip formatter={(value: number | undefined) => value ? formatCurrency(value) : '0'} />
                 <Legend />
                 <Bar dataKey="cpp" stackId="a" fill="#10b981" name="CPP" />
                 <Bar dataKey="oas" stackId="a" fill="#3b82f6" name="OAS" />
