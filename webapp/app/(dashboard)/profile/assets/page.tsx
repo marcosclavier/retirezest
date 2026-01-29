@@ -734,6 +734,69 @@ export default function AssetsPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* GIC-specific display fields */}
+                    {asset.type === 'gic' && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {asset.gicMaturityDate && (
+                            <div>
+                              <span className="text-sm text-gray-500">Maturity Date: </span>
+                              <span className="font-medium text-gray-900">
+                                {new Date(asset.gicMaturityDate).toLocaleDateString('en-CA', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          {asset.gicInterestRate !== null && (
+                            <div>
+                              <span className="text-sm text-gray-500">Interest Rate: </span>
+                              <span className="font-medium text-gray-900">
+                                {asset.gicInterestRate}%
+                              </span>
+                            </div>
+                          )}
+                          {asset.gicTermMonths !== null && (
+                            <div>
+                              <span className="text-sm text-gray-500">Term: </span>
+                              <span className="font-medium text-gray-900">
+                                {asset.gicTermMonths} months ({Math.floor(asset.gicTermMonths / 12)} years)
+                              </span>
+                            </div>
+                          )}
+                          {asset.gicCompoundingFrequency && (
+                            <div>
+                              <span className="text-sm text-gray-500">Compounding: </span>
+                              <span className="font-medium text-gray-900">
+                                {asset.gicCompoundingFrequency.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </span>
+                            </div>
+                          )}
+                          {asset.gicReinvestStrategy && (
+                            <div>
+                              <span className="text-sm text-gray-500">At Maturity: </span>
+                              <span className="font-medium text-gray-900">
+                                {asset.gicReinvestStrategy === 'cash-out' && 'Cash Out'}
+                                {asset.gicReinvestStrategy === 'auto-renew' && 'Auto-Renew'}
+                                {asset.gicReinvestStrategy === 'transfer-to-tfsa' && 'Transfer to TFSA'}
+                                {asset.gicReinvestStrategy === 'transfer-to-nonreg' && 'Transfer to Non-Reg'}
+                              </span>
+                            </div>
+                          )}
+                          {asset.gicIssuer && (
+                            <div>
+                              <span className="text-sm text-gray-500">Issuer: </span>
+                              <span className="font-medium text-gray-900">
+                                {asset.gicIssuer}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex space-x-2 ml-4">
                     <button
