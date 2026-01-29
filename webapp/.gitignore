@@ -59,3 +59,5 @@ docs/STRIPE_PRODUCTION_CREDENTIALS.md
 
 # email tracking data (contains user emails)
 email_tracking.json
+reactivation_tracking_results.json
+reactivation_check.log
