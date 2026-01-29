@@ -591,8 +591,8 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
   },
   {
     value: 'minimize-income',
-    label: 'Minimize Income',
-    description: 'Minimizes taxable income to preserve benefits (GIS, OAS)',
+    label: 'Income Minimization (GIS-Optimized)',
+    description: 'Minimizes taxable income to preserve government benefits like GIS and avoid OAS clawback',
   },
   {
     value: 'rrif-splitting',
@@ -620,6 +620,21 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
     description: 'Ideal for couples with income imbalance. Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
   },
 ];
+
+/**
+ * Get the display name for a withdrawal strategy
+ */
+export function getStrategyDisplayName(strategy: WithdrawalStrategy | string): string {
+  const option = strategyOptions.find(opt => opt.value === strategy);
+  return option?.label || strategy;
+}
+
+/**
+ * Check if a strategy is the default strategy
+ */
+export function isDefaultStrategy(strategy: WithdrawalStrategy | string): boolean {
+  return strategy === defaultHouseholdInput.strategy;
+}
 
 // Province options
 export const provinceOptions: { value: Province; label: string }[] = [

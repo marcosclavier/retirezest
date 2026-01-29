@@ -1,9 +1,10 @@
 'use client';
 
-import { SimulationResponse } from '@/lib/types/simulation';
+import { SimulationResponse, getStrategyDisplayName, isDefaultStrategy } from '@/lib/types/simulation';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, AlertTriangle, AlertCircle, TrendingDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface ResultsHeroSectionProps {
   result: SimulationResponse;
@@ -116,29 +117,20 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
 
   // Get person names for title
   const p1Name = result.household_input?.p1?.name || 'Person 1';
-  const p2Name = result.household_input?.p2?.name || 'Person 2';
+  const p2Name = result.household_input?.p2?.name || 'Partner 2';
   const hasP2 = result.household_input?.p2 && result.household_input.p2.name;
 
-  // Get strategy name (convert API format to display format)
-  const strategyMap: Record<string, string> = {
-    'minimize-income': 'Minimize Income',
-    'balanced': 'Balanced',
-    'rrif-splitting': 'RRIF Splitting',
-    'corporate-optimized': 'Corporate Optimized',
-    'capital-gains-optimized': 'Capital Gains Optimized',
-    'tfsa-first': 'TFSA First',
-    'manual': 'Manual'
-  };
-  const strategyName = result.household_input?.strategy
-    ? strategyMap[result.household_input.strategy] || result.household_input.strategy
-    : '';
+  // Get strategy name using helper function
+  const strategy = result.household_input?.strategy;
+  const strategyName = strategy ? getStrategyDisplayName(strategy) : '';
+  const isDefault = strategy ? isDefaultStrategy(strategy) : false;
 
   // Create title with names
   const simulationTitle = hasP2
     ? `Retirement Simulation for ${p1Name} and ${p2Name}`
     : `Retirement Simulation for ${p1Name}`;
 
-  console.log('📝 Title variables:', { p1Name, p2Name, hasP2, strategyName, simulationTitle });
+  console.log('📝 Title variables:', { p1Name, p2Name, hasP2, strategyName, isDefault, simulationTitle });
 
   return (
     <Card className={`${healthLevel.lightBg} ${healthLevel.borderColor} border-2 overflow-hidden`}>
@@ -148,9 +140,21 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             {simulationTitle}
           </h2>
-          <p className="text-sm md:text-base text-gray-600">
-            {strategyName && `Strategy: ${strategyName} • `}Health Score: Based on your inputs and projected retirement timeline
-          </p>
+          <div className="flex items-center justify-center gap-2 text-sm md:text-base text-gray-600 mb-1">
+            {strategyName && (
+              <>
+                <span>Strategy:</span>
+                <span className="font-medium text-gray-900">{strategyName}</span>
+                {isDefault && (
+                  <Badge variant="secondary" className="text-xs">
+                    Default
+                  </Badge>
+                )}
+                <span>•</span>
+              </>
+            )}
+            <span>Health Score: Based on your inputs and projected retirement timeline</span>
+          </div>
         </div>
 
         {/* Health Score Display */}
