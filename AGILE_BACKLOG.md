@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026 (Added US-038: Dashboard UX Investigation from user feedback)
+**Last Updated**: January 29, 2026 (Added US-038: Income Timing Bug, US-039: Pension Start Dates from user feedback)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -58,7 +58,7 @@
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
-| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | 📋 To Do |
+| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | ✅ Done (Pre-existing) |
 | US-013 | RRIF Strategy Validation | 8 | P1 🟡 | Epic 5: Simulation | 📋 To Do |
 | US-003 | Database Migration - Pension Indexing (Backend) | 8 | P1 🟡 | Epic 1: Retention | 📋 To Do |
 | AI-2.7 | E2E Test for Withdrawal Strategy Selector | 3 | P1 🟡 | Epic 6: Testing | 📋 To Do |
@@ -100,7 +100,7 @@
 | US-029 | Fix Default Withdrawal Strategy | 1 | P0 🔴 | Epic 4: UX | ✅ Done |
 | US-022 | What-If Scenario Slider Testing & Fixes | 5 | P1 🟡 | Epic 6: Testing | ✅ Done |
 | US-027 | Educational Guidance - Withdrawal Order | 5 | P1 🟡 | Epic 4: UX | 📋 To Do |
-| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | 📋 To Do |
+| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | ✅ Done (Pre-existing) |
 | US-021 | Configurable Investment Yields | 8 | P1 🟡 | Epic 3: Investment | 📋 Deferred |
 
 **Total Story Points**: 20 committed / 40 capacity (50% utilization - conservative sprint)
@@ -271,7 +271,22 @@
 | **Priority Justification** | **P0 (Critical)** because:<br>1. **Strongest negative signal** - 1/5 is rock bottom satisfaction<br>2. **High priority by algorithm** - System flagged as priority 4<br>3. **User retention risk** - Dissatisfied users churn and don't return<br>4. **Word-of-mouth risk** - Negative experiences spread to friends/family<br>5. **Product reputation** - Dashboard is first impression after signup<br>6. **Pattern risk** - This may be symptom of broader UX issues<br>7. **Quick ROI** - Fixing dashboard UX benefits all users immediately |
 | **Success Metrics** | **Investigation Phase:**<br>- [ ] Root cause identified within 2 weeks<br>- [ ] 3+ specific UX issues documented<br>- [ ] User responds to outreach email (stretch goal)<br><br>**Fix Phase:**<br>- [ ] Dashboard satisfaction score increases from 1/5 to >3.5/5 average<br>- [ ] Feedback form completion rate increases from 0% to >60%<br>- [ ] Zero 1/5 satisfaction scores in next 30 days<br>- [ ] Dashboard page bounce rate decreases by 20%<br>- [ ] User engagement metrics improve (time on page, actions taken)<br><br>**Long-term:**<br>- [ ] Dashboard satisfaction maintains >4/5 average<br>- [ ] Less than 5% of feedback scores are ≤2<br>- [ ] Support tickets about dashboard confusion decrease by 50%<br>- [ ] User retention improves (fewer churned users citing dashboard issues) |
 | **Related Stories** | - US-028 (Help Section) - Dashboard could link to help content<br>- US-027 (Educational Guidance) - Dashboard could surface key guidance<br>- Feedback System (already implemented) - Improve form UX |
-| **Next Steps** | 1. ✅ Create user story (US-038) and add to backlog<br>2. Query user's simulation history and profile data<br>3. Audit dashboard UI/UX comprehensively<br>4. Draft outreach email to rightfooty218@gmail.com<br>5. Prioritize quick wins for Sprint 3 or 4<br>6. Set up dashboard analytics for ongoing monitoring |
+| **Next Steps** | 1. ✅ Create user story (US-038) and add to backlog<br>2. ✅ Email sent to user requesting clarification on "pics" (Jan 29, 2026)<br>3. Query user's simulation history and profile data<br>4. Wait for user response to understand issue<br>5. Investigate and fix reported issue<br>6. Follow up with corrected results after fix deployed |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-039** | **Pension Start Date Configuration & Simulation Integration** | **5** | **P1** | **📋 To Do** |
+| **Description** | As a user with pension income, I want to specify when my pension payments will start (age or specific year) and have this accurately reflected in my retirement simulations so that my projections show correct income timing |
+| **User Story** | As a retiree with a company pension, I want to configure when my pension payments begin (e.g., at age 60, or in year 2028) so that my retirement simulation accurately shows $0 pension income before that date and the correct pension amount starting from that date forward. |
+| **Acceptance Criteria** | **Data Model & Input:**<br>- [ ] Pension data model includes `startAge` field (integer, 50-85)<br>- [ ] Pension data model includes `startYear` field (optional, alternative to age)<br>- [ ] Pension input form asks "When will pension payments start?"<br>- [ ] User can choose: "At age X" OR "In year YYYY"<br>- [ ] Default pension start age is 65 if not specified<br>- [ ] Validation: startAge must be ≥ current age<br>- [ ] Validation: startYear must be ≥ current year<br>- [ ] Help text explains: "Enter the age when you will start receiving pension payments"<br><br>**Simulation Integration:**<br>- [ ] Simulation shows $0 pension income before start age/year<br>- [ ] Simulation shows full pension amount starting from start age/year<br>- [ ] Pension income properly indexed for inflation (if indexing enabled)<br>- [ ] Pension income included in taxable income calculations<br>- [ ] Pension income factored into OAS/GIS clawback calculations<br>- [ ] Year-by-year projection table shows correct pension timing<br>- [ ] Cash flow chart visualizes pension income starting at correct age<br><br>**Edge Cases:**<br>- [ ] User already receiving pension (startAge = currentAge) works correctly<br>- [ ] Future pension (startAge 10+ years away) works correctly<br>- [ ] Pension starting mid-year (prorated for first year)<br>- [ ] Multiple pensions with different start dates all handled correctly<br>- [ ] Partner has different pension start age than user<br><br>**Testing:**<br>- [ ] Test pension starting at age 55 (early retirement)<br>- [ ] Test pension starting at age 60 (common early pension)<br>- [ ] Test pension starting at age 65 (standard retirement)<br>- [ ] Test pension already started (age 70, pension at 65)<br>- [ ] Test pension 5 years in future<br>- [ ] Test multiple pensions (DB + DC) with different start ages<br>- [ ] Verify inflation indexing works correctly over time<br>- [ ] Verify pension income affects GIS eligibility calculations |
+| **Tasks** | **Week 1: Backend Implementation (8 hours)**<br>- [ ] Update Prisma schema: Add `startAge` and `startYear` to Pension model<br>- [ ] Create database migration<br>- [ ] Update pension API routes to save/retrieve start date<br>- [ ] Update Python backend simulation to handle pension start timing:<br>  - [ ] Modify `juan-retirement-app/modules/simulation.py`<br>  - [ ] Add logic: `if current_age < pension.startAge: pension_income = 0`<br>  - [ ] Ensure pension properly starts at specified age<br>  - [ ] Handle inflation indexing from start year forward<br>- [ ] Write unit tests for pension timing logic<br><br>**Week 2: Frontend Implementation (6 hours)**<br>- [ ] Update pension input form:<br>  - [ ] Add "Pension Start Age" field (number input, 50-85)<br>  - [ ] Add help tooltip explaining start age<br>  - [ ] Add validation (must be ≥ current age)<br>  - [ ] Pre-fill with sensible default (65 or retirement age)<br>- [ ] Update TypeScript types (`webapp/lib/types/simulation.ts`)<br>- [ ] Update pension form component (`components/PensionForm.tsx`)<br>- [ ] Test form saves and retrieves start age correctly<br><br>**Week 3: Simulation Results Display (4 hours)**<br>- [ ] Update cash flow visualization to show pension starting at correct age<br>- [ ] Update year-by-year income table to show $0 before start age<br>- [ ] Add pension timeline indicator in results<br>- [ ] Test with multiple scenarios (early/late pension start)<br><br>**Week 4: Testing & Documentation (4 hours)**<br>- [ ] Create comprehensive test scenarios<br>- [ ] Run regression tests (ensure existing pensions still work)<br>- [ ] Test edge cases (already started, far future, multiple pensions)<br>- [ ] Update user documentation about pension start dates<br>- [ ] Create FAQ: "When should I start my pension?" |
+| **Technical Notes** | **Database Schema Update:**<br>```prisma<br>model Pension {<br>  id                  String   @id @default(cuid())<br>  userId              String<br>  pensionName         String   // e.g., "Teacher's Pension"<br>  monthlyAmount       Float    // Monthly pension amount<br>  inflationIndexed    Boolean  @default(true)<br>  startAge            Int?     @default(65) // NEW: Age when pension starts<br>  startYear           Int?     // NEW: Alternative to startAge<br>  createdAt           DateTime @default(now())<br>  updatedAt           DateTime @updatedAt<br>  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)<br>}<br>```<br><br>**Python Backend Logic (simulation.py):**<br>```python<br>def calculate_pension_income(pension, current_age, current_year):<br>    # Determine start age/year<br>    start_age = pension.get('startAge', 65)<br>    start_year = pension.get('startYear')<br>    <br>    # Check if pension has started<br>    if start_year:<br>        if current_year < start_year:<br>            return 0  # Pension hasn't started yet<br>    else:<br>        if current_age < start_age:<br>            return 0  # Pension hasn't started yet<br>    <br>    # Pension has started - return monthly amount (adjusted for inflation if indexed)<br>    monthly_amount = pension['monthlyAmount']<br>    annual_amount = monthly_amount * 12<br>    <br>    # Apply inflation indexing if enabled<br>    if pension.get('inflationIndexed', True):<br>        years_since_start = current_age - start_age<br>        inflation_rate = 0.02  # 2% default<br>        annual_amount *= (1 + inflation_rate) ** years_since_start<br>    <br>    return annual_amount<br>```<br><br>**Frontend Form Component:**<br>```tsx<br>// webapp/components/PensionForm.tsx<br><Input<br>  type="number"<br>  label="Pension Start Age"<br>  min={currentAge}<br>  max={85}<br>  value={pension.startAge ?? 65}<br>  onChange={(e) => updatePension({ startAge: parseInt(e.target.value) })}<br>  helpText="Age when you will start receiving pension payments"<br>  required<br>/><br>```<br><br>**Common Pension Start Ages:**<br>- **55-60**: Early retirement pensions (often reduced amounts)<br>- **60-65**: Bridge pensions (until CPP/OAS starts)<br>- **65**: Standard retirement age (most common)<br>- **65+**: Deferred pensions (sometimes with increase)<br><br>**Files to Modify:**<br>1. `webapp/prisma/schema.prisma` - Add startAge/startYear fields<br>2. `juan-retirement-app/modules/simulation.py` - Pension timing logic<br>3. `webapp/components/PensionForm.tsx` - Add start age input<br>4. `webapp/lib/types/simulation.ts` - Update TypeScript types<br>5. `webapp/app/api/pensions/route.ts` - Save/retrieve start date<br>6. `webapp/components/simulation/CashFlowChart.tsx` - Show pension timing |
+| **User Impact** | **High** - Many users have pensions that don't start immediately at retirement. Without this feature, simulations show incorrect income timing, leading to inaccurate projections and poor financial planning decisions. This is especially critical for early retirees (age 55-60) whose pensions may not start until 60-65. |
+| **Known Issues** | **Current Implementation Gap:**<br>- Current system assumes all pensions start immediately<br>- No way to specify future pension start date<br>- Simulations may overstate early retirement income<br>- Users manually adjust by creating separate scenarios<br><br>**User Pain Points:**<br>- "My pension doesn't start until age 60, but simulation shows income at 55"<br>- "How do I model bridge pension vs full pension?"<br>- "Simulation assumes I get pension now, but I'm 5 years away"<br><br>**Related to US-038**: If user's feedback "pics come due" refers to pension start dates (not CPP/OAS), this story addresses that issue. |
+| **Dependencies** | - Prisma schema migration capability<br>- Python backend simulation engine access<br>- Pension data already captured in user profiles<br>- Related to US-003 (Pension Indexing) - both enhance pension modeling |
+| **Priority Justification** | **P1 (High)** because:<br>1. **Accuracy critical** - Income timing is fundamental to retirement planning<br>2. **Common scenario** - Many users have pensions with future start dates<br>3. **Easy to implement** - Relatively straightforward 5-pt story<br>4. **High ROI** - Fixes projections for ~30-40% of users with pensions<br>5. **User feedback driven** - May be related to US-038 user complaint<br>6. **Complements US-038** - If "pics" = pensions, this story solves it |
+| **Success Metrics** | - [ ] 100% of pensions with future start dates show $0 income before start<br>- [ ] Pension income starts exactly at specified age/year<br>- [ ] Inflation indexing works correctly from start date<br>- [ ] Zero user complaints about incorrect pension timing<br>- [ ] Users report improved accuracy (survey: >80% say "accurate")<br>- [ ] Regression tests pass (existing pensions still work) |
+| **Related Stories** | - US-038 (Fix Income Timing Bug) - May be the same issue<br>- US-003 (Pension Indexing) - Both improve pension modeling<br>- US-027 (Educational Guidance) - Document pension start date strategies |
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -296,8 +311,8 @@
 | **Dependencies** | - US-027 (Withdrawal Order Guidance) - include in help content<br>- US-025 (Strategy Discoverability) - document strategies in help<br>- All major features should be stable before documenting |
 | **Success Metrics** | - [ ] Help center visited by 40%+ of new users<br>- [ ] Average help session duration >3 minutes (reading content)<br>- [ ] Support ticket volume decreases by 30%<br>- [ ] User satisfaction with help content >4/5<br>- [ ] 90%+ of users can find answers to common questions<br>- [ ] Search successfully finds relevant content 80%+ of time |
 
-**Total Story Points**: 15 → 20 → 28 → 33
-**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025 (✅), US-026 (✅), US-027, US-028, US-029 (✅), US-038
+**Total Story Points**: 15 → 20 → 28 → 33 → 38
+**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025 (✅), US-026 (✅), US-027, US-028, US-029 (✅), US-038, US-039
 
 ---
 
@@ -747,14 +762,14 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 35 ⬆️ New: US-036 (RRIF Tax Withholding), US-037 (Real Estate in Strategies)
+**Total User Stories**: 36 ⬆️ New: US-036 (RRIF Tax Withholding), US-037 (Real Estate), US-038 (Income Timing Bug), US-039 (Pension Start Dates)
 **Completed**: 5 (14%)
 **In Progress**: 0 (0%) - Sprint 2 complete
-**To Do**: 30 (86%)
+**To Do**: 31 (86%)
 
 **By Priority**:
-- P0 (Critical): 3 stories (2 done, 1 to do)
-- P1 (High): 13 stories (2 done, 11 to do) ⬆️ New: US-034 (Monetization)
+- P0 (Critical): 4 stories (2 done, 2 to do) ⬆️ New: US-038 (Income Timing Bug)
+- P1 (High): 14 stories (2 done, 12 to do) ⬆️ New: US-034 (Monetization), US-039 (Pension Start Dates)
 - P2 (Medium): 10 stories (1 done, 9 to do) ⬆️ New: US-036 (RRIF Withholding), US-037 (Real Estate)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
@@ -764,7 +779,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 1 (User Retention): 5 stories, 31 pts (✅ 5 done - Sprint 1 complete)
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
-- Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do)
+- Epic 4 (UX): 9 stories, 41 pts (2 done, 7 to do) ⬆️ New: US-038 (Income Timing), US-039 (Pension Start)
 - Epic 5 (Simulation): 7 stories, 68 pts (2 done, 5 to do) ⬆️ New: US-036 (RRIF Withholding), US-037 (Real Estate)
 - Epic 6 (Testing): 4 stories, 34 pts (all backlog) ⬆️ New: US-035 (E2E Testing)
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
