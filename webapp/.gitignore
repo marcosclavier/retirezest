@@ -53,3 +53,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 .auth/
+
+# credentials and secrets
+docs/STRIPE_PRODUCTION_CREDENTIALS.md
+
+# email tracking data (contains user emails)
+email_tracking.json

@@ -19,6 +19,8 @@
 require('dotenv').config({ path: '.env.local' });
 
 const { Resend } = require('resend');
+const fs = require('fs');
+const path = require('path');
 
 // Check for API key
 if (!process.env.RESEND_API_KEY) {
@@ -327,6 +329,38 @@ async function sendReengagementEmails() {
   console.log('  - Reactivation Rate: 25-50% (1-2 users)');
   console.log('  - Highest Response: Susan McMillan (critical issue fixed)');
   console.log('\n' + '='.repeat(80));
+
+  // Save email tracking data to file
+  try {
+    const trackingFile = path.join(__dirname, 'email_tracking.json');
+    const trackingData = {
+      campaign: 're-engagement-deleted-users',
+      sent_date: new Date().toISOString(),
+      total_sent: results.sent.length,
+      total_failed: results.failed.length,
+      emails: results.sent.map(r => ({
+        resend_id: r.id,
+        recipient_email: r.to,
+        recipient_name: r.name,
+        priority: r.priority,
+        sent_at: new Date().toISOString(),
+        status: 'sent'
+      })),
+      failed_emails: results.failed.map(r => ({
+        recipient_email: r.to,
+        recipient_name: r.name,
+        priority: r.priority,
+        error: r.error,
+        failed_at: new Date().toISOString()
+      }))
+    };
+
+    fs.writeFileSync(trackingFile, JSON.stringify(trackingData, null, 2));
+    console.log(`\n✅ Email tracking data saved to: ${trackingFile}`);
+    console.log(`📊 Total Resend IDs captured: ${results.sent.length}`);
+  } catch (error) {
+    console.error(`\n⚠️  Warning: Failed to save tracking data: ${error.message}`);
+  }
 
   // Exit with appropriate code
   process.exit(results.failed.length > 0 ? 1 : 0);
