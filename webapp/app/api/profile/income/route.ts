@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, description, amount, frequency, startAge, owner, notes, isTaxable } = body;
+    const { type, description, amount, frequency, startAge, owner, notes, isTaxable, inflationIndexed } = body;
 
     // Validation
     if (!type || !amount || !frequency) {
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         owner: owner || 'person1',
         notes: notes || null,
         isTaxable: isTaxable !== undefined ? isTaxable : true,
+        inflationIndexed: inflationIndexed !== undefined ? inflationIndexed : true, // Default true (most pensions are indexed)
       },
     });
 
@@ -95,7 +96,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, type, description, amount, frequency, startAge, owner, notes, isTaxable } = body;
+    const { id, type, description, amount, frequency, startAge, owner, notes, isTaxable, inflationIndexed } = body;
 
     if (!id) {
       throw new ValidationError('Income ID is required', 'id');
@@ -121,6 +122,7 @@ export async function PUT(request: NextRequest) {
         owner: owner || 'person1',
         notes: notes || null,
         isTaxable: isTaxable !== undefined ? isTaxable : true,
+        inflationIndexed: inflationIndexed !== undefined ? inflationIndexed : true,
       },
     });
 

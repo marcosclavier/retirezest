@@ -108,19 +108,20 @@ model User {
 }
 
 model Income {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String    // employment, cpp, oas, pension, rental, business, investment, other
-  description String?
-  amount      Float
-  frequency   String    // monthly, annual, biweekly, weekly
-  startAge    Int?      // Age when income starts (for CPP, OAS, pension)
-  owner       String?   @default("person1") // person1, person2, joint - for couples planning
-  notes       String?
-  isTaxable   Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String    // employment, cpp, oas, pension, rental, business, investment, other
+  description       String?
+  amount            Float
+  frequency         String    // monthly, annual, biweekly, weekly
+  startAge          Int?      // Age when income starts (for CPP, OAS, pension)
+  owner             String?   @default("person1") // person1, person2, joint - for couples planning
+  notes             String?
+  isTaxable         Boolean   @default(true)
+  inflationIndexed  Boolean   @default(true) // Whether income adjusts for inflation annually (most pensions, CPP, OAS are indexed)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([userId])
   @@index([userId, type])
