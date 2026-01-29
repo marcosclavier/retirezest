@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026 (Added US-021: Investment Yields Configuration)
+**Last Updated**: January 29, 2026 (Added US-022: What-If Scenario Slider Testing & Fixes)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -185,6 +185,16 @@
 | **Acceptance Criteria** | - [ ] >80% code coverage for simulation.py<br>- [ ] All tax calculations tested<br>- [ ] All withdrawal strategies tested<br>- [ ] Edge cases covered<br>- [ ] Tests run in CI/CD |
 | **Tasks** | - [ ] Set up pytest framework<br>- [ ] Write tax calculation tests<br>- [ ] Write withdrawal strategy tests<br>- [ ] Write GIS calculation tests<br>- [ ] Add coverage reporting<br>- [ ] Fix any bugs found |
 
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-022** | **What-If Scenario Slider Testing & Fixes** | **5** | **P1** | **📋 To Do** |
+| **Description** | As a user, I want the What-If scenario sliders to work correctly and provide accurate simulation comparisons so that I can confidently explore different retirement scenarios |
+| **Acceptance Criteria** | - [ ] All sliders respond correctly to user input<br>- [ ] Slider values map correctly to adjustments (e.g., spending 50-150%, retirement age -5 to +5)<br>- [ ] "Run What-If Scenario" button executes simulation successfully<br>- [ ] Results display shows accurate comparison (original vs what-if)<br>- [ ] Health score delta calculated correctly<br>- [ ] Final estate delta calculated correctly<br>- [ ] Error handling works for invalid scenarios<br>- [ ] Reset button clears all adjustments<br>- [ ] Slider state persists during interaction (no unexpected resets) |
+| **Tasks** | - [ ] Audit WhatIfSliders.tsx component for bugs<br>- [ ] Test slider value mapping (spending, retirement age, CPP age, OAS age)<br>- [ ] Test /api/simulation/what-if endpoint with various adjustments<br>- [ ] Verify adjustment calculations (lines 43-45 in WhatIfSliders.tsx)<br>- [ ] Test edge cases (min/max values, boundary conditions)<br>- [ ] Fix checkHasChanges() function if needed (line 48-55)<br>- [ ] Test error handling for failed API calls<br>- [ ] Verify comparison UI renders correctly (health score, estate)<br>- [ ] Create automated E2E test for What-If feature<br>- [ ] Document known limitations and expected behavior |
+| **Technical Notes** | Component located at: `webapp/components/simulation/WhatIfSliders.tsx`<br>API endpoint: `webapp/app/api/simulation/what-if/route.ts`<br>Potential issues:<br>- Slider value offsets (+5 for retirement/CPP sliders) may cause confusion<br>- handleAdjustmentChange may not trigger hasChanges update correctly<br>- Error state may not clear properly between runs<br>- What-If result may show stale data |
+| **User Impact** | High - What-If scenarios are critical for users to explore different retirement strategies. Bugs here undermine confidence in the tool. |
+| **Known Issues** | - User reported issues via screenshot (needs investigation)<br>- Multiple test scripts exist but may not cover all scenarios<br>- Scripts: test-what-if-comprehensive.ts, test-what-if-accuracy.ts, test-what-if-sliders.ts |
+
 ---
 
 #### Epic 7: Performance & Optimization
@@ -264,9 +274,9 @@
 
 ### Epic 6: Testing & Quality
 **Goal**: Achieve >80% test coverage and prevent regression bugs
-**Total Story Points**: 21
+**Total Story Points**: 26
 **Status**: 📋 Backlog
-**User Stories**: US-014, US-015
+**User Stories**: US-014, US-015, US-022
 
 ### Epic 7: Performance & Optimization
 **Goal**: Improve app performance and mobile experience
@@ -418,14 +428,14 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 21
-**Completed**: 5 (24%)
-**In Progress**: 2 (10%)
-**To Do**: 14 (67%)
+**Total User Stories**: 22
+**Completed**: 5 (23%)
+**In Progress**: 2 (9%)
+**To Do**: 15 (68%)
 
 **By Priority**:
 - P0 (Critical): 3 stories (2 done, 1 in progress)
-- P1 (High): 5 stories (2 done, 3 to do) ⬆️ New: US-021
+- P1 (High): 6 stories (2 done, 4 to do) ⬆️ New: US-021, US-022
 - P2 (Medium): 5 stories (1 done, 4 to do)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
@@ -434,10 +444,10 @@ Track velocity over sprints to improve estimation accuracy.
 **By Epic**:
 - Epic 1 (User Retention): 5 stories, 31 pts (1 done, 1 in progress)
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
-- Epic 3 (Investment Config): 1 story, 8 pts (all to do) ⬆️ NEW EPIC
+- Epic 3 (Investment Config): 1 story, 8 pts (all to do)
 - Epic 4 (UX): 3 stories, 10 pts (2 done, 1 to do)
 - Epic 5 (Simulation): 3 stories, 21 pts (2 done, 1 to do)
-- Epic 6 (Testing): 2 stories, 21 pts (all backlog)
+- Epic 6 (Testing): 3 stories, 26 pts (all backlog) ⬆️ New: US-022
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
 
