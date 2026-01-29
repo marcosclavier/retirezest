@@ -18,6 +18,7 @@ from modules.withdrawal_strategies import get_strategy, is_hybrid_strategy
 from modules.tax_optimizer import TaxOptimizer
 from modules.estate_tax_calculator import EstateCalculator
 from modules import real_estate
+from modules.gic_calculator import process_gic_maturity_events, get_gic_balance_locked
 from utils.helpers import clamp
 
 
@@ -1084,6 +1085,53 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Inflation adjustment based on years since simulation start (not age difference)
     # This ensures CPP and OAS grow with general inflation from the start of the simulation
     years_since_start = max(0, (year if year is not None else hh.start_year) - hh.start_year)
+    current_year = (year if year is not None else hh.start_year)
+
+    # Process GIC maturity events at start of year
+    gic_assets = getattr(person, 'gic_assets', [])
+    if gic_assets:
+        gic_result = process_gic_maturity_events(
+            gic_assets=gic_assets,
+            current_year=current_year,
+            simulation_age=age
+        )
+
+        # Handle matured GIC funds according to reinvestment strategy
+        for instruction in gic_result["reinvestment_instructions"]:
+            amount = instruction["amount"]
+            action = instruction["action"]
+
+            if action == "cash-out":
+                # Add to non-registered liquid assets (nr_cash bucket)
+                person.nr_cash += amount
+                person.nonreg_balance += amount
+
+            elif action == "transfer-to-tfsa":
+                # Move to TFSA (if room available)
+                available_tfsa_room = tfsa_room
+                tfsa_contribution = min(amount, available_tfsa_room)
+                person.tfsa_balance += tfsa_contribution
+                # Remainder goes to non-reg cash
+                remainder = amount - tfsa_contribution
+                if remainder > 0:
+                    person.nr_cash += remainder
+                    person.nonreg_balance += remainder
+
+            elif action == "transfer-to-nonreg":
+                # Move to non-registered investments bucket
+                person.nr_invest += amount
+                person.nonreg_balance += amount
+
+            elif action == "auto-renew":
+                # New GIC already added to gic_assets list in the instruction
+                pass
+
+        # Update person's GIC assets list (remove matured, keep locked)
+        person.gic_assets = gic_result["locked_gics"] + [
+            instr.get("new_gic")
+            for instr in gic_result["reinvestment_instructions"]
+            if instr.get("new_gic") is not None
+        ]
 
     cpp = 0.0
     if age >= person.cpp_start_age:

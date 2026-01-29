@@ -167,6 +167,9 @@ class Person:
     # Temporary field for current year's downsizing capital gains (cleared each year)
     downsizing_capital_gains_this_year: float = 0.0
 
+    # GIC assets (List of dicts from database)
+    gic_assets: List[Dict[str, Any]] = field(default_factory=list)
+
     def total_liquid_balance(self) -> float:
         """Return total balance across all accounts."""
         return (
