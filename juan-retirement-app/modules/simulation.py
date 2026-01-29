@@ -329,6 +329,8 @@ def tax_for_detailed(
     prov_params,
     rental_income: float = 0.0,
     downsizing_capital_gains: float = 0.0,
+    pension_income_total: float = 0.0,
+    other_income_total: float = 0.0,
 ) -> tuple:
     """
     Returns household tax components (federal + provincial) for this candidate incremental withdrawal mix.
@@ -347,6 +349,10 @@ def tax_for_detailed(
     ordinary_income = float(nr_interest) if nr_interest is not None else 0.0
     # Add rental income from real estate properties (fully taxable as ordinary income)
     ordinary_income += float(rental_income)
+    # Add employer pension income (fully taxable as ordinary income)
+    ordinary_income += float(pension_income_total)
+    # Add other income sources: employment, business, investment, other (fully taxable)
+    ordinary_income += float(other_income_total)
 
     # Eligible / non-eligible dividends:
     extra_elig = float(add_corp_dividend) if corp_dividend_type.lower().startswith("elig") else 0.0
@@ -420,6 +426,8 @@ def tax_for(
     prov_params,
     rental_income: float = 0.0,
     downsizing_capital_gains: float = 0.0,
+    pension_income_total: float = 0.0,
+    other_income_total: float = 0.0,
 ) -> float:
     """
     Returns household tax (federal + provincial) for this candidate incremental withdrawal mix.
@@ -458,6 +466,8 @@ def tax_for(
         prov_params=prov_params,
         rental_income=rental_income,
         downsizing_capital_gains=downsizing_capital_gains,
+        pension_income_total=pension_income_total,
+        other_income_total=other_income_total,
     )
     return total_tax
 
@@ -1149,6 +1159,44 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Get rental income from real estate properties
     rental_income = real_estate.get_rental_income(person)
 
+    # Process pension incomes (check startAge)
+    pension_income_total = 0.0
+    pension_incomes = getattr(person, 'pension_incomes', [])
+    for pension in pension_incomes:
+        pension_start_age = pension.get('startAge', 65)
+        if age >= pension_start_age:
+            # Pension has started
+            annual_amount = pension.get('amount', 0.0)
+
+            # Apply inflation indexing if enabled
+            if pension.get('inflationIndexed', True):
+                years_since_pension_start = age - pension_start_age
+                annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+
+            pension_income_total += annual_amount
+
+    # Process other income sources (employment, business, rental from Income table, investment, other)
+    other_income_total = 0.0
+    other_incomes = getattr(person, 'other_incomes', [])
+    for other_income in other_incomes:
+        income_start_age = other_income.get('startAge')
+
+        # If no startAge specified, income is active (e.g., rental, investment income)
+        # If startAge specified, check if income has started
+        if income_start_age is None or age >= income_start_age:
+            annual_amount = other_income.get('amount', 0.0)
+
+            # Apply inflation indexing if enabled
+            if other_income.get('inflationIndexed', True):
+                if income_start_age:
+                    years_since_start = age - income_start_age
+                    annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                else:
+                    # No start age - use years since simulation start
+                    annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+
+            other_income_total += annual_amount
+
     # Get downsizing capital gains for this year (if any)
     downsizing_capgains = getattr(person, "downsizing_capital_gains_this_year", 0.0)
 
@@ -1285,6 +1333,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         prov_params         = prov,
         rental_income       = rental_income,   # Real estate rental income (fully taxable)
         downsizing_capital_gains = downsizing_capgains,  # Capital gains from property sale this year
+        pension_income_total = pension_income_total,  # Employer pension income (fully taxable)
+        other_income_total   = other_income_total,    # Employment, business, investment income (fully taxable)
     )
     # Store base OAS clawback amounts for later use
     base_oas_clawback = base_fed_oas_clawback + base_prov_oas_clawback
@@ -1522,6 +1572,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 prov_params         = prov_params,
                 rental_income       = rental_income,  # Real estate rental income from outer scope
                 downsizing_capital_gains = downsizing_capgains,  # Capital gains from downsizing from outer scope
+                pension_income_total = pension_income_total,  # Employer pension income from outer scope
+                other_income_total   = other_income_total,    # Employment, business, investment income from outer scope
             )
 
         # Binary search: find the minimum withdrawal needed to net the shortfall after tax

@@ -170,6 +170,13 @@ class Person:
     # GIC assets (List of dicts from database)
     gic_assets: List[Dict[str, Any]] = field(default_factory=list)
 
+    # Pension income sources (List of dicts from database)
+    # Each pension: {name, amount, startAge, inflationIndexed, ...}
+    pension_incomes: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Other income sources (employment, business, rental, investment, other)
+    other_incomes: List[Dict[str, Any]] = field(default_factory=list)
+
     def total_liquid_balance(self) -> float:
         """Return total balance across all accounts."""
         return (
