@@ -10,15 +10,15 @@
 ## 🎯 Sprint Progress
 
 **Committed**: 31 story points
-**Completed**: 3 story points (10%)
+**Completed**: 5 story points (16%)
 **In Progress**: 5 story points (16%)
-**To Do**: 23 story points (74%)
+**To Do**: 21 story points (68%)
 
 ---
 
 ## 📊 Kanban Board
 
-### 📋 To Do (23 pts)
+### 📋 To Do (21 pts)
 
 #### US-003: Database Migration - Pension Indexing [8 pts] 🔴 P1
 **Owner**: Backend Team
@@ -40,27 +40,6 @@ As a user, I want my pension indexing checkbox selection to be saved so that my 
 - [ ] API routes save/retrieve value
 - [ ] Existing pensions default to true
 - [ ] UI checkbox state persists
-
----
-
-#### US-004: Fix Resend Email ID Tracking [2 pts] 🟡 P2
-**Owner**: Backend Team
-**Blocked**: No
-
-As a developer, I want to properly capture Resend email IDs so that I can track individual email delivery status.
-
-**Tasks**:
-- [ ] Debug Resend API response format
-- [ ] Update send_reengagement_emails.js
-- [ ] Test email sending
-- [ ] Verify ID capture
-- [ ] Update documentation
-
-**Acceptance Criteria**:
-- [ ] Email IDs properly extracted
-- [ ] IDs logged to database/file
-- [ ] Can query email status by ID
-- [ ] Documentation updated
 
 ---
 
@@ -117,7 +96,7 @@ As a product manager, I want to automatically track which deleted users reactiva
 
 ---
 
-### ✅ Done (3 pts)
+### ✅ Done (5 pts)
 
 #### US-001: Monitor Re-engagement Campaign [3 pts] 🔴 P0
 **Owner**: Product Team
@@ -135,6 +114,35 @@ As a product manager, I want to monitor re-engagement email campaign results so 
 - ✅ 4/4 emails sent successfully
 - ✅ Campaign execution report created
 - ✅ Monitoring plan documented
+
+---
+
+#### US-004: Fix Resend Email ID Tracking [2 pts] 🟡 P2
+**Owner**: Backend Team
+**Completed**: Jan 29, 2026
+
+As a developer, I want to properly capture Resend email IDs so that I can track individual email delivery and status.
+
+**Completed Tasks**:
+- [x] Debug Resend API response format (result.id contains email ID)
+- [x] Update send_reengagement_emails.js with tracking persistence
+- [x] Create check_email_status.js query utility
+- [x] Verify ID capture and storage to email_tracking.json
+- [x] Update documentation (EMAIL_TRACKING_SYSTEM.md)
+- [x] Add privacy protection (.gitignore)
+
+**Results**:
+- ✅ Email IDs properly extracted from Resend API
+- ✅ IDs logged to email_tracking.json with full metadata
+- ✅ Query utility created (check_email_status.js)
+- ✅ Comprehensive documentation created
+- ✅ Privacy-safe implementation (tracking file gitignored)
+
+**Files Changed**:
+- Modified: send_reengagement_emails.js (+30 lines)
+- Modified: .gitignore (+3 lines)
+- Created: check_email_status.js (126 lines)
+- Created: EMAIL_TRACKING_SYSTEM.md (425 lines)
 
 ---
 
