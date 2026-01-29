@@ -412,6 +412,19 @@
 
 ---
 
+| **US-034** | **Premium Features Review & Monetization Analysis** | **5** | **P1** | **📋 To Do** |
+| **Description** | As a product owner, I want to review the effectiveness of premium features and analyze monetization performance so that I can optimize pricing, features, and conversion strategies |
+| **Acceptance Criteria** | **Premium Feature Usage Analysis:**<br>- [ ] Track usage frequency of each premium feature<br>- [ ] Identify most/least used premium features<br>- [ ] Analyze feature adoption rate by cohort<br>- [ ] Compare expected vs actual feature usage<br><br>**Conversion & Retention Metrics:**<br>- [ ] Free-to-premium conversion rate<br>- [ ] Premium subscription churn rate<br>- [ ] Average time to conversion (days from signup)<br>- [ ] Conversion rate by feature gate touchpoint<br>- [ ] Monthly Recurring Revenue (MRR) growth<br>- [ ] Annual vs monthly plan split<br><br>**User Behavior Analysis:**<br>- [ ] Feature usage patterns (which features drive value?)<br>- [ ] Correlation between features and retention<br>- [ ] Premium user engagement vs free user engagement<br>- [ ] User feedback on premium features (support tickets, ratings)<br><br>**Monetization Optimization:**<br>- [ ] Evaluate pricing strategy ($5.99/mo, $47/yr)<br>- [ ] Compare to competitor pricing<br>- [ ] Identify opportunities for upsells/add-ons<br>- [ ] Assess value perception (is premium worth it?)<br>- [ ] Identify feature gaps (what premium users want)<br><br>**Financial Metrics:**<br>- [ ] Customer Acquisition Cost (CAC) for premium<br>- [ ] Lifetime Value (LTV) of premium subscribers<br>- [ ] LTV/CAC ratio (should be >3)<br>- [ ] Break-even point (when do we recover CAC?)<br>- [ ] Revenue per premium user<br>- [ ] Projected revenue at 100/500/1000 premium users |
+| **Tasks** | **Data Collection:**<br>- [ ] Implement premium feature usage tracking (analytics events)<br>- [ ] Create premium user dashboard (analytics)<br>- [ ] Set up conversion funnel tracking<br>- [ ] Query Stripe for subscription metrics<br>- [ ] Survey premium users (feature satisfaction, value perception)<br><br>**Analysis:**<br>- [ ] Generate premium feature usage report<br>- [ ] Analyze conversion funnel (where do users drop off?)<br>- [ ] Calculate CAC, LTV, LTV/CAC ratio<br>- [ ] Benchmark against industry standards<br>- [ ] Identify most impactful conversion touchpoints<br>- [ ] Review competitor pricing and features<br><br>**Optimization Recommendations:**<br>- [ ] Prioritize features to build/improve based on data<br>- [ ] Recommend pricing adjustments (if needed)<br>- [ ] Suggest new premium features to add<br>- [ ] Identify low-value features to deprecate/move to free<br>- [ ] Optimize feature gate messaging<br>- [ ] Create retention strategies for premium users<br><br>**Documentation:**<br>- [ ] Write monetization analysis report<br>- [ ] Create premium features dashboard (ongoing tracking)<br>- [ ] Document pricing strategy and rationale<br>- [ ] Update product roadmap based on findings<br>- [ ] Present findings to stakeholders |
+| **Technical Notes** | **Current Premium Features (9 total):**<br>1. **Early Retirement Calculator**: Unlimited calculations (free: 10/day)<br>   - Usage metric: API calls to `/api/early-retirement/calculate`<br>   - Value hypothesis: High - enables retirement planning<br><br>2. **Scenario Persistence**: Save/load simulations<br>   - Usage metric: API calls to `/api/scenarios/save`, `/api/scenarios/route`<br>   - Value hypothesis: Medium - convenience for repeat users<br><br>3. **CSV Export**: Download simulation data<br>   - Usage metric: Button clicks, downloads completed<br>   - Value hypothesis: Medium - useful for advisors<br><br>4. **PDF Report**: Professional retirement report<br>   - Usage metric: Button clicks, PDFs generated<br>   - Value hypothesis: High - shareable, professional<br><br>5. **Interactive Retirement Age Slider**: What-if scenarios<br>   - Usage metric: Slider interactions, simulations run<br>   - Value hypothesis: High - enables exploration<br><br>6. **Multiple Market Scenarios**: Pessimistic/neutral/optimistic<br>   - Usage metric: Scenario switches, comparisons made<br>   - Value hypothesis: Medium - risk assessment<br><br>7. **Detailed Year-by-Year Projections**: Full data<br>   - Usage metric: Table views, expansions<br>   - Value hypothesis: Medium - transparency<br><br>8. **Advanced Charts**: Enhanced visualizations<br>   - Usage metric: Chart interactions, views<br>   - Value hypothesis: Low-Medium - aesthetic value<br><br>9. **Priority Email Support**: Faster responses<br>   - Usage metric: Support tickets from premium users, response time<br>   - Value hypothesis: Low - rarely used<br><br>**Key Questions to Answer:**<br>1. Which premium feature drives the most conversions?<br>2. Do premium users use all 9 features, or just 1-2?<br>3. What's the average time from signup to conversion?<br>4. Do users convert on first feature gate, or after multiple encounters?<br>5. Is the yearly plan ($47) more popular than monthly ($5.99)?<br>6. What's the churn rate for premium subscribers?<br>7. Why do premium users churn? (exit survey)<br>8. Are we leaving money on the table (underpriced)?<br>9. Should we add more tiers (e.g., Pro, Enterprise)?<br>10. What features should we add to increase value?<br><br>**Financial Calculations:**<br>- CAC = (Marketing + Sales Cost) / New Premium Subscribers<br>- LTV = (Monthly Revenue × Gross Margin) / Churn Rate<br>- Target LTV/CAC: >3 (ideally 5-7)<br>- Break-even: When does revenue > CAC?<br><br>**Competitive Benchmarks:**<br>- NewRetirement: $120/year (~$10/month)<br>- Boldin (formerly NewRetirement): $95/year<br>- Personal Capital: Free (monetizes through wealth management)<br>- Wealthica: $50/year CAD (~$36 USD)<br>- RetireZest: $47/year (~$4/month) - competitive! |
+| **User Impact** | **Critical** - Monetization success determines business viability. Underpriced = leaving money on table. Overpriced = low conversion. Wrong features = low retention. This analysis guides product strategy. |
+| **Known Issues** | - No analytics tracking for premium feature usage yet<br>- Conversion funnel not instrumented<br>- No user satisfaction surveys<br>- Limited data (new feature, few premium users yet)<br>- CAC unknown (no marketing spend tracked)<br>- Competitive pricing research not done<br>- No A/B testing of pricing/features |
+| **Success Metrics** | - [ ] Data-driven recommendation for pricing optimization<br>- [ ] Identify top 3 value-driving features<br>- [ ] Achieve LTV/CAC ratio >3<br>- [ ] Increase free-to-premium conversion by 20%<br>- [ ] Reduce premium churn to <5% monthly<br>- [ ] Premium user satisfaction >4.5/5<br>- [ ] Clear product roadmap for premium features<br>- [ ] Monetization dashboard created (ongoing tracking) |
+| **Dependencies** | - US-024 (Premium Payment System) complete<br>- US-032 (Premium Benefits Testing) complete<br>- Analytics platform (Posthog/Mixpanel) integrated<br>- At least 20-50 premium users for meaningful data<br>- Access to Stripe subscription data<br>- User survey tool (Typeform, Google Forms) |
+| **Related Stories** | US-024 (Premium Payment), US-032 (Premium Benefits Testing), US-033 (PDF Reports) |
+
+---
+
 ## 🎯 Epics
 
 ### Epic 1: User Retention & Engagement
@@ -470,9 +483,9 @@
 
 ### Epic 10: Monetization & Revenue
 **Goal**: Ensure reliable payment processing, subscription management, and premium feature delivery
-**Total Story Points**: 21
+**Total Story Points**: 26
 **Status**: 📋 To Do
-**User Stories**: US-024, US-032, US-033
+**User Stories**: US-024, US-032, US-033, US-034
 
 ---
 
@@ -612,14 +625,14 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 31 ⬆️ New: US-031 (Early Retirement Evaluation)
+**Total User Stories**: 32 ⬆️ New: US-034 (Premium Features Review & Monetization)
 **Completed**: 5 (16%)
-**In Progress**: 0 (0%) - Sprint 1 complete
-**To Do**: 26 (84%)
+**In Progress**: 0 (0%) - Sprint 2 complete
+**To Do**: 27 (84%)
 
 **By Priority**:
 - P0 (Critical): 3 stories (2 done, 1 to do)
-- P1 (High): 12 stories (2 done, 10 to do) ⬆️ New: US-030 (Security)
+- P1 (High): 13 stories (2 done, 11 to do) ⬆️ New: US-034 (Monetization)
 - P2 (Medium): 7 stories (1 done, 6 to do)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
@@ -635,7 +648,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
 - Epic 9 (Security): 1 story, 13 pts (all to do) ⬆️ NEW EPIC
-- Epic 10 (Monetization): 1 story, 8 pts (all to do)
+- Epic 10 (Monetization): 4 stories, 26 pts (all to do)
 
 ---
 
