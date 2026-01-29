@@ -140,10 +140,9 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     oas_start_age: oasStartAge,
     oas_annual_at_start: oasAnnual,
 
-    // Other income sources
-    employer_pension_annual: 0,
-    rental_income_annual: 0,
-    other_income_annual: 0,
+    // Pension and other income lists
+    pension_incomes: [],
+    other_incomes: [],
 
     // Account balances
     rrsp_balance: actualRRSP,
@@ -215,9 +214,8 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     oas_start_age: 65,
     oas_annual_at_start: 8500,
 
-    employer_pension_annual: 0,
-    rental_income_annual: 0,
-    other_income_annual: 0,
+    pension_incomes: [],
+    other_incomes: [],
 
     rrsp_balance: 0,
     rrif_balance: 0,
@@ -278,9 +276,8 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     oas_start_age: 0,
     oas_annual_at_start: 0,
 
-    employer_pension_annual: 0,
-    rental_income_annual: 0,
-    other_income_annual: 0,
+    pension_incomes: [],
+    other_incomes: [],
 
     rrsp_balance: 0,
     rrif_balance: 0,

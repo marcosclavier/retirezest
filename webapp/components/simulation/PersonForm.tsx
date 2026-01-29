@@ -51,9 +51,8 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
   };
 
   const isOtherIncomeComplete = (): boolean => {
-    return (person.employer_pension_annual ?? 0) > 0 ||
-           (person.rental_income_annual ?? 0) > 0 ||
-           (person.other_income_annual ?? 0) > 0;
+    return (person.pension_incomes?.length ?? 0) > 0 ||
+           (person.other_incomes?.length ?? 0) > 0;
   };
 
   const isNonregDetailsComplete = (): boolean => {
@@ -287,44 +286,12 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           isComplete={isOtherIncomeComplete()}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <LabelWithTooltip
-                htmlFor={`${personNumber}-pension`}
-                tooltip="Annual employer pension income from defined benefit or defined contribution plans"
-              >
-                Employer Pension ($ per year)
-              </LabelWithTooltip>
-              <CurrencyInput
-                id={`${personNumber}-pension`}
-                value={person.employer_pension_annual ?? 0}
-                onChange={(value) => onChange('employer_pension_annual', value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <LabelWithTooltip
-                htmlFor={`${personNumber}-rental`}
-                tooltip="Annual NET rental income after deducting property tax, insurance, mortgage interest, repairs, and other eligible expenses. Enter the amount you report on your T776 tax form (line 8230 - Total rental income)."
-              >
-                Rental Income - NET ($ per year)
-              </LabelWithTooltip>
-              <CurrencyInput
-                id={`${personNumber}-rental`}
-                value={person.rental_income_annual ?? 0}
-                onChange={(value) => onChange('rental_income_annual', value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <LabelWithTooltip
-                htmlFor={`${personNumber}-other`}
-                tooltip="Annual employment or business income (e.g., part-time salary, consulting, freelance work). Do NOT include investment income (interest, dividends, capital gains) - those are automatically calculated from your non-registered account holdings and receive proper tax treatment."
-              >
-                Other Income - Employment/Business ($ per year)
-              </LabelWithTooltip>
-              <CurrencyInput
-                id={`${personNumber}-other`}
-                value={person.other_income_annual ?? 0}
-                onChange={(value) => onChange('other_income_annual', value)}
-              />
+            <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> Pension and other income sources (employment, rental, business, investment)
+                are now managed through your Profile → Income page, where you can set specific start ages
+                for each income source.
+              </p>
             </div>
           </div>
         </Collapsible>
