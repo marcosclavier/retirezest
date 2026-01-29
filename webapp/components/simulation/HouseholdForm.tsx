@@ -55,6 +55,9 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
     return provinceNames[code.toUpperCase()] || code;
   };
 
+  // Get the current strategy label for display
+  const currentStrategyLabel = strategyOptions.find(opt => opt.value === household.strategy)?.label || 'Select withdrawal strategy';
+
   // Supported provinces for tax calculations
   const supportedProvinces = ['AB', 'BC', 'ON', 'QC'];
 
@@ -207,7 +210,14 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
               onValueChange={(value: WithdrawalStrategy) => onChange('strategy', value)}
             >
               <SelectTrigger id="strategy" className="h-auto min-h-[48px] bg-white">
-                <SelectValue placeholder="Select withdrawal strategy" />
+                <div className="flex flex-col items-start text-left w-full">
+                  <span className="font-medium text-base">{currentStrategyLabel}</span>
+                  {household.strategy && (
+                    <span className="text-xs text-gray-600 mt-0.5">
+                      {strategyOptions.find(opt => opt.value === household.strategy)?.description}
+                    </span>
+                  )}
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {strategyOptions.map((option) => (

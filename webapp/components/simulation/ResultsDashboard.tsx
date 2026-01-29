@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SimulationResponse } from '@/lib/types/simulation';
+import { SimulationResponse, getStrategyDisplayName, isDefaultStrategy } from '@/lib/types/simulation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -393,7 +393,10 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
               {result.household_input?.strategy && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold" style={{ color: '#111827' }}>Selected Strategy:</span>
-                  <Badge variant="outline">{result.household_input.strategy}</Badge>
+                  <Badge variant={isDefaultStrategy(result.household_input.strategy) ? "secondary" : "outline"}>
+                    {getStrategyDisplayName(result.household_input.strategy)}
+                    {isDefaultStrategy(result.household_input.strategy) && " (Default)"}
+                  </Badge>
                 </div>
               )}
               <div className="flex items-center justify-between">
