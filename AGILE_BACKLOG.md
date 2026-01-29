@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026 (Added US-023: AI-Powered GIS Enhancement - Testing & Deployment)
+**Last Updated**: January 29, 2026 (Added US-025, US-026, US-027, US-028: Withdrawal Strategy UX & Educational Guidance)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -138,6 +138,52 @@
 | **Description** | As a user, I want the default withdrawal strategy to be "minimize-income" so that I get tax-optimized results by default |
 | **Acceptance Criteria** | - [x] Default strategy changed to minimize-income<br>- [x] Existing users unaffected<br>- [x] New users see minimize-income selected<br>- [x] Help text updated |
 | **Status** | Completed in commit 81fcb19 |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-025** | **Improve Withdrawal Strategy Discoverability** | **3** | **P1** | **📋 To Do** |
+| **Description** | As a user, I want the withdrawal strategy selector to be more visible and prominent so that I understand it's an important decision that affects my retirement plan |
+| **Acceptance Criteria** | - [ ] Strategy selector moved to more prominent location<br>- [ ] Visual hierarchy improved (larger, clearer label)<br>- [ ] Help icon/tooltip added explaining importance<br>- [ ] Strategy selector highlighted or emphasized (border, icon, etc.)<br>- [ ] Mobile view optimized for easy access<br>- [ ] User can easily find and change strategy<br>- [ ] Strategy selection tracked in analytics |
+| **Tasks** | - [ ] Audit current strategy selector location and visibility<br>- [ ] Design mockup for improved UI<br>- [ ] Move selector to prominent location (e.g., above inputs, in hero section)<br>- [ ] Add visual emphasis (icon, border, background color)<br>- [ ] Update label to be clearer (e.g., "Withdrawal Strategy (Important)")<br>- [ ] Add tooltip explaining why strategy matters<br>- [ ] Test on mobile devices<br>- [ ] Update analytics to track strategy changes<br>- [ ] A/B test different UI approaches if possible |
+| **Technical Notes** | Current implementation:<br>- Strategy stored in household.strategy<br>- Default: "minimize-income" (set in commit 81fcb19)<br>- Options: "minimize-income", "balanced-income", "early-rrif-withdrawal", "max-tfsa-first"<br>- Needs better visual prominence in UI<br><br>Suggested improvements:<br>- Add icon (e.g., 🎯 Strategy)<br>- Use Card component for emphasis<br>- Add contextual help for each strategy option<br>- Show preview of strategy impact |
+| **User Impact** | Medium-High - Ian Crawford (deleted user) specifically mentioned "early RRIF withdrawals for wife with no income" which is a strategy option. Better discoverability could prevent user frustration and account deletions. |
+| **Dependencies** | - US-010 (Default strategy) - already completed<br>- Design mockup or user research for best placement |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-026** | **Display Current Strategy Selection in Strategy Selector** | **2** | **P1** | **📋 To Do** |
+| **Description** | As a user, I want to clearly see which withdrawal strategy is currently selected (e.g., "minimize-income") so that I know what strategy my simulation will use |
+| **Acceptance Criteria** | - [ ] Current strategy value visible in selector/dropdown<br>- [ ] Default "minimize-income" shows as selected<br>- [ ] User-selected strategy persists and displays correctly<br>- [ ] Strategy name displayed in human-readable format<br>- [ ] Visual confirmation when strategy is changed<br>- [ ] Current strategy shown in simulation results summary |
+| **Tasks** | - [ ] Verify strategy value binding in UI component<br>- [ ] Ensure dropdown/select shows current value<br>- [ ] Map technical names to display names (e.g., "minimize-income" → "Income Minimization (GIS-Optimized)")<br>- [ ] Add visual indicator for default vs custom strategy<br>- [ ] Show current strategy in results header<br>- [ ] Test strategy persistence across page refreshes<br>- [ ] Update SimulationWizard if needed |
+| **Technical Notes** | Strategy mapping (from simulation/page.tsx:762-772):<br>```typescript<br>const strategyMap: Record<string, string> = {<br>  'minimize-income': 'Income Minimization (GIS-Optimized)',<br>  'balanced-income': 'Balanced Income',<br>  'early-rrif-withdrawal': 'Early RRIF Withdrawals (Income Splitting)',<br>  'max-tfsa-first': 'Maximize TFSA First',<br>  // ... other mappings<br>};<br>```<br><br>Ensure selector component uses this mapping to show friendly names. |
+| **User Impact** | Medium - Users need clear feedback about which strategy they're using. Confusion about strategy selection leads to unexpected results and reduced trust in the tool. |
+| **Dependencies** | - US-010 (Default strategy) - already completed<br>- US-025 (Improved discoverability) - should implement together for best UX |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-027** | **Educational Guidance: Withdrawal Order to Save Taxes & Avoid Clawback** | **5** | **P1** | **📋 To Do** |
+| **Description** | As a user, I want clear educational guidance about the optimal account withdrawal order (TFSA/RRSP/RRIF/NonReg) so that I can minimize taxes and avoid OAS/GIS clawback throughout my retirement |
+| **Acceptance Criteria** | - [ ] Educational tooltip/modal explains withdrawal order strategy<br>- [ ] Visual diagram shows recommended withdrawal sequence<br>- [ ] Explanation of tax implications for each account type<br>- [ ] Guidance on OAS clawback threshold and avoidance<br>- [ ] Guidance on GIS income limits and preservation<br>- [ ] Examples showing tax savings from optimal order<br>- [ ] Context-sensitive help based on user's assets<br>- [ ] Mobile-friendly educational content<br>- [ ] Links to CRA resources for verification<br>- [ ] Accessible to users of all financial literacy levels |
+| **Tasks** | - [ ] Research optimal withdrawal order strategies<br>- [ ] Create educational content outline<br>- [ ] Design visual diagram for withdrawal order<br>- [ ] Write clear explanations for each account type<br>- [ ] Document OAS clawback threshold (2026: ~$90,997)<br>- [ ] Document GIS income limits (2026: $22,272 single, $29,424 couple)<br>- [ ] Create examples with real numbers<br>- [ ] Design tooltip/modal component<br>- [ ] Implement contextual help integration<br>- [ ] Review content with tax professional or CPA<br>- [ ] User testing for clarity and comprehension<br>- [ ] Update documentation and help center |
+| **Technical Notes** | **Current Withdrawal Strategy Implementation:**<br>Backend: `juan-retirement-app/modules/simulation.py`<br>- Lines 784-793: TFSA prioritization for GIS preservation<br>- Lines 625-642: GIS threshold targeting<br>- Lines 824-850: Income addition calculations<br><br>**Withdrawal Order Best Practices:**<br>1. **Before Age 65 (Pre-OAS/GIS)**:<br>   - TFSA first (tax-free, no impact on benefits)<br>   - NonReg second (capital gains only 50% taxable)<br>   - RRSP/RRIF last (100% taxable)<br><br>2. **Age 65-71 (OAS Started, Pre-RRIF)**:<br>   - TFSA first (preserves GIS eligibility)<br>   - RRSP early withdrawals if income low (income splitting)<br>   - NonReg carefully (watch OAS clawback threshold)<br><br>3. **Age 72+ (RRIF Mandatory)**:<br>   - RRIF minimum required<br>   - TFSA to top up (avoid exceeding clawback threshold)<br>   - NonReg as needed<br><br>**Tax Thresholds 2026:**<br>- OAS Clawback starts: ~$90,997<br>- GIS Single threshold: $22,272<br>- GIS Couple threshold: $29,424<br>- Federal Basic Personal Amount: ~$15,705<br><br>**Example Savings:**<br>Scenario: Couple, $600K assets, low pension income<br>- Poor order (RRSP first): $180K total tax, lose $45K GIS<br>- Optimal order (TFSA first): $120K total tax, keep $42K GIS<br>- **Savings: $60K + $42K = $102K over 30 years** |
+| **User Impact** | **Very High** - Many users don't understand withdrawal order strategy. This is a critical knowledge gap that can cost tens of thousands of dollars in unnecessary taxes and lost government benefits. Educational guidance empowers users to make informed decisions. |
+| **Examples** | **Example 1: GIS-Eligible Couple**<br>Assets: TFSA $100K, RRSP $150K, NonReg $50K<br>Income: CPP $15K, OAS $8K = $23K total<br>Need: $40K/year<br>Optimal Order:<br>1. TFSA ($17K/year) - keeps income at $23K → GIS eligible<br>2. When TFSA depleted, carefully balance RRIF + NonReg<br>Result: Receive $8K-12K GIS for 5-10 years<br><br>**Example 2: High-Asset Couple (OAS Clawback Risk)**<br>Assets: RRSP $800K, TFSA $200K, NonReg $300K<br>Income: CPP $28K, OAS $16K = $44K total<br>Need: $80K/year<br>Optimal Order:<br>1. TFSA ($36K/year) - no tax, no clawback impact<br>2. NonReg (capital gains) - only 50% taxable<br>3. RRIF minimum required at 72<br>Result: Avoid OAS clawback, save $15K-20K in taxes<br><br>**Example 3: Single Low-Income Retiree**<br>Assets: TFSA $80K, RRSP $120K<br>Income: CPP $10K, OAS $8K = $18K total<br>Need: $35K/year<br>Optimal Order:<br>1. TFSA ($17K/year) - stay under GIS threshold ($22,272)<br>2. RRIF minimum at 72<br>Result: Receive $4K GIS annually, maximize government benefits |
+| **Dependencies** | - US-025 (Strategy Discoverability) - integrate guidance into strategy selector<br>- US-026 (Display Current Strategy) - show guidance when strategy selected<br>- US-023 (GIS Testing) - ensure GIS thresholds accurate |
+| **Success Metrics** | - [ ] 80%+ of users view educational content before running simulation<br>- [ ] User comprehension survey shows >70% understand withdrawal order<br>- [ ] Reduction in support questions about withdrawal strategies<br>- [ ] Positive user feedback on helpfulness (>4/5 rating)<br>- [ ] Users able to explain why TFSA-first is often optimal |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-028** | **Update Help Section & Documentation Center** | **8** | **P2** | **📋 To Do** |
+| **Description** | As a user, I want a comprehensive, up-to-date help section so that I can learn how to use RetireZest effectively and understand retirement planning concepts |
+| **Acceptance Criteria** | - [ ] Help section accessible from main navigation<br>- [ ] Topics organized by category (Getting Started, Features, Concepts, FAQ)<br>- [ ] Search functionality works across all help articles<br>- [ ] Help content covers all major features<br>- [ ] Each help article has clear examples and screenshots<br>- [ ] Mobile-responsive help center<br>- [ ] Contextual help links from relevant pages<br>- [ ] Video tutorials for key workflows<br>- [ ] Glossary of retirement planning terms<br>- [ ] Contact support option visible |
+| **Tasks** | - [ ] Audit existing help content (if any)<br>- [ ] Create help center structure/sitemap<br>- [ ] Write help articles for key features:<br>  - [ ] Profile setup and data entry<br>  - [ ] Asset management (TFSA, RRSP, RRIF, NonReg)<br>  - [ ] Income sources (CPP, OAS, pensions)<br>  - [ ] Expense tracking and one-time expenses<br>  - [ ] Withdrawal strategies explained<br>  - [ ] What-If scenarios<br>  - [ ] GIS eligibility and optimization<br>  - [ ] Health score interpretation<br>  - [ ] Reading simulation results<br>  - [ ] Premium features<br>- [ ] Create FAQ section with common questions<br>- [ ] Add retirement planning glossary<br>- [ ] Implement search functionality<br>- [ ] Add contextual help links throughout app<br>- [ ] Create video tutorials (5-10 minutes each)<br>- [ ] Design help center UI/UX<br>- [ ] Implement help center frontend<br>- [ ] User testing for clarity and completeness<br>- [ ] SEO optimization for help articles |
+| **Technical Notes** | **Help Center Implementation Options:**<br><br>**Option 1: In-App Help Center**<br>- Create `/help` route in Next.js<br>- Help articles as MDX files<br>- Search using Algolia or custom solution<br>- Full control over design/UX<br><br>**Option 2: Third-Party Solution**<br>- Use Intercom, Zendesk, or Help Scout<br>- Faster implementation<br>- Built-in analytics and search<br>- Monthly subscription cost<br><br>**Option 3: Hybrid Approach**<br>- In-app contextual help (tooltips, modals)<br>- External documentation site (Docusaurus, GitBook)<br>- Video hosting on YouTube/Vimeo<br><br>**Recommended: Option 3 (Hybrid)**<br>- Best user experience<br>- Cost-effective<br>- Easy to maintain and update<br><br>**Content Categories:**<br>1. Getting Started (5 articles)<br>   - Welcome to RetireZest<br>   - Quick start guide<br>   - Understanding your first simulation<br>   - Common questions for new users<br>   - Tour of key features<br><br>2. Managing Your Profile (8 articles)<br>   - Personal information<br>   - Assets (TFSA, RRSP, RRIF, NonReg)<br>   - Income sources (CPP, OAS, pensions, employment)<br>   - Expenses (monthly, annual, one-time)<br>   - Real estate and property<br>   - Partner/spouse information<br>   - Settings and preferences<br>   - Data privacy and security<br><br>3. Running Simulations (6 articles)<br>   - How to run your first simulation<br>   - Understanding withdrawal strategies<br>   - Using What-If scenarios<br>   - Reading simulation results<br>   - Health score explained<br>   - Saving and comparing scenarios<br><br>4. Advanced Features (5 articles)<br>   - GIS optimization strategies<br>   - Tax optimization techniques<br>   - OAS clawback avoidance<br>   - Income splitting strategies<br>   - Premium features guide<br><br>5. Retirement Planning Concepts (10 articles)<br>   - TFSA vs RRSP vs RRIF<br>   - CPP and OAS benefits<br>   - Guaranteed Income Supplement (GIS)<br>   - RRIF minimum withdrawals<br>   - Tax brackets and optimization<br>   - Inflation and purchasing power<br>   - Estate planning basics<br>   - Withdrawal order strategies<br>   - Retirement age considerations<br>   - Market scenarios and risk<br><br>6. FAQ (15-20 questions)<br>   - Is my data secure?<br>   - How accurate are the simulations?<br>   - What withdrawal strategy should I use?<br>   - How does GIS optimization work?<br>   - Can I export my results?<br>   - What's the difference between scenarios?<br>   - How often should I update my profile?<br>   - etc. |
+| **User Impact** | **Medium-High** - Good documentation reduces support burden, improves user onboarding, and builds trust. Users who understand the tool are more likely to remain active and recommend it to others. |
+| **Dependencies** | - US-027 (Withdrawal Order Guidance) - include in help content<br>- US-025 (Strategy Discoverability) - document strategies in help<br>- All major features should be stable before documenting |
+| **Success Metrics** | - [ ] Help center visited by 40%+ of new users<br>- [ ] Average help session duration >3 minutes (reading content)<br>- [ ] Support ticket volume decreases by 30%<br>- [ ] User satisfaction with help content >4/5<br>- [ ] 90%+ of users can find answers to common questions<br>- [ ] Search successfully finds relevant content 80%+ of time |
+
+**Total Story Points**: 15 → 20 → 28
+**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025, US-026, US-027, US-028
 
 ---
 
@@ -290,9 +336,9 @@
 
 ### Epic 4: UX Improvements
 **Goal**: Reduce onboarding abandonment and improve user satisfaction
-**Total Story Points**: 10
+**Total Story Points**: 15
 **Status**: 🔄 In Progress
-**User Stories**: US-008 (✅), US-009, US-010 (✅)
+**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025, US-026
 
 ### Epic 5: Simulation Accuracy & Features
 **Goal**: Ensure simulation results are accurate and trustworthy
@@ -462,15 +508,15 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 24
-**Completed**: 5 (21%)
-**In Progress**: 2 (8%)
-**To Do**: 17 (71%)
+**Total User Stories**: 28 ⬆️ New: US-025, US-026, US-027, US-028
+**Completed**: 5 (18%)
+**In Progress**: 2 (7%)
+**To Do**: 21 (75%)
 
 **By Priority**:
 - P0 (Critical): 4 stories (2 done, 1 in progress, 1 to do) ⬆️ New: US-024
-- P1 (High): 7 stories (2 done, 5 to do) ⬆️ New: US-021, US-022, US-023
-- P2 (Medium): 5 stories (1 done, 4 to do)
+- P1 (High): 11 stories (2 done, 9 to do) ⬆️ New: US-021, US-022, US-023, US-025, US-026, US-027
+- P2 (Medium): 6 stories (1 done, 5 to do) ⬆️ New: US-028
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
 - P5 (Icebox): 2 stories
@@ -479,7 +525,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 1 (User Retention): 5 stories, 31 pts (1 done, 1 in progress)
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
-- Epic 4 (UX): 3 stories, 10 pts (2 done, 1 to do)
+- Epic 4 (UX): 7 stories, 28 pts (2 done, 5 to do) ⬆️ New: US-025, US-026, US-027, US-028
 - Epic 5 (Simulation): 4 stories, 34 pts (2 done, 2 to do) ⬆️ New: US-023
 - Epic 6 (Testing): 3 stories, 26 pts (all backlog) ⬆️ New: US-022
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
