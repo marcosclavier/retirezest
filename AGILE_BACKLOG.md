@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026
+**Last Updated**: January 29, 2026 (Added US-021: Investment Yields Configuration)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -100,7 +100,23 @@
 
 ---
 
-#### Epic 3: UX Improvements
+---
+
+#### Epic 3: Investment & Account Configuration
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-021** | **Configurable Investment Yields (TFSA/RRSP/RRIF)** | **8** | **P1** | **📋 To Do** |
+| **Description** | As a user, I want to configure custom interest rates for my TFSA, RRSP, and RRIF accounts so that my retirement projections reflect my actual investment strategy and risk tolerance |
+| **Acceptance Criteria** | - [ ] UI allows setting yield % for TFSA accounts<br>- [ ] UI allows setting yield % for RRSP accounts<br>- [ ] UI allows setting yield % for RRIF accounts<br>- [ ] Default yields pre-populated (e.g., 5% balanced portfolio)<br>- [ ] Yields saved per account type<br>- [ ] Simulation engine uses custom yields<br>- [ ] Validation: yields between -10% and 20%<br>- [ ] Help text explains conservative vs aggressive yields |
+| **Tasks** | - [ ] Add yield fields to Asset model (Prisma schema)<br>- [ ] Update database migration<br>- [ ] Add yield input fields to asset forms<br>- [ ] Implement yield validation (range check)<br>- [ ] Update simulation.py to use custom yields<br>- [ ] Add yield presets (Conservative 3%, Balanced 5%, Aggressive 7%)<br>- [ ] Create help documentation explaining yields<br>- [ ] Test with different yield scenarios<br>- [ ] Update API routes (create/update assets) |
+| **Technical Notes** | Current system uses hardcoded 5% default. Need to make it configurable per account. |
+| **User Impact** | High - Users want control over return assumptions. Different users have different risk profiles. |
+| **Examples** | - Conservative investor: TFSA 3%, RRSP 3%, RRIF 3%<br>- Balanced investor: TFSA 5%, RRSP 5%, RRIF 5%<br>- Aggressive investor: TFSA 7%, RRSP 7%, RRIF 7%<br>- Mixed strategy: TFSA 6% (stocks), RRSP 4% (bonds), RRIF 4% (conservative) |
+
+---
+
+#### Epic 4: UX Improvements
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -125,7 +141,7 @@
 
 ---
 
-#### Epic 4: Simulation Accuracy & Features
+#### Epic 5: Simulation Accuracy & Features
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -153,7 +169,7 @@
 
 ### Medium Priority (Sprints 3-4)
 
-#### Epic 5: Testing & Quality
+#### Epic 6: Testing & Quality
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -171,7 +187,7 @@
 
 ---
 
-#### Epic 6: Performance & Optimization
+#### Epic 7: Performance & Optimization
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -191,7 +207,7 @@
 
 ### Low Priority (Future Sprints)
 
-#### Epic 7: Advanced Features
+#### Epic 8: Advanced Features
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -228,31 +244,37 @@
 **Status**: 📋 Backlog
 **User Stories**: US-006, US-007
 
-### Epic 3: UX Improvements
+### Epic 3: Investment & Account Configuration
+**Goal**: Give users control over investment return assumptions and account settings
+**Total Story Points**: 8
+**Status**: 📋 Backlog
+**User Stories**: US-021
+
+### Epic 4: UX Improvements
 **Goal**: Reduce onboarding abandonment and improve user satisfaction
 **Total Story Points**: 10
 **Status**: 🔄 In Progress
 **User Stories**: US-008 (✅), US-009, US-010 (✅)
 
-### Epic 4: Simulation Accuracy & Features
+### Epic 5: Simulation Accuracy & Features
 **Goal**: Ensure simulation results are accurate and trustworthy
 **Total Story Points**: 21
 **Status**: 🔄 In Progress
 **User Stories**: US-011 (✅), US-012 (✅), US-013
 
-### Epic 5: Testing & Quality
+### Epic 6: Testing & Quality
 **Goal**: Achieve >80% test coverage and prevent regression bugs
 **Total Story Points**: 21
 **Status**: 📋 Backlog
 **User Stories**: US-014, US-015
 
-### Epic 6: Performance & Optimization
+### Epic 7: Performance & Optimization
 **Goal**: Improve app performance and mobile experience
 **Total Story Points**: 13
 **Status**: 📋 Backlog
 **User Stories**: US-016, US-017
 
-### Epic 7: Advanced Features
+### Epic 8: Advanced Features
 **Goal**: Add sophisticated features for power users
 **Total Story Points**: 68
 **Status**: 📋 Icebox
@@ -396,14 +418,14 @@ Track velocity over sprints to improve estimation accuracy.
 
 ### Current Status (Jan 29, 2026)
 
-**Total User Stories**: 20
-**Completed**: 5 (25%)
+**Total User Stories**: 21
+**Completed**: 5 (24%)
 **In Progress**: 2 (10%)
-**To Do**: 13 (65%)
+**To Do**: 14 (67%)
 
 **By Priority**:
 - P0 (Critical): 3 stories (2 done, 1 in progress)
-- P1 (High): 4 stories (2 done, 2 to do)
+- P1 (High): 5 stories (2 done, 3 to do) ⬆️ New: US-021
 - P2 (Medium): 5 stories (1 done, 4 to do)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
@@ -412,11 +434,12 @@ Track velocity over sprints to improve estimation accuracy.
 **By Epic**:
 - Epic 1 (User Retention): 5 stories, 31 pts (1 done, 1 in progress)
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
-- Epic 3 (UX): 3 stories, 10 pts (2 done, 1 to do)
-- Epic 4 (Simulation): 3 stories, 21 pts (2 done, 1 to do)
-- Epic 5 (Testing): 2 stories, 21 pts (all backlog)
-- Epic 6 (Performance): 2 stories, 13 pts (all backlog)
-- Epic 7 (Advanced): 3 stories, 68 pts (all icebox)
+- Epic 3 (Investment Config): 1 story, 8 pts (all to do) ⬆️ NEW EPIC
+- Epic 4 (UX): 3 stories, 10 pts (2 done, 1 to do)
+- Epic 5 (Simulation): 3 stories, 21 pts (2 done, 1 to do)
+- Epic 6 (Testing): 2 stories, 21 pts (all backlog)
+- Epic 7 (Performance): 2 stories, 13 pts (all backlog)
+- Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
 
 ---
 
