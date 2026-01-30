@@ -85,6 +85,17 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Fetch Scenario for CPP/OAS fallback values (establishes IncomeSource as primary, Scenario as fallback)
+    // This fixes Bug #1: Scenario.cppStartAge/oasStartAge were being ignored completely
+    const scenario = await prisma.scenario.findFirst({
+      where: { userId: session.userId },
+      select: {
+        cppStartAge: true,
+        oasStartAge: true,
+      },
+      orderBy: { createdAt: 'asc' }, // Get earliest/baseline scenario
+    });
+
     // Fetch expenses to calculate total spending
     const expenses = await prisma.expense.findMany({
       where: {
@@ -335,10 +346,11 @@ export async function GET(request: NextRequest) {
       name: user?.firstName || 'Me',
       start_age: age,
 
-      // Government benefits from database (or sensible defaults)
-      cpp_start_age: person1Income.cpp_start_age ?? Math.max(age, 65),
+      // Government benefits with 3-tier priority: IncomeSource → Scenario → fallback
+      // This fixes Bug #1: Users who configured CPP/OAS in Scenario but not IncomeSource now get correct values
+      cpp_start_age: person1Income.cpp_start_age ?? scenario?.cppStartAge ?? Math.max(age, 65),
       cpp_annual_at_start: person1Income.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
-      oas_start_age: person1Income.oas_start_age ?? Math.max(age, 65),
+      oas_start_age: person1Income.oas_start_age ?? scenario?.oasStartAge ?? Math.max(age, 65),
       oas_annual_at_start: person1Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
       // Pension and other income lists (with startAge support)
@@ -383,10 +395,11 @@ export async function GET(request: NextRequest) {
         name: user?.partnerFirstName || 'Partner',
         start_age: partnerAge,
 
-        // Government benefits from database (or sensible defaults)
-        cpp_start_age: person2Income.cpp_start_age ?? Math.max(partnerAge, 65),
+        // Government benefits with 3-tier priority: IncomeSource → Scenario → fallback
+        // Same fix as person1 for Bug #1
+        cpp_start_age: person2Income.cpp_start_age ?? scenario?.cppStartAge ?? Math.max(partnerAge, 65),
         cpp_annual_at_start: person2Income.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
-        oas_start_age: person2Income.oas_start_age ?? Math.max(partnerAge, 65),
+        oas_start_age: person2Income.oas_start_age ?? scenario?.oasStartAge ?? Math.max(partnerAge, 65),
         oas_annual_at_start: person2Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
         // Pension and other income lists (with startAge support)
