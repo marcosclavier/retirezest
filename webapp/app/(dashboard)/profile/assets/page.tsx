@@ -347,21 +347,30 @@ export default function AssetsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  placeholder="e.g., TD RRSP Account"
+                  placeholder={formData.type === 'gic' ? 'e.g., My 5-Year GIC' : 'e.g., My RRSP Account'}
                   required
                 />
+                {formData.type === 'gic' && (
+                  <p className="mt-1 text-sm text-gray-700">
+                    Use a general name (avoid account numbers or personal details)
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Current Balance ($) *</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.balance}
-                  onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
+                  type="text"
+                  inputMode="decimal"
+                  value={formData.balance ? Number(formData.balance.replace(/,/g, '')).toLocaleString('en-US') : ''}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/,/g, '');
+                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                      setFormData({ ...formData, balance: value });
+                    }
+                  }}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  placeholder="e.g., 150000"
+                  placeholder="e.g., 150,000"
                   required
                 />
               </div>
@@ -558,8 +567,11 @@ export default function AssetsPage() {
                       value={formData.gicIssuer}
                       onChange={(e) => setFormData({ ...formData, gicIssuer: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                      placeholder="e.g., TD Bank, Tangerine"
+                      placeholder="e.g., TD Bank, Tangerine (optional)"
                     />
+                    <p className="mt-1 text-sm text-gray-700">
+                      General bank name only (no branch or account details needed)
+                    </p>
                   </div>
                 </>
               )}
@@ -592,8 +604,11 @@ export default function AssetsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  placeholder="Additional details"
+                  placeholder="Additional details (optional)"
                 />
+                <p className="mt-1 text-sm text-gray-700">
+                  Avoid including account numbers or sensitive information
+                </p>
               </div>
 
               <div className="md:col-span-2">
@@ -604,9 +619,12 @@ export default function AssetsPage() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900"
-                  placeholder="Any additional notes..."
+                  placeholder="Any additional notes (optional)"
                   rows={3}
                 />
+                <p className="mt-1 text-sm text-gray-700">
+                  Do not include passwords, PINs, or account numbers
+                </p>
               </div>
             </div>
 

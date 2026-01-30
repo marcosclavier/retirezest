@@ -43,7 +43,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, name, description, balance, currentValue, contributionRoom, returnRate, owner, notes } = body;
+    const {
+      type, name, description, balance, currentValue, contributionRoom, returnRate, owner, notes,
+      gicMaturityDate, gicTermMonths, gicInterestRate, gicCompoundingFrequency, gicReinvestStrategy, gicIssuer
+    } = body;
 
     // Validation
     if (!type || !name) {
@@ -71,6 +74,13 @@ export async function POST(request: NextRequest) {
         returnRate: returnRate ? parseFloat(returnRate) : null,
         owner: owner || 'person1',
         notes: notes || null,
+        // GIC-specific fields
+        gicMaturityDate: gicMaturityDate ? new Date(gicMaturityDate) : null,
+        gicTermMonths: gicTermMonths ? parseInt(gicTermMonths) : null,
+        gicInterestRate: gicInterestRate ? parseFloat(gicInterestRate) : null,
+        gicCompoundingFrequency: gicCompoundingFrequency || null,
+        gicReinvestStrategy: gicReinvestStrategy || null,
+        gicIssuer: gicIssuer || null,
       },
     });
 
@@ -101,7 +111,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, type, name, description, balance, currentValue, contributionRoom, returnRate, owner, notes } = body;
+    const {
+      id, type, name, description, balance, currentValue, contributionRoom, returnRate, owner, notes,
+      gicMaturityDate, gicTermMonths, gicInterestRate, gicCompoundingFrequency, gicReinvestStrategy, gicIssuer
+    } = body;
 
     if (!id) {
       throw new ValidationError('Asset ID is required', 'id');
@@ -130,6 +143,13 @@ export async function PUT(request: NextRequest) {
         returnRate: returnRate ? parseFloat(returnRate) : null,
         owner: owner !== undefined ? owner : undefined,
         notes: notes || null,
+        // GIC-specific fields
+        gicMaturityDate: gicMaturityDate ? new Date(gicMaturityDate) : null,
+        gicTermMonths: gicTermMonths ? parseInt(gicTermMonths) : null,
+        gicInterestRate: gicInterestRate ? parseFloat(gicInterestRate) : null,
+        gicCompoundingFrequency: gicCompoundingFrequency || null,
+        gicReinvestStrategy: gicReinvestStrategy || null,
+        gicIssuer: gicIssuer || null,
       },
     });
 
