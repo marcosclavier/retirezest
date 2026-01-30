@@ -27,6 +27,36 @@
 
 ---
 
+## 🎁 Ad-Hoc Work Completed (Outside Sprint Scope)
+
+**Note**: The following work was completed Jan 29-30, 2026, but is **NOT** tracked in Sprint 3 velocity:
+
+### ✅ GIC Maturity Tracking Feature - 8 Story Points
+
+**User Request**: "pics not showing at right times sucks" (Satisfaction: 1/5)
+**Interpretation**: GIC maturity events not tracked in retirement simulations
+
+**Work Completed**:
+- ✅ **Phase 2**: Python backend GIC maturity processing (5 pts) - Commit `06afdac`
+- ✅ **Phase 3**: Frontend GIC asset form with privacy protections (2 pts) - Commit `3a0e049`
+- ✅ **User Communication**: Email sent to rightfooty218@gmail.com about new feature
+- ✅ **Production Deployment**: Live at www.retirezest.com/profile/assets
+
+**Documentation**: [SPRINT_3_GIC_COMPLETION_UPDATE.md](SPRINT_3_GIC_COMPLETION_UPDATE.md)
+
+**Why Not in Sprint 3**:
+- Work was NOT included in Sprint 3 planning
+- User feedback received mid-sprint (Jan 29)
+- Completed outside Sprint 3 Kanban board tracking
+- Counting toward velocity would artificially inflate metrics
+
+**User Story Numbering Note**:
+- Git commits used "US-038" for GIC work (historical, unchanged)
+- Sprint 3 US-038 refers to "Fix CPP/OAS Income Timing Bug" (different story)
+- See [SPRINT_3_GIC_COMPLETION_UPDATE.md](SPRINT_3_GIC_COMPLETION_UPDATE.md) for full clarification
+
+---
+
 ## 🎯 Sprint Progress
 
 **Core Commitment**: 16 story points

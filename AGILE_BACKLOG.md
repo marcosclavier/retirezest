@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 29, 2026 (Added US-038: GIC Maturity Tracking, US-039: Pension Start Dates, US-040: GIC Unit Tests, US-041: GIC Integration Tests)
+**Last Updated**: January 30, 2026 (GIC Maturity Tracking completed and deployed, Sprint 3 board updated)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -47,41 +47,52 @@
 
 ---
 
-## 🎯 Next Sprint: Sprint 3 - January 30 - February 12, 2026
+## 🎯 Current Sprint: Sprint 3 - January 30 - February 12, 2026
 
-**Sprint Goal**: Improve onboarding UX and validate simulation accuracy while establishing reliable sprint processes
+**Sprint Goal**: Fix critical income timing bug, improve onboarding UX, and validate simulation accuracy based on user feedback
 
-**Sprint Planning Date**: January 29, 2026
+**Sprint Planning Date**: January 29, 2026 (Revised based on critical user feedback)
 **Pre-Sprint Verification**: ✅ Complete (AI-2.3 process followed)
 
 ### Sprint 3 Backlog
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
-| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | ✅ Done (Pre-existing) |
-| US-013 | RRIF Strategy Validation | 8 | P1 🟡 | Epic 5: Simulation | 📋 To Do |
-| US-003 | Database Migration - Pension Indexing (Backend) | 8 | P1 🟡 | Epic 1: Retention | 📋 To Do |
-| AI-2.7 | E2E Test for Withdrawal Strategy Selector | 3 | P1 🟡 | Epic 6: Testing | 📋 To Do |
+| US-038 | Fix CPP/OAS Income Timing Bug | 8 | P0 🔴 | Epic 4: UX | 📋 To Do |
+| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | 📋 To Do |
+| US-039 | Pension Start Date Configuration | 5 | P1 🟡 | Epic 4: UX | 📋 To Do |
+| US-013 | RRIF Strategy Validation (Stretch) | 8 | P1 🟡 | Epic 5: Simulation | 📋 To Do |
+| US-003 | Database Migration - Pension Indexing (Stretch) | 3 | P1 🟡 | Epic 1: Retention | 📋 To Do |
 
-**Total Story Points**: 22 committed / 40 capacity (55% utilization - conservative + stretch goals)
-**Core Commitment**: 11 pts (US-009 + US-013)
-**Stretch Goals**: 11 pts (US-003 + AI-2.7)
+**Total Story Points**: 27 planned / 40 capacity (68% utilization)
+**Core Commitment**: 16 pts (US-038, US-009, US-039)
+**Stretch Goals**: 11 pts (US-013, US-003)
 
-**Sprint Board**: [SPRINT_3_BOARD.md](SPRINT_3_BOARD.md)
+**Sprint Board**: [SPRINT_3_BOARD_REVISED.md](SPRINT_3_BOARD_REVISED.md)
 **Pre-Planning Report**: [SPRINT_3_PRE_PLANNING_VERIFICATION.md](SPRINT_3_PRE_PLANNING_VERIFICATION.md)
 
-**Key Focus Areas**:
-- ✅ Onboarding: Unblock 12 users stuck at Step 6 (US-009)
-- ✅ Accuracy: Validate RRIF strategies against CRA rules (US-013)
-- ✅ Completion: Finish pension indexing backend (US-003)
-- ✅ Quality: Prevent withdrawal strategy regressions (AI-2.7)
-- ✅ Process: Enforce backlog hygiene (AI-2.2)
+**Ad-Hoc Work Completed (Outside Sprint Scope)**:
+- ✅ **GIC Maturity Tracking** - 8 story points completed Jan 29-30, 2026
+  - Phase 2: Python backend processing (5 pts) - Commit `06afdac`
+  - Phase 3: Frontend GIC form with privacy protections (2 pts) - Commit `3a0e049`
+  - Status: Deployed to production at www.retirezest.com/profile/assets
+  - Documentation: [SPRINT_3_GIC_COMPLETION_UPDATE.md](SPRINT_3_GIC_COMPLETION_UPDATE.md)
+  - User Response: Email sent to rightfooty218@gmail.com about GIC feature
+  - Note: NOT counted toward Sprint 3 velocity (completed outside sprint tracking)
 
-**Key Learnings from Sprint 2**:
-- ✅ Pre-sprint verification prevents duplicate work (discovered US-022 complete)
+**Key Focus Areas**:
+- 🔴 Critical: Fix CPP/OAS income timing bug (user satisfaction: 1/5) (US-038)
+- 🟢 Quick Win: Unblock 12 users stuck at Step 6 onboarding (US-009)
+- 🟡 Enhancement: Add pension start date configuration (US-039)
+- 📊 Stretch: Validate RRIF strategies against CRA rules (US-013)
+- 📊 Stretch: Finish pension indexing backend (US-003)
+
+**Key Learnings from Sprint 2 Applied**:
+- ✅ Pre-sprint verification prevents duplicate work (AI-2.3)
 - ✅ Small stories (1-3 pts) have higher success rate
-- ✅ Conservative planning (50-60% capacity) improves quality
-- ✅ Git history check is CRITICAL before starting work
+- ✅ Conservative planning (60% capacity = 16 pts core)
+- ✅ Git history check is CRITICAL before starting work (AI-2.1)
+- ✅ Update backlog immediately after story completion (AI-2.2)
 
 ---
 
