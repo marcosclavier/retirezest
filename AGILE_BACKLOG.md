@@ -51,8 +51,8 @@
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
-| US-038 | Fix CPP/OAS Income Timing Bug | 8 | P0 🔴 | Epic 4: UX | 📋 To Do |
-| US-009 | Onboarding - Skip Real Estate Step | 1 | P2 🟢 | Epic 4: UX | 📋 To Do |
+| US-038 | Fix CPP/OAS Income Timing Bug | 8 | P0 🔴 | Epic 4: UX | ✅ Done |
+| US-009 | Onboarding - Skip Real Estate Step | 1 (0 delivered) | P2 🟢 | Epic 4: UX | ✅ Done (Pre-existing) |
 
 **Total Story Points**: 9 planned / 15 capacity (60% utilization - conservative)
 **Core Commitment**: 9 pts (US-038, US-009)
@@ -262,10 +262,11 @@
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
-| **US-009** | **Onboarding - Skip Real Estate Step** | **3** | **P2** | **📋 To Do** |
+| **US-009** | **Onboarding - Skip Real Estate Step** | **1 (0 delivered)** | **P2** | **✅ Done (Pre-existing)** |
 | **Description** | As a user without property, I want to skip the real estate onboarding step so that I can complete setup faster |
-| **Acceptance Criteria** | - [ ] "Skip for now" button visible on Step 6<br>- [ ] Clicking skip advances to next step<br>- [ ] Can return to add real estate later<br>- [ ] Progress bar shows step as optional<br>- [ ] No validation errors when skipped |
-| **Impact** | 12 users currently stuck at Step 6 (86% complete) |
+| **Acceptance Criteria** | - [x] "Skip for now" button visible on Step 6<br>- [x] Clicking skip advances to next step<br>- [x] Can return to add real estate later<br>- [x] Progress bar shows step as optional<br>- [x] No validation errors when skipped |
+| **Impact** | 12 users can now complete onboarding (feature was already implemented) |
+| **Verification** | See [US-009_VERIFICATION_REPORT.md](US-009_VERIFICATION_REPORT.md) - All acceptance criteria verified as complete |
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
