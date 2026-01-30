@@ -9,7 +9,7 @@ Core Functions:
 - simulate() - Multi-year household simulation
 """
 
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 import pandas as pd
 from modules.models import Person, Household, TaxParams, YearResult
 from modules.config import get_tax_params, index_tax_params
@@ -286,6 +286,177 @@ def apply_corp_dividend(person: Person, dividend_amount: float) -> float:
     person.corp_rdtoh = max(0.0, available_rdtoh - refund)
 
     return refund
+
+
+def calculate_gic_maturity_value(
+    principal: float,
+    annual_rate: float,
+    term_months: int,
+    compounding_frequency: str = "annually"
+) -> float:
+    """
+    Calculate GIC maturity value using compound interest formula.
+
+    Formula: FV = P × (1 + r/n)^(n × t)
+    Where:
+      - FV = Future Value (maturity value)
+      - P = Principal (initial investment)
+      - r = Annual interest rate (decimal)
+      - n = Compounding frequency per year
+      - t = Time in years
+
+    Args:
+        principal: Initial GIC investment amount
+        annual_rate: Annual interest rate (e.g., 0.045 for 4.5%)
+        term_months: GIC term in months
+        compounding_frequency: One of 'annually', 'semi-annually', 'quarterly', 'monthly'
+
+    Returns:
+        float: Maturity value of the GIC
+
+    Example:
+        >>> calculate_gic_maturity_value(10000, 0.045, 12, "annually")
+        10450.0  # $10k at 4.5% for 1 year = $10,450
+    """
+    if principal <= 0:
+        return 0.0
+
+    if annual_rate <= 0:
+        return principal  # No interest
+
+    # Convert term from months to years
+    term_years = term_months / 12.0
+
+    # Determine compounding frequency (n)
+    frequency_map = {
+        "annually": 1,
+        "semi-annually": 2,
+        "quarterly": 4,
+        "monthly": 12
+    }
+    n = frequency_map.get(compounding_frequency.lower(), 1)
+
+    # Calculate maturity value: FV = P × (1 + r/n)^(n × t)
+    maturity_value = principal * ((1 + annual_rate / n) ** (n * term_years))
+
+    return maturity_value
+
+
+def process_gic_maturity_events(
+    gic_assets: List[Dict[str, Any]],
+    current_year: int,
+    simulation_age: int
+) -> Dict[str, Any]:
+    """
+    Process GIC maturity events in the current year.
+
+    Checks all GIC assets for maturity in the current year and processes them
+    according to their reinvestment strategy.
+
+    Args:
+        gic_assets: List of GIC asset dictionaries
+        current_year: Current simulation year
+        simulation_age: Person's age this year
+
+    Returns:
+        Dict with:
+          - 'locked_gics': List of GICs still locked (not matured)
+          - 'reinvestment_instructions': List of dicts with 'action', 'amount', and optional 'new_gic'
+          - 'total_interest_income': Total taxable interest from matured GICs
+    """
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
+
+    result = {
+        'locked_gics': [],
+        'reinvestment_instructions': [],
+        'total_interest_income': 0.0
+    }
+
+    if not gic_assets:
+        return result
+
+    for gic in gic_assets:
+        maturity_date = gic.get('gicMaturityDate')
+        if not maturity_date:
+            # No maturity date - keep as locked
+            result['locked_gics'].append(gic)
+            continue
+
+        # Extract year from maturity date (assuming ISO format YYYY-MM-DD or datetime object)
+        if isinstance(maturity_date, str):
+            maturity_year = int(maturity_date.split('-')[0])
+        else:
+            maturity_year = maturity_date.year
+
+        # Check if GIC matures this year
+        if maturity_year == current_year:
+            principal = gic.get('currentValue', 0.0)
+            annual_rate = gic.get('gicInterestRate', 0.0)
+            term_months = gic.get('gicTermMonths', 12)
+            compounding = gic.get('gicCompoundingFrequency', 'annually')
+            reinvest_strategy = gic.get('gicReinvestStrategy', 'cash-out')
+
+            # Calculate maturity value
+            maturity_value = calculate_gic_maturity_value(
+                principal,
+                annual_rate,
+                term_months,
+                compounding
+            )
+
+            interest_earned = maturity_value - principal
+            result['total_interest_income'] += interest_earned  # Taxable in maturity year
+
+            # Handle reinvestment strategy
+            if reinvest_strategy == 'cash-out':
+                # Transfer full maturity value to non-registered account
+                result['reinvestment_instructions'].append({
+                    'action': 'cash-out',
+                    'amount': maturity_value
+                })
+
+            elif reinvest_strategy == 'auto-renew':
+                # Renew GIC with same terms for another term
+                if isinstance(maturity_date, str):
+                    old_date = datetime.fromisoformat(maturity_date.split('T')[0])
+                else:
+                    old_date = maturity_date
+
+                new_maturity_date = old_date + relativedelta(months=term_months)
+
+                # Create new GIC
+                new_gic = {
+                    **gic,  # Copy all fields
+                    'gicMaturityDate': new_maturity_date.isoformat(),
+                    'currentValue': maturity_value  # Principal for next term
+                }
+
+                result['reinvestment_instructions'].append({
+                    'action': 'auto-renew',
+                    'amount': maturity_value,
+                    'new_gic': new_gic
+                })
+
+            elif reinvest_strategy == 'transfer-to-nonreg':
+                # Transfer to non-registered account
+                result['reinvestment_instructions'].append({
+                    'action': 'transfer-to-nonreg',
+                    'amount': maturity_value
+                })
+
+            elif reinvest_strategy == 'transfer-to-tfsa':
+                # Transfer to TFSA (if room available)
+                result['reinvestment_instructions'].append({
+                    'action': 'transfer-to-tfsa',
+                    'amount': maturity_value
+                })
+
+        else:
+            # GIC not yet matured - keep as locked
+            result['locked_gics'].append(gic)
+
+    return result
 
 
 def cap_gain_ratio(nonreg_balance: float, nonreg_acb: float) -> float:
@@ -1211,6 +1382,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     nr_elig_div     = nr_dist["elig_div"]
     nr_nonelig_div  = nr_dist["nonelig_div"]
     nr_capg_dist    = nr_dist["capg_dist"]
+
+    # --- Add GIC interest income to non-registered interest ---
+    if gic_assets:
+        gic_interest_income = gic_result.get('total_interest_income', 0.0)
+        nr_interest += gic_interest_income
 
     # --- Corporate passive & RDTOH (bucket aware) ---
     corp_info = corp_passive_income(person)
