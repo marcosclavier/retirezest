@@ -663,6 +663,37 @@
 **Status**: 📋 To Do
 **User Stories**: US-024, US-032, US-033, US-034
 
+### Epic 11: Process Improvements & Team Efficiency
+**Goal**: Improve Agile processes, sprint predictability, and team productivity through systematic improvements
+**Total Story Points**: 12
+**Status**: 🔄 In Progress (Sprint 3 Retrospective Action Items)
+**Action Items**: AI-3.1, AI-3.2, AI-3.3, AI-3.4, AI-3.5, AI-3.6, AI-3.7
+
+---
+
+#### Sprint 3 Retrospective Action Items (January 30, 2026)
+
+| ID | Action Item | Story Points | Priority | Status | Due Date |
+|----|-------------|--------------|----------|--------|----------|
+| **AI-3.1** | **Create Sprint Pivot Protocol** | **2** | **P0 🔴** | **📋 To Do** | **Before Sprint 4** |
+| **AI-3.2** | **Implement User Story Naming Convention** | **1** | **P1 🟡** | **📋 To Do** | **Before Sprint 4** |
+| **AI-3.3** | **Create "Urgent Work" Kanban Swim Lane** | **1** | **P1 🟡** | **📋 To Do** | **Before Sprint 4** |
+| **AI-3.4** | **Establish Fallback Process for Blocked Stories** | **1** | **P1 🟡** | **📋 To Do** | **Sprint 3 Day 2** |
+| **AI-3.5** | **Conduct Mid-Sprint Check-In (Day 5)** | **1** | **P2 🟢** | **📋 To Do** | **Sprint 3 Day 5** |
+| **AI-3.6** | **Create UAT Checklist Template** | **3** | **P2 🟢** | **📋 To Do** | **Sprint 4** |
+| **AI-3.7** | **Update Sprint Board Daily** | **3** | **P0 🔴** | **📋 To Do** | **Daily** |
+
+**Detailed Descriptions**: See [SPRINT_3_RETROSPECTIVE.md](SPRINT_3_RETROSPECTIVE.md) for full action item details, acceptance criteria, and context.
+
+**Summary**:
+- **AI-3.1**: Document formal process for sprint pivots during user crises (2 hrs)
+- **AI-3.2**: Adopt US/AH/BF/SP/AI naming convention to prevent numbering conflicts (1 hr)
+- **AI-3.3**: Add "Urgent Work" swim lane to sprint board template (30 min)
+- **AI-3.4**: Create fallback process when stories blocked >48 hours (1 hr)
+- **AI-3.5**: Mid-sprint review on Day 5 to catch derailment early (30 min)
+- **AI-3.6**: Standardized UAT checklist for user-facing features (1 hr)
+- **AI-3.7**: Daily sprint board updates (5 min/day) - AI-2.2 reinforced!
+
 ---
 
 ## 📝 User Story Template
@@ -825,6 +856,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
 - Epic 9 (Security): 1 story, 13 pts (all to do) ⬆️ NEW EPIC
 - Epic 10 (Monetization): 4 stories, 26 pts (all to do)
+- Epic 11 (Process Improvements): 7 action items, 12 pts (🔄 in progress) ⬆️ NEW EPIC - Sprint 3 Retrospective
 
 ---
 
