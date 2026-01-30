@@ -39,37 +39,79 @@
 
 ---
 
-## 🎯 Current Sprint: Sprint 2 - Complete! ✅
+## 🎯 Current Sprint: Sprint 4 - February 13-19, 2026 (1 week)
 
-**Sprint Goal**: Enable premium monetization and improve withdrawal strategy UX to reduce user churn
+**Sprint Goal**: Complete Sprint 3 carryovers - Fix critical income timing bug and unblock onboarding
 
-**Status**: ✅ 105% Complete (21/20 pts) - Exceeded commitment!
+**Sprint Planning Date**: January 30, 2026
+**Sprint Duration**: 1 week (5 days) - Focused sprint for Sprint 3 completion
+**Team Capacity**: 9 story points (conservative 60% capacity)
+
+### Sprint 4 Backlog
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| US-038 | Fix CPP/OAS Income Timing Bug | 8 | P0 🔴 | Epic 4: UX | 📋 To Do |
+| US-009 | Onboarding - Skip Real Estate Step | 1 | P2 🟢 | Epic 4: UX | 📋 To Do |
+
+**Total Story Points**: 9 planned / 15 capacity (60% utilization - conservative)
+**Core Commitment**: 9 pts (US-038, US-009)
+
+**Sprint Board**: [SPRINT_4_BOARD.md](SPRINT_4_BOARD.md)
+
+**Why 1-Week Sprint?**:
+- Focused sprint to complete Sprint 3 high-priority carryovers
+- US-038 is P0 critical (user satisfaction 1/5)
+- US-009 is quick win (1 pt, unblocks 12 users)
+- Conservative 60% capacity ensures realistic commitment
+- Rapid iteration and course correction
+
+**Deferred to Sprint 5**:
+- US-039: Pension Start Date Configuration (5 pts) - capacity constraint
+- US-013: RRIF Strategy Validation (8 pts) - better for 2-week sprint
+- US-003: Pension Indexing Backend (3 pts) - lower priority
+
+**Key Risks**:
+- 🔴 US-038 blocked on user response (awaiting clarification email sent Jan 29)
+- Fallback plan: Investigate based on user simulation data if no response by Day 2
+- Pivot plan: If US-038 cannot be resolved, switch to US-042 (2 pts) + US-043 (3 pts)
 
 ---
 
-## 🎯 Current Sprint: Sprint 3 - January 30 - February 12, 2026
+## 🎯 Previous Sprint: Sprint 3 - January 30 - February 12, 2026
 
 **Sprint Goal**: Fix critical income timing bug, improve onboarding UX, and validate simulation accuracy based on user feedback
 
+**Status**: ⚠️ 0% Complete (0/16 pts core) - All work pivoted to critical user issue
+
 **Sprint Planning Date**: January 29, 2026 (Revised based on critical user feedback)
 **Pre-Sprint Verification**: ✅ Complete (AI-2.3 process followed)
+**Retrospective**: [SPRINT_3_RETROSPECTIVE.md](SPRINT_3_RETROSPECTIVE.md)
 
 ### Sprint 3 Backlog
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
-| US-038 | Fix CPP/OAS Income Timing Bug | 8 | P0 🔴 | Epic 4: UX | 📋 To Do |
-| US-009 | Onboarding - Skip Real Estate Step | 3 | P2 🟢 | Epic 4: UX | 📋 To Do |
-| US-039 | Pension Start Date Configuration | 5 | P1 🟡 | Epic 4: UX | 📋 To Do |
-| US-013 | RRIF Strategy Validation (Stretch) | 8 | P1 🟡 | Epic 5: Simulation | 📋 To Do |
-| US-003 | Database Migration - Pension Indexing (Stretch) | 3 | P1 🟡 | Epic 1: Retention | 📋 To Do |
+| US-038 | Fix CPP/OAS Income Timing Bug | 8 | P0 🔴 | Epic 4: UX | 🔄 Carried to Sprint 4 |
+| US-009 | Onboarding - Skip Real Estate Step | 3 → 1 | P2 🟢 | Epic 4: UX | 🔄 Carried to Sprint 4 |
+| US-039 | Pension Start Date Configuration | 5 | P1 🟡 | Epic 4: UX | 📋 Deferred to Sprint 5 |
+| US-013 | RRIF Strategy Validation (Stretch) | 8 | P1 🟡 | Epic 5: Simulation | 📋 Deferred to Sprint 5 |
+| US-003 | Database Migration - Pension Indexing (Stretch) | 3 | P1 🟡 | Epic 1: Retention | 📋 Deferred to Sprint 5 |
 
 **Total Story Points**: 27 planned / 40 capacity (68% utilization)
 **Core Commitment**: 16 pts (US-038, US-009, US-039)
 **Stretch Goals**: 11 pts (US-013, US-003)
+**Completed**: 0 pts (0%) - Work pivoted to critical GIC feature (8 pts ad-hoc work)
 
 **Sprint Board**: [SPRINT_3_BOARD_REVISED.md](SPRINT_3_BOARD_REVISED.md)
 **Pre-Planning Report**: [SPRINT_3_PRE_PLANNING_VERIFICATION.md](SPRINT_3_PRE_PLANNING_VERIFICATION.md)
+
+**Sprint 3 → Sprint 4 Carryover Rationale**:
+- Sprint 3 ended with 0% completion due to critical user feedback requiring immediate response
+- GIC Maturity Tracking (8 pts) completed ad-hoc outside sprint scope (user satisfaction 1/5)
+- US-038 and US-009 carried to Sprint 4 (1-week focused sprint)
+- US-039, US-013, US-003 deferred to Sprint 5 due to capacity constraints
+- Sprint 4 planned conservatively (9 pts / 60% capacity) to ensure completion
 
 **Ad-Hoc Work Completed (Outside Sprint Scope)**:
 - ✅ **GIC Maturity Tracking** - 8 story points completed Jan 29-30, 2026
