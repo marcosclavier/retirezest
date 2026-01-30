@@ -1777,6 +1777,9 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # pass through baseline non-reg distributions (cash to household)
         "nr_interest": nr_interest,
         "nr_elig_div": nr_elig_div,
+        # pension and other income from lists
+        "pension_income": pension_income_total,
+        "other_income": other_income_total,
         "nr_nonelig_div": nr_nonelig_div,
         "nr_capg_dist": nr_capg_dist,
         # corporate gross passive components (for reporting)
@@ -2431,6 +2434,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         corp_capg_gen_p1_val     = float(info1.get("corp_capg_gen", 0.0))
         corp_capg_gen_p2_val     = float(info2.get("corp_capg_gen", 0.0))
 
+        # --- Pension and other income from pension_incomes and other_incomes lists ---
+        pension_income_p1 = float(info1.get("pension_income", 0.0))
+        pension_income_p2 = float(info2.get("pension_income", 0.0))
+        other_income_p1 = float(info1.get("other_income", 0.0))
+        other_income_p2 = float(info2.get("other_income", 0.0))
+
         _calc_total = (tax1_fed + tax1_prov) + (tax2_fed + tax2_prov)
         # Use relative tolerance check for final validation (accounts for floating-point precision at any scale)
         assert _rel_tol_check(total_tax_after_split, _calc_total), \
@@ -2483,6 +2492,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             #Pensions
             oas_p1=t1["oas"], oas_p2=t2["oas"], cpp_p1=t1["cpp"], cpp_p2=t2["cpp"],
             gis_p1=t1["gis"], gis_p2=t2["gis"],
+            # Private pension and other income
+            pension_income_p1=pension_income_p1, pension_income_p2=pension_income_p2,
+            other_income_p1=other_income_p1, other_income_p2=other_income_p2,
             #OAS Clawback
             oas_clawback_p1=float(t1.get("oas_clawback", 0.0)), oas_clawback_p2=float(t2.get("oas_clawback", 0.0)),
             #withdrawls

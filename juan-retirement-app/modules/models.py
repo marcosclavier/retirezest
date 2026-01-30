@@ -293,6 +293,12 @@ class YearResult:
     oas_clawback_p1: float = 0.0
     oas_clawback_p2: float = 0.0
 
+    # Private pension and other income (from pension_incomes and other_incomes lists)
+    pension_income_p1: float = 0.0
+    pension_income_p2: float = 0.0
+    other_income_p1: float = 0.0
+    other_income_p2: float = 0.0
+
     # Non-registered income breakdown
     nr_interest_p1: float = 0.0
     nr_interest_p2: float = 0.0
