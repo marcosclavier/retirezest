@@ -301,6 +301,18 @@
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
+| **US-042** | **Align Withdrawal Strategy Names Between Frontend and Backend** | **2** | **P2** | **📋 To Do** |
+| **Description** | As a developer, I want withdrawal strategy internal names to be consistent between the frontend UI and Python backend so that we eliminate the need for mapping dictionaries and reduce the risk of synchronization bugs |
+| **Acceptance Criteria** | - [ ] **Audit Phase**: Identify all withdrawal strategy name mismatches between frontend and backend<br>- [ ] **Alignment Phase**: Choose canonical naming scheme (prefer backend names for consistency)<br>- [ ] **Implementation Phase**: Update frontend strategyMap to use backend names<br>- [ ] **Testing Phase**: Verify all withdrawal strategies still display correctly<br>- [ ] **Documentation Phase**: Update any developer docs or comments referencing old names<br>- [ ] Zero TypeScript compilation errors<br>- [ ] All withdrawal strategies render with correct display names<br>- [ ] Backend receives correct strategy values from frontend |
+| **Tasks** | - [ ] **Audit** (3 hours):<br>  - Grep for all withdrawal strategy references in frontend<br>  - Grep for all withdrawal strategy references in Python backend<br>  - Document current mapping (e.g., 'early-rrif-withdrawal' → 'rrif-frontload')<br>  - List all files requiring updates<br>- [ ] **Decision** (2 hours):<br>  - Choose canonical naming scheme (recommend: backend names)<br>  - Create migration plan for backward compatibility<br>  - Review with team for approval<br>- [ ] **Implementation** (3 hours):<br>  - Update `webapp/app/(dashboard)/simulation/page.tsx` strategyMap keys<br>  - Update any API calls or form submissions<br>  - Update TypeScript types if needed<br>  - Update database seed data if applicable<br>- [ ] **Validation** (2 hours):<br>  - Run TypeScript compilation<br>  - Test all 6 withdrawal strategies in dev environment<br>  - Verify backend receives correct strategy names<br>  - Check existing user simulations still work |
+| **Technical Notes** | **Current Naming Inconsistency:**<br><br>**Frontend** (`webapp/app/(dashboard)/simulation/page.tsx:252`):<br>```typescript<br>const strategyMap: Record<string, string> = {<br>  'minimize-income': 'Income Minimization (GIS-Optimized)',<br>  'balanced-income': 'Balanced Income',<br>  'early-rrif-withdrawal': 'Early RRIF Withdrawals (Income Splitting)', // ⚠️ MISMATCH<br>  'max-tfsa-first': 'Maximize TFSA First',<br>  'corporate-optimized': 'Corporate Account Optimization',<br>  'preserve-estate': 'Estate Preservation',<br>};<br>```<br><br>**Backend** (Python `juan-retirement-app/modules/`):<br>- Uses `'rrif-frontload'` instead of `'early-rrif-withdrawal'`<br><br>**Problem**: Requires mapping dictionaries that can get out of sync<br><br>**Recommended Approach**:<br>1. Use backend names as source of truth (they drive simulation logic)<br>2. Update frontend to use `'rrif-frontload'` key<br>3. Keep display name "Early RRIF Withdrawals (Income Splitting)"<br>4. Check database for any stored strategy values (may need migration)<br><br>**Files to Update**:<br>- `webapp/app/(dashboard)/simulation/page.tsx` (strategyMap keys)<br>- `webapp/components/simulation/*.tsx` (any hardcoded strategy checks)<br>- `webapp/app/api/simulate/route.ts` (API endpoint if validation exists)<br>- `webapp/prisma/schema.prisma` (if enum exists)<br>- Any test files referencing withdrawal strategies |
+| **User Impact** | **Low** (internal refactoring) - Users will see no visible changes. This is a developer experience improvement that reduces technical debt and prevents future bugs from mapping dictionary desync. However, it's important for long-term maintainability. |
+| **Priority Justification** | **P2 (Medium)** because:<br>1. **Technical debt** - Inconsistent naming creates maintenance burden<br>2. **Low urgency** - Current mapping works, no active bugs reported<br>3. **Quick win** - Only 2 story points, can be completed in 1 day<br>4. **Risk reduction** - Eliminates potential sync bugs in future<br>5. **Developer experience** - Makes codebase easier to understand<br>6. **Good housekeeping** - Should be done before adding new withdrawal strategies |
+| **Success Metrics** | - [ ] Zero withdrawal strategy name mappings between frontend/backend<br>- [ ] TypeScript compilation passes with 0 errors<br>- [ ] All 6 withdrawal strategies tested and working<br>- [ ] No user-reported issues after deployment<br>- [ ] Code review passes (naming consistency verified)<br>- [ ] Documentation updated to reflect new naming convention |
+| **Related Stories** | - US-025 (Withdrawal Strategy UX) - Uses strategy names in UI<br>- US-026 (Default Withdrawal Strategy) - References strategy selection<br>- Future withdrawal strategy features - Will benefit from consistent naming |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
 | **US-027** | **Educational Guidance: Withdrawal Order to Save Taxes & Avoid Clawback** | **5** | **P1** | **📋 To Do** |
 | **Description** | As a user, I want clear educational guidance about the optimal account withdrawal order (TFSA/RRSP/RRIF/NonReg) so that I can minimize taxes and avoid OAS/GIS clawback throughout my retirement |
 | **Acceptance Criteria** | - [ ] Educational tooltip/modal explains withdrawal order strategy<br>- [ ] Visual diagram shows recommended withdrawal sequence<br>- [ ] Explanation of tax implications for each account type<br>- [ ] Guidance on OAS clawback threshold and avoidance<br>- [ ] Guidance on GIS income limits and preservation<br>- [ ] Examples showing tax savings from optimal order<br>- [ ] Context-sensitive help based on user's assets<br>- [ ] Mobile-friendly educational content<br>- [ ] Links to CRA resources for verification<br>- [ ] Accessible to users of all financial literacy levels |
@@ -830,17 +842,17 @@ Track velocity over sprints to improve estimation accuracy.
 
 ## 📊 Backlog Metrics
 
-### Current Status (Jan 29, 2026)
+### Current Status (Jan 30, 2026)
 
-**Total User Stories**: 36 ⬆️ New: US-036 (RRIF Tax Withholding), US-037 (Real Estate), US-038 (Income Timing Bug), US-039 (Pension Start Dates)
+**Total User Stories**: 37 ⬆️ New: US-036 (RRIF Tax Withholding), US-037 (Real Estate), US-038 (Income Timing Bug), US-039 (Pension Start Dates), US-042 (Strategy Name Alignment)
 **Completed**: 5 (14%)
 **In Progress**: 0 (0%) - Sprint 2 complete
-**To Do**: 31 (86%)
+**To Do**: 32 (86%)
 
 **By Priority**:
 - P0 (Critical): 4 stories (2 done, 2 to do) ⬆️ New: US-038 (Income Timing Bug)
 - P1 (High): 14 stories (2 done, 12 to do) ⬆️ New: US-034 (Monetization), US-039 (Pension Start Dates)
-- P2 (Medium): 10 stories (1 done, 9 to do) ⬆️ New: US-036 (RRIF Withholding), US-037 (Real Estate)
+- P2 (Medium): 11 stories (1 done, 10 to do) ⬆️ New: US-036 (RRIF Withholding), US-037 (Real Estate), US-042 (Strategy Name Alignment)
 - P3 (Low): 4 stories (0 done, 4 to do)
 - P4 (Nice-to-have): 2 stories
 - P5 (Icebox): 2 stories
@@ -850,7 +862,7 @@ Track velocity over sprints to improve estimation accuracy.
 - Epic 2 (French): 2 stories, 34 pts (all backlog)
 - Epic 3 (Investment Config): 1 story, 8 pts (all to do)
 - Epic 4 (UX): 9 stories, 41 pts (2 done, 7 to do) ⬆️ New: US-038 (Income Timing), US-039 (Pension Start)
-- Epic 5 (Simulation): 7 stories, 68 pts (2 done, 5 to do) ⬆️ New: US-036 (RRIF Withholding), US-037 (Real Estate)
+- Epic 5 (Simulation): 8 stories, 70 pts (2 done, 6 to do) ⬆️ New: US-036 (RRIF Withholding), US-037 (Real Estate), US-042 (Strategy Name Alignment)
 - Epic 6 (Testing): 4 stories, 34 pts (all backlog) ⬆️ New: US-035 (E2E Testing)
 - Epic 7 (Performance): 2 stories, 13 pts (all backlog)
 - Epic 8 (Advanced): 3 stories, 68 pts (all icebox)
