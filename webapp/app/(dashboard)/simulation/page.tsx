@@ -5,9 +5,9 @@ import dynamic from 'next/dynamic';
 import { useDebouncedCallback } from '@/lib/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw, Mail, CheckCircle } from 'lucide-react';
 import { runSimulation, healthCheck } from '@/lib/api/simulation-client';
 import {
   defaultHouseholdInput,
@@ -87,6 +87,9 @@ export default function SimulationPage() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [hasShownFeedback, setHasShownFeedback] = useState(false);
   const [isWizardMode, setIsWizardMode] = useState(false);
+  const [emailVerified, setEmailVerified] = useState<boolean>(true); // Default true, will check on load
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const [lastProfileUpdate] = useState<Date | null>(null);
   const [lastSimulationLoad] = useState<Date | null>(null);
 
@@ -200,7 +203,7 @@ export default function SimulationPage() {
         const token = csrfData.token || null;
         setCsrfToken(token);
 
-        // Fetch profile settings to get couples planning preference
+        // Fetch profile settings to get couples planning preference and email verification status
         // Always use database value, not localStorage (database is source of truth)
         try {
           const settingsRes = await fetch('/api/profile/settings');
@@ -209,6 +212,11 @@ export default function SimulationPage() {
             if (settingsData?.includePartner !== undefined) {
               console.log('🔧 Using includePartner from database:', settingsData.includePartner);
               setIncludePartner(settingsData.includePartner);
+            }
+            // Check email verification status
+            if (settingsData?.emailVerified !== undefined) {
+              console.log('📧 Email verification status:', settingsData.emailVerified);
+              setEmailVerified(settingsData.emailVerified);
             }
           }
         } catch (err) {
@@ -688,6 +696,34 @@ export default function SimulationPage() {
     setPrefillAttempted(true);
   };
 
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setResendSuccess(false);
+
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setResendSuccess(true);
+        // Reset success message after 5 seconds
+        setTimeout(() => setResendSuccess(false), 5000);
+      } else {
+        console.error('Failed to resend verification email');
+        alert('Failed to resend verification email. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error resending verification email:', error);
+      alert('Failed to resend verification email. Please try again later.');
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleUpgradeClick = (feature: 'csv' | 'pdf' | 'export' | 'early-retirement' | 'general' = 'general') => {
     setUpgradeFeature(feature);
     setShowUpgradeModal(true);
@@ -926,12 +962,47 @@ export default function SimulationPage() {
           />
         )}
 
-        {/* API Health Warning */}
+        {/* API Health Warning - Informational only, doesn't block simulation */}
         {apiHealthy === false && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Python API is not responding. Make sure the backend is running on port 8000.
+          <Alert variant="default" className="border-yellow-300 bg-yellow-50">
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-900">
+              Backend health check did not respond. You can still run simulations - if there are issues, you'll see an error message.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Email Verification Banner - Shown when email is not verified */}
+        {!emailVerified && !prefillLoading && (
+          <Alert variant="default" className="border-orange-300 bg-orange-50">
+            <Mail className="h-4 w-4 text-orange-600" />
+            <AlertTitle className="text-orange-900">Email Verification Required</AlertTitle>
+            <AlertDescription className="text-orange-800">
+              <p className="mb-3">
+                You need to verify your email address before running retirement simulations.
+                Check your inbox for the verification link we sent you.
+              </p>
+              <Button
+                onClick={handleResendVerification}
+                disabled={resendingEmail}
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-orange-50 border-orange-300 text-orange-900"
+              >
+                {resendingEmail ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : resendSuccess ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Email Sent! Check Your Inbox
+                  </>
+                ) : (
+                  'Resend Verification Email'
+                )}
+              </Button>
             </AlertDescription>
           </Alert>
         )}
@@ -1162,7 +1233,7 @@ export default function SimulationPage() {
       <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
         <Button
           onClick={handleRunSimulation}
-          disabled={isLoading || prefillLoading || apiHealthy === false}
+          disabled={isLoading || prefillLoading}
           size="lg"
           className="w-full sm:w-auto sm:min-w-[200px]"
         >

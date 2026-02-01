@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Check, Crown, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
+import { PRICING } from '@/lib/pricing';
 
 export default function SubscribePage() {
   const router = useRouter();
@@ -156,8 +157,8 @@ export default function SubscribePage() {
             <CardTitle className="text-2xl">Monthly</CardTitle>
             <CardDescription>Pay as you go</CardDescription>
             <div className="mt-4">
-              <div className="text-5xl font-bold">$5.99</div>
-              <div className="text-gray-600 mt-1">per month</div>
+              <div className="text-5xl font-bold">{PRICING.PREMIUM_MONTHLY_PRICE_DISPLAY}</div>
+              <div className="text-gray-600 mt-1">per {PRICING.PREMIUM_MONTHLY_BILLING_PERIOD}</div>
             </div>
           </CardHeader>
           <CardContent>
@@ -187,17 +188,17 @@ export default function SubscribePage() {
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
             <Badge className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-1">
               <Sparkles className="h-3 w-3 mr-1 inline" />
-              Save 34%
+              Save {Math.round((1 - (PRICING.PREMIUM_ANNUAL_PRICE_CAD / (PRICING.PREMIUM_MONTHLY_PRICE_CAD * 12))) * 100)}%
             </Badge>
           </div>
           <CardHeader>
             <CardTitle className="text-2xl">Yearly</CardTitle>
             <CardDescription>Best value</CardDescription>
             <div className="mt-4">
-              <div className="text-5xl font-bold">$47</div>
+              <div className="text-5xl font-bold">{PRICING.PREMIUM_ANNUAL_PRICE_DISPLAY}</div>
               <div className="text-gray-600 mt-1">per year</div>
               <div className="text-sm text-green-600 font-semibold mt-2">
-                Save $24.88 per year
+                Save ${((PRICING.PREMIUM_MONTHLY_PRICE_CAD * 12) - PRICING.PREMIUM_ANNUAL_PRICE_CAD).toFixed(2)} per year
               </div>
             </div>
           </CardHeader>

@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Loader2,
 } from 'lucide-react';
+import { PRICING } from '@/lib/pricing';
 
 interface SubscriptionData {
   isPremium: boolean;
@@ -289,7 +290,7 @@ export default function BillingPage() {
             <div className="mt-6 p-4 bg-white rounded-lg border-2 border-blue-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-lg">Starting at $9.99/month</div>
+                  <div className="font-semibold text-lg">Starting at {PRICING.PREMIUM_MONTHLY_PRICE_DISPLAY}/month</div>
                   <div className="text-sm text-gray-600">Cancel anytime</div>
                 </div>
                 <Button onClick={() => router.push('/subscribe')} size="lg">

@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2, FileDown, Loader2, Lock } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Calendar, DollarSign, TrendingUp, PieChart, Settings, Landmark, Lightbulb, CheckCircle2, FileDown, Loader2, Lock, Mail, CheckCircle } from 'lucide-react';
 import { RetirementReport } from '@/components/reports/RetirementReport';
 import { generatePDF } from '@/lib/reports/generatePDF';
 import { KeyInsightsCard } from '@/components/simulation/KeyInsightsCard';
@@ -32,6 +32,8 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [reportSettings, setReportSettings] = useState<{ companyName?: string; companyLogo?: string }>({});
   const [isMounted, setIsMounted] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Set mounted state for client-side only rendering
   useEffect(() => {
@@ -106,8 +108,78 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
     }
   };
 
+  // Resend verification email
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setResendSuccess(false);
+
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setResendSuccess(true);
+        // Reset success message after 5 seconds
+        setTimeout(() => setResendSuccess(false), 5000);
+      } else {
+        console.error('Failed to resend verification email');
+        alert('Failed to resend verification email. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error resending verification email:', error);
+      alert('Failed to resend verification email. Please try again later.');
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   // Error state
   if (!result.success) {
+    // Special handling for email verification required error
+    if ((result as any).requiresVerification) {
+      return (
+        <Alert variant="default" className="border-orange-300 bg-orange-50">
+          <Mail className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-900">Email Verification Required</AlertTitle>
+          <AlertDescription className="text-orange-800">
+            <div className="space-y-3">
+              <p>{result.message || 'Please verify your email to run simulations'}</p>
+              {result.error_details && <p className="text-sm">{result.error_details}</p>}
+              <Button
+                onClick={handleResendVerification}
+                disabled={resendingEmail}
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-orange-50 border-orange-300 text-orange-900"
+              >
+                {resendingEmail ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : resendSuccess ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Email Sent! Check Your Inbox
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Resend Verification Email
+                  </>
+                )}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    // Default error rendering
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />

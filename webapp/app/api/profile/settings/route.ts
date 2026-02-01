@@ -27,6 +27,8 @@ export async function GET() {
         lifeExpectancy: true,
         companyName: true,
         companyLogo: true,
+        emailVerified: true,
+        email: true,
       },
     });
 
