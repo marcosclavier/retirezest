@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth';
 import { projectRetirement, ProjectionInput } from '@/lib/calculations/projection';
 import { logger } from '@/lib/logger';
 import { handleApiError, AuthenticationError, ValidationError } from '@/lib/errors';
+import { calculateAgeFromDOB } from '@/lib/utils/age';
 
 /**
  * POST /api/scenarios/create-baseline
@@ -54,10 +55,10 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('User not found');
     }
 
-    // Calculate current age
+    // Calculate current age using accurate calculation
     const currentAge = user.dateOfBirth
-      ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()
-      : 50;
+      ? calculateAgeFromDOB(user.dateOfBirth)
+      : 50; // Fallback if no DOB (should not happen after onboarding)
 
     // Aggregate assets by type (person 1 only for baseline)
     const assets = user.assets.filter((a: any) => !a.owner || a.owner === 'person1');
