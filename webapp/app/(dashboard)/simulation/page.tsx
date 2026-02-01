@@ -29,6 +29,8 @@ import { SimulationWizard } from '@/components/simulation/SimulationWizard';
 import { UpgradeModal } from '@/components/modals/UpgradeModal';
 import { PostSimulationFeedbackModal } from '@/components/feedback/PostSimulationFeedbackModal';
 import { StaleDataAlert } from '@/components/simulation/StaleDataAlert';
+import { LowSuccessRateWarning } from '@/components/modals/LowSuccessRateWarning';
+import { analyzeFailureReasons, type FailureAnalysis } from '@/lib/analysis/failureReasons';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -92,6 +94,8 @@ export default function SimulationPage() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [lastProfileUpdate] = useState<Date | null>(null);
   const [lastSimulationLoad] = useState<Date | null>(null);
+  const [failureAnalysis, setFailureAnalysis] = useState<FailureAnalysis | null>(null);
+  const [showLowSuccessWarning, setShowLowSuccessWarning] = useState(false);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -772,12 +776,23 @@ export default function SimulationPage() {
       if (response.success) {
         setActiveTab('results');
 
-        // Show post-simulation feedback modal if not shown before
-        if (!hasShownFeedback) {
-          // Delay modal appearance by 2 seconds to let user see results first
+        // Analyze for low success rate and failure reasons
+        const analysis = analyzeFailureReasons(response, simulationData);
+        setFailureAnalysis(analysis);
+
+        // Show low success rate warning FIRST if applicable (high priority)
+        if (analysis.hasLowSuccessRate) {
           setTimeout(() => {
-            setShowFeedbackModal(true);
-          }, 2000);
+            setShowLowSuccessWarning(true);
+          }, 1500); // Show after 1.5s to let results load
+        } else {
+          // Show post-simulation feedback modal if not shown before (only if no critical warning)
+          if (!hasShownFeedback) {
+            // Delay modal appearance by 2 seconds to let user see results first
+            setTimeout(() => {
+              setShowFeedbackModal(true);
+            }, 2000);
+          }
         }
       }
     } catch (error) {
@@ -1498,6 +1513,29 @@ export default function SimulationPage() {
           localStorage.setItem('post_simulation_feedback_submitted', 'true');
         }}
       />
+
+      {/* Low Success Rate Warning Modal - US-046 */}
+      {failureAnalysis && (
+        <LowSuccessRateWarning
+          analysis={failureAnalysis}
+          open={showLowSuccessWarning}
+          onAdjustPlan={() => {
+            setShowLowSuccessWarning(false);
+            setActiveTab('input');
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onDismiss={() => {
+            setShowLowSuccessWarning(false);
+            // Show feedback modal after dismissing warning (if not shown before)
+            if (!hasShownFeedback) {
+              setTimeout(() => {
+                setShowFeedbackModal(true);
+              }, 500);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
