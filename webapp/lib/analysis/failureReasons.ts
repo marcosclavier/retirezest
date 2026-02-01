@@ -35,7 +35,10 @@ export function analyzeFailureReasons(
   result: SimulationResponse,
   household: HouseholdInput
 ): FailureAnalysis {
-  const successRate = result.summary?.success_rate || 0;
+  // CRITICAL: success_rate from backend is 0.0-1.0 (decimal), not percentage
+  // Convert to percentage by multiplying by 100
+  const successRateDecimal = result.summary?.success_rate || 0;
+  const successRate = successRateDecimal * 100; // Convert to percentage
   const hasLowSuccessRate = successRate < 10;
 
   const failureReasons: FailureReason[] = [];

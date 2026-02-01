@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: January 30, 2026 (Sprint 5 planned: US-040, US-041, US-042, US-013)
+**Last Updated**: January 31, 2026 (Sprint 6 planned: US-045, US-046, US-047)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 2 weeks
@@ -75,6 +75,97 @@
 - 🔴 US-038 blocked on user response (awaiting clarification email sent Jan 29)
 - Fallback plan: Investigate based on user simulation data if no response by Day 2
 - Pivot plan: If US-038 cannot be resolved, switch to US-042 (2 pts) + US-043 (3 pts)
+
+---
+
+## 🎯 Current Sprint: Sprint 6 - February 1-14, 2026 (2 weeks)
+
+**Sprint Goal**: Complete GIC Ladder Planner integration and Early Retirement UI enhancements
+
+**Sprint Planning Date**: January 31, 2026
+**Sprint Duration**: 2 weeks (10 days)
+**Team Capacity**: 10 story points (focused sprint for integration work)
+
+### Sprint 6 Backlog
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| US-045 | Integrate GIC Ladder Planner into Assets Page | 5 | P1 🟡 | Epic 3: Investment | 📋 To Do |
+| US-046 | Mobile Responsive Testing - Early Retirement | 3 | P2 🟢 | Epic 4: UX | 📋 To Do |
+| US-047 | GIC Ladder Database Integration | 2 | P2 🟢 | Epic 3: Investment | 📋 To Do |
+
+**Total Story Points**: 10 planned / 20 capacity (50% utilization - conservative)
+**Core Commitment**: 10 pts (US-045, US-046, US-047)
+
+**Sprint Board**: [SPRINT_6_BOARD.md](SPRINT_6_BOARD.md)
+
+**Why Sprint 6?**:
+- Complete US-013 GIC Ladder Planner integration (component built in Sprint 5 but not integrated)
+- Ensure early retirement features are mobile-responsive
+- Add database persistence for GIC ladder plans
+- Conservative capacity ensures quality integration work
+
+**Sprint 5 Context**:
+- Sprint 5 delivered 13 points across 4 user stories (US-040, US-041, US-042, US-013)
+- GIC Ladder Planner component built and tested but NOT integrated into any page
+- Early retirement What-If Sliders successfully deployed
+- LIRA support added to database and API
+- Baseline scenario auto-creation implemented
+
+**Key Focus Areas**:
+- 🟡 Integration: Connect GIC Ladder Planner to assets page (US-045)
+- 🟢 Testing: Ensure early retirement features work on mobile (US-046)
+- 🟢 Enhancement: Add database persistence for GIC ladder (US-047)
+
+---
+
+## 🎯 Previous Sprint: Sprint 5 - January 31, 2026 (Completed in 3 days)
+
+**Sprint Goal**: Advanced Retirement Planning Features - What-If Scenarios, LIRA Support, and GIC Ladder
+
+**Status**: ✅ 100% Complete (13/13 pts core commitment)
+
+**Sprint Planning Date**: January 30, 2026
+**Pre-Sprint Verification**: ✅ Complete
+**Actual Duration**: 3 days (vs 14 days planned)
+**Retrospective**: [SPRINT_5_RETROSPECTIVE.md](SPRINT_5_RETROSPECTIVE.md)
+
+### Sprint 5 Backlog
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| US-040 | What-If Sliders for Interactive Scenarios | 5 | P1 🟡 | Epic 4: UX | ✅ Done |
+| US-041 | LIRA Account Support | 3 | P1 🟡 | Epic 3: Investment | ✅ Done |
+| US-042 | Auto-Create Baseline Scenario After Onboarding | 2 | P2 🟢 | Epic 4: UX | ✅ Done |
+| US-013 | GIC Ladder Planner Component | 3 | P2 🟢 | Epic 3: Investment | ⚠️ Built (NOT Integrated) |
+
+**Total Story Points**: 13 committed / 18 capacity (72% utilization)
+**Completed**: 13 pts (100%) - All stories delivered in 3 days
+**Velocity**: 4.3 pts/day (exceptional)
+
+**Sprint Board**: [SPRINT_5_BOARD.md](SPRINT_5_BOARD.md)
+**Technical Reference**: [docs/SPRINT_5_TECHNICAL_REFERENCE.md](webapp/docs/SPRINT_5_TECHNICAL_REFERENCE.md)
+**Test Results**: [EARLY_RETIREMENT_TEST_RESULTS.md](webapp/EARLY_RETIREMENT_TEST_RESULTS.md)
+
+**Key Achievements**:
+- ✅ **US-040**: What-If Sliders with 500ms debounce, auto-correction for CPP/OAS ages
+- ✅ **US-041**: LIRA balance column added to Scenario model, combined with RRSP for projections
+- ✅ **US-042**: Baseline scenario auto-creation from onboarding data
+- ⚠️ **US-013**: GIC Ladder Planner component built (283 lines) and tested (26/26 tests passing) but **NOT integrated into any page**
+
+**Testing Coverage**:
+- Component Tests: 71/71 passing (100%)
+- Early Retirement Scenarios: 64/65 passing (98.5%)
+- Total Test Coverage: 135 automated tests
+
+**Production Deployment**:
+- Commit: `cfed2ac` - "feat: Complete Sprint 5 - Advanced Retirement Planning Features"
+- Deployed: January 31, 2026
+- Files Changed: 19 files, 6,030 insertions, 286 deletions
+
+**Sprint 5 → Sprint 6 Carryover**:
+- US-013 GIC Ladder integration deferred to Sprint 6 (component exists but needs integration)
+- Component is production-ready (tested, documented) but users cannot access it
 
 ---
 
@@ -238,6 +329,36 @@
 ---
 
 #### Epic 3: Investment & Account Configuration
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-045** | **Integrate GIC Ladder Planner into Assets Page** | **5** | **P1** | **📋 Sprint 6** |
+| **Description** | As a user, I want to access the GIC Ladder Planner from my Assets page so that I can create and manage staggered GIC investments for liquidity and returns |
+| **Acceptance Criteria** | - [ ] GIC Ladder Planner component integrated into Assets page<br>- [ ] Accessible via tab or section on `/profile/assets`<br>- [ ] Component renders correctly with all features<br>- [ ] Generate ladder functionality works<br>- [ ] Add/remove/edit rung functionality works<br>- [ ] Statistics display correctly (weighted avg rate, avg maturity, total invested)<br>- [ ] Mobile responsive design<br>- [ ] Help text explains GIC ladder strategy |
+| **Tasks** | - [ ] Import GICLadderPlanner component into assets page<br>- [ ] Create new tab or section for GIC Ladder<br>- [ ] Add navigation/routing<br>- [ ] Test ladder generation<br>- [ ] Test statistics calculations<br>- [ ] Test on mobile devices<br>- [ ] Add help documentation<br>- [ ] Update user guide |
+| **Technical Notes** | Component already built: `/webapp/components/assets/GICLadderPlanner.tsx` (283 lines)<br>Tests already passing: 26/26 (100%)<br>Just needs integration into page |
+| **User Impact** | High - Users can plan GIC ladder strategies for retirement income |
+| **Sprint** | Sprint 6 |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-046** | **Mobile Responsive Testing - Early Retirement** | **3** | **P2** | **📋 Sprint 6** |
+| **Description** | As a mobile user, I want the early retirement page to work perfectly on my phone so that I can plan retirement on the go |
+| **Acceptance Criteria** | - [ ] What-If Sliders work on mobile (touch-friendly)<br>- [ ] Early retirement form is mobile-responsive<br>- [ ] Results display correctly on small screens<br>- [ ] No horizontal scrolling<br>- [ ] Touch targets are large enough (min 44px)<br>- [ ] Text is readable without zooming<br>- [ ] Tested on iOS Safari and Android Chrome |
+| **Tasks** | - [ ] Test early retirement page on iPhone<br>- [ ] Test early retirement page on Android<br>- [ ] Fix any responsive issues<br>- [ ] Verify What-If Sliders work with touch<br>- [ ] Check form layout on mobile<br>- [ ] Verify results table scrolls properly<br>- [ ] Document mobile testing results |
+| **Technical Notes** | Components to test:<br>- `/webapp/app/(dashboard)/early-retirement/page.tsx`<br>- `/webapp/components/early-retirement/WhatIfSliders.tsx`<br>Tailwind CSS responsive classes should handle most cases |
+| **User Impact** | Medium - Ensures mobile users have good experience |
+| **Sprint** | Sprint 6 |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-047** | **GIC Ladder Database Integration** | **2** | **P2** | **📋 Sprint 6** |
+| **Description** | As a user, I want my GIC ladder plans to be saved in my account so that I can revisit and update them later |
+| **Acceptance Criteria** | - [ ] Create GICLadder model in Prisma schema<br>- [ ] API endpoints for create/read/update/delete<br>- [ ] Save ladder to database when user clicks "Save"<br>- [ ] Load saved ladders on page load<br>- [ ] Display list of saved ladders<br>- [ ] Allow editing/deleting saved ladders<br>- [ ] Ladders associated with user account |
+| **Tasks** | - [ ] Update Prisma schema with GICLadder model<br>- [ ] Create database migration<br>- [ ] Create API route: `/api/gic-ladder/`<br>- [ ] Add save functionality to component<br>- [ ] Add load functionality<br>- [ ] Add list/edit/delete UI<br>- [ ] Test CRUD operations<br>- [ ] Deploy migration |
+| **Technical Notes** | **Prisma Schema:**<br>```prisma<br>model GICLadder {<br>  id String @id @default(cuid())<br>  userId String<br>  user User @relation(fields: [userId], references: [id], onDelete: Cascade)<br>  name String<br>  totalInvestment Float<br>  rungs Json // Array of GICRung objects<br>  createdAt DateTime @default(now())<br>  updatedAt DateTime @updatedAt<br>}<br>```<br><br>**API Routes:**<br>- POST `/api/gic-ladder` - Create new ladder<br>- GET `/api/gic-ladder` - Get user's ladders<br>- PUT `/api/gic-ladder/[id]` - Update ladder<br>- DELETE `/api/gic-ladder/[id]` - Delete ladder |
+| **User Impact** | Medium - Allows users to save and manage ladder plans |
+| **Sprint** | Sprint 6 |
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|

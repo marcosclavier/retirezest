@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { PRICING, PREMIUM_FEATURES as PRICING_FEATURES } from '@/lib/pricing';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -89,11 +90,11 @@ export function UpgradeModal({ isOpen, onClose, feature = 'general' }: UpgradeMo
                 Premium Plan
               </p>
               <div className="mt-2 flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-bold text-gray-900">$9.99</span>
-                <span className="text-xl text-gray-600">/month</span>
+                <span className="text-5xl font-bold text-gray-900">{PRICING.PREMIUM_MONTHLY_PRICE_DISPLAY}</span>
+                <span className="text-xl text-gray-600">/{PRICING.PREMIUM_MONTHLY_BILLING_PERIOD}</span>
               </div>
               <p className="mt-2 text-sm text-gray-600">
-                Cancel anytime • Billed monthly
+                Cancel anytime • Billed monthly in {PRICING.PREMIUM_MONTHLY_CURRENCY}
               </p>
             </div>
           </div>

@@ -27,7 +27,7 @@ const scenario1 = {
   },
   result: {
     summary: {
-      success_rate: 5.2,
+      success_rate: 0.052, // 5.2% as decimal (backend format: 0.0-1.0)
     },
     year_by_year: [
       { year: 2026, age_p1: 55, spending_gap: 5000 },
@@ -55,7 +55,7 @@ const scenario2 = {
   },
   result: {
     summary: {
-      success_rate: 8.5,
+      success_rate: 0.085, // 8.5% as decimal (backend format: 0.0-1.0)
     },
     year_by_year: [],
   },
@@ -79,7 +79,7 @@ const scenario3 = {
   },
   result: {
     summary: {
-      success_rate: 95.3,
+      success_rate: 0.953, // 95.3% as decimal (backend format: 0.0-1.0)
     },
     year_by_year: [],
   },
