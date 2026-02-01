@@ -240,6 +240,26 @@ export default function OnboardingWizard() {
         }),
       });
 
+      // Create baseline scenario automatically (US-042)
+      try {
+        const baselineResponse = await fetch('/api/scenarios/create-baseline', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!baselineResponse.ok) {
+          // Log error but don't block completion
+          console.warn('Failed to create baseline scenario:', await baselineResponse.text());
+        } else {
+          console.log('Baseline scenario created successfully');
+        }
+      } catch (baselineError) {
+        // Log error but don't block completion
+        console.warn('Error creating baseline scenario:', baselineError);
+      }
+
       // Clear saved progress from localStorage
       clearProgress(userId);
 

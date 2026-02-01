@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
           rrspBalance: true,
           tfsaBalance: true,
           nonRegBalance: true,
+          liraBalance: true,
           realEstateValue: true,
           employmentIncome: true,
           pensionIncome: true,
@@ -121,12 +122,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create projection input from scenario data
+    // Note: LIRA is treated as RRSP/RRIF for projection purposes
     const projectionInput: ProjectionInput = {
       currentAge: body.currentAge,
       retirementAge: body.retirementAge,
       lifeExpectancy: body.lifeExpectancy || 95,
       province: body.province || 'AB',
-      rrspBalance: body.rrspBalance || 0,
+      rrspBalance: (body.rrspBalance || 0) + (body.liraBalance || 0), // Combine LIRA with RRSP for projection
       tfsaBalance: body.tfsaBalance || 0,
       nonRegBalance: body.nonRegBalance || 0,
       realEstateValue: body.realEstateValue || 0,
@@ -163,6 +165,7 @@ export async function POST(request: NextRequest) {
         rrspBalance: body.rrspBalance || 0,
         tfsaBalance: body.tfsaBalance || 0,
         nonRegBalance: body.nonRegBalance || 0,
+        liraBalance: body.liraBalance || 0,
         realEstateValue: body.realEstateValue || 0,
         employmentIncome: body.employmentIncome || 0,
         pensionIncome: body.pensionIncome || 0,

@@ -129,6 +129,12 @@ export async function GET(request: NextRequest) {
     // Calculate annual income (person 1 + joint + person 2 if applicable)
     const incomeSources = user.incomeSources || [];
 
+    // Get CPP and OAS start ages from Income table (if configured)
+    const cppIncome = incomeSources.find((i: any) => i.type === 'cpp' && (!i.owner || i.owner === 'person1'));
+    const oasIncome = incomeSources.find((i: any) => i.type === 'oas' && (!i.owner || i.owner === 'person1'));
+    const cppStartAge = cppIncome?.startAge || 65; // Default to 65
+    const oasStartAge = oasIncome?.startAge || 65; // Default to 65
+
     // Person 1 income
     const person1Income = incomeSources
       .filter((i: any) => !i.owner || i.owner === 'person1')
@@ -185,6 +191,10 @@ export async function GET(request: NextRequest) {
 
       // Province for CRA-compliant rules
       province,
+
+      // Government benefits start ages
+      cppStartAge,
+      oasStartAge,
 
       // Couples planning data
       includePartner,

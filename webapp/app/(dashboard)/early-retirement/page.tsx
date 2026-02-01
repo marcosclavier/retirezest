@@ -10,6 +10,7 @@ import { SavingsGapAnalysis } from '@/components/retirement/SavingsGapAnalysis';
 import { RetirementScenarios } from '@/components/retirement/RetirementScenarios';
 import { ActionPlan } from '@/components/retirement/ActionPlan';
 import { CalculationInputs } from '@/components/retirement/CalculationInputs';
+import { WhatIfSliders } from '@/components/early-retirement/WhatIfSliders';
 
 interface EarlyRetirementData {
   readinessScore: number;
@@ -76,6 +77,8 @@ interface UserProfile {
   targetAnnualExpenses: number;
   lifeExpectancy: number;
   province?: string;
+  cppStartAge?: number;
+  oasStartAge?: number;
   includePartner?: boolean;
   partner?: {
     age: number;
@@ -206,6 +209,23 @@ export default function EarlyRetirementPage() {
     }
   };
 
+  const handleWhatIfScenarioChange = (scenario: Partial<UserProfile>) => {
+    if (profileData) {
+      // Merge what-if changes with current profile data
+      const updatedData = {
+        ...profileData,
+        ...scenario,
+      };
+
+      // Update selected age if retirement age changed
+      if (scenario.targetRetirementAge) {
+        setSelectedAge(scenario.targetRetirementAge);
+      }
+
+      calculateEarlyRetirement(updatedData);
+    }
+  };
+
   const handleRefresh = () => {
     loadProfileData();
   };
@@ -328,6 +348,20 @@ export default function EarlyRetirementPage() {
             includePartner={profileData.includePartner}
             partner={profileData.partner}
             province={profileData.province}
+          />
+
+          {/* What-If Sliders for Interactive Scenario Planning */}
+          <WhatIfSliders
+            baselineScenario={{
+              retirementAge: selectedAge,
+              cppStartAge: profileData.cppStartAge || 65,
+              oasStartAge: profileData.oasStartAge || 65,
+              currentSavings: profileData.currentSavings,
+              annualSavings: profileData.annualSavings,
+            }}
+            currentAge={profileData.currentAge}
+            onScenarioChange={handleWhatIfScenarioChange}
+            isCalculating={isLoading}
           />
 
           {/* Readiness Score - Hero Component */}
