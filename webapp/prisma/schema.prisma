@@ -74,6 +74,13 @@ model User {
   earlyRetirementCalcsToday Int       @default(0)
   earlyRetirementCalcsDate  DateTime?
 
+  // Main simulation daily tracking (free tier: 10/day, premium: unlimited)
+  simulationRunsToday Int       @default(0)
+  simulationRunsDate  DateTime?
+
+  // Free simulation tracking (for unverified users - 3 lifetime before email verification)
+  freeSimulationsUsed Int @default(0) // Simulations run before email verification
+
   // Account deletion (soft delete with 30-day grace period)
   deletedAt           DateTime? // When account was marked for deletion
   scheduledDeletionAt DateTime? // When permanent deletion will occur (deletedAt + 30 days)

@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Session found:', session.email);
 
-    // Email verification check
-    console.log('🔍 Checking email verification...');
+    // LIMIT CHECK 1: Email verification (3 free simulations for unverified users)
+    console.log('🔍 Step 1: Checking email verification limit...');
     const { prisma } = await import('@/lib/prisma');
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
@@ -44,23 +44,63 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ User found, emailVerified:', user?.emailVerified);
 
-    if (!user?.emailVerified) {
-      console.log('❌ Email not verified');
-      logger.info('Simulation blocked - email not verified', {
+    const { checkFreeSimulationLimit, checkDailySimulationLimit } = await import('@/lib/subscription');
+    const emailLimitCheck = await checkFreeSimulationLimit(session.email, user?.emailVerified || false);
+
+    if (!emailLimitCheck.allowed) {
+      console.log('❌ Free simulation limit reached, email verification required');
+      logger.info('Simulation blocked - email verification limit reached', {
         user: session.email,
+        freeSimulationsUsed: 3,
       });
 
       return NextResponse.json(
         {
           success: false,
-          message: 'Please verify your email to run simulations',
-          error: 'Email verification required',
-          error_details: 'You must verify your email address before running retirement simulations. Check your inbox for the verification link or request a new one from your dashboard.',
+          message: 'Please verify your email to continue running simulations',
+          error: 'Free simulation limit reached',
+          error_details: 'You have used your 3 free simulations. Please verify your email address to unlock unlimited retirement simulations. Check your inbox for the verification link or request a new one from your dashboard.',
           requiresVerification: true,
+          freeSimulationsRemaining: 0,
           warnings: [],
         },
         { status: 403 }
       );
+    }
+
+    // Log remaining free simulations for unverified users
+    if (!user?.emailVerified && emailLimitCheck.remaining > 0) {
+      console.log(`ℹ️ Free simulations remaining: ${emailLimitCheck.remaining}`);
+    }
+
+    // LIMIT CHECK 2: Daily simulation limit (10/day for free tier, unlimited for premium)
+    console.log('🔍 Step 2: Checking daily simulation limit...');
+    const dailyLimitCheck = await checkDailySimulationLimit(session.email);
+
+    if (!dailyLimitCheck.allowed) {
+      console.log('❌ Daily simulation limit reached for free tier');
+      logger.info('Simulation blocked - daily limit reached', {
+        user: session.email,
+        dailySimulations: 10,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Daily simulation limit reached. Upgrade to Premium for unlimited simulations.',
+          error: 'Daily limit reached',
+          error_details: 'You have reached your daily limit of 10 simulations. Upgrade to Premium for unlimited simulations, advanced features, and priority support.',
+          requiresUpgrade: true,
+          dailySimulationsRemaining: 0,
+          warnings: [],
+        },
+        { status: 429 }
+      );
+    }
+
+    // Log remaining daily simulations for free tier users
+    if (!dailyLimitCheck.isPremium && dailyLimitCheck.remaining > 0) {
+      console.log(`ℹ️ Daily simulations remaining: ${dailyLimitCheck.remaining}`);
     }
 
     // Parse request body
@@ -176,6 +216,20 @@ export async function POST(request: NextRequest) {
           healthScore: responseData.summary.health_score,
           strategy: responseData.household_input.strategy
         });
+
+        // Increment counters after successful simulation
+        const { incrementFreeSimulationCount, incrementDailySimulationCount } = await import('@/lib/subscription');
+
+        // Increment free simulation counter for unverified users (lifetime limit: 3)
+        if (!user?.emailVerified) {
+          await incrementFreeSimulationCount(session.email);
+          console.log('📊 Free simulation count incremented');
+        }
+
+        // Increment daily simulation counter for all users (daily limit tracking)
+        await incrementDailySimulationCount(session.email);
+        console.log('📊 Daily simulation count incremented');
+
       } catch (dbError) {
         // Log error but don't fail the request - simulation results are still returned
         logger.error('Failed to save simulation to database', dbError, {
@@ -184,8 +238,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return successful response
-    return NextResponse.json(responseData, { status: 200 });
+    // Return successful response with metadata
+    const responseWithMeta = {
+      ...responseData,
+      freeSimulationsRemaining: !user?.emailVerified ? Math.max(0, emailLimitCheck.remaining - 1) : -1,
+      dailySimulationsRemaining: !dailyLimitCheck.isPremium ? Math.max(0, dailyLimitCheck.remaining - 1) : -1,
+    };
+    return NextResponse.json(responseWithMeta, { status: 200 });
 
   } catch (error) {
     const duration = Date.now() - startTime;

@@ -2,7 +2,7 @@
 
 **Version**: 1.0
 **Base URL**: https://www.retirezest.com/api
-**Last Updated**: January 31, 2026
+**Last Updated**: February 1, 2026
 
 ---
 
@@ -158,20 +158,44 @@ All API endpoints (except `/api/auth/login` and `/api/auth/register`) require au
       },
       // ... more years
     ]
-  }
+  },
+  "freeSimulationsRemaining": -1,
+  "dailySimulationsRemaining": 9
 }
 ```
+
+**Response Fields**:
+- `freeSimulationsRemaining` (number): Remaining free simulations for unverified users (0-3). Returns -1 for verified users (unlimited in this check).
+- `dailySimulationsRemaining` (number): Remaining daily simulations for free tier users (0-10). Returns -1 for premium users (unlimited).
 
 **Error Responses**:
 - `400 Bad Request` - Missing or invalid parameters
 - `401 Unauthorized` - User not authenticated
-- `403 Forbidden` - Simulation limit reached (free tier) or premium feature required
+- `403 Forbidden` - Email verification required (free simulation limit reached)
 - `404 Not Found` - Scenario not found
+- `429 Too Many Requests` - Daily simulation limit reached (free tier)
 - `500 Internal Server Error` - Simulation engine error
 
-**Rate Limiting**:
-- **Free Tier**: 10 simulations max (lifetime)
-- **Premium Tier**: Unlimited
+**Rate Limiting - Dual Limit System**:
+
+The simulation API implements a **two-tier progressive limit system**:
+
+1. **Email Verification Limit (Unverified Users)**:
+   - **Limit**: 3 simulations (lifetime)
+   - **Error**: 403 Forbidden with `requiresVerification: true`
+   - **Purpose**: Encourage email verification while allowing product testing
+   - **Bypass**: Verify email address
+
+2. **Daily Simulation Limit (Verified Free Tier)**:
+   - **Limit**: 10 simulations per day
+   - **Error**: 429 Too Many Requests with `requiresUpgrade: true`
+   - **Reset**: Daily at midnight (user's timezone)
+   - **Purpose**: Rate limiting for freemium model
+   - **Bypass**: Upgrade to Premium
+
+3. **Premium Tier**:
+   - **Limit**: Unlimited simulations
+   - **Both Checks**: Bypassed completely
 
 ---
 
@@ -612,16 +636,14 @@ All errors follow this structure:
 }
 ```
 
-**403 Forbidden (Free Tier Limit)**:
+**403 Forbidden (Email Verification Required)**:
 ```json
 {
   "success": false,
-  "error": "Free tier limit reached",
-  "message": "You've used all 10 free simulations. Upgrade to Premium for unlimited simulations!",
-  "requiresUpgrade": true,
-  "simulationCount": 10,
-  "simulationLimit": 10,
-  "upgradeUrl": "/subscribe"
+  "error": "Free simulation limit reached",
+  "message": "Please verify your email to continue running simulations",
+  "requiresVerification": true,
+  "freeSimulationsRemaining": 0
 }
 ```
 
@@ -635,7 +657,18 @@ All errors follow this structure:
 }
 ```
 
-**429 Rate Limit Exceeded**:
+**429 Too Many Requests (Daily Simulation Limit)**:
+```json
+{
+  "success": false,
+  "error": "Daily limit reached",
+  "message": "Daily simulation limit reached. Upgrade to Premium for unlimited simulations.",
+  "requiresUpgrade": true,
+  "dailySimulationsRemaining": 0
+}
+```
+
+**429 Too Many Requests (Early Retirement Daily Limit)**:
 ```json
 {
   "success": false,
@@ -652,9 +685,17 @@ All errors follow this structure:
 
 ### Simulation API
 
-**Free Tier**:
-- **Limit**: 10 simulations (lifetime)
+**Dual Limit System** (see detailed explanation in POST /api/simulation/run section):
+
+**Unverified Users**:
+- **Limit**: 3 simulations (lifetime)
+- **Action**: Block with email verification prompt
+- **Reset**: Never (lifetime counter)
+
+**Verified Free Tier**:
+- **Limit**: 10 simulations per day
 - **Action**: Block with upgrade prompt
+- **Reset**: Daily at midnight
 
 **Premium Tier**:
 - **Limit**: Unlimited
@@ -702,6 +743,21 @@ Future versions will be prefixed:
 
 ---
 
-**Last Updated**: January 31, 2026
+## Changelog
+
+### February 1, 2026
+- **Added**: Dual simulation limit system documentation
+  - Email verification limit (3 free simulations for unverified users)
+  - Daily simulation limit (10/day for verified free tier)
+  - Added `freeSimulationsRemaining` and `dailySimulationsRemaining` to simulation response
+  - New 403 and 429 error responses with detailed limit information
+- **Updated**: Rate limiting section to reflect dual-tier system
+
+### January 31, 2026
+- Initial API reference creation
+
+---
+
+**Last Updated**: February 1, 2026
 **Maintained By**: Engineering Team
 **Next Review**: Quarterly or when major API changes are made

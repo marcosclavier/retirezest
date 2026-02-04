@@ -57,6 +57,9 @@ Primary user account table.
 | dateOfBirth | DateTime | Optional | Date of birth |
 | province | String | Optional | Province code (ON, BC, etc.) |
 | maritalStatus | String | Optional | Marital status |
+| freeSimulationsUsed | Int | Default: 0 | Lifetime count of free simulations (unverified users only) |
+| simulationRunsToday | Int | Default: 0 | Daily simulation count for rate limiting (free tier) |
+| simulationRunsDate | DateTime | Optional | Last simulation run date (for daily reset) |
 | createdAt | DateTime | Indexed | Account creation timestamp |
 | updatedAt | DateTime | Auto | Last update timestamp |
 
@@ -503,5 +506,21 @@ VACUUM FULL;
 
 ---
 
-*Last Updated*: 2025-12-05
+## Changelog
+
+### February 1, 2026
+- **Added**: Dual simulation limit tracking fields to User table
+  - `freeSimulationsUsed` - Tracks lifetime free simulations for unverified users (limit: 3)
+  - `simulationRunsToday` - Tracks daily simulations for free tier users (limit: 10/day)
+  - `simulationRunsDate` - Stores last simulation date for daily reset logic
+- **Migrations**:
+  - `20260201000000_add_free_simulations_tracking`
+  - `20260201000001_add_daily_simulation_tracking`
+
+### December 5, 2025
+- Initial database documentation
+
+---
+
+*Last Updated*: February 1, 2026
 *Updated By*: Claude Code

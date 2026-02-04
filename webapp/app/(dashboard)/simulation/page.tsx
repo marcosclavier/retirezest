@@ -90,6 +90,8 @@ export default function SimulationPage() {
   const [hasShownFeedback, setHasShownFeedback] = useState(false);
   const [isWizardMode, setIsWizardMode] = useState(false);
   const [emailVerified, setEmailVerified] = useState<boolean>(true); // Default true, will check on load
+  const [freeSimulationsRemaining, setFreeSimulationsRemaining] = useState<number | undefined>(undefined);
+  const [dailySimulationsRemaining, setDailySimulationsRemaining] = useState<number | undefined>(undefined);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [lastProfileUpdate] = useState<Date | null>(null);
@@ -221,6 +223,20 @@ export default function SimulationPage() {
             if (settingsData?.emailVerified !== undefined) {
               console.log('📧 Email verification status:', settingsData.emailVerified);
               setEmailVerified(settingsData.emailVerified);
+
+              // Fetch free simulation count for unverified users
+              if (!settingsData.emailVerified) {
+                try {
+                  const freeSimRes = await fetch('/api/user/free-simulations');
+                  if (freeSimRes.ok) {
+                    const freeSimData = await freeSimRes.json();
+                    console.log('🎯 Free simulations remaining:', freeSimData.freeSimulationsRemaining);
+                    setFreeSimulationsRemaining(freeSimData.freeSimulationsRemaining);
+                  }
+                } catch (freeSimErr) {
+                  console.error('Failed to fetch free simulation count:', freeSimErr);
+                }
+              }
             }
           }
         } catch (err) {
@@ -768,6 +784,16 @@ export default function SimulationPage() {
 
       setResult(response);
 
+      // Update free simulations remaining count if present in response
+      if (response.freeSimulationsRemaining !== undefined) {
+        setFreeSimulationsRemaining(response.freeSimulationsRemaining);
+      }
+
+      // Update daily simulations remaining count if present in response
+      if (response.dailySimulationsRemaining !== undefined) {
+        setDailySimulationsRemaining(response.dailySimulationsRemaining);
+      }
+
       // Switch to results tab if simulation succeeded
       if (response.success) {
         setActiveTab('results');
@@ -983,15 +1009,28 @@ export default function SimulationPage() {
           </Alert>
         )}
 
-        {/* Email Verification Banner - Shown when email is not verified */}
-        {!emailVerified && !prefillLoading && (
+        {/* Email Verification Banner - Shows free simulations remaining or verification required */}
+        {!emailVerified && !prefillLoading && freeSimulationsRemaining !== undefined && (
           <Alert variant="default" className="border-orange-300 bg-orange-50">
             <Mail className="h-4 w-4 text-orange-600" />
-            <AlertTitle className="text-orange-900">Email Verification Required</AlertTitle>
+            <AlertTitle className="text-orange-900">
+              {freeSimulationsRemaining > 0
+                ? `${freeSimulationsRemaining} Free Simulation${freeSimulationsRemaining === 1 ? '' : 's'} Remaining`
+                : 'Email Verification Required'}
+            </AlertTitle>
             <AlertDescription className="text-orange-800">
               <p className="mb-3">
-                You need to verify your email address before running retirement simulations.
-                Check your inbox for the verification link we sent you.
+                {freeSimulationsRemaining > 0 ? (
+                  <>
+                    You have {freeSimulationsRemaining} free simulation{freeSimulationsRemaining === 1 ? '' : 's'} remaining.
+                    Verify your email to unlock unlimited simulations.
+                  </>
+                ) : (
+                  <>
+                    You&apos;ve used your 3 free simulations. Please verify your email to continue.
+                    Check your inbox for the verification link we sent you.
+                  </>
+                )}
               </p>
               <Button
                 onClick={handleResendVerification}
@@ -1011,9 +1050,34 @@ export default function SimulationPage() {
                     Email Sent! Check Your Inbox
                   </>
                 ) : (
-                  'Resend Verification Email'
+                  freeSimulationsRemaining > 0 ? 'Verify Now' : 'Resend Verification Email'
                 )}
               </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Daily Simulation Limit Banner - Shows for free tier users (verified email) */}
+        {emailVerified && dailySimulationsRemaining !== undefined && dailySimulationsRemaining !== -1 && dailySimulationsRemaining <= 5 && !prefillLoading && (
+          <Alert variant="default" className="border-blue-300 bg-blue-50">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-900">
+              {dailySimulationsRemaining > 0
+                ? `${dailySimulationsRemaining} Simulation${dailySimulationsRemaining === 1 ? '' : 's'} Remaining Today`
+                : 'Daily Limit Reached'}
+            </AlertTitle>
+            <AlertDescription className="text-blue-800">
+              {dailySimulationsRemaining > 0 ? (
+                <p>
+                  You have {dailySimulationsRemaining} simulation{dailySimulationsRemaining === 1 ? '' : 's'} remaining today (free tier: 10/day).
+                  Upgrade to Premium for unlimited simulations and advanced features.
+                </p>
+              ) : (
+                <p>
+                  You&apos;ve used all 10 simulations for today. Your limit resets tomorrow.
+                  Upgrade to Premium for unlimited simulations anytime.
+                </p>
+              )}
             </AlertDescription>
           </Alert>
         )}

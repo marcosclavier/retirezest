@@ -484,6 +484,12 @@ export interface SimulationResponse {
   error?: string;
   error_details?: string;
   errors?: ValidationError[];  // Validation errors from backend
+
+  // Free simulation tracking for unverified users
+  freeSimulationsRemaining?: number;  // -1 for verified users, 0-3 for unverified
+
+  // Daily simulation tracking (free tier: 10/day, premium: unlimited)
+  dailySimulationsRemaining?: number;  // -1 for premium users, 0-10 for free tier
 }
 
 // Default values for new person

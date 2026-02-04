@@ -26,7 +26,8 @@ A comprehensive web application for Canadian seniors to plan their retirement, c
 ✅ Vercel Analytics & Speed Insights
 ✅ Google Analytics 4 integration
 
-### Recently Completed (Jan 2026)
+### Recently Completed (Jan-Feb 2026)
+✅ **Dual Simulation Limit System** (Feb 2026) - Freemium monetization
 ✅ Re-engagement email campaign system
 ✅ User segmentation & analytics
 ✅ Email automation with Resend
@@ -329,11 +330,14 @@ python3 -m uvicorn api.main:app --reload  # Start Python simulation server (port
   - Conversion funnel monitoring
 
 ### Subscription & Payments ✅
+- **Dual Simulation Limit System**:
+  - Unverified users: 3 lifetime simulations (encourages email verification)
+  - Verified free tier: 10 simulations/day (freemium model)
+  - Premium tier: Unlimited simulations
 - Stripe integration for premium subscriptions
-- Free tier with rate limiting
-- Premium tier with unlimited simulations
 - Subscription management dashboard
 - Webhook handling for payment events
+- Progressive conversion funnel (unverified → verified → premium)
 
 ---
 

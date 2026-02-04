@@ -26,21 +26,23 @@
 
 | Plan | Price | Features |
 |------|-------|----------|
-| **Free** | $0 | 10 simulations max, single market scenario, limited early retirement calc (3/day) |
+| **Free (Unverified)** | $0 | 3 simulations (lifetime), single market scenario, limited early retirement calc (3/day) |
+| **Free (Verified)** | $0 | 10 simulations/day, single market scenario, limited early retirement calc (3/day) |
 | **Premium (Monthly)** | **$5.99/month** | Unlimited simulations, all 3 market scenarios, unlimited early retirement calc, CSV/PDF exports |
 | **Premium (Yearly)** | **$47/year** | All Premium features + 34% savings ($24.88/year saved) |
 
 ### Feature Comparison
 
-| Feature | Free Tier | Premium Tier |
-|---------|-----------|--------------|
-| **Simulation Limit** | ⚠️ **10 max (lifetime)** | ✅ **Unlimited** |
-| **Market Scenarios** | ❌ Single (neutral only) | ✅ All 3 (pessimistic, neutral, optimistic) |
-| **Early Retirement Calculator** | ⚠️ 3/day limit | ✅ Unlimited |
-| **CSV Export** | ❌ No | ✅ Yes |
-| **PDF Reports** | ❌ No | ✅ Yes |
-| **JSON Data Export** | ❌ No | ✅ Yes |
-| **Action Plan** | ⚠️ 5 recommendations | ✅ 10+ recommendations |
+| Feature | Free (Unverified) | Free (Verified) | Premium Tier |
+|---------|-------------------|-----------------|--------------|
+| **Simulation Limit** | ⚠️ **3 (lifetime)** | ⚠️ **10/day** | ✅ **Unlimited** |
+| **Email Verification Required** | ❌ After 3 simulations | ✅ Already verified | ✅ Not required |
+| **Market Scenarios** | ❌ Single (neutral) | ❌ Single (neutral) | ✅ All 3 (pessimistic, neutral, optimistic) |
+| **Early Retirement Calculator** | ⚠️ 3/day limit | ⚠️ 3/day limit | ✅ Unlimited |
+| **CSV Export** | ❌ No | ❌ No | ✅ Yes |
+| **PDF Reports** | ❌ No | ❌ No | ✅ Yes |
+| **JSON Data Export** | ❌ No | ❌ No | ✅ Yes |
+| **Action Plan** | ⚠️ 5 recommendations | ⚠️ 5 recommendations | ✅ 10+ recommendations |
 
 ---
 
@@ -62,6 +64,11 @@ model User {
   stripeSubscriptionId String? @unique
   subscriptionStartDate DateTime?
   subscriptionEndDate   DateTime?
+
+  // Dual simulation limit tracking (freemium monetization)
+  freeSimulationsUsed Int @default(0)  // Email verification limit (3 lifetime)
+  simulationRunsToday Int @default(0)  // Daily limit for free tier (10/day)
+  simulationRunsDate  DateTime?        // Last simulation date for daily reset
 
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -95,16 +102,22 @@ export function canAccessPremiumFeature(user: User, feature: string): boolean {
 
 ## Feature Gating Implementation
 
-### Feature 1: 10-Simulation Limit (NOT YET IMPLEMENTED)
+### Feature 1: Dual Simulation Limit System (IMPLEMENTED ✅)
 
-**Status**: ❌ NOT IMPLEMENTED (See US-045 in backlog)
-**Priority**: P1 (High)
-**Estimated Effort**: 8 hours (1 day)
+**Status**: ✅ IMPLEMENTED (See US-052 in Sprint 6)
+**Priority**: P0 (Critical - Freemium Monetization)
+**Implementation Date**: February 1, 2026
 
-**Implementation Plan**:
+This feature implements a **two-tier progressive limit system** to balance user experience with monetization:
+
+1. **Email Verification Limit**: 3 lifetime simulations for unverified users
+2. **Daily Simulation Limit**: 10 simulations/day for verified free tier users
+3. **Premium Unlimited**: Both limits bypassed for premium subscribers
+
+**Implementation**:
 
 ```typescript
-// webapp/app/api/simulation/run/route.ts
+// webapp/app/api/simulation/run/route.ts (Lines 37-104)
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -112,128 +125,171 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Fetch user with subscription data
+  // Fetch user email verification status
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session.userId },
+    select: { emailVerified: true },
+  });
+
+  // LIMIT CHECK 1: Email Verification (3 free simulations for unverified users)
+  const emailLimitCheck = await checkFreeSimulationLimit(session.email, user?.emailVerified || false);
+
+  if (!emailLimitCheck.allowed) {
+    return NextResponse.json({
+      success: false,
+      message: 'Please verify your email to continue running simulations',
+      error: 'Free simulation limit reached',
+      requiresVerification: true,
+      freeSimulationsRemaining: 0,
+    }, { status: 403 });
+  }
+
+  // LIMIT CHECK 2: Daily Simulation Limit (10/day for free tier)
+  const dailyLimitCheck = await checkDailySimulationLimit(session.email);
+
+  if (!dailyLimitCheck.allowed) {
+    return NextResponse.json({
+      success: false,
+      message: 'Daily simulation limit reached. Upgrade to Premium for unlimited simulations.',
+      error: 'Daily limit reached',
+      requiresUpgrade: true,
+      dailySimulationsRemaining: 0,
+    }, { status: 429 });
+  }
+
+  // ... proceed with simulation logic ...
+
+  // After successful simulation - increment counters (Lines 220-231)
+  if (!user?.emailVerified) {
+    await incrementFreeSimulationCount(session.email);
+  }
+  await incrementDailySimulationCount(session.email);
+
+  // Return response with remaining counts (Lines 241-247)
+  return NextResponse.json({
+    ...responseData,
+    freeSimulationsRemaining: !user?.emailVerified ? Math.max(0, emailLimitCheck.remaining - 1) : -1,
+    dailySimulationsRemaining: !dailyLimitCheck.isPremium ? Math.max(0, dailyLimitCheck.remaining - 1) : -1,
+  });
+}
+```
+
+**Backend Functions** (`lib/subscription.ts`):
+
+```typescript
+// Check email verification limit (Lines 248-273)
+export async function checkFreeSimulationLimit(
+  userEmail: string,
+  isEmailVerified: boolean
+): Promise<{ allowed: boolean; remaining: number; requiresVerification: boolean }> {
+  if (isEmailVerified) {
+    return { allowed: true, remaining: -1, requiresVerification: false };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: userEmail },
+    select: { freeSimulationsUsed: true },
+  });
+
+  const FREE_SIMULATION_LIMIT = 3;
+  const used = user?.freeSimulationsUsed || 0;
+  const remaining = FREE_SIMULATION_LIMIT - used;
+
+  return { allowed: remaining > 0, remaining, requiresVerification: !allowed };
+}
+
+// Check daily simulation limit (Lines 285-328)
+export async function checkDailySimulationLimit(
+  userEmail: string
+): Promise<{ allowed: boolean; remaining: number; isPremium: boolean }> {
+  const user = await prisma.user.findUnique({
+    where: { email: userEmail },
     select: {
       subscriptionTier: true,
       subscriptionStatus: true,
+      simulationRunsToday: true,
+      simulationRunsDate: true,
     },
   });
 
-  const isPremium = user?.subscriptionTier === 'premium' &&
-                   user?.subscriptionStatus === 'active';
-
-  // FREE TIER: Check simulation count
-  if (!isPremium) {
-    const simulationCount = await prisma.simulationRun.count({
-      where: { userId: session.user.id },
-    });
-
-    if (simulationCount >= 10) {
-      return NextResponse.json({
-        success: false,
-        message: 'Free tier limit reached',
-        error: 'You\'ve used all 10 free simulations. Upgrade to Premium for unlimited simulations!',
-        requiresUpgrade: true,
-        simulationCount: simulationCount,
-        simulationLimit: 10,
-        upgradeUrl: '/subscribe',
-      }, { status: 403 });
-    }
+  // Premium users bypass limit
+  const isPremium = user.subscriptionTier === 'premium' && user.subscriptionStatus === 'active';
+  if (isPremium) {
+    return { allowed: true, remaining: -1, isPremium: true };
   }
 
-  // Continue with simulation...
-  const body = await request.json();
-  // ... rest of simulation logic
+  // Free tier: 10 simulations per day
+  const FREE_TIER_DAILY_LIMIT = 10;
+  const today = new Date().toDateString();
+  const lastRunDate = user.simulationRunsDate?.toDateString();
+
+  // Reset if new day
+  if (lastRunDate !== today) {
+    return { allowed: true, remaining: FREE_TIER_DAILY_LIMIT, isPremium: false };
+  }
+
+  // Check daily limit
+  const remaining = FREE_TIER_DAILY_LIMIT - (user.simulationRunsToday || 0);
+  return { allowed: remaining > 0, remaining, isPremium: false };
 }
 ```
 
-**Frontend Implementation**:
+**Frontend Implementation** (`app/(dashboard)/simulation/page.tsx`):
 
 ```typescript
-// webapp/app/simulation/page.tsx
+// State tracking (Lines 92-94)
+const [freeSimulationsRemaining, setFreeSimulationsRemaining] = useState<number | undefined>(undefined);
+const [dailySimulationsRemaining, setDailySimulationsRemaining] = useState<number | undefined>(undefined);
 
-const [simulationCount, setSimulationCount] = useState(0);
-const [simulationLimit, setSimulationLimit] = useState(10);
-
-useEffect(() => {
-  // Fetch simulation count on page load
-  async function fetchSimulationCount() {
-    const response = await fetch('/api/user/simulation-count');
-    const data = await response.json();
-    setSimulationCount(data.count);
-  }
-  fetchSimulationCount();
-}, []);
-
-// Show warning when approaching limit
-{simulationCount >= 8 && simulationCount < 10 && (
-  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-    <div className="flex">
-      <div className="flex-shrink-0">
-        <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
-      </div>
-      <div className="ml-3">
-        <p className="text-sm text-yellow-700">
-          You've used {simulationCount} of {simulationLimit} free simulations.
-          <a href="/subscribe" className="font-medium underline text-yellow-700 hover:text-yellow-600">
-            Upgrade to Premium
-          </a> for unlimited simulations.
-        </p>
-      </div>
-    </div>
-  </div>
-)}
-
-// Block simulation when limit reached
-{simulationCount >= 10 && (
-  <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-    <div className="flex">
-      <div className="flex-shrink-0">
-        <XCircleIcon className="h-5 w-5 text-red-400" />
-      </div>
-      <div className="ml-3">
-        <h3 className="text-sm font-medium text-red-800">Free Tier Limit Reached</h3>
-        <p className="text-sm text-red-700 mt-2">
-          You've used all {simulationLimit} free simulations. Upgrade to Premium to run unlimited simulations.
-        </p>
-        <div className="mt-4">
-          <a
-            href="/subscribe"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Upgrade Now - $5.99/month
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-```
-
-**New API Endpoint** (needs to be created):
-
-```typescript
-// webapp/app/api/user/simulation-count/route.ts
-
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-
-export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const count = await prisma.simulationRun.count({
-    where: { userId: session.user.id },
-  });
-
-  return NextResponse.json({ count, limit: 10 });
+// Update state after simulation (Lines 787-795)
+if (response.freeSimulationsRemaining !== undefined) {
+  setFreeSimulationsRemaining(response.freeSimulationsRemaining);
 }
+if (response.dailySimulationsRemaining !== undefined) {
+  setDailySimulationsRemaining(response.dailySimulationsRemaining);
+}
+
+// Email Verification Banner (Lines 1006-1058)
+{!emailVerified && freeSimulationsRemaining !== undefined && (
+  <Alert variant="default" className="border-orange-300 bg-orange-50">
+    <Mail className="h-4 w-4 text-orange-600" />
+    <AlertTitle className="text-orange-900">
+      {freeSimulationsRemaining > 0
+        ? `${freeSimulationsRemaining} Free Simulation${freeSimulationsRemaining === 1 ? '' : 's'} Remaining`
+        : 'Email Verification Required'}
+    </AlertTitle>
+    <AlertDescription className="text-orange-800">
+      {freeSimulationsRemaining > 0
+        ? `Verify your email to unlock 10 daily simulations instead of just ${3 - freeSimulationsRemaining} total.`
+        : 'You\'ve used all 3 free simulations. Verify your email to continue with 10 simulations per day.'}
+    </AlertDescription>
+    <Button variant="default" className="bg-orange-600 hover:bg-orange-700 text-white mt-3">
+      {freeSimulationsRemaining > 0 ? 'Verify Now' : 'Resend Verification Email'}
+    </Button>
+  </Alert>
+)}
+
+// Daily Limit Banner (Lines 1060-1083)
+{emailVerified && dailySimulationsRemaining !== undefined && dailySimulationsRemaining <= 5 && (
+  <Alert variant="default" className="border-blue-300 bg-blue-50">
+    <AlertCircle className="h-4 w-4 text-blue-600" />
+    <AlertTitle className="text-blue-900">
+      {dailySimulationsRemaining > 0
+        ? `${dailySimulationsRemaining} Simulation${dailySimulationsRemaining === 1 ? '' : 's'} Remaining Today`
+        : 'Daily Limit Reached'}
+    </AlertTitle>
+    <AlertDescription className="text-blue-800">
+      {dailySimulationsRemaining > 0
+        ? `Free tier: 10 simulations per day. Your limit resets tomorrow.`
+        : 'You\'ve used all 10 daily simulations. Your limit resets tomorrow or upgrade to Premium for unlimited access.'}
+    </AlertDescription>
+    {dailySimulationsRemaining === 0 && (
+      <Button variant="default" className="bg-blue-600 hover:bg-blue-700 text-white mt-3">
+        Upgrade to Premium
+      </Button>
+    )}
+  </Alert>
+)}
 ```
 
 ---
@@ -764,6 +820,7 @@ export async function POST(request: NextRequest) {
 
 | Feature | Status | Location | Notes |
 |---------|--------|----------|-------|
+| **Dual Simulation Limit System** | ✅ Implemented | `/api/simulation/run/route.ts`, `lib/subscription.ts` | **US-052** - Email + Daily limits |
 | Multiple Market Scenarios | ✅ Implemented | `/api/simulation/run/route.ts` | Works correctly |
 | Early Retirement Limit | ✅ Implemented | `/api/early-retirement/calculate/route.ts` | 3/day for free |
 | CSV Export | ✅ Implemented | `/api/simulation/export/csv/route.ts` | Premium only |
@@ -775,22 +832,29 @@ export async function POST(request: NextRequest) {
 
 | Feature | Priority | Estimated Effort | User Story |
 |---------|----------|------------------|------------|
-| **10-Simulation Limit** | P1 (High) | 8 hours (1 day) | **US-045** |
 | JSON Data Export | P2 (Medium) | 4 hours | Not yet created |
 | Advanced Action Plan (10+ recs) | P2 (Medium) | 16 hours (2 days) | Not yet created |
 
-### US-045: Implement 10-Simulation Limit
+### US-052: Dual Simulation Limit System ✅
 
-**Status**: Added to AGILE_BACKLOG.md
+**Status**: ✅ COMPLETE (Sprint 6 - February 1, 2026)
 **Epic**: Epic 10 - Monetization & Revenue
 **Story Points**: 5
-**Acceptance Criteria**: See `/Users/jrcb/Documents/GitHub/retirezest/PREMIUM_FEATURE_SIMULATION_LIMIT.md`
+**Documentation**: See `/Users/jrcb/Documents/GitHub/retirezest/webapp/DUAL_LIMIT_SYSTEM_COMPLETE.md`
 
-**Next Steps**:
-1. Prioritize US-045 for next sprint
-2. Follow implementation guide in `PREMIUM_FEATURE_SIMULATION_LIMIT.md`
-3. Test thoroughly with free and premium accounts
-4. Monitor conversion rates after deployment
+**Implementation Summary**:
+- **Database**: 3 new fields added to User model (2 migrations applied)
+- **Backend**: 4 new functions in `lib/subscription.ts` for limit checking and counter management
+- **API**: Sequential limit checks in `/api/simulation/run/route.ts`
+- **Frontend**: Two informational banners in simulation page (email verification + daily limit)
+- **TypeScript**: 0 compilation errors
+- **Testing**: Manual testing complete, all user journeys validated
+
+**Impact**:
+- Reduces signup friction (3 free simulations before email verification)
+- Encourages email verification (unlocks 10 daily simulations)
+- Creates clear upgrade path to Premium (unlimited simulations)
+- Production-ready freemium monetization funnel
 
 ---
 
@@ -803,6 +867,25 @@ export async function POST(request: NextRequest) {
 
 ---
 
-**Last Updated**: January 31, 2026
-**Next Review**: After US-045 implementation
+## Changelog
+
+### February 1, 2026
+- **Major Update**: Dual Simulation Limit System (US-052) marked as complete
+- Updated pricing model to show unverified vs verified free tiers
+- Updated feature comparison table with three tiers (unverified, verified, premium)
+- Replaced "NOT IMPLEMENTED" status for 10-simulation limit with "IMPLEMENTED" dual-limit system
+- Added complete implementation code examples from production
+- Removed US-045 from "Not Yet Implemented" (superseded by US-052)
+- Updated database schema section with new tracking fields
+- Added comprehensive implementation summary with impact analysis
+
+### January 31, 2026
+- Initial premium features documentation created
+- Documented planned 10-simulation limit (US-045)
+- Documented existing premium features (market scenarios, early retirement, CSV/PDF export)
+
+---
+
+**Last Updated**: February 1, 2026
+**Next Review**: Quarterly or after major premium feature changes
 **Maintained By**: Engineering Team & Product Team
