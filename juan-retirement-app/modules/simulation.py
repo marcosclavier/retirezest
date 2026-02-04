@@ -2129,6 +2129,20 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     year = hh.start_year; age1 = hh.p1.start_age; age2 = hh.p2.start_age
     p1 = hh.p1; p2 = hh.p2
 
+    # US-074: Auto-calculate endAge for rental income linked to downsizing (one-time initialization)
+    for person in [p1, p2]:
+        for other_income in getattr(person, 'other_incomes', []):
+            income_type = other_income.get('type', '')
+            if income_type == 'rental':
+                # Only auto-calculate if endAge is not already set
+                if other_income.get('endAge') is None:
+                    # Check if person has downsizing plan
+                    if person.plan_to_downsize and person.downsize_year:
+                        # Calculate age when property will be sold
+                        years_until_downsize = person.downsize_year - hh.start_year
+                        rental_end_age = person.start_age + years_until_downsize
+                        # Set endAge in the dictionary (persists for all simulation years)
+                        other_income['endAge'] = rental_end_age
 
     rows = []
     tfsa_room1 = p1.tfsa_room_start

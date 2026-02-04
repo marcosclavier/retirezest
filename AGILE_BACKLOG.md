@@ -37,7 +37,7 @@
 | US-072 | Fix Employment Income Not Applied Before Retirement | 3 | P0 🔴 | Epic 5: Simulation | ✅ Done |
 | US-073 | Auto-Stop rental_income_annual When Property Is Sold | 2 | P0 🔴 | Epic 5: Simulation | ✅ Done |
 | US-075 | Connect Real Estate Downsizing UI to Simulation Engine | 5 | P0 🔴 | Epic 5: Simulation | ✅ Done |
-| US-074 | Add Automatic endAge for Rental Income in other_incomes | 3 | P1 🟡 | Epic 5: Simulation | 📋 To Do |
+| US-074 | Add Automatic endAge for Rental Income in other_incomes | 3 | P1 🟡 | Epic 5: Simulation | ✅ Done |
 
 **PHASE 2: UX Improvements (After Bugs Fixed)**
 
