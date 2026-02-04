@@ -1441,7 +1441,7 @@ export default function SimulationPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="hidden md:grid w-full grid-cols-2 max-w-md mx-auto">
           <TabsTrigger value="input">Input</TabsTrigger>
-          <TabsTrigger value="results" disabled={!result}>
+          <TabsTrigger value="results">
             Results
           </TabsTrigger>
         </TabsList>
@@ -1534,6 +1534,40 @@ export default function SimulationPage() {
                 For a more accurate projection, switch to the <strong>Input</strong> tab to review and customize all assumptions.
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* US-068: Empty State when no results exist yet */}
+          {!result && (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div className="bg-gray-100 rounded-full p-6 mb-6">
+                <Play className="h-16 w-16 text-gray-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                No simulation results yet
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md">
+                Click the <strong>"Run Simulation"</strong> button above to generate your personalized retirement projection with year-by-year analysis, tax optimization, and government benefits.
+              </p>
+              <div className="flex items-center gap-2 text-blue-600 font-medium mb-6">
+                <ArrowDown className="h-5 w-5 animate-bounce" />
+                <span>Scroll up and click "Run Simulation"</span>
+              </div>
+              <Button
+                onClick={() => {
+                  // Scroll to top where Run Simulation button is
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  // Switch to Input tab on mobile
+                  if (window.innerWidth < 768) {
+                    setActiveTab('input');
+                  }
+                }}
+                size="lg"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Play className="h-5 w-5 mr-2" />
+                Go to Input Tab
+              </Button>
+            </div>
           )}
 
           {result ? (
