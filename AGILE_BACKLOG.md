@@ -1,15 +1,15 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: February 1, 2026 (Sprint 6 COMPLETE: US-047, US-046, Critical Bug Fix)
+**Last Updated**: February 4, 2026 (Sprint 8 PLANNED - Critical Bug Fix + User Conversion)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
-**Sprint Duration**: 2 weeks
+**Sprint Duration**: 7 days (default)
 
 ---
 
 ## 📋 Table of Contents
 
-1. [Current Sprint](#current-sprint-sprint-1---jan-29---feb-11-2026)
+1. [Current Sprint](#current-sprint-sprint-8---february-10-16-2026)
 2. [Product Backlog](#product-backlog)
 3. [Epic Breakdown](#epics)
 4. [User Story Template](#user-story-template)
@@ -18,29 +18,101 @@
 
 ---
 
-## 🎯 Current Sprint: Sprint 7 - February 2-15, 2026 (2 weeks)
+## 🎯 Current Sprint: Sprint 8 - February 10-16, 2026 (7 days)
 
-**Sprint Goal**: To be determined - Awaiting product owner prioritization
+**Sprint Goal**: "Fix critical employment income bug and unblock 19 users who entered assets but never ran simulations"
 
-**Sprint Planning Date**: February 1, 2026
-**Sprint Duration**: 2 weeks (10 days)
-**Team Capacity**: 20 story points (based on recent velocity)
+**Sprint Planning Date**: February 4, 2026
+**Sprint Duration**: 7 days (bug fix + user conversion sprint)
+**Team Capacity**: 18 story points (focused sprint with critical bug fix)
+**Sprint Type**: Critical Bug Fix + User Conversion Optimization
 
-### Sprint 7 Candidates (To Be Prioritized)
+### Sprint 8 Backlog (FINALIZED)
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
+| US-072 | Fix Employment Income Not Applied Before Retirement | 3 | P0 🔴 | Epic 5: Simulation | 📋 To Do |
+| US-066 | Make "Run Simulation" Button Prominent and Impossible to Miss | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
+| US-067 | Add Post-Onboarding Redirect and Welcome Modal | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
+| US-068 | Add Empty State on Results Tab | 1 | P0 🔴 | Epic 1: Retention | 📋 To Do |
+| US-071 | Re-engagement Email Campaign for 19 Users | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
 | US-044 | Improve Cash Flow Gap Messaging | 2 | P1 🟡 | Epic 4: UX | 📋 To Do |
-| US-045 | Integrate GIC Ladder Planner into Assets Page | 5 | P2 🟢 | Epic 3: Investment | 📋 To Do |
-| US-048 | Mobile Responsive Testing - All Features | 3 | P2 🟢 | Epic 4: UX | 📋 To Do |
+| **Stretch:** US-069 | Add Simulation Validation with Clear Error Messages | 2 | P1 🟡 | Epic 1: Retention | 📋 Stretch |
+| **Stretch:** US-070 | Improve Simulation Loading State | 1 | P1 🟡 | Epic 1: Retention | 📋 Stretch |
+| **Stretch:** US-053 | Optimize Dashboard Layout Query (JWT Caching) | 3 | P0 🔴 | Epic 6: Quality | 📋 Stretch |
 
-**Note**: Sprint 7 backlog to be finalized based on user feedback and business priorities.
+**Total Story Points**: 12 committed + 6 stretch = 18 total (67% committed, 33% buffer)
+**Sprint Board**: [SPRINT_8_PLAN.md](SPRINT_8_PLAN.md)
 
-**Sprint 6 Learnings**:
-- Critical bugs take priority over feature development
-- User-reported issues provide invaluable insights
-- Quality and bug-free experience is paramount
-- Conservative sprint planning allows for investigation and proper fixes
+**Critical Issues Identified**:
+- 🔴 **US-072**: Employment income bug affecting all pre-retirement users
+  - Location: `/juan-retirement-app/modules/simulation.py:1357`
+  - Impact: Missing `endAge` check causes incorrect cash flow projections
+  - User: Daniel Gonzalez (danjgonzalezm@gmail.com) - 1% success rate instead of 95%+
+  - Evidence: Tax = $0 in 2026-2027 despite $200K employment income
+  - Fix: Add `endAge` check with special handling for employment income
+- 🔴 **User Conversion Issue**: 19 active users with $20.6M in assets haven't run simulations
+  - Root Cause: Simulation button not prominent, no post-onboarding guidance
+  - Revenue at Risk: $456/year (if 50% convert to premium)
+  - Fix: US-066, US-067, US-068, US-071
+
+**Sprint 8 Success Criteria**:
+- ✅ US-072 deployed: Daniel's simulation shows correct tax (> $0 in 2026-2027)
+- ✅ Daniel's success rate increases from 1% to 95%+
+- ✅ 19 users receive re-engagement email
+- ✅ At least 5/19 users (26%) run their first simulation
+- ✅ Simulation button redesigned and prominent
+- ✅ Post-onboarding redirect and welcome modal live
+
+**Sprint 8 Focus**:
+- Fix critical simulation accuracy bug (US-072) - affects all pre-retirees
+- Implement user conversion improvements (US-066, US-067, US-068)
+- Re-engage 19 users with assets (US-071)
+- Improve cash flow gap messaging (US-044)
+- Stretch: Validation, loading state, performance optimization
+
+**Sprint 7 → Sprint 8 Learnings Applied**:
+- User-reported bugs provide critical insights (Daniel's screenshot revealed bug)
+- Employment income logic requires special handling (default to retirement age)
+- Simulation accuracy is paramount - fix before more users are affected
+- User conversion requires multiple touchpoints (button, modal, empty state, email)
+- Conservative sprint planning (67% committed) allows for thorough testing
+
+---
+
+## 🎯 Previous Sprint: Sprint 7 - February 2-9, 2026 (Status: Deferred)
+
+**Sprint Goal**: "Ship a bulletproof, bug-free RetireZest with < 500ms response times and 100% feature reliability"
+
+**Status**: ⚠️ Deferred to Sprint 9 - Sprint 8 takes priority due to critical bug
+
+**Sprint Planning Date**: February 1, 2026
+**Sprint Duration**: 7 days (planned)
+**Team Capacity**: 15 story points (conservative for quality-focused sprint)
+**Sprint Type**: Quality Assurance & Performance Optimization
+
+### Sprint 7 Backlog (DEFERRED TO SPRINT 9)
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| US-053 | Optimize Dashboard Layout Query (JWT Caching) | 3 | P0 🔴 | Epic 6: Quality | 📋 To Do → Sprint 8 Stretch |
+| US-054 | Optimize Login API Response Time | 3 | P0 🔴 | Epic 6: Quality | 📋 Deferred to Sprint 9 |
+| US-048 | Mobile Responsive Testing - All Features | 3 | P2 🟢 | Epic 4: UX | 📋 Deferred to Sprint 9 |
+| US-049 | Subscription Status Ribbon Display | 2 | P2 🟢 | Epic 4: UX | 📋 Deferred to Sprint 9 |
+| US-050 | Python API Monitoring & Alerting | 2 | P2 🟢 | Epic 6: Quality | 📋 Deferred to Sprint 9 |
+
+**Total Story Points**: 15 planned
+**Status**: Deferred due to critical employment income bug (US-072) discovered February 4, 2026
+
+**Sprint 7 → Sprint 8 Pivot**:
+- **February 4, 2026**: Critical bug discovered (US-072)
+  - User: Daniel Gonzalez (danjgonzalezm@gmail.com)
+  - Issue: Employment income not counted before retirement
+  - Evidence: Tax = $0 in 2026-2027 despite $200K employment
+  - Impact: 1% success rate instead of 95%+
+- **Decision**: Prioritize bug fix + user conversion over performance optimization
+- **Rationale**: Simulation accuracy is fundamental; performance can wait
+- **Sprint 7 Items**: Moved to Sprint 8 stretch (US-053) or Sprint 9 (US-054, US-048, US-049, US-050)
 
 ---
 
@@ -90,10 +162,11 @@
 | US-047 | Fix Baseline Scenario Auto-Population | 3 | P0 🔴 | Epic 4: UX | ✅ Done |
 | US-046 | Improve Low Success Rate Messaging | 8 | P0 🔴 | Epic 4: UX | ✅ Done + CRITICAL BUG FIXED |
 | US-044 | Fix Cash Flow Gap Detection | 5 | P1 🟡 | Epic 4: UX | ✅ Investigated (Deferred to Sprint 7) |
+| **US-052** | **Dual Simulation Limit System (Email + Daily)** | **5** | **P0 🔴** | **Epic 10: Monetization** | **✅ Done** |
 
-**Total Story Points**: 16 planned / 11 delivered (US-047: 3, US-046: 8)
-**Completed**: 11 pts (100% of core commitment)
-**Velocity**: 11 pts/day (exceptional)
+**Total Story Points**: 21 planned / 16 delivered (US-047: 3, US-046: 8, US-052: 5)
+**Completed**: 16 pts (100% of core commitment + monetization feature)
+**Velocity**: 16 pts/day (exceptional)
 
 **Sprint Board**: [SPRINT_6_BOARD.md](SPRINT_6_BOARD.md)
 **Verification Report**: [SPRINT_6_VERIFICATION_REPORT.md](SPRINT_6_VERIFICATION_REPORT.md)
@@ -120,6 +193,16 @@
   - Root cause identified: TFSA intentionally last in withdrawal strategies (by design)
   - Conclusion: UX issue, not critical bug
   - Deferred to Sprint 7 as messaging improvement (2-3 hours)
+- ✅ **US-052**: Dual Simulation Limit System implemented (freemium monetization)
+  - **Limit 1**: Email verification - 3 free simulations for unverified users
+  - **Limit 2**: Daily limit - 10 simulations/day for free tier users
+  - **Premium**: Unlimited simulations (both limits bypassed)
+  - Database: Added `freeSimulationsUsed`, `simulationRunsToday`, `simulationRunsDate` fields
+  - Backend: 4 new functions in `lib/subscription.ts`
+  - Frontend: Email verification banner + daily limit banner in simulation page
+  - API: Sequential limit checks in `/api/simulation/run`
+  - TypeScript: 0 compilation errors
+  - Documentation: `DUAL_LIMIT_SYSTEM_COMPLETE.md`
 
 **Testing Coverage**:
 - Automated Tests: 3/3 passing (100%)
@@ -301,6 +384,73 @@
 
 #### Epic 1: User Retention & Engagement
 
+**Context**: February 3, 2026 analysis revealed critical conversion funnel issue: 20 users entered $24.4M in assets but ran ZERO simulations. Root causes: (1) Simulation button disabled bug (fixed Feb 1), (2) Poor UX/onboarding. See [USER_CONVERSION_ANALYSIS_FEBRUARY_2026.md](USER_CONVERSION_ANALYSIS_FEBRUARY_2026.md) for full analysis.
+
+**Goal**: Increase simulation conversion from 0-20% to 80-90% through UX improvements and re-engagement.
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-066** | **Make "Run Simulation" Button Prominent and Impossible to Miss** | **2** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As a user who has entered my assets and created a scenario, I want the "Run Simulation" button to be prominent and obvious so that I know exactly how to see my retirement projection |
+| **Acceptance Criteria** | - [ ] Button size increased 2x (large size)<br>- [ ] Vibrant gradient background (blue-500 to blue-600)<br>- [ ] Positioned at top of page (above the fold)<br>- [ ] Clear label: "🚀 Run Your Retirement Simulation"<br>- [ ] Subtle pulsing animation for first-time users<br>- [ ] Hover effect: scale + shadow increase<br>- [ ] Mobile-responsive (full width on mobile) |
+| **Tasks** | - [ ] Update button size and styling in simulation/page.tsx<br>- [ ] Add gradient background class<br>- [ ] Position button above all other content<br>- [ ] Add Lucide icon (Rocket) to button<br>- [ ] Implement CSS animation (pulse-once for first-time users)<br>- [ ] Add hover state with transform and shadow<br>- [ ] Test on mobile devices (iPhone, Android)<br>- [ ] Update button in mobile layout (full width) |
+| **Technical Notes** | **Current Location**: `webapp/app/(dashboard)/simulation/page.tsx` line ~1165<br><br>**BEFORE**:<br>```tsx<br><button className="px-4 py-2 bg-blue-600 text-white rounded"><br>  Run Simulation<br></button><br>```<br><br>**AFTER**:<br>```tsx<br><button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xl font-bold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all animate-pulse-once"><br>  <Rocket className="w-6 h-6 inline mr-2" /><br>  Run Your Retirement Simulation<br></button><br>```<br><br>**Add to tailwind.config.js**:<br>```js<br>animation: {<br>  'pulse-once': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 3',<br>}<br>``` |
+| **User Impact** | **CRITICAL** - Without prominent button, users don't know where to click. This is the #1 blocker preventing users from seeing value. 20 users with $24.4M in assets couldn't figure out how to run simulations. |
+| **Priority Justification** | P0 because:<br>1. **Highest impact fix** - Directly addresses #1 user confusion point<br>2. **Quick implementation** - 2 hours, pure CSS/HTML changes<br>3. **Zero risk** - No logic changes, just styling<br>4. **Immediate ROI** - Unblocks 19 active users ($20.6M assets) |
+| **Success Metrics** | - [ ] Button click rate increases from unknown to >95%<br>- [ ] Simulation conversion increases from 0% to >80%<br>- [ ] User feedback: "Easy to find button" in surveys |
+| **Related Stories** | - US-067 (Post-onboarding redirect) - Directs users to this page<br>- US-068 (Empty state) - Reinforces need to click this button |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-067** | **Add Post-Onboarding Redirect and Welcome Modal** | **2** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As a new user who just completed onboarding, I want to be automatically taken to the simulation page with clear guidance on what to do next so that I can immediately run my first simulation |
+| **Acceptance Criteria** | - [ ] After creating baseline scenario, redirect to `/simulation?welcome=true`<br>- [ ] Show welcome modal on first visit (check localStorage)<br>- [ ] Modal explains: "Click Run Simulation to see your projection"<br>- [ ] Arrow graphic pointing to button<br>- [ ] Dismissible with "Got it!" button<br>- [ ] Modal doesn't show again after dismissal<br>- [ ] Optional tooltip pointing to button (for users who dismiss modal) |
+| **Tasks** | - [ ] Add redirect after scenario creation: `router.push('/simulation?welcome=true')`<br>- [ ] Create WelcomeModal component<br>- [ ] Add modal trigger based on URL param `?welcome=true`<br>- [ ] Check localStorage for `welcome_modal_seen: true`<br>- [ ] Design modal content (heading, explanation, arrow graphic)<br>- [ ] Implement arrow SVG pointing down to button<br>- [ ] Add "Got it!" dismiss button<br>- [ ] Set localStorage on dismiss<br>- [ ] Add fallback tooltip if modal dismissed too quickly<br>- [ ] Test on mobile and desktop |
+| **Technical Notes** | **Files to Modify**:<br>1. `webapp/app/onboarding/page.tsx` - Add redirect after scenario creation<br>2. `webapp/app/(dashboard)/simulation/page.tsx` - Add welcome modal<br>3. `webapp/components/WelcomeModal.tsx` - New component<br><br>**Redirect Logic**:<br>```tsx<br>// onboarding/page.tsx<br>const handleComplete = async () => {<br>  await createBaselineScenario();<br>  router.push('/simulation?welcome=true');<br>};<br>```<br><br>**Modal Logic**:<br>```tsx<br>// simulation/page.tsx<br>const [showWelcome, setShowWelcome] = useState(false);<br><br>useEffect(() => {<br>  const params = new URLSearchParams(window.location.search);<br>  const isWelcome = params.get('welcome') === 'true';<br>  const seen = localStorage.getItem('welcome_modal_seen');<br>  <br>  if (isWelcome && !seen) {<br>    setShowWelcome(true);<br>  }<br>}, []);<br><br>const handleDismiss = () => {<br>  localStorage.setItem('welcome_modal_seen', 'true');<br>  setShowWelcome(false);<br>};<br>``` |
+| **User Impact** | **HIGH** - Guides users to next step immediately after onboarding. Prevents confusion about "what do I do now?". Increases likelihood of running first simulation. |
+| **Priority Justification** | P0 because:<br>1. **Smooth onboarding** - Seamless transition from setup to action<br>2. **Prevents drop-off** - 80% of affected users created scenarios but didn't simulate<br>3. **Quick win** - 2 hours implementation<br>4. **Complements US-066** - Directs users to prominent button |
+| **Success Metrics** | - [ ] 90%+ of new users who complete onboarding run simulation within 5 minutes<br>- [ ] Modal shown to 100% of first-time users<br>- [ ] Modal dismissed within 10 seconds on average<br>- [ ] Simulation conversion increases from 0% to >80% |
+| **Related Stories** | - US-066 (Prominent button) - Modal points to this button<br>- US-068 (Empty state) - Alternative path if user dismisses modal |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-068** | **Add Empty State on Results Tab** | **1** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As a user who clicks the "Results" tab before running a simulation, I want to see a helpful empty state that tells me what to do so that I understand I need to run a simulation first |
+| **Acceptance Criteria** | - [ ] Empty state shown when no simulation results exist<br>- [ ] Large icon (📊) and clear heading<br>- [ ] Explanation: "Click Run Simulation to see your projection"<br>- [ ] Arrow pointing up to button location<br>- [ ] Call-to-action button: "Run My First Simulation"<br>- [ ] Mobile-friendly layout |
+| **Tasks** | - [ ] Update ResultsDashboard component<br>- [ ] Add conditional rendering: if (!simulationResults) show empty state<br>- [ ] Design empty state layout (centered, icon, text, CTA)<br>- [ ] Add Chart icon from Lucide (large, 96x96)<br>- [ ] Add heading: "No simulation results yet"<br>- [ ] Add explanation text<br>- [ ] Add arrow SVG pointing up/left to button<br>- [ ] Add CTA button that scrolls to Run Simulation button<br>- [ ] Test on mobile (ensure arrow/text makes sense)<br>- [ ] Test with screen readers (accessibility) |
+| **Technical Notes** | **File**: `webapp/components/simulation/ResultsDashboard.tsx`<br><br>**Implementation**:<br>```tsx<br>export function ResultsDashboard({ results }) {<br>  if (!results) {<br>    return (<br>      <div className="flex flex-col items-center justify-center py-20 text-center px-4"><br>        <BarChart3 className="w-24 h-24 text-gray-300 mb-6" /><br>        <h3 className="text-2xl font-bold text-gray-900 mb-2"><br>          No simulation results yet<br>        </h3><br>        <p className="text-gray-600 mb-6 max-w-md"><br>          Click "Run Simulation" to see your personalized retirement<br>          projection, year-by-year cash flow, and tax-optimized<br>          withdrawal strategy.<br>        </p><br>        <div className="flex items-center gap-2 text-blue-600"><br>          <ArrowUp className="w-5 h-5" /><br>          <span className="font-medium">Click "Run Simulation" above</span><br>        </div><br>        <Button<br>          onClick={() => {<br>            document.getElementById('run-simulation-btn')?.scrollIntoView({<br>              behavior: 'smooth',<br>              block: 'center'<br>            });<br>          }}<br>          className="mt-6"<br>        ><br>          Run My First Simulation<br>        </Button><br>      </div><br>    );<br>  }<br>  <br>  // Normal results display<br>  return ( ... );<br>}<br>``` |
+| **User Impact** | **HIGH** - Prevents confusion when users click Results tab expecting to see data. Common user behavior: "Where are my results?" Empty state guides them to action. |
+| **Priority Justification** | P0 because:<br>1. **Prevents confusion** - Users naturally click Results first<br>2. **Quick implementation** - 1 hour, single component change<br>3. **Zero risk** - Only affects empty state (doesn't break existing functionality)<br>4. **Reinforces US-066** - Multiple paths to same action |
+| **Success Metrics** | - [ ] Empty state shown to 100% of users who visit Results before running simulation<br>- [ ] CTA button click rate >80%<br>- [ ] Reduction in "where are my results?" support tickets<br>- [ ] Simulation conversion increases (contributes to overall 80% target) |
+| **Related Stories** | - US-066 (Prominent button) - Empty state points to this<br>- US-067 (Welcome modal) - Alternative onboarding path |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-069** | **Add Simulation Validation with Clear Error Messages** | **2** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a user attempting to run a simulation, I want to see clear validation errors if I'm missing required data so that I know exactly what to fix |
+| **Acceptance Criteria** | - [ ] Validate before running simulation<br>- [ ] Show red alert with specific errors (bulleted list)<br>- [ ] "Fix these issues" button links to relevant input tab<br>- [ ] Button disabled with tooltip if validation fails<br>- [ ] Help text explains common mistakes |
+| **Validation Rules** | - At least 1 asset OR 1 income source<br>- Retirement age >= current age<br>- Life expectancy > retirement age<br>- CPP start age valid (60-70)<br>- OAS start age valid (65-70) |
+| **User Impact** | **MEDIUM** - Prevents silent failures, helps users understand what data is missing. |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-070** | **Improve Simulation Loading State** | **1** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a user running a simulation, I want to see progressive loading messages and a progress bar so that I know the system is working |
+| **Acceptance Criteria** | - [ ] Replace generic "Loading..." with stages<br>- [ ] Progress bar (0% → 100%)<br>- [ ] Estimated time remaining<br>- [ ] 30-second timeout with error message<br>- [ ] Mobile-friendly design |
+| **User Impact** | **MEDIUM** - Reduces perceived wait time, prevents users from thinking page is frozen. |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-071** | **Re-engagement Email Campaign for Users with Assets but No Simulations** | **2** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As the product owner, I want to send re-engagement emails to users who loaded assets but never ran simulations so that we can recover these high-value users and prevent churn |
+| **Acceptance Criteria** | - [ ] Query database for users: assets > 0, scenarios = 0<br>- [ ] Personalized email with actual asset amount<br>- [ ] Clear CTA: Link to /simulation page<br>- [ ] Explain what they'll see (benefits)<br>- [ ] Track email opens and clicks<br>- [ ] Track simulation runs within 48 hours<br>- [ ] Success metric: 60%+ run simulations (12/19 users) |
+| **Tasks** | - [ ] Query database: `SELECT id, email, COUNT(assets) FROM User WHERE assets > 0 AND scenarios = 0`<br>- [ ] Create email template (personalized with asset amount)<br>- [ ] Send via Resend API (batch email)<br>- [ ] Add tracking links (UTM params)<br>- [ ] Monitor opens/clicks in Resend dashboard<br>- [ ] Query simulation runs 48 hours after send<br>- [ ] Document results in report |
+| **Technical Notes** | **Target**: 19 active users with $20.6M in assets<br><br>**Email Subject**: "Your retirement plan is 90% complete - one click away!"<br><br>**Email Body Template**:<br>```<br>Hi [First Name],<br><br>I noticed you loaded $[X] in assets into RetireZest (thank you!),<br>but you haven't run your retirement simulation yet.<br><br>Good news: You're just ONE CLICK away from seeing your<br>personalized retirement projection.<br><br>→ [Run My Simulation]<br><br>What you'll see:<br>✅ Year-by-year cash flow through retirement<br>✅ Tax-optimized withdrawal strategy  <br>✅ Success probability (will your money last?)<br>✅ GIS/OAS benefit optimization<br><br>Questions? Hit reply - I'm here to help.<br><br>- [Product Owner Name]<br>```<br><br>**Implementation**:<br>```typescript<br>// Query users<br>const users = await prisma.user.findMany({<br>  where: {<br>    assets: { some: {} },<br>    scenarios: { none: {} }<br>  },<br>  include: {<br>    assets: { select: { balance: true } }<br>  }<br>});<br><br>// Calculate total assets<br>users.forEach(user => {<br>  const totalAssets = user.assets.reduce((sum, a) => sum + a.balance, 0);<br>  <br>  // Send personalized email<br>  await sendEmail({<br>    to: user.email,<br>    subject: "Your retirement plan is 90% complete",<br>    template: 'reengagement-simulation',<br>    data: {<br>      firstName: user.email.split('@')[0],<br>      totalAssets: formatCurrency(totalAssets),<br>      simulationUrl: `https://retirezest.com/simulation?utm_source=email&utm_campaign=reengagement`<br>    }<br>  });<br>});<br>``` |
+| **User Impact** | **CRITICAL** - Potential to recover 19 users with $20.6M in assets. Prevents churn, demonstrates product value, generates word-of-mouth. High-value users most likely to convert to premium. |
+| **Priority Justification** | P0 because:<br>1. **Immediate revenue impact** - Prevent $432-$1,000/year churn<br>2. **High conversion potential** - Users already invested time loading data<br>3. **Quick execution** - 2 hours to send emails<br>4. **Demonstrates care** - Personal outreach shows we value users<br>5. **Data-driven** - Can measure exact ROI (opens, clicks, simulations) |
+| **Success Metrics** | - [ ] Email sent to 19 users (100%)<br>- [ ] Open rate: 60%+ (12/19 users)<br>- [ ] Click rate: 40%+ (8/19 users)<br>- [ ] **Simulation conversion: 60%+ (12/19 users)**<br>- [ ] Response rate (replies): 10%+ (2/19 users)<br>- [ ] Zero unsubscribes or spam reports |
+| **Related Stories** | - US-066, US-067, US-068 (UX fixes that make email successful)<br>- US-001 (Previous re-engagement campaign - apply learnings) |
+
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
 | **US-001** | **Monitor Re-engagement Campaign** | **3** | **P0** | **✅ Done** |
@@ -404,6 +554,83 @@
 
 ---
 
+#### Epic 11: Comprehensive Asset, Income & Expense Coverage
+
+**Goal**: Ensure RetireZest supports all major Canadian retirement assets, income sources, and expense categories for complete retirement planning.
+
+**Background**: Review completed February 3, 2026 identified 13 missing categories across assets (5), income (6), and expenses (2). See [ASSET_INCOME_EXPENSE_CATEGORIES_REVIEW.md](ASSET_INCOME_EXPENSE_CATEGORIES_REVIEW.md) for full analysis.
+
+**Key Deliverables**:
+1. LIF/LRIF asset types and automatic LIRA conversion tracking (age 71)
+2. Annuity assets and guaranteed income modeling
+3. Investment income tax type differentiation (dividend/interest/capital gains)
+4. Long-term care expense planning ($6K-$20K/month in Canada)
+5. Home care expense modeling (alternative to LTC facilities)
+6. DPSP asset type for historical employer plan balances
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-060** | **Add LIF/LRIF Asset Types and Conversion Tracking** | **8** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As a user with a LIRA, I want the system to automatically track when my LIRA converts to a LIF/LRIF at age 71 and apply correct minimum/maximum withdrawal rules so my retirement projections are accurate |
+| **Acceptance Criteria** | - [ ] Add "lif", "lrif", "rlif" asset types to schema<br>- [ ] Add LIF-specific fields (min/max withdrawal, province, unlock rules)<br>- [ ] Simulation automatically converts LIRA → LIF at age 71<br>- [ ] Apply provincial LIF withdrawal rules (BC, SK, MB, federal)<br>- [ ] Support NS unlocking rule (50% at age 55+ as of 2025)<br>- [ ] Display LIF conversion in investment timeline<br>- [ ] Year-by-year table shows LIF min/max withdrawals |
+| **Tasks** | - [ ] Update Prisma schema: Add lifMinWithdrawal, lifMaxWithdrawal, lifProvince, lifUnlockAmount fields<br>- [ ] Create database migration<br>- [ ] Update Python backend to convert LIRA → LIF at age 71<br>- [ ] Implement provincial LIF rules (BC, SK, MB different from federal RLIF)<br>- [ ] Implement NS unlocking (50% at 55+ since April 2025)<br>- [ ] Update assets page UI to show LIF/LRIF options<br>- [ ] Add LIF conversion to InvestmentTimeline component (US-040)<br>- [ ] Test with user rightfooty218@gmail.com (has LIRA, age 67)<br>- [ ] Update documentation |
+| **Technical Notes** | **2025 Regulatory Update**: Nova Scotia allows 55+ to unlock 50% when transferring LIRA to LIF (effective April 1, 2025)<br><br>**Provincial Variations**:<br>- BC, SK, MB: LIF with province-specific min/max rules<br>- Federal: RLIF (Restricted LIF) - more restrictive<br>- ON: LIF phased out in 2008, now use LRIF<br><br>**Schema Changes**:<br>```prisma<br>model Asset {<br>  type String // add: lif, lrif, rlif<br>  lifMinWithdrawal Float?<br>  lifMaxWithdrawal Float?<br>  lifProvince String?<br>  lifUnlockAmount Float?<br>}<br>```<br><br>**Backend Logic**:<br>At age 71, convert LIRA → LIF/LRIF:<br>- Check province for LIF type<br>- Apply min withdrawal (like RRIF)<br>- Apply max withdrawal (unique to LIF)<br>- Allow unlocking if eligible (NS only) |
+| **User Impact** | **CRITICAL** - ~15% of users have LIRAs. They don't know when it converts to LIF/LRIF (age 71) or that there are maximum withdrawal limits. User rightfooty218@gmail.com specifically asked about "end date for investments" - LIF conversion is part of this. |
+| **Related Stories** | - US-040 (Investment Timeline) - Shows LIF conversion at age 71<br>- US-041 (LIRA Support) - Completed in Sprint 5 |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-061** | **Add Annuity Asset Type and Income Tracking** | **5** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a retiree who converted my RRSP to an annuity, I want to track my annuity asset and guaranteed income payments so my retirement plan reflects this income source |
+| **Acceptance Criteria** | - [ ] Add "annuity" asset type to schema<br>- [ ] Add annuity-specific fields (type, start date, payment, indexed, guarantee)<br>- [ ] Support annuity types: term, life, joint-life, variable<br>- [ ] Link annuity asset to annuity income (auto-create income stream)<br>- [ ] Apply correct tax treatment (portion is return of capital, non-taxable)<br>- [ ] Display annuity guarantee period and payments in results<br>- [ ] Support inflation-indexed annuities<br>- [ ] Help text explains annuity types and trade-offs |
+| **Tasks** | - [ ] Update Prisma schema: Add annuityType, annuityStartDate, annuityEndDate, annuityPayment, annuityIndexed, annuityGuarantee fields<br>- [ ] Create database migration<br>- [ ] Update assets page UI to show annuity option and form fields<br>- [ ] Add "annuity" income type to Income model<br>- [ ] Backend: Auto-create annuity income when annuity asset is added<br>- [ ] Implement tax treatment (return of capital portion non-taxable)<br>- [ ] Create educational content: "Should I convert my RRSP to an annuity?"<br>- [ ] Test with term annuity (10-year guarantee)<br>- [ ] Test with life annuity (no end date)<br>- [ ] Test with joint-life annuity (survives to spouse)<br>- [ ] Update documentation |
+| **Technical Notes** | **Annuity Types**:<br>1. **Term Annuity**: Fixed payments for specific period (e.g., 10 years)<br>2. **Life Annuity**: Payments until death (no estate value)<br>3. **Joint-Life**: Payments until both spouses pass<br>4. **Variable Annuity**: Payments vary with investment performance<br><br>**Tax Treatment**: Complex - portion of each payment is non-taxable return of capital, remainder is taxable income. Calculation: (Principal ÷ Total Expected Payments) = Non-Taxable Portion<br><br>**Schema Changes**:<br>```prisma<br>model Asset {<br>  type String // add: annuity<br>  annuityType String? // "term", "life", "joint-life", "variable"<br>  annuityStartDate DateTime?<br>  annuityEndDate DateTime? // For term only<br>  annuityPayment Float? // Monthly/annual amount<br>  annuityIndexed Boolean? // Inflation protection<br>  annuityGuarantee Int? // Guarantee period (years)<br>}<br><br>model Income {<br>  type String // add: annuity<br>  annuityStartDate DateTime?<br>  annuityIndexed Boolean?<br>  annuityGuarantee Int?<br>}<br>``` |
+| **User Impact** | **High** - ~8% of retirees have annuities. Common for LIRA conversions (can convert LIRA to life annuity instead of LIF). Provides guaranteed income but reduces flexibility. |
+| **Examples** | **Example**: Convert $300K LIRA to life annuity at age 65:<br>- Guaranteed payment: $1,250/month ($15K/year) for life<br>- Indexed: 2% annual increase<br>- Guarantee: 10 years (if die before 75, spouse gets payments)<br>- Trade-off: No flexibility, but income guaranteed |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-062** | **Split Investment Income into Tax Types (Dividend/Interest/Capital Gains)** | **5** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a user with investment income, I want to specify whether my income is from dividends, interest, or capital gains so the tax calculations are accurate |
+| **Acceptance Criteria** | - [ ] Add income types: "dividend-eligible", "dividend-ineligible", "interest", "capital-gains"<br>- [ ] Update income form to show investment income sub-types<br>- [ ] Backend applies correct tax treatment for each type:<br>  - Eligible dividends: Dividend tax credit (lowest tax)<br>  - Ineligible dividends: Smaller tax credit<br>  - Interest: Fully taxable at marginal rate (highest tax)<br>  - Capital gains: 50% inclusion rate (medium tax)<br>- [ ] Simulation results show tax breakdown by income type<br>- [ ] Help text explains different tax treatments<br>- [ ] Migration script: Convert existing "investment" income to "interest" (conservative)<br>- [ ] Display effective tax rate by income type in results |
+| **Tasks** | - [ ] Update Prisma schema: Add dividend-eligible, dividend-ineligible, interest, capital-gains to Income.type<br>- [ ] Add investmentType, dividendEligibility, capitalGainsCostBase fields<br>- [ ] Create database migration<br>- [ ] Migration script: Update existing "investment" → "interest"<br>- [ ] Update income form UI with investment sub-types dropdown<br>- [ ] Update Python backend tax calculations:<br>  - Eligible dividends: Gross-up 138%, federal credit 15.02%, provincial varies<br>  - Ineligible dividends: Gross-up 115%, federal credit 9.03%<br>  - Interest: 100% taxable at marginal rate<br>  - Capital gains: 50% inclusion rate (as of 2025)<br>- [ ] Display tax breakdown in results: "Investment Income Taxes: Dividends $X, Interest $Y, Capital Gains $Z"<br>- [ ] Create educational content: "Investment Income and Taxes"<br>- [ ] Test with high-dividend scenario (verify tax savings)<br>- [ ] Test with high-interest scenario (verify higher taxes)<br>- [ ] Update documentation |
+| **Technical Notes** | **Tax Treatment (2025 Federal Rates)**:<br>1. **Eligible Dividends** (Canadian corporations):<br>   - Grossed up: Amount × 1.38<br>   - Federal tax credit: 15.02% of grossed-up amount<br>   - Provincial credit: Varies by province (ON: 10%)<br>   - **Effective tax rate**: 20-25% (lowest)<br><br>2. **Ineligible Dividends** (small business):<br>   - Grossed up: Amount × 1.15<br>   - Federal tax credit: 9.03% of grossed-up amount<br>   - Provincial credit: Lower than eligible<br>   - **Effective tax rate**: 30-35%<br><br>3. **Interest Income**:<br>   - 100% taxable at marginal rate<br>   - No credits or deductions<br>   - **Effective tax rate**: 40-50% (highest)<br><br>4. **Capital Gains**:<br>   - 50% inclusion rate (only half is taxable)<br>   - **Effective tax rate**: 20-25% (similar to eligible dividends)<br><br>**Example**: $10,000 income at 40% marginal rate:<br>- Eligible dividend: $2,000-$2,500 tax<br>- Interest: $4,000 tax<br>- Capital gains: $2,000 tax<br>**Difference**: $2,000/year tax savings! |
+| **User Impact** | **High** - ~40% of users have investment income. Current "investment" category overstates taxes if income is dividends or capital gains. Users with $20K dividend income could be overpaying estimated taxes by $4K-$6K/year in projections. |
+| **Priority Justification** | P1 because:<br>1. Tax accuracy is critical for retirement planning<br>2. Many users have dividend-focused portfolios<br>3. Current projections overstate taxes (conservative, but inaccurate)<br>4. Relatively quick implementation (5 pts, ~10 hours) |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-063** | **Add Long-Term Care Expense Category with Cost Modeling** | **8** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As a retirement planner, I want to model long-term care costs (nursing home, assisted living) so I can plan for this major expense that could cost $6K-$20K/month in Canada |
+| **Acceptance Criteria** | - [ ] Add "long-term-care" and "home-care" expense categories<br>- [ ] Split existing "healthcare" into "healthcare-routine"<br>- [ ] Add LTC-specific fields: type, facility, province, start age, duration, subsidy<br>- [ ] Provide LTC cost presets by province (public vs private)<br>- [ ] Default LTC start age: 85 (user-configurable 75-95)<br>- [ ] Default LTC duration: 3-5 years (user-configurable 1-15 years)<br>- [ ] Simulation shows impact of LTC on retirement success rate<br>- [ ] Educational content: "Planning for Long-Term Care in Canada"<br>- [ ] Display provincial subsidy eligibility (income-tested)<br>- [ ] Warning if LTC costs exceed available assets |
+| **Tasks** | - [ ] Update Prisma schema: Add long-term-care, home-care, healthcare-routine to Expense.category<br>- [ ] Add LTC fields: ltcType, ltcFacility, ltcProvince, ltcStartAge, ltcDuration, ltcSubsidy<br>- [ ] Create database migration<br>- [ ] Build LTC cost database by province:<br>  - Ontario: Public $2,036/month, Private $6,000-$15,000/month<br>  - BC: Public $1,200/month, Private $4,500-$12,000/month<br>  - Quebec: Public $2,000/month, Private $5,000-$18,000/month<br>  - Alberta: Public $1,800/month, Private $5,500-$14,000/month<br>  - Nova Scotia: Public $3,315/month, Private $6,000-$16,000/month<br>- [ ] Create LTC expense form with province presets<br>- [ ] Backend: Model LTC as time-bound expense (age 85-90 default)<br>- [ ] Show LTC impact in simulation: "LTC costs $180K over 5 years, reduces success rate from 95% to 78%"<br>- [ ] Create educational modal: "What is Long-Term Care?"<br>- [ ] Add "Plan for LTC" prompt to age 75+ users<br>- [ ] Test with high LTC costs ($20K/month × 5 years = $1.2M)<br>- [ ] Test with public subsidy (income-tested)<br>- [ ] Update documentation |
+| **Technical Notes** | **Long-Term Care Costs (Canada 2025)**:<br><br>**Public Subsidized**:<br>- Ontario: $2,036/month (basic co-payment as of July 2024)<br>- Nova Scotia: $3,315/month (standard accommodation as of Nov 2024)<br>- Range: $879-$3,575/month depending on province<br>- **Income-tested**: Higher income = higher co-payment<br><br>**Private (Non-Subsidized)**:<br>- Basic: $6,000-$15,000/month<br>- Premium: $15,000-$20,900/month<br>- Includes: Room, meals, 24/7 care, medications<br><br>**Average LTC Stay**:<br>- Men: 2.5 years average<br>- Women: 3.5 years average<br>- 10% stay 5+ years<br>- **Planning horizon**: 3-5 years (conservative: 7 years)<br><br>**Total Lifetime Cost**:<br>- Public: $72K-$215K (3-5 years)<br>- Private: $216K-$900K (3-5 years)<br>- Premium: $540K-$1.5M (3-5 years)<br><br>**Schema Changes**:<br>```prisma<br>model Expense {<br>  category String // add: long-term-care, home-care, healthcare-routine<br>  ltcType String? // "public-subsidized", "private-basic", "private-premium"<br>  ltcFacility String?<br>  ltcProvince String?<br>  ltcStartAge Int? // Default: 85<br>  ltcDuration Int? // Default: 3-5 years<br>  ltcSubsidy Float? // Provincial subsidy if income-tested<br>}<br>``` |
+| **User Impact** | **CRITICAL** - 100% of retirees need to plan for potential LTC. This is the #1 expense that depletes retirement savings. Without LTC planning:<br>- Users see "100% success rate" but fail to account for $200K-$1M expense<br>- Retirement projections are overly optimistic<br>- Users are unprepared for LTC costs<br><br>**Real Example**: User with $800K assets, $50K/year spending:<br>- Without LTC: 100% success to age 95<br>- With LTC ($10K/month for 5 years at age 85): 65% success rate<br>- **LTC costs $600K** - massive impact on retirement security |
+| **Priority Justification** | **P0 (Critical)** because:<br>1. **Universal impact** - All retirees face potential LTC costs<br>2. **Massive expense** - $200K-$1M can deplete retirement savings<br>3. **Accuracy critical** - Current projections dangerously optimistic<br>4. **Competitive differentiator** - Most retirement tools don't model LTC<br>5. **User safety** - Users need realistic planning for this risk |
+| **Related Stories** | - US-064 (Home Care Expenses) - Alternative to LTC facilities<br>- US-040 (Investment Timeline) - Show when LTC costs deplete assets |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-064** | **Add Home Care Expense Category** | **3** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a user planning to age at home, I want to model in-home care costs (nursing, PSW, therapy) so I can budget for care without moving to a facility |
+| **Acceptance Criteria** | - [ ] Add "home-care" expense category (already part of US-063 schema)<br>- [ ] Add home care fields: hours/week, type (nursing/PSW/therapy), provider<br>- [ ] Provide hourly rate presets by care type (Ontario 2025):<br>  - Private Nursing: $29-$96/hour<br>  - PSW (Personal Support Worker): $29/hour<br>  - Occupational Therapy: $137/hour<br>  - Companion Care: $20-$25/hour<br>- [ ] Calculate monthly cost: hours × rate × 4.33 weeks<br>- [ ] Support escalating care (e.g., 5 hrs/week at age 75 → 20 hrs/week at age 85)<br>- [ ] Simulation models home care as alternative to LTC<br>- [ ] Compare costs: "Home care ($2,500/month) vs LTC facility ($6,000/month)"<br>- [ ] Educational content: "Aging at Home: Costs and Considerations" |
+| **Tasks** | - [ ] Update Prisma schema: Add homeCareHours, homeCareType, homeCareProvider to Expense model (already added in US-063)<br>- [ ] Build home care cost database:<br>  - Ontario: Nursing $29-$96/hr, PSW $29/hr, Therapy $137/hr<br>  - BC: Similar rates (regional variations)<br>  - Quebec: Lower rates (provincial subsidies)<br>- [ ] Create home care expense form<br>- [ ] Add "escalating care" feature: Start at 5 hrs/week age 75, increase to 20 hrs/week age 85<br>- [ ] Backend: Calculate monthly cost and annual total<br>- [ ] Show home care vs LTC comparison in results<br>- [ ] Create educational content about aging at home<br>- [ ] Test with low-intensity care (5 hrs/week PSW = $629/month)<br>- [ ] Test with high-intensity care (40 hrs/week nursing = $6,144/month, same as LTC!)<br>- [ ] Update documentation |
+| **Technical Notes** | **Home Care Costs (Ontario 2025)**:<br>- Private Nursing: $29.44-$96.14/hour<br>- PSW: $28.94/hour average<br>- Occupational Therapy: $136.98/hour<br>- Companion Care: $20-$25/hour<br><br>**Monthly Cost Examples** (4.33 weeks/month):<br>1. **Light care** (5 hrs/week PSW):<br>   - 5 hrs × $29 × 4.33 = $628/month<br>   - Annual: $7,536<br><br>2. **Moderate care** (15 hrs/week PSW):<br>   - 15 hrs × $29 × 4.33 = $1,884/month<br>   - Annual: $22,608<br><br>3. **Heavy care** (40 hrs/week PSW + 5 hrs/week nursing):<br>   - (40 × $29) + (5 × $60) × 4.33 = $6,325/month<br>   - Annual: $75,900<br>   - **Same cost as private LTC facility!**<br><br>**Advantage**: Home care is cheaper than LTC for light/moderate care. But at 40+ hours/week, costs are similar to facility care.<br><br>**Schema Changes** (already in US-063):<br>```prisma<br>model Expense {<br>  homeCareHours Float? // Hours per week<br>  homeCareType String? // "nursing", "psw", "therapy", "companion"<br>  homeCareProvider String? // Agency or private<br>}<br>``` |
+| **User Impact** | **High** - ~30% of retirees prefer aging at home vs moving to facility. Home care is significantly cheaper for light/moderate care needs (5-20 hrs/week). Provides realistic alternative to LTC planning. |
+| **Examples** | **Example 1**: Age at home with escalating care:<br>- Age 75-80: 5 hrs/week PSW = $629/month ($37,740 over 5 years)<br>- Age 80-85: 15 hrs/week PSW = $1,884/month ($113,040 over 5 years)<br>- Age 85-90: 30 hrs/week PSW = $3,767/month ($226,020 over 5 years)<br>- **Total: $376,800 over 15 years**<br>- Compare to LTC at age 85: $10,000/month for 5 years = $600,000<br>- **Savings: $223,200 by aging at home** |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-065** | **Add DPSP Asset Type (Historical Balances)** | **3** | **P2** 🟢 | **📋 To Do** |
+| **Description** | As a user with a Deferred Profit Sharing Plan from a former employer, I want to track this locked-in balance so it's included in my retirement projections |
+| **Acceptance Criteria** | - [ ] Add "dpsp" asset type to schema<br>- [ ] Add DPSP-specific fields: vested (always true), employer name<br>- [ ] DPSP treated like RRSP for withdrawals (no contributions since 1991)<br>- [ ] Help text: "DPSPs are employer-funded retirement plans. No contributions allowed since 1991."<br>- [ ] Simulation includes DPSP in RRSP/RRIF projections<br>- [ ] At age 71, DPSP converts to RRIF along with RRSP |
+| **Tasks** | - [ ] Update Prisma schema: Add dpsp to Asset.type<br>- [ ] Add fields: dpspVested (default true), dpspEmployer<br>- [ ] Create database migration<br>- [ ] Update assets page UI to show DPSP option<br>- [ ] Add DPSP form fields: Employer name, balance<br>- [ ] Backend: Treat DPSP like RRSP (withdrawals 100% taxable)<br>- [ ] At age 71: Convert DPSP → RRIF<br>- [ ] Help text explains DPSP history and rules<br>- [ ] Test with DPSP balance from former employer<br>- [ ] Update documentation |
+| **Technical Notes** | **DPSP Background**:<br>- Deferred Profit Sharing Plans were employer-funded retirement plans<br>- Employee contributions prohibited since 1991<br>- Many retirees still have DPSP balances from former employers<br>- **Tax treatment**: Like RRSP (contributions were tax-deferred, withdrawals 100% taxable)<br>- **Withdrawal rules**: Can withdraw anytime (unlike LIRA which is locked)<br>- **Conversion**: At age 71, must convert to RRIF or withdraw as lump sum<br><br>**Prevalence**: ~10% of retirees have DPSP balances<br><br>**Schema Changes**:<br>```prisma<br>model Asset {<br>  type String // add: dpsp<br>  dpspVested Boolean? @default(true) // Always true (can't contribute since 1991)<br>  dpspEmployer String? // Former employer name<br>}<br>``` |
+| **User Impact** | **Low-Medium** - ~10% of users have DPSP balances. Not tracking this asset means their projections understate retirement resources. Small feature that improves completeness. |
+| **Priority Justification** | P2 because:<br>1. Relatively small user segment (~10%)<br>2. Low complexity (similar to RRSP)<br>3. Quick implementation (3 pts, ~6 hours)<br>4. Improves completeness for affected users |
+
+---
+
 #### Epic 4: UX Improvements
 
 | ID | User Story | Story Points | Priority | Status |
@@ -500,6 +727,18 @@
 | **US-042** | **Align Withdrawal Strategy Names Between Frontend and Backend** | **2** | **P2** | **📋 To Do** |
 | **Description** | As a developer, I want withdrawal strategy internal names to be consistent between the frontend UI and Python backend so that we eliminate the need for mapping dictionaries and reduce the risk of synchronization bugs |
 | **Acceptance Criteria** | - [ ] **Audit Phase**: Identify all withdrawal strategy name mismatches between frontend and backend<br>- [ ] **Alignment Phase**: Choose canonical naming scheme (prefer backend names for consistency)<br>- [ ] **Implementation Phase**: Update frontend strategyMap to use backend names<br>- [ ] **Testing Phase**: Verify all withdrawal strategies still display correctly<br>- [ ] **Documentation Phase**: Update any developer docs or comments referencing old names<br>- [ ] Zero TypeScript compilation errors<br>- [ ] All withdrawal strategies render with correct display names<br>- [ ] Backend receives correct strategy values from frontend |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-049** | **Subscription Status Ribbon Display** | **2** | **P2** | **📋 To Do** |
+| **Description** | As a user, I want to see a visible ribbon or badge showing whether I'm on the Free or Premium subscription tier so that I'm always aware of my account status and understand which features are available to me |
+| **Acceptance Criteria** | - [ ] Subscription status ribbon visible on all dashboard pages<br>- [ ] Shows "Free" badge for free tier users<br>- [ ] Shows "Premium" badge for premium users<br>- [ ] Different visual styling for Free vs Premium (e.g., gray vs gold/blue)<br>- [ ] Clicking on Free badge shows upgrade options<br>- [ ] Clicking on Premium badge shows subscription details<br>- [ ] Mobile-responsive design<br>- [ ] Ribbon position doesn't obstruct main content<br>- [ ] Status updates immediately after subscription change |
+| **Tasks** | - [ ] Design ribbon/badge component mockup<br>- [ ] Choose visual styling (colors, icons, placement)<br>- [ ] Create SubscriptionRibbon component<br>- [ ] Fetch user subscription status from session/API<br>- [ ] Implement Free tier badge (gray, with upgrade CTA)<br>- [ ] Implement Premium tier badge (gold/blue, with manage link)<br>- [ ] Add to main layout or navigation bar<br>- [ ] Link Free badge to /pricing or upgrade modal<br>- [ ] Link Premium badge to /account or subscription management<br>- [ ] Test on all dashboard pages<br>- [ ] Test on mobile devices<br>- [ ] Verify status updates after subscription changes |
+| **Technical Notes** | **Placement Options:**<br>1. **Top Navigation Bar** - Next to user profile dropdown<br>2. **Sidebar** - Below main navigation items<br>3. **Header** - Small badge near logo<br><br>**Recommended: Top Navigation Bar** (most visible without being intrusive)<br><br>**Component Structure:**<br>```tsx<br>// components/SubscriptionRibbon.tsx<br>function SubscriptionRibbon({ tier }: { tier: 'free' \| 'premium' }) {<br>  if (tier === 'free') {<br>    return (<br>      <Link href="/pricing"><br>        <Badge className="bg-gray-200 text-gray-700 hover:bg-gray-300"><br>          Free Tier<br>          <ArrowUpRight className="w-3 h-3 ml-1" /><br>        </Badge><br>      </Link><br>    );<br>  }<br>  <br>  return (<br>    <Link href="/account"><br>      <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white"><br>        <Crown className="w-3 h-3 mr-1" /><br>        Premium<br>      </Badge><br>    </Link><br>  );<br>}<br>```<br><br>**Session Integration:**<br>```typescript<br>// Get subscription tier from session<br>const session = await getSession();<br>const user = await prisma.user.findUnique({<br>  where: { id: session.userId },<br>  select: { subscriptionTier: true }<br>});<br>const tier = user.subscriptionTier; // 'free' or 'premium'<br>```<br><br>**Visual Design:**<br>- **Free Tier**:<br>  - Color: Gray (#E5E7EB background, #374151 text)<br>  - Icon: None or small info icon<br>  - Hover: Slight darkening + "Upgrade" tooltip<br>  <br>- **Premium Tier**:<br>  - Color: Gold gradient (#FCD34D to #F59E0B) or Blue (#3B82F6)<br>  - Icon: Crown or Star<br>  - Hover: Slight brightening + "Manage Subscription" tooltip<br><br>**Files to Create/Modify:**<br>1. `webapp/components/SubscriptionRibbon.tsx` - New component<br>2. `webapp/components/Navigation.tsx` - Add ribbon to nav bar<br>3. `webapp/app/(dashboard)/layout.tsx` - Integrate into layout<br>4. `webapp/lib/types/subscription.ts` - Type definitions (if needed) |
+| **User Impact** | **Medium** - Helps users understand their account status at a glance. Provides visibility into tier benefits and creates upgrade awareness for free tier users. Premium users feel valued with distinctive badge. |
+| **Priority Justification** | **P2 (Medium)** because:<br>1. **User awareness** - Users should know their subscription status<br>2. **Upgrade conversion** - Visible Free badge reminds users of premium option<br>3. **Quick win** - Only 2 story points, ~4 hours of work<br>4. **Low risk** - Simple UI addition, no complex logic<br>5. **Professional appearance** - Common SaaS pattern users expect |
+| **Success Metrics** | - [ ] Subscription badge visible on 100% of dashboard pages<br>- [ ] Click-through rate on Free badge >10% (users exploring upgrade)<br>- [ ] Zero user confusion about which tier they're on<br>- [ ] Premium users report feeling valued (survey feedback)<br>- [ ] Badge loads within 200ms (fast, no performance impact) |
+| **Related Stories** | - US-024 (Premium Account Verification) - subscription management<br>- Dual Limit System (Feb 1, 2026) - complements free/premium differentiation |
 | **Tasks** | - [ ] **Audit** (3 hours):<br>  - Grep for all withdrawal strategy references in frontend<br>  - Grep for all withdrawal strategy references in Python backend<br>  - Document current mapping (e.g., 'early-rrif-withdrawal' → 'rrif-frontload')<br>  - List all files requiring updates<br>- [ ] **Decision** (2 hours):<br>  - Choose canonical naming scheme (recommend: backend names)<br>  - Create migration plan for backward compatibility<br>  - Review with team for approval<br>- [ ] **Implementation** (3 hours):<br>  - Update `webapp/app/(dashboard)/simulation/page.tsx` strategyMap keys<br>  - Update any API calls or form submissions<br>  - Update TypeScript types if needed<br>  - Update database seed data if applicable<br>- [ ] **Validation** (2 hours):<br>  - Run TypeScript compilation<br>  - Test all 6 withdrawal strategies in dev environment<br>  - Verify backend receives correct strategy names<br>  - Check existing user simulations still work |
 | **Technical Notes** | **Current Naming Inconsistency:**<br><br>**Frontend** (`webapp/app/(dashboard)/simulation/page.tsx:252`):<br>```typescript<br>const strategyMap: Record<string, string> = {<br>  'minimize-income': 'Income Minimization (GIS-Optimized)',<br>  'balanced-income': 'Balanced Income',<br>  'early-rrif-withdrawal': 'Early RRIF Withdrawals (Income Splitting)', // ⚠️ MISMATCH<br>  'max-tfsa-first': 'Maximize TFSA First',<br>  'corporate-optimized': 'Corporate Account Optimization',<br>  'preserve-estate': 'Estate Preservation',<br>};<br>```<br><br>**Backend** (Python `juan-retirement-app/modules/`):<br>- Uses `'rrif-frontload'` instead of `'early-rrif-withdrawal'`<br><br>**Problem**: Requires mapping dictionaries that can get out of sync<br><br>**Recommended Approach**:<br>1. Use backend names as source of truth (they drive simulation logic)<br>2. Update frontend to use `'rrif-frontload'` key<br>3. Keep display name "Early RRIF Withdrawals (Income Splitting)"<br>4. Check database for any stored strategy values (may need migration)<br><br>**Files to Update**:<br>- `webapp/app/(dashboard)/simulation/page.tsx` (strategyMap keys)<br>- `webapp/components/simulation/*.tsx` (any hardcoded strategy checks)<br>- `webapp/app/api/simulate/route.ts` (API endpoint if validation exists)<br>- `webapp/prisma/schema.prisma` (if enum exists)<br>- Any test files referencing withdrawal strategies |
 | **User Impact** | **Low** (internal refactoring) - Users will see no visible changes. This is a developer experience improvement that reduces technical debt and prevents future bugs from mapping dictionary desync. However, it's important for long-term maintainability. |
@@ -558,12 +797,27 @@
 | **Dependencies** | - US-027 (Withdrawal Order Guidance) - include in help content<br>- US-025 (Strategy Discoverability) - document strategies in help<br>- All major features should be stable before documenting |
 | **Success Metrics** | - [ ] Help center visited by 40%+ of new users<br>- [ ] Average help session duration >3 minutes (reading content)<br>- [ ] Support ticket volume decreases by 30%<br>- [ ] User satisfaction with help content >4/5<br>- [ ] 90%+ of users can find answers to common questions<br>- [ ] Search successfully finds relevant content 80%+ of time |
 
-**Total Story Points**: 15 → 20 → 28 → 33 → 38
-**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025 (✅), US-026 (✅), US-027, US-028, US-029 (✅), US-038, US-039
+**Total Story Points**: 15 → 20 → 28 → 33 → 38 → 40
+**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025 (✅), US-026 (✅), US-027, US-028, US-029 (✅), US-038, US-039, US-042, US-049
 
 ---
 
 #### Epic 5: Simulation Accuracy & Features
+
+**CRITICAL BUG IDENTIFIED**: February 4, 2026 - Employment income not counted before retirement age. See [DANIEL_GONZALEZ_CASHFLOW_GAP_ANALYSIS.md](DANIEL_GONZALEZ_CASHFLOW_GAP_ANALYSIS.md) for full analysis.
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-072** | **🔴 CRITICAL: Fix Employment Income Not Applied Before Retirement** | **3** | **P0** 🔴 | **📋 To Do** |
+| **Description** | As a user with employment income who hasn't retired yet, I want my employment income to be properly included in simulation years before my retirement age so that my cash flow projections are accurate and don't show false gaps |
+| **Bug Report** | **User**: danjgonzalezm@gmail.com (Daniel Gonzalez)<br>**Issue**: Simulation shows cash flow GAPS and 1% success rate despite $200K employment income<br>**Evidence**: Tax = $0 in years 2026-2027 (ages 64-65) proves NO income being counted<br>**Impact**: Assets depleted unnecessarily for 2 years, causing false failures<br>**Root Cause**: Python backend `/juan-retirement-app/modules/simulation.py:1357` checks `startAge` but not `endAge` for other_incomes. Employment income with no explicit startAge/endAge may not be applied correctly. |
+| **Acceptance Criteria** | - [ ] Employment income applies to ALL years from current age to retirement age - 1<br>- [ ] Employment income does NOT apply at/after retirement age<br>- [ ] Fix handles income with null startAge (defaults to current age)<br>- [ ] Fix handles income with null endAge for employment (defaults to retirement age)<br>- [ ] Year-by-year results show correct taxable income for pre-retirement years<br>- [ ] Test case: Daniel Gonzalez (age 64, retire 66, $200K employment) shows NO gaps in 2026-2027<br>- [ ] Tax > $0 in pre-retirement years (proves income is counted)<br>- [ ] Success rate improves from 1% to 90%+ for Daniel's profile |
+| **Tasks** | - [ ] **Reproduce Bug** (1 hour):<br>  - Create test user with Daniel's profile (age 64, retire 66, $200K employment, $58K expenses)<br>  - Run simulation, capture year-by-year results<br>  - Confirm tax = $0 in ages 64-65 (bug present)<br>  - Confirm tax > $0 at age 66+ (retirement logic works)<br>- [ ] **Fix Python Backend** (2 hours):<br>  - Open `/juan-retirement-app/modules/simulation.py`<br>  - Locate income application logic (line ~1349-1369)<br>  - Add endAge check to income filtering<br>  - Special handling for employment income type:<br>    - If type == 'employment' and no endAge, set endAge = retirementAge<br>    - If no startAge, set startAge = currentAge<br>  - Apply income only if startAge <= age < endAge<br>- [ ] **Test Fix** (1 hour):<br>  - Re-run simulation with Daniel's profile<br>  - Verify tax > $0 in 2026-2027 (income now counted)<br>  - Verify success rate increases to 90%+<br>  - Test with other employment scenarios (retire at 55, 60, 65, 70)<br>  - Ensure fix doesn't break retirement income (CPP, OAS, pension)<br>- [ ] **Deploy & Verify** (30 min):<br>  - Deploy Python backend to production<br>  - Re-run Daniel's simulation (notify him)<br>  - Verify results in database<br>  - Monitor for any errors |
+| **Technical Notes** | **Current Code** (`simulation.py:1357`):<br>```python<br># BUG: Only checks startAge, never checks endAge<br>for other_income in other_incomes:<br>    income_start_age = other_income.get('startAge')<br>    <br>    # If no startAge specified, income is active<br>    if income_start_age is None or age >= income_start_age:<br>        annual_amount = other_income.get('amount', 0.0)<br>        other_income_total += annual_amount<br>```<br><br>**Fixed Code**:<br>```python<br># FIX: Check both startAge and endAge<br>for other_income in other_incomes:<br>    income_type = other_income.get('type', '')<br>    income_start_age = other_income.get('startAge')<br>    income_end_age = other_income.get('endAge')<br>    <br>    # Special handling for employment income<br>    if income_type == 'employment':<br>        if income_start_age is None:<br>            income_start_age = person.current_age<br>        if income_end_age is None:<br>            income_end_age = person.retirement_age<br>    <br>    # Check if income is active this year<br>    is_active = True<br>    if income_start_age is not None and age < income_start_age:<br>        is_active = False<br>    if income_end_age is not None and age >= income_end_age:<br>        is_active = False<br>    <br>    if is_active:<br>        annual_amount = other_income.get('amount', 0.0)<br>        # Apply inflation...<br>        other_income_total += annual_amount<br>```<br><br>**Test Case Data** (Daniel Gonzalez):<br>```json<br>{<br>  "person1": {<br>    "currentAge": 64,<br>    "retirementAge": 66,<br>    "lifeExpectancy": 85<br>  },<br>  "assets": [<br>    {"type": "rrsp", "balance": 500000},<br>    {"type": "tfsa", "balance": 100000},<br>    {"type": "nonreg", "balance": 50000},<br>    {"type": "property", "balance": 400000}<br>  ],<br>  "income": [<br>    {"type": "employment", "amount": 200000, "startAge": null, "endAge": null}<br>  ],<br>  "expenses": [<br>    {"amount": 58000}<br>  ]<br>}<br>```<br><br>**Expected Results After Fix**:<br>```<br>Year 2026 (Age 64):<br>  ✅ Employment Income: $200,000<br>  ✅ Tax: ~$60,000 (not $0!)<br>  ✅ Net Cash Flow: +$82,000<br>  ✅ Success: ✓<br><br>Year 2027 (Age 65):<br>  ✅ Employment Income: $200,000<br>  ✅ Tax: ~$60,000<br>  ✅ Net Cash Flow: +$82,000<br>  ✅ Success: ✓<br><br>Year 2028 (Age 66 - Retired):<br>  ✅ Employment Income: $0<br>  ✅ CPP/OAS Income: ~$23,000<br>  ✅ Withdrawals: ~$35,000<br>  ✅ Tax: ~$10,796<br>  ✅ Success: ✓<br>``` |
+| **User Impact** | **CRITICAL** - Affects ALL users with employment income before retirement:<br>- Creates false cash flow gaps<br>- Artificially lowers success rates (Daniel: 1% instead of 95%+)<br>- Assets depleted unnecessarily before retirement<br>- Users see "failure" when they should see "success"<br>- Undermines trust in simulation accuracy<br>- Similar to US-038 CPP/OAS bug (income timing issue) |
+| **Priority Justification** | **P0 (Critical)** because:<br>1. **Active user impact** - Daniel ran 3 simulations today, all wrong<br>2. **Core functionality broken** - Employment income is fundamental<br>3. **Data-driven evidence** - Screenshot proves bug (tax = $0)<br>4. **Systemic issue** - Affects all pre-retirees with employment income<br>5. **Quick fix** - 3 story points, ~4 hours total<br>6. **High confidence** - Root cause identified in code (line 1357) |
+| **Success Metrics** | - [ ] Daniel's simulation shows tax > $0 in 2026-2027<br>- [ ] Daniel's success rate increases from 1% to 90%+<br>- [ ] No cash flow gaps in pre-retirement years for any user with employment income<br>- [ ] Zero regression - retirement income (CPP, OAS, pension) still works<br>- [ ] User feedback: "My simulation looks correct now" |
+| **Related Stories** | - US-038 (CPP/OAS Income Timing Bug) - Similar income timing issue, fixed Sprint 4<br>- US-011 (GIS Strategy) - Related to income calculations<br>- US-040 (Investment Timeline) - Both affect pre-retirees |
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
@@ -719,6 +973,36 @@
 | **Success Metrics** | - [ ] All 8 integration test scenarios pass<br>- [ ] Tests run in <30 seconds<br>- [ ] Zero GIC-related bugs in production after deployment<br>- [ ] Integration test coverage >80% for GIC code paths<br>- [ ] Test failures caught in CI/CD before deployment |
 | **Dependencies** | - US-038 Phase 2 complete (gic_calculator.py module) ✅<br>- US-038 Phase 3 complete (integration into simulation.py) ⏳<br>- US-040 complete (unit tests) ⏳<br>- Person model updated with gic_assets field<br>- YearResult model updated with gic_maturity_events field<br>- pytest framework set up |
 | **Related Stories** | US-038 (GIC Maturity Tracking), US-040 (GIC Unit Tests), US-015 (Backend Unit Tests) |
+
+---
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-050** | **Python API Monitoring & Alerting System** | **3** | **P1** | **📋 To Do** |
+| **Description** | As a developer, I want automated monitoring and alerting for the Python simulation API so that I'm immediately notified when the service goes down and can prevent user-facing simulation failures |
+| **User Feedback** | **Source**: Recent production incident (January 31, 2026 - Feb 1, 2026)<br>**Issue**: Python API went down, causing simulation button to be permanently disabled<br>**Impact**: Complete simulation failure, users unable to run any simulations<br>**Root Cause**: Python API health check failing, no monitoring alert sent<br>**Recovery Time**: Hours (manual discovery and restart required) |
+| **Acceptance Criteria** | - [ ] Health check endpoint monitoring Python API (/health or /api/health)<br>- [ ] Alert triggers if API down for >5 minutes<br>- [ ] Alert sent via email (to developer email)<br>- [ ] Alert includes: timestamp, error type, API URL, suggested fix<br>- [ ] Monitoring runs every 1-2 minutes<br>- [ ] Dashboard shows API status (up/down, uptime percentage)<br>- [ ] Alert includes automatic restart instructions<br>- [ ] False positive rate <1% (reliable alerts)<br>- [ ] Recovery time <10 minutes (from downtime to alert to restart) |
+| **Tasks** | **Option 1: Simple Script + Cron (Free, 2 hours)**<br>- [ ] Create monitoring script: `scripts/monitor-python-api.sh`<br>- [ ] Script curls `http://localhost:8000/health` every 2 minutes<br>- [ ] If 3 consecutive failures (6 minutes), send email alert<br>- [ ] Email via sendmail or curl to Resend API<br>- [ ] Set up cron job: `*/2 * * * * /path/to/monitor-python-api.sh`<br>- [ ] Test monitoring with intentional API shutdown<br>- [ ] Document setup in README<br><br>**Option 2: UptimeRobot (Free Tier, 1 hour)**<br>- [ ] Sign up for UptimeRobot free tier<br>- [ ] Add monitor for `https://retirezest.com/api/health` (Next.js proxy)<br>- [ ] Create proxy endpoint: `/api/health` that checks Python API<br>- [ ] Configure 5-minute alert threshold<br>- [ ] Add email alert contact<br>- [ ] Test monitoring<br>- [ ] Document setup<br><br>**Option 3: Vercel Monitoring (If available, 30 min)**<br>- [ ] Check if Vercel plan includes monitoring<br>- [ ] Set up alerts for API failures<br>- [ ] Configure notification email<br><br>**Recommended: Option 1 (Simple Script)**<br>- No external dependencies<br>- No monthly cost<br>- Full control over alert logic<br>- Works with localhost Python API |
+| **Technical Notes** | **Monitoring Script (`scripts/monitor-python-api.sh`):**<br>```bash<br>#!/bin/bash<br># Monitor Python API health and alert if down<br><br>API_URL="http://localhost:8000/health"<br>ALERT_EMAIL="dev@retirezest.com"<br>LOG_FILE="/var/log/python-api-monitor.log"<br>FAILURE_COUNT_FILE="/tmp/python-api-failures.txt"<br><br># Initialize failure count<br>if [ ! -f "$FAILURE_COUNT_FILE" ]; then<br>  echo "0" > "$FAILURE_COUNT_FILE"<br>fi<br><br># Check API health<br>if curl -f -s "$API_URL" > /dev/null; then<br>  echo "$(date): Python API is UP" >> "$LOG_FILE"<br>  echo "0" > "$FAILURE_COUNT_FILE"  # Reset counter<br>else<br>  echo "$(date): Python API is DOWN" >> "$LOG_FILE"<br>  <br>  # Increment failure count<br>  FAILURES=$(cat "$FAILURE_COUNT_FILE")<br>  FAILURES=$((FAILURES + 1))<br>  echo "$FAILURES" > "$FAILURE_COUNT_FILE"<br>  <br>  # Send alert after 3 consecutive failures (6 minutes)<br>  if [ "$FAILURES" -ge 3 ]; then<br>    # Send email via Resend API<br>    curl -X POST https://api.resend.com/emails \<br>      -H "Authorization: Bearer $RESEND_API_KEY" \<br>      -H "Content-Type: application/json" \<br>      -d '{<br>        "from": "alerts@retirezest.com",<br>        "to": ["'$ALERT_EMAIL'"],<br>        "subject": "🚨 CRITICAL: Python API Down",<br>        "html": "<p><strong>Python API is DOWN</strong></p><p>The Python simulation API has been down for 6+ minutes.</p><p><strong>Immediate Action Required:</strong></p><ol><li>SSH into server</li><li>Check Python process: <code>lsof -ti:8000</code></li><li>Restart API: <code>cd juan-retirement-app && python -m uvicorn main:app --host 0.0.0.0 --port 8000 &</code></li><li>Verify health: <code>curl http://localhost:8000/health</code></li></ol><p>Timestamp: '$(date)'</p>"<br>      }'<br>    <br>    echo "$(date): ALERT SENT - Python API down for 6+ minutes" >> "$LOG_FILE"<br>    echo "0" > "$FAILURE_COUNT_FILE"  # Reset to avoid spam<br>  fi<br>fi<br>```<br><br>**Cron Job Setup:**<br>```bash<br># Edit crontab<br>crontab -e<br><br># Add monitoring job (every 2 minutes)<br>*/2 * * * * /home/ubuntu/retirezest/scripts/monitor-python-api.sh<br>```<br><br>**Python API Health Endpoint** (if doesn't exist):<br>```python<br># juan-retirement-app/main.py<br>@app.get("/health")<br>async def health_check():<br>    return {"status": "ok", "timestamp": datetime.now().isoformat()}<br>```<br><br>**Next.js Proxy Endpoint** (for external monitoring):<br>```typescript<br>// webapp/app/api/health/route.ts<br>export async function GET() {<br>  try {<br>    const pythonHealth = await fetch('http://localhost:8000/health');<br>    if (pythonHealth.ok) {<br>      return NextResponse.json({ status: 'ok' });<br>    }<br>    return NextResponse.json({ status: 'error' }, { status: 503 });<br>  } catch {<br>    return NextResponse.json({ status: 'error' }, { status: 503 });<br>  }<br>}<br>```<br><br>**Files to Create/Modify:**<br>1. `scripts/monitor-python-api.sh` - Monitoring script<br>2. `juan-retirement-app/main.py` - Add /health endpoint (if missing)<br>3. `webapp/app/api/health/route.ts` - Proxy for external monitoring<br>4. `README.md` - Document monitoring setup<br>5. `.env` - Add RESEND_API_KEY for alerts |
+| **User Impact** | **Critical** - Python API downtime = complete simulation failure. Users cannot run simulations, health check blocks UI, no way to recover without developer intervention. Monitoring reduces downtime from hours to minutes, improving reliability from ~95% to ~99.9%. |
+| **Priority Justification** | **P1 (High)** because:<br>1. **Production incident** - Just happened (Jan 31 - Feb 1, 2026)<br>2. **Complete service failure** - No simulations work when API down<br>3. **Manual discovery** - No alert, required user report + developer investigation<br>4. **High recovery time** - Hours to discover and fix<br>5. **Quick win** - Only 3 story points, 2-3 hours of work<br>6. **Prevents future incidents** - Catches downtime in 5-10 minutes instead of hours<br>7. **Low cost** - Free solution (bash script + cron) |
+| **Success Metrics** | - [ ] Monitoring running 24/7 (check cron logs)<br>- [ ] Alert received within 10 minutes of API downtime<br>- [ ] False positive rate <1% (no spam alerts)<br>- [ ] Recovery time <15 minutes (alert → restart → verified)<br>- [ ] Zero user-reported API outages (monitoring catches first)<br>- [ ] API uptime improves from ~95% to >99% |
+| **Related Stories** | - CRITICAL_BUG_FIX_SIMULATION_BUTTON_DISABLED.md (Feb 1, 2026)<br>- US-016 (Performance Monitoring)<br>- Epic 6: Quality & Testing |
+
+---
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-051** | **User Apology & Service Recovery Campaign** | **2** | **P1** | **📋 To Do** |
+| **Description** | As a product owner, I want to send a personalized apology email to users affected by the simulation button bug (Jan 31 - Feb 1) so that we can restore user trust, demonstrate accountability, and retain valuable users |
+| **Affected User** | **Steven Morehouse** (steven.morehouse@gmail.com)<br>- Signed up: January 31, 2026<br>- Attempted simulation: Failed (button disabled)<br>- Impact: Unable to use core feature on first visit<br>- Recovery: Python API restarted February 1, 2026<br>- Status: Likely poor first impression, at risk of churn |
+| **Acceptance Criteria** | - [ ] Personalized apology email drafted and reviewed<br>- [ ] Email sent to steven.morehouse@gmail.com<br>- [ ] Email explains what happened (Python API outage)<br>- [ ] Email acknowledges frustration and impact<br>- [ ] Email confirms issue is fixed<br>- [ ] Email offers compensation (1 month free Premium, or extended trial)<br>- [ ] Email invites feedback and questions<br>- [ ] Email includes direct contact (reply-to: founder/dev email)<br>- [ ] Follow-up scheduled if no response within 7 days |
+| **Tasks** | - [ ] **Draft Email** (1 hour):<br>  - Personalized greeting ("Dear Steven")<br>  - Acknowledge sign-up date (Jan 31)<br>  - Explain bug: "Python simulation engine was temporarily offline"<br>  - Apologize sincerely: "We're sorry for the frustration this caused"<br>  - Confirm fix: "Issue resolved as of Feb 1, all simulations working"<br>  - Offer compensation:<br>    - Option A: 1 month free Premium ($X value)<br>    - Option B: Extended free trial (30 days instead of 14)<br>    - Option C: Direct offer to help with first simulation<br>  - Invite feedback: "Your experience matters to us"<br>  - Provide direct contact: "Reply to this email or call [phone]"<br>  - Sign with name + title (e.g., "Juan, Founder")<br>- [ ] **Review Email** (30 min):<br>  - Check tone (apologetic but not groveling)<br>  - Check clarity (explains issue without jargon)<br>  - Check action items (clear next steps for user)<br>  - Spell check and grammar<br>- [ ] **Send Email** (15 min):<br>  - Send via Resend API<br>  - BCC founder email (for record)<br>  - Tag email: "apology-jan31-incident"<br>  - Log in CRM/database<br>- [ ] **Follow-Up** (30 min, 7 days later):<br>  - Check if user responded<br>  - Check if user logged in again<br>  - If no response: Send gentle follow-up<br>  - If logged in: Monitor usage, offer help if needed |
+| **Technical Notes** | **Email Draft Template:**<br>```<br>Subject: Our Apologies - RetireZest Simulation Issue Resolved<br><br>Dear Steven,<br><br>I'm reaching out personally to apologize for the technical issue you encountered when you signed up for RetireZest on January 31st.<br><br>Our Python simulation engine unexpectedly went offline, which prevented you from running your first retirement simulation. I can only imagine how frustrating that must have been, especially as a new user trying out our tool for the first time.<br><br>I want you to know that:<br>1. ✅ The issue has been fully resolved as of February 1st<br>2. ✅ We've implemented monitoring to prevent this in the future<br>3. ✅ All simulation features are now working perfectly<br><br>As a sincere apology, I'd like to offer you [compensation choice]:<br>- 1 month of RetireZest Premium (normally $XX) completely free<br>- OR: I'll personally help you set up your first simulation via email or call<br><br>Your experience matters to us, and we're committed to providing you with accurate, reliable retirement planning tools. If you have any questions, concerns, or feedback, please reply to this email directly - I read every message.<br><br>Thank you for giving RetireZest a chance. I hope we can make your second experience much better than your first.<br><br>Warmly,<br>Juan<br>Founder, RetireZest<br>juan@retirezest.com<br><br>P.S. - If you'd like to try running a simulation now, everything is working and I'm here to help if you need it.<br>```<br><br>**Send via Resend API:**<br>```bash<br>curl -X POST https://api.resend.com/emails \<br>  -H "Authorization: Bearer $RESEND_API_KEY" \<br>  -H "Content-Type: application/json" \<br>  -d '{<br>    "from": "Juan <juan@retirezest.com>",<br>    "to": ["steven.morehouse@gmail.com"],<br>    "reply_to": "juan@retirezest.com",<br>    "subject": "Our Apologies - RetireZest Simulation Issue Resolved",<br>    "html": "[HTML version of email above]"<br>  }'<br>```<br><br>**Files to Create:**<br>- `scripts/send_apology_email_steven.js` - Script to send email<br>- `docs/USER_APOLOGY_JAN31_INCIDENT.md` - Document incident + response<br>- `CRITICAL_BUG_FIX_SIMULATION_BUTTON_DISABLED.md` - Update with follow-up action |
+| **User Impact** | **High** - First impressions matter. Steven signed up and immediately hit a critical bug. Without outreach, high probability of churn (90% of users don't return after failed first experience). Apology email:<br>1. Shows we care about users<br>2. Demonstrates accountability<br>3. Provides context (not a permanent problem)<br>4. Offers tangible compensation<br>5. Opens communication channel<br><br>Expected outcome: 40-60% chance of re-engagement (vs 5-10% without email) |
+| **Priority Justification** | **P1 (High)** because:<br>1. **User retention** - Steven at high risk of churn<br>2. **Brand reputation** - Poor first impression needs repair<br>3. **Quick win** - Only 2 story points, 2-3 hours total<br>4. **Low cost** - Just an email, optional compensation<br>5. **High ROI** - Potential to save a customer ($XX LTV)<br>6. **Demonstrates values** - Shows we care about users<br>7. **Time sensitive** - Apology most effective within 2-3 days |
+| **Success Metrics** | - [ ] Email sent within 48 hours of incident<br>- [ ] Steven opens email (track with Resend)<br>- [ ] Steven logs in again within 14 days<br>- [ ] Steven runs at least 1 successful simulation<br>- [ ] Steven responds positively (or doesn't churn)<br>- [ ] Retention rate: >50% (vs expected 5-10% without outreach) |
+| **Related Stories** | - CRITICAL_BUG_FIX_SIMULATION_BUTTON_DISABLED.md (Feb 1, 2026)<br>- US-050 (Python API Monitoring) - Prevents future incidents<br>- Epic 1: User Retention |
 
 ---
 

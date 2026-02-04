@@ -1350,11 +1350,29 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     other_income_total = 0.0
     other_incomes = getattr(person, 'other_incomes', [])
     for other_income in other_incomes:
+        income_type = other_income.get('type', '')
         income_start_age = other_income.get('startAge')
+        income_end_age = other_income.get('endAge')
 
-        # If no startAge specified, income is active (e.g., rental, investment income)
-        # If startAge specified, check if income has started
-        if income_start_age is None or age >= income_start_age:
+        # Special handling for employment income: defaults to current age → retirement age
+        if income_type == 'employment':
+            if income_start_age is None:
+                income_start_age = person.start_age  # Default to person's starting age
+            if income_end_age is None:
+                income_end_age = person.retirement_age  # Default to retirement age
+
+        # Check if income is active this year
+        is_active = True
+
+        # Check start age: income hasn't started yet
+        if income_start_age is not None and age < income_start_age:
+            is_active = False
+
+        # Check end age: income has already ended
+        if income_end_age is not None and age >= income_end_age:
+            is_active = False
+
+        if is_active:
             annual_amount = other_income.get('amount', 0.0)
 
             # Apply inflation indexing if enabled
