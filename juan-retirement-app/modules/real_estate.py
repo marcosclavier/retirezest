@@ -205,6 +205,9 @@ def handle_downsizing(
         person.primary_residence_purchase_price = new_home_cost
         person.primary_residence_mortgage = 0.0  # Assume paid cash from proceeds
         person.primary_residence_monthly_payment = 0.0
+        # Clear rental income - assume new home doesn't generate rental income
+        # (User can manually add rental income if new property is also rental)
+        person.rental_income_annual = 0.0
     else:
         # Sold outright - no longer have residence
         person.has_primary_residence = False
@@ -212,6 +215,8 @@ def handle_downsizing(
         person.primary_residence_purchase_price = 0.0
         person.primary_residence_mortgage = 0.0
         person.primary_residence_monthly_payment = 0.0
+        # Clear rental income - no longer have property
+        person.rental_income_annual = 0.0
 
     # Mark downsizing as complete (don't repeat)
     person.plan_to_downsize = False
@@ -223,7 +228,8 @@ def handle_downsizing(
         f"Paid off ${mortgage_payoff:,.0f} mortgage, "
         f"Bought new home for ${new_home_cost:,.0f}, "
         f"Net cash: ${net_cash:,.0f}, "
-        f"Taxable gains: ${taxable_gain:,.0f}"
+        f"Taxable gains: ${taxable_gain:,.0f}, "
+        f"Rental income cleared: Yes"
     )
 
     return result

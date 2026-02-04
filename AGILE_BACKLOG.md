@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: February 4, 2026 (Sprint 8 PLANNED - Critical Bug Fix + User Conversion)
+**Last Updated**: February 4, 2026 (Sprint 8 Day 1: US-072 Complete + US-073/074 Added)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 7 days (default)
@@ -18,7 +18,7 @@
 
 ---
 
-## 🎯 Current Sprint: Sprint 8 - February 10-16, 2026 (7 days)
+## 🎯 Current Sprint: Sprint 8 - February 4-11, 2026 (7 days)
 
 **Sprint Goal**: "Fix critical employment income bug and unblock 19 users who entered assets but never ran simulations"
 
@@ -26,23 +26,44 @@
 **Sprint Duration**: 7 days (bug fix + user conversion sprint)
 **Team Capacity**: 18 story points (focused sprint with critical bug fix)
 **Sprint Type**: Critical Bug Fix + User Conversion Optimization
+**Sprint Status**: 🔄 In Progress (Day 1 - US-072 Completed ✅)
 
-### Sprint 8 Backlog (FINALIZED)
+### Sprint 8 Backlog (IN PROGRESS) - REVISED
+
+**PHASE 1: Verify & Fix Critical Bugs (Before User Outreach)**
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
 | US-072 | Fix Employment Income Not Applied Before Retirement | 3 | P0 🔴 | Epic 5: Simulation | ✅ Done |
-| ~~US-066~~ | ~~Make "Run Simulation" Button Prominent~~ | ~~2~~ | ~~P0~~ | ~~Epic 1~~ | ✅ Already Done |
-| US-067 | Add Post-Onboarding Redirect and Welcome Modal | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
-| US-068 | Add Empty State on Results Tab | 1 | P0 🔴 | Epic 1: Retention | 📋 To Do |
-| US-071 | Re-engagement Email Campaign for 19 Users | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
-| US-044 | Improve Cash Flow Gap Messaging | 2 | P1 🟡 | Epic 4: UX | 📋 To Do |
-| **Stretch:** US-069 | Add Simulation Validation with Clear Error Messages | 2 | P1 🟡 | Epic 1: Retention | 📋 Stretch |
-| **Stretch:** US-070 | Improve Simulation Loading State | 1 | P1 🟡 | Epic 1: Retention | 📋 Stretch |
-| **Stretch:** US-053 | Optimize Dashboard Layout Query (JWT Caching) | 3 | P0 🔴 | Epic 6: Quality | 📋 Stretch |
+| US-073 | Auto-Stop rental_income_annual When Property Is Sold | 2 | P0 🔴 | Epic 5: Simulation | 📋 To Do |
+| US-074 | Add Automatic endAge for Rental Income in other_incomes | 3 | P0 🔴 | Epic 5: Simulation | 📋 To Do |
 
-**Total Story Points**: 10 committed + 6 stretch = 16 total (63% committed, 37% buffer)
-**Note**: US-066 removed from Sprint 8 - already completed in previous sprint
+**PHASE 2: UX Improvements (After Bugs Fixed)**
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| ~~US-066~~ | ~~Make "Run Simulation" Button Prominent~~ | ~~2~~ | ~~P0~~ | ~~Epic 1~~ | ✅ Already Done |
+| US-067 | Add Post-Onboarding Redirect and Welcome Modal | 2 | P1 🟡 | Epic 1: Retention | 📋 To Do |
+| US-068 | Add Empty State on Results Tab | 1 | P1 🟡 | Epic 1: Retention | 📋 To Do |
+| US-044 | Improve Cash Flow Gap Messaging | 2 | P1 🟡 | Epic 4: UX | 📋 To Do |
+
+**PHASE 3: User Outreach (Final, After Everything Verified)**
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| US-071 | Re-engagement Email Campaign for 19 Users | 2 | P1 🟡 | Epic 1: Retention | ⏸️ On Hold |
+
+**STRETCH GOALS (Optional)**
+
+| ID | User Story | Story Points | Priority | Epic | Status |
+|----|------------|--------------|----------|------|--------|
+| US-069 | Add Simulation Validation with Clear Error Messages | 2 | P2 🟢 | Epic 1: Retention | 📋 Stretch |
+| US-070 | Improve Simulation Loading State | 1 | P2 🟢 | Epic 1: Retention | 📋 Stretch |
+| US-053 | Optimize Dashboard Layout Query (JWT Caching) | 3 | P1 🟡 | Epic 6: Quality | 📋 Stretch |
+
+**Total Story Points**: 15 committed (was 10) + 6 stretch = 21 total
+**Rationale**: Added US-073 (2 pts) and US-074 (3 pts) to ensure all simulation accuracy bugs are fixed before user outreach
+**Note**: US-071 moved to Phase 3 (on hold) - will not communicate with users until bugs are fixed
 **Sprint Board**: [SPRINT_8_PLAN.md](SPRINT_8_PLAN.md)
 
 **Critical Issues Identified**:
@@ -58,12 +79,68 @@
   - Fix: US-066, US-067, US-068, US-071
 
 **Sprint 8 Success Criteria**:
-- ✅ US-072 deployed: Daniel's simulation shows correct tax (> $0 in 2026-2027)
-- ✅ Daniel's success rate increases from 1% to 95%+
-- ✅ 19 users receive re-engagement email
-- ✅ At least 5/19 users (26%) run their first simulation
-- ✅ Simulation button redesigned and prominent
-- ✅ Post-onboarding redirect and welcome modal live
+- ✅ **COMPLETED**: US-072 deployed: Daniel's simulation shows correct tax (> $0 in 2026-2027)
+- ✅ **COMPLETED**: Employment income bug fixed - 2 critical bugs discovered and fixed
+- ✅ **COMPLETED**: All 5 verification test cases passing (100%)
+- ✅ **COMPLETED**: Code pushed to production (6 commits, GitHub main branch)
+- ⏳ **PENDING**: Verify Railway/Vercel auto-deployment completed
+- ⏳ **PENDING**: Production verification - Daniel's simulation shows correct results
+- 📋 **TO DO**: 19 users receive re-engagement email
+- 📋 **TO DO**: At least 5/19 users (26%) run their first simulation
+- 📋 **TO DO**: Simulation button redesigned and prominent (US-066 already done)
+- 📋 **TO DO**: Post-onboarding redirect and welcome modal live
+
+### Sprint 8 Progress Report (Day 1 - February 4, 2026)
+
+**Completed Today**:
+- ✅ **US-072 COMPLETED** (3 story points)
+  - Initial implementation: Fixed employment income endAge check
+  - Bug #1 discovered: Non-existent `retirement_age` field referenced
+  - Bug #1 fixed: Changed to use `cpp_start_age` as retirement age proxy
+  - Bug #2 discovered: Tax splitting losing employment/pension income
+  - Bug #2 fixed: Updated `recompute_tax()` to include `other_income` and `pension_income`
+  - Created comprehensive test suite: 5 test cases, all passing
+  - Production deployment: 6 commits pushed to GitHub main branch
+  - Documentation: SPRINT_8_DAY_2_PROGRESS.md, PRODUCTION_DEPLOYMENT_SPRINT_8.md
+
+**Test Results**:
+```
+✅ Test 1: Daniel Gonzalez (Age 64: Tax = $60,896, Age 65: Tax = $82,950, Age 66: Tax = $0)
+✅ Test 2: Early Retirement (Age 50: Tax = $23,266, Age 55: Tax = $0)
+✅ Test 3: Late Retirement (Age 65: Tax = $16,699, Age 70: Tax = $379)
+✅ Test 4: Regression Test (CPP: $15,000, OAS: $8,000, Other Income: $0)
+✅ Test 5: Multiple Incomes (Age 64: Other = $124,000, Age 66: Other = $24,000)
+Tests Passed: 5/5 (100%)
+```
+
+**Production Commits**:
+1. `b1a41f4` - Initial US-072 implementation (employment income endAge check)
+2. `4bbc911` - Verification plan and Sprint 8 backlog update
+3. `59a5f24` - Sprint 8 Day 1 progress report
+4. `3b65825` - Fix retirement_age field bug (CRITICAL)
+5. `b3e54f5` - Fix tax splitting bug that zeros out employment income (CRITICAL)
+6. `8b416d0` - Complete verification test suite and Day 2 progress report
+
+**Velocity**:
+- Story points completed: 3/10 committed (30%)
+- Days elapsed: 1/7 (14%)
+- On track for sprint completion
+
+**Blockers**: None
+
+**Additional Discoveries**:
+- 🔍 **Rental Income Investigation**: Completed investigation into how rental income handles property sales
+  - Found 2 bugs in rental income lifecycle management
+  - Created US-073: Auto-stop `rental_income_annual` when property is sold (2 pts)
+  - Created US-074: Add automatic endAge for rental income in `other_incomes` array (3 pts)
+  - Both stories added to Epic 5 backlog for future sprint
+
+**Next Steps**:
+1. Verify Railway Python API auto-deployment completed
+2. Verify Vercel frontend auto-deployment completed
+3. Test production API health endpoint
+4. Re-run Daniel Gonzalez's simulation in production
+5. Begin US-067 (Post-onboarding redirect and welcome modal)
 
 **Sprint 8 Focus**:
 - Fix critical simulation accuracy bug (US-072) - affects all pre-retirees
@@ -822,6 +899,32 @@
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
+| **US-073** | **Auto-Stop rental_income_annual When Property Is Sold (Downsizing)** | **2** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a user who plans to sell my rental property via downsizing, I want the rental income to automatically stop when the property is sold so that my retirement projections don't incorrectly count rental income after the property is gone |
+| **Bug Report** | **Discovery**: February 4, 2026 - Investigation into rental income and property sales<br>**Issue**: `handle_downsizing()` function at `real_estate.py:111-229` updates property status when selling but does NOT clear `person.rental_income_annual`<br>**Impact**: Rental income continues indefinitely even after property is sold (when `new_home_cost == 0`)<br>**Root Cause**: `handle_downsizing()` only updates property values and mortgage, but never sets `rental_income_annual = 0.0` |
+| **Acceptance Criteria** | - [ ] When `handle_downsizing()` runs and `new_home_cost == 0` (selling outright), set `person.rental_income_annual = 0.0`<br>- [ ] When `handle_downsizing()` runs and `new_home_cost > 0` (buying new home), optionally clear rental income (unless new property also generates rental income)<br>- [ ] Test case: User with $24K/year rental income sells property at age 70<br>- [ ] Verify rental income stops at age 70 in simulation results<br>- [ ] Verify no regression - property appreciation and capital gains still work<br>- [ ] Documentation updated to explain rental income stops automatically when property is sold |
+| **Tasks** | - [ ] **Update handle_downsizing() function** (1 hour):<br>  - Open `/juan-retirement-app/modules/real_estate.py`<br>  - Locate `handle_downsizing()` function (line 111)<br>  - After updating property status (lines 201-218), add rental income logic:<br>    ```python<br>    # Clear rental income when selling property<br>    if new_home_cost == 0:<br>        # Sold outright - no longer have rental income<br>        person.rental_income_annual = 0.0<br>    else:<br>        # Downsized to new home - assume new home doesn't generate rental income<br>        # (User can manually add rental income if new property is also rental)<br>        person.rental_income_annual = 0.0<br>    ```<br>- [ ] **Create test case** (1 hour):<br>  - Test user: Age 65, $24K/year rental income, plans to sell at 70<br>  - Run simulation, verify rental income present at ages 65-69<br>  - Verify rental income = $0 at age 70+<br>  - Verify other income sources (CPP, OAS) still work<br>- [ ] **Deploy & verify** (30 min):<br>  - Deploy Python backend to production<br>  - Test with production data<br>  - Monitor for any errors |
+| **Technical Notes** | **Current Code** (`real_estate.py:201-218`):<br>```python<br># Update person's property status<br>if new_home_cost > 0:<br>    # Bought a new home - update values<br>    person.primary_residence_value = new_home_cost<br>    person.primary_residence_purchase_price = new_home_cost<br>    person.primary_residence_mortgage = 0.0<br>    person.primary_residence_monthly_payment = 0.0<br>else:<br>    # Sold outright - no longer have residence<br>    person.has_primary_residence = False<br>    person.primary_residence_value = 0.0<br>    person.primary_residence_purchase_price = 0.0<br>    person.primary_residence_mortgage = 0.0<br>    person.primary_residence_monthly_payment = 0.0<br>```<br><br>**Fixed Code**:<br>```python<br># Update person's property status<br>if new_home_cost > 0:<br>    # Bought a new home - update values<br>    person.primary_residence_value = new_home_cost<br>    person.primary_residence_purchase_price = new_home_cost<br>    person.primary_residence_mortgage = 0.0<br>    person.primary_residence_monthly_payment = 0.0<br>    # Assume new home doesn't generate rental income<br>    person.rental_income_annual = 0.0<br>else:<br>    # Sold outright - no longer have residence<br>    person.has_primary_residence = False<br>    person.primary_residence_value = 0.0<br>    person.primary_residence_purchase_price = 0.0<br>    person.primary_residence_mortgage = 0.0<br>    person.primary_residence_monthly_payment = 0.0<br>    # Clear rental income<br>    person.rental_income_annual = 0.0<br>``` |
+| **User Impact** | **MEDIUM** - Affects users who plan to sell rental properties in retirement. Without this fix, projections incorrectly assume rental income continues forever, leading to overly optimistic cash flow projections. |
+| **Priority Justification** | **P1 (High)** because:<br>1. **Data accuracy** - Rental income should stop when property is sold<br>2. **Quick fix** - 2 story points, ~2.5 hours total<br>3. **Low risk** - Only affects downsizing scenarios<br>4. **Common scenario** - Many retirees downsize and sell rental properties |
+| **Success Metrics** | - [ ] Rental income stops automatically when property is sold<br>- [ ] Test cases pass for selling at various ages<br>- [ ] No regression - property sale proceeds and capital gains still work<br>- [ ] Documentation updated |
+| **Related Stories** | - US-060 (LIF/LRIF Asset Types) - Similar asset lifecycle tracking<br>- US-074 (Auto-stop rental income in other_incomes) - Related rental income fix |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| **US-074** | **Add Automatic endAge for Rental Income in other_incomes Array** | **3** | **P1** 🟡 | **📋 To Do** |
+| **Description** | As a user who adds rental income via the Income table (other_incomes array), I want the system to help me automatically stop rental income when I plan to sell the property so that I don't have to manually remember to set endAge |
+| **Bug Report** | **Discovery**: February 4, 2026 - Investigation into rental income and property sales<br>**Issue**: `other_incomes` array with `type='rental'` has NO automatic `endAge` default (unlike employment income which defaults to retirement age)<br>**Impact**: Rental income from `other_incomes` array continues forever unless user manually sets `endAge`<br>**Root Cause**: `simulation.py:1368-1374` has special handling for employment income to default `endAge` to `cpp_start_age`, but no such handling exists for rental income |
+| **Acceptance Criteria** | - [ ] UI shows option to link rental income to property sale (downsizing)<br>- [ ] If rental income is linked to downsizing, automatically set `endAge = downsize_year_age`<br>- [ ] If not linked, rental income continues forever (current behavior, intended for investment properties)<br>- [ ] Frontend validation: If rental income entered, ask "Will you sell this property?" Yes → set endAge, No → leave endAge null<br>- [ ] Test case: User adds $24K rental income, plans to sell property at age 70<br>- [ ] Verify rental income stops at age 70 in simulation results<br>- [ ] Documentation explains rental income lifecycle options |
+| **Tasks** | - [ ] **Update Python backend** (2 hours):<br>  - Open `/juan-retirement-app/modules/simulation.py`<br>  - Locate income processing logic (line 1360-1399)<br>  - Add special handling for rental income type:<br>    ```python<br>    # Special handling for rental income: link to downsizing if applicable<br>    if income_type == 'rental':<br>        if income_end_age is None and person.plan_to_downsize:<br>            # Link rental income to property sale<br>            years_until_downsize = person.downsize_year - hh.start_year<br>            rental_end_age = person.start_age + years_until_downsize<br>            income_end_age = rental_end_age<br>    ```<br>- [ ] **Update frontend UI** (1 hour):<br>  - Add checkbox to Income form: "This rental income will stop when I sell the property"<br>  - If checked, link to downsizing year<br>  - If unchecked, rental income continues forever<br>  - Help text: "Check this if you plan to sell the rental property. Otherwise, rental income continues indefinitely."<br>- [ ] **Test cases** (1 hour):<br>  - Test 1: Rental income linked to downsizing → stops at downsizing year<br>  - Test 2: Rental income NOT linked → continues forever<br>  - Test 3: Multiple rental incomes with different endAge values<br>- [ ] **Deploy & verify** (30 min) |
+| **Technical Notes** | **Current Code** (`simulation.py:1368-1374`):<br>```python<br># Special handling for employment income: defaults to retirement age<br>if income_type == 'employment':<br>    if income_start_age is None:<br>        income_start_age = person.start_age<br>    if income_end_age is None:<br>        income_end_age = person.cpp_start_age<br>```<br><br>**Proposed Code**:<br>```python<br># Special handling for employment income<br>if income_type == 'employment':<br>    if income_start_age is None:<br>        income_start_age = person.start_age<br>    if income_end_age is None:<br>        income_end_age = person.cpp_start_age<br><br># Special handling for rental income: link to downsizing if applicable<br>if income_type == 'rental':<br>    if income_end_age is None and person.plan_to_downsize:<br>        # Calculate age when property will be sold<br>        years_until_downsize = person.downsize_year - hh.start_year<br>        rental_end_age = person.start_age + years_until_downsize<br>        income_end_age = rental_end_age<br>```<br><br>**Frontend Changes** (`webapp/app/(dashboard)/profile/income/page.tsx`):<br>```tsx<br>// Add to Income form for type='rental'<br>{incomeType === 'rental' && (<br>  <div className="space-y-2"><br>    <label className="flex items-center gap-2"><br>      <input<br>        type="checkbox"<br>        checked={linkToDownsizing}<br>        onChange={(e) => setLinkToDownsizing(e.target.checked)}<br>      /><br>      <span>This rental income will stop when I sell the property</span><br>    </label><br>    <p className="text-sm text-gray-600"><br>      Check this if you plan to sell the rental property. Otherwise,<br>      rental income continues indefinitely.<br>    </p><br>  </div><br>)}<br>``` |
+| **User Impact** | **MEDIUM** - Helps users plan rental income lifecycle correctly. Without this, users must manually calculate and set endAge, which is error-prone and non-obvious. |
+| **Priority Justification** | **P1 (High)** because:<br>1. **User convenience** - Automates manual calculation<br>2. **Data accuracy** - Prevents rental income from continuing forever incorrectly<br>3. **Moderate complexity** - 3 story points, ~4.5 hours total<br>4. **Complements US-073** - Handles rental income from different source |
+| **Success Metrics** | - [ ] UI shows rental income → downsizing linkage option<br>- [ ] Rental income automatically stops when linked to downsizing<br>- [ ] Test cases pass for various rental income scenarios<br>- [ ] User feedback: "Easy to understand rental income options" |
+| **Related Stories** | - US-073 (Auto-stop rental_income_annual) - Handles rental income from real estate module<br>- US-072 (Employment income endAge) - Similar automatic endAge logic |
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
 | **US-011** | **GIS Strategy Assessment Card** | **8** | **P1** | **✅ Done** |
 | **Description** | As a low-income retiree, I want to see if I qualify for GIS and understand the strategy recommendations so that I can maximize my retirement income |
 | **Acceptance Criteria** | - [x] Card shows GIS eligibility<br>- [x] Displays recommended strategy<br>- [x] Explains why strategy is recommended<br>- [x] Shows estimated GIS amounts<br>- [x] Accessible color contrast |
@@ -1248,9 +1351,9 @@
 
 ### Epic 5: Simulation Accuracy & Features
 **Goal**: Ensure simulation results are accurate and trustworthy
-**Total Story Points**: 68 (was 50, +18 for US-046 through US-049)
+**Total Story Points**: 73 (was 68, +2 for US-073, +3 for US-074)
 **Status**: 🔄 In Progress
-**User Stories**: US-011 (✅), US-012 (✅), US-013, US-023, US-031, US-036, US-037, US-046, US-047, US-048, US-049
+**User Stories**: US-011 (✅), US-012 (✅), US-013, US-023, US-031, US-036, US-037, US-046, US-047, US-048, US-049, US-072 (✅), US-073, US-074
 
 ### Epic 6: Testing & Quality
 **Goal**: Achieve >80% test coverage and prevent regression bugs

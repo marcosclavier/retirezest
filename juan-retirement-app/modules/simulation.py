@@ -1398,6 +1398,9 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
             other_income_total += annual_amount
 
+    # Add rental income from real estate properties (retrieved earlier)
+    other_income_total += rental_income
+
     # Get downsizing capital gains for this year (if any)
     downsizing_capgains = getattr(person, "downsizing_capital_gains_this_year", 0.0)
 
@@ -2125,6 +2128,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
     year = hh.start_year; age1 = hh.p1.start_age; age2 = hh.p2.start_age
     p1 = hh.p1; p2 = hh.p2
+
+
     rows = []
     tfsa_room1 = p1.tfsa_room_start
     tfsa_room2 = p2.tfsa_room_start
