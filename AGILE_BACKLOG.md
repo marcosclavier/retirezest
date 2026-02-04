@@ -44,7 +44,7 @@
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
 | ~~US-066~~ | ~~Make "Run Simulation" Button Prominent~~ | ~~2~~ | ~~P0~~ | ~~Epic 1~~ | ✅ Already Done |
-| US-067 | Add Post-Onboarding Redirect and Welcome Modal | 2 | P1 🟡 | Epic 1: Retention | 📋 To Do |
+| US-067 | Add Post-Onboarding Redirect and Welcome Modal | 2 | P1 🟡 | Epic 1: Retention | ✅ Done |
 | US-068 | Add Empty State on Results Tab | 1 | P1 🟡 | Epic 1: Retention | 📋 To Do |
 | US-044 | Improve Cash Flow Gap Messaging | 2 | P1 🟡 | Epic 4: UX | 📋 To Do |
 

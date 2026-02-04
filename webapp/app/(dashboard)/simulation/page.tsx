@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { useDebouncedCallback } from '@/lib/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw, Mail, CheckCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw, Mail, CheckCircle, ArrowDown, X } from 'lucide-react';
 import { runSimulation, healthCheck } from '@/lib/api/simulation-client';
 import {
   defaultHouseholdInput,
@@ -64,6 +65,7 @@ const WithdrawalsBySourceChart = dynamic(() => import('@/components/simulation/W
 });
 
 export default function SimulationPage() {
+  const searchParams = useSearchParams();
   const [household, setHousehold] = useState<HouseholdInput>({
     ...defaultHouseholdInput,
     p1: { ...defaultPersonInput, name: 'Me' },
@@ -71,6 +73,7 @@ export default function SimulationPage() {
   const [includePartner, setIncludePartner] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<SimulationResponse | null>(null);
+  const [showGuidanceBanner, setShowGuidanceBanner] = useState(false);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('input');
   const [prefillLoading, setPrefillLoading] = useState(true);
@@ -194,6 +197,23 @@ export default function SimulationPage() {
 
     fetchSubscription();
   }, []);
+
+  // US-067: Check if user should see guidance banner
+  useEffect(() => {
+    // Show guidance if:
+    // 1. Just completed onboarding (URL param)
+    // 2. Never ran simulation before (localStorage check)
+    // 3. No simulation results currently displayed
+    const onboardingComplete = searchParams.get('onboarding') === 'complete';
+    const hasRunSimulation = localStorage.getItem('has_run_simulation') === 'true';
+    const guidanceDismissed = localStorage.getItem('guidance_banner_dismissed') === 'true';
+
+    if (!result && !guidanceDismissed && (onboardingComplete || !hasRunSimulation)) {
+      setShowGuidanceBanner(true);
+    } else {
+      setShowGuidanceBanner(false);
+    }
+  }, [result, searchParams]);
 
   // Check API health, fetch CSRF token, load profile settings, and load prefill data on mount
   useEffect(() => {
@@ -798,6 +818,9 @@ export default function SimulationPage() {
       if (response.success) {
         setActiveTab('results');
 
+        // Mark that user has run a simulation (US-067)
+        localStorage.setItem('has_run_simulation', 'true');
+
         // Analyze for low success rate and failure reasons
         const analysis = analyzeFailureReasons(response, simulationData);
         setFailureAnalysis(analysis);
@@ -906,6 +929,62 @@ export default function SimulationPage() {
             </div>
           )}
         </div>
+
+        {/* US-067: Inline Guidance Banner for New Users */}
+        {showGuidanceBanner && !isLoading && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Play className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  🎉 Ready to see your retirement plan?
+                </h3>
+                <p className="text-sm text-blue-800 mb-4">
+                  Click the <strong>"Run Simulation"</strong> button below to generate your personalized retirement projection with:
+                </p>
+                <ul className="text-sm text-blue-800 space-y-1.5 mb-4 ml-4">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
+                    <span>Year-by-year cash flow analysis</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
+                    <span>Tax-optimized withdrawal strategy</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
+                    <span>Government benefits projections (CPP, OAS, GIS)</span>
+                  </li>
+                </ul>
+
+                {/* Arrow pointing down */}
+                <div className="flex items-center gap-2 text-blue-600 font-medium animate-bounce">
+                  <ArrowDown className="h-5 w-5" />
+                  <span>Scroll down and click "Run Simulation"</span>
+                </div>
+              </div>
+
+              {/* Dismiss button */}
+              <button
+                onClick={() => {
+                  localStorage.setItem('guidance_banner_dismissed', 'true');
+                  setShowGuidanceBanner(false);
+                }}
+                className="flex-shrink-0 text-blue-400 hover:text-blue-600 transition-colors"
+                aria-label="Dismiss guidance"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Hero CTA - Prominent call-to-action when user has data but no results */}
         {!result && !prefillLoading && prefillAvailable && (
