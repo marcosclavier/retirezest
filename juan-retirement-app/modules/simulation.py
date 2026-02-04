@@ -1141,7 +1141,7 @@ def calculate_gis_optimization_withdrawal(
     return withdrawals, effective_rate, analysis
 
 
-def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params) -> tuple[float, float, float]:
+def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params, info_dict=None) -> tuple[float, float, float]:
     bd       = taxd.get("breakdown", {})
     ordinary = float(bd.get("nr_interest", 0.0))
     eligd    = float(bd.get("nr_elig_div", 0.0))
@@ -1150,6 +1150,17 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
 
     oas     = float(taxd.get("oas", 0.0))
     cpp_amt = float(taxd.get("cpp", 0.0))
+
+    # FIX: Include pension_income and other_income from info_dict (employment, business, etc.)
+    # These were being lost in the tax splitting recalculation, causing tax to be $0
+    pension_income_from_list = 0.0
+    other_income_total = 0.0
+    if info_dict:
+        pension_income_from_list = float(info_dict.get("pension_income", 0.0))
+        other_income_total = float(info_dict.get("other_income", 0.0))
+
+    # Add pension and other income to ordinary income (both fully taxable)
+    ordinary += pension_income_from_list + other_income_total
 
     # Add corporate dividends actually paid to THIS person in the recompute path
     corp_cash = float(wself.get("corp", 0.0))
@@ -2368,8 +2379,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         transfer21 = split * w2["rrif"] if age2 >= 65 else 0.0
       
         # == After calling recompute_tax for each person ==
-        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y)
-        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y)
+        # FIX: Pass info1/info2 dicts so recompute_tax can include pension_income and other_income
+        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y, info1)
+        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, info2)
 
 
         # Rebuild per-person and household totals ONLY from recompute outputs
