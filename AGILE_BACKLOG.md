@@ -31,8 +31,8 @@
 
 | ID | User Story | Story Points | Priority | Epic | Status |
 |----|------------|--------------|----------|------|--------|
-| US-072 | Fix Employment Income Not Applied Before Retirement | 3 | P0 🔴 | Epic 5: Simulation | 📋 To Do |
-| US-066 | Make "Run Simulation" Button Prominent and Impossible to Miss | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
+| US-072 | Fix Employment Income Not Applied Before Retirement | 3 | P0 🔴 | Epic 5: Simulation | ✅ Done |
+| ~~US-066~~ | ~~Make "Run Simulation" Button Prominent~~ | ~~2~~ | ~~P0~~ | ~~Epic 1~~ | ✅ Already Done |
 | US-067 | Add Post-Onboarding Redirect and Welcome Modal | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
 | US-068 | Add Empty State on Results Tab | 1 | P0 🔴 | Epic 1: Retention | 📋 To Do |
 | US-071 | Re-engagement Email Campaign for 19 Users | 2 | P0 🔴 | Epic 1: Retention | 📋 To Do |
@@ -41,7 +41,8 @@
 | **Stretch:** US-070 | Improve Simulation Loading State | 1 | P1 🟡 | Epic 1: Retention | 📋 Stretch |
 | **Stretch:** US-053 | Optimize Dashboard Layout Query (JWT Caching) | 3 | P0 🔴 | Epic 6: Quality | 📋 Stretch |
 
-**Total Story Points**: 12 committed + 6 stretch = 18 total (67% committed, 33% buffer)
+**Total Story Points**: 10 committed + 6 stretch = 16 total (63% committed, 37% buffer)
+**Note**: US-066 removed from Sprint 8 - already completed in previous sprint
 **Sprint Board**: [SPRINT_8_PLAN.md](SPRINT_8_PLAN.md)
 
 **Critical Issues Identified**:
