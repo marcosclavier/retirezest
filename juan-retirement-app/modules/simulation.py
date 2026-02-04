@@ -1359,7 +1359,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             if income_start_age is None:
                 income_start_age = person.start_age  # Default to person's starting age
             if income_end_age is None:
-                income_end_age = person.retirement_age  # Default to retirement age
+                # Default to CPP start age as proxy for retirement age
+                income_end_age = person.cpp_start_age
 
         # Check if income is active this year
         is_active = True
