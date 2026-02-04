@@ -19,7 +19,8 @@
       "Bash(/tmp/daniel_test.json)",
       "Bash(git push:*)",
       "Bash(npm run dev:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

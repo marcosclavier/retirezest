@@ -76,6 +76,22 @@ export interface PersonInput {
   early_rrif_withdrawal_annual: number; // Fixed annual amount
   early_rrif_withdrawal_percentage: number; // Or as % of balance (0-100)
   early_rrif_withdrawal_mode: 'fixed' | 'percentage'; // Which mode to use
+
+  // Real estate - rental income and property details
+  rental_income_annual?: number;
+
+  // Primary residence for downsizing scenario
+  has_primary_residence?: boolean;
+  primary_residence_value?: number;
+  primary_residence_purchase_price?: number;
+  primary_residence_mortgage?: number;
+  primary_residence_monthly_payment?: number;
+
+  // Downsizing plan
+  plan_to_downsize?: boolean;
+  downsize_year?: number | null;
+  downsize_new_home_cost?: number;
+  downsize_is_principal_residence?: boolean;
 }
 
 export type Province = 'AB' | 'BC' | 'ON' | 'QC';
@@ -555,6 +571,18 @@ export const defaultPersonInput: PersonInput = {
   early_rrif_withdrawal_annual: 20000,
   early_rrif_withdrawal_percentage: 5.0,
   early_rrif_withdrawal_mode: 'fixed',
+
+  // Real estate defaults (no property by default)
+  rental_income_annual: 0,
+  has_primary_residence: false,
+  primary_residence_value: 0,
+  primary_residence_purchase_price: 0,
+  primary_residence_mortgage: 0,
+  primary_residence_monthly_payment: 0,
+  plan_to_downsize: false,
+  downsize_year: null,
+  downsize_new_home_cost: 0,
+  downsize_is_principal_residence: true,
 };
 
 // Default household input

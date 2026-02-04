@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
       where: { userId: session.userId },
       select: {
         propertyType: true,
+        purchasePrice: true,
         currentValue: true,
         mortgageBalance: true,
         owner: true,
@@ -381,6 +382,34 @@ export async function GET(request: NextRequest) {
       corp_invest_bucket: person1Totals.corporate_balance * 0.85,
     };
 
+    // Map real estate data to person1
+    const person1RealEstate = realEstateAssets.filter(
+      property => !property.owner || property.owner === 'person1' || property.owner === 'me'
+    );
+    if (person1RealEstate.length > 0) {
+      // Find primary residence (first property with isPrincipalResidence = true, or first property)
+      const primaryResidence = person1RealEstate.find(p => p.isPrincipalResidence) || person1RealEstate[0];
+      const ownershipShare = (primaryResidence.ownershipPercent || 100) / 100;
+
+      person1Input.has_primary_residence = true;
+      person1Input.primary_residence_value = primaryResidence.currentValue * ownershipShare;
+      person1Input.primary_residence_purchase_price = (primaryResidence.purchasePrice || 0) * ownershipShare;
+      person1Input.primary_residence_mortgage = (primaryResidence.mortgageBalance || 0) * ownershipShare;
+      person1Input.primary_residence_monthly_payment = 0; // TODO: Link to Debt table for accurate payment
+
+      // Set rental_income_annual from primary residence (backward compatibility)
+      // Note: Rental income is also in other_incomes array (lines 229-257)
+      person1Input.rental_income_annual = (primaryResidence.monthlyRentalIncome || 0) * 12 * ownershipShare;
+
+      // Map downsizing plan
+      if (primaryResidence.planToSell && primaryResidence.plannedSaleYear) {
+        person1Input.plan_to_downsize = true;
+        person1Input.downsize_year = primaryResidence.plannedSaleYear;
+        person1Input.downsize_new_home_cost = (primaryResidence.downsizeTo || 0) * ownershipShare;
+        person1Input.downsize_is_principal_residence = primaryResidence.isPrincipalResidence;
+      }
+    }
+
     // Build person 2 input (for partner) - only if couples planning is enabled or they have assets
     const hasPartnerAssets = Object.values(person2Totals).some(val => val > 0);
     const shouldIncludePartner = user?.includePartner || hasPartnerAssets;
@@ -429,6 +458,33 @@ export async function GET(request: NextRequest) {
         corp_gic_bucket: person2Totals.corporate_balance * 0.10,
         corp_invest_bucket: person2Totals.corporate_balance * 0.85,
       };
+
+      // Map real estate data to person2
+      const person2RealEstate = realEstateAssets.filter(
+        property => property.owner === 'person2' || property.owner === 'partner'
+      );
+      if (person2RealEstate.length > 0) {
+        // Find primary residence (first property with isPrincipalResidence = true, or first property)
+        const primaryResidence = person2RealEstate.find(p => p.isPrincipalResidence) || person2RealEstate[0];
+        const ownershipShare = (primaryResidence.ownershipPercent || 100) / 100;
+
+        person2Input.has_primary_residence = true;
+        person2Input.primary_residence_value = primaryResidence.currentValue * ownershipShare;
+        person2Input.primary_residence_purchase_price = (primaryResidence.purchasePrice || 0) * ownershipShare;
+        person2Input.primary_residence_mortgage = (primaryResidence.mortgageBalance || 0) * ownershipShare;
+        person2Input.primary_residence_monthly_payment = 0; // TODO: Link to Debt table for accurate payment
+
+        // Set rental_income_annual from primary residence (backward compatibility)
+        person2Input.rental_income_annual = (primaryResidence.monthlyRentalIncome || 0) * 12 * ownershipShare;
+
+        // Map downsizing plan
+        if (primaryResidence.planToSell && primaryResidence.plannedSaleYear) {
+          person2Input.plan_to_downsize = true;
+          person2Input.downsize_year = primaryResidence.plannedSaleYear;
+          person2Input.downsize_new_home_cost = (primaryResidence.downsizeTo || 0) * ownershipShare;
+          person2Input.downsize_is_principal_residence = primaryResidence.isPrincipalResidence;
+        }
+      }
     }
 
     // Determine province - map user's profile province to supported simulation provinces
