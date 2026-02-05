@@ -1012,32 +1012,6 @@ DEBUG WITHDRAWAL [No Partner] Age 85 Year 2066:
 DEBUG HH GIS CASE2 (One OAS) [2066]: P1_income=$33,121 (OAS=$18,768) P2_income=$0 (OAS=$0) Combined=$33,121 threshold=$118,810
 DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2066]: gis_p1=$15,046.02
 DEBUG HH GIS FINAL [2066]: t1[gis]=$15,046.02 t2[gis]=$0.00
-Traceback (most recent call last):
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'tfsa_p1'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 272, in test_user
-    current_results = self.run_simulation(household)
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 179, in run_simulation
-    final_estate = (results_df.iloc[-1]['tfsa_p1'] +
-                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1130, in __getitem__
-    return self._get_value(key)
-           ~~~~~~~~~~~~~~~^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1246, in _get_value
-    loc = self.index.get_loc(label)
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3819, in get_loc
-    raise KeyError(key) from err
-KeyError: 'tfsa_p1'
   WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
   WARNING: GIS optimization left $42,078 shortfall, using fallback order
 
@@ -2118,32 +2092,6 @@ DEBUG WITHDRAWAL [No Partner] Age 85 Year 2065:
   RRIF: available=$0 (skipping, no funds)
   TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
 DEBUG HH GIS FINAL [2065]: t1[gis]=$0.00 t2[gis]=$0.00
-Traceback (most recent call last):
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'tfsa_p1'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 272, in test_user
-    current_results = self.run_simulation(household)
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 179, in run_simulation
-    final_estate = (results_df.iloc[-1]['tfsa_p1'] +
-                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1130, in __getitem__
-    return self._get_value(key)
-           ~~~~~~~~~~~~~~~^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1246, in _get_value
-    loc = self.index.get_loc(label)
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3819, in get_loc
-    raise KeyError(key) from err
-KeyError: 'tfsa_p1'
   WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
   WARNING: GIS optimization left $64,402 shortfall, using fallback order
 
@@ -3359,32 +3307,6 @@ DEBUG WITHDRAWAL [No Partner] Age 85 Year 2070:
   RRIF: available=$0 (skipping, no funds)
   TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
 DEBUG HH GIS FINAL [2070]: t1[gis]=$0.00 t2[gis]=$0.00
-Traceback (most recent call last):
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'tfsa_p1'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 272, in test_user
-    current_results = self.run_simulation(household)
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 179, in run_simulation
-    final_estate = (results_df.iloc[-1]['tfsa_p1'] +
-                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1130, in __getitem__
-    return self._get_value(key)
-           ~~~~~~~~~~~~~~~^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1246, in _get_value
-    loc = self.index.get_loc(label)
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3819, in get_loc
-    raise KeyError(key) from err
-KeyError: 'tfsa_p1'
   WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
   WARNING: GIS optimization left $44,545 shortfall, using fallback order
 
@@ -4330,32 +4252,6 @@ DEBUG WITHDRAWAL [No Partner] Age 85 Year 2060:
   RRIF: available=$0 (skipping, no funds)
   TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
 DEBUG HH GIS FINAL [2060]: t1[gis]=$0.00 t2[gis]=$0.00
-Traceback (most recent call last):
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'tfsa_p1'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 272, in test_user
-    current_results = self.run_simulation(household)
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 179, in run_simulation
-    final_estate = (results_df.iloc[-1]['tfsa_p1'] +
-                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1130, in __getitem__
-    return self._get_value(key)
-           ~~~~~~~~~~~~~~~^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1246, in _get_value
-    loc = self.index.get_loc(label)
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3819, in get_loc
-    raise KeyError(key) from err
-KeyError: 'tfsa_p1'
   WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
   WARNING: GIS optimization left $32,507 shortfall, using fallback order
 
@@ -5085,32 +4981,6 @@ DEBUG WITHDRAWAL [No Partner] Age 85 Year 2052:
   RRIF: available=$0 (skipping, no funds)
   TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
 DEBUG HH GIS FINAL [2052]: t1[gis]=$0.00 t2[gis]=$0.00
-Traceback (most recent call last):
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'tfsa_p1'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 272, in test_user
-    current_results = self.run_simulation(household)
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 179, in run_simulation
-    final_estate = (results_df.iloc[-1]['tfsa_p1'] +
-                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1130, in __getitem__
-    return self._get_value(key)
-           ~~~~~~~~~~~~~~~^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1246, in _get_value
-    loc = self.index.get_loc(label)
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3819, in get_loc
-    raise KeyError(key) from err
-KeyError: 'tfsa_p1'
   WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
   WARNING: GIS optimization left $76,054 shortfall, using fallback order
 
@@ -6110,32 +5980,6 @@ DEBUG WITHDRAWAL [No Partner] Age 85 Year 2062:
   RRIF: available=$0 (skipping, no funds)
   TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
 DEBUG HH GIS FINAL [2062]: t1[gis]=$0.00 t2[gis]=$0.00
-Traceback (most recent call last):
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3812, in get_loc
-    return self._engine.get_loc(casted_key)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 167, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 196, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'tfsa_p1'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 272, in test_user
-    current_results = self.run_simulation(household)
-  File "/Users/jrcb/Documents/GitHub/retirezest/juan-retirement-app/test_regression_phase1.py", line 179, in run_simulation
-    final_estate = (results_df.iloc[-1]['tfsa_p1'] +
-                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1130, in __getitem__
-    return self._get_value(key)
-           ~~~~~~~~~~~~~~~^^^^^
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/series.py", line 1246, in _get_value
-    loc = self.index.get_loc(label)
-  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pandas/core/indexes/base.py", line 3819, in get_loc
-    raise KeyError(key) from err
-KeyError: 'tfsa_p1'
 
 ================================================================================
 PHASE 1 REGRESSION TESTING: TEST ACCOUNTS
@@ -6152,7 +5996,18 @@ TESTING: test@example.com
    Baseline Sims: 5
 
 🚀 Running simulation...
-❌ Simulation failed: 'tfsa_p1'
+✅ Simulation complete
+
+📊 Results:
+   Success Rate: 0.0% (0/41 years)
+   Total Tax: $8,929
+   Total Benefits: $900,347
+   Final Estate: $517,300
+
+⚠️  No baseline comparison available (first simulation)
+
+⚠️ NO BASELINE
+================================================================================
 
 ================================================================================
 TESTING: claire.conservative@test.com
@@ -6165,7 +6020,18 @@ TESTING: claire.conservative@test.com
    Baseline Sims: 0
 
 🚀 Running simulation...
-❌ Simulation failed: 'tfsa_p1'
+✅ Simulation complete
+
+📊 Results:
+   Success Rate: 0.0% (0/40 years)
+   Total Tax: $390,080
+   Total Benefits: $0
+   Final Estate: $0
+
+⚠️  No baseline comparison available (first simulation)
+
+⚠️ NO BASELINE
+================================================================================
 
 ================================================================================
 TESTING: alex.aggressive@test.com
@@ -6178,7 +6044,18 @@ TESTING: alex.aggressive@test.com
    Baseline Sims: 0
 
 🚀 Running simulation...
-❌ Simulation failed: 'tfsa_p1'
+✅ Simulation complete
+
+📊 Results:
+   Success Rate: 0.0% (0/45 years)
+   Total Tax: $899,973
+   Total Benefits: $0
+   Final Estate: $0
+
+⚠️  No baseline comparison available (first simulation)
+
+⚠️ NO BASELINE
+================================================================================
 
 ================================================================================
 TESTING: mike.moderate@test.com
@@ -6191,7 +6068,18 @@ TESTING: mike.moderate@test.com
    Baseline Sims: 0
 
 🚀 Running simulation...
-❌ Simulation failed: 'tfsa_p1'
+✅ Simulation complete
+
+📊 Results:
+   Success Rate: 0.0% (0/35 years)
+   Total Tax: $361,110
+   Total Benefits: $0
+   Final Estate: $0
+
+⚠️  No baseline comparison available (first simulation)
+
+⚠️ NO BASELINE
+================================================================================
 
 ================================================================================
 TESTING: sarah.struggling@test.com
@@ -6204,7 +6092,18 @@ TESTING: sarah.struggling@test.com
    Baseline Sims: 0
 
 🚀 Running simulation...
-❌ Simulation failed: 'tfsa_p1'
+✅ Simulation complete
+
+📊 Results:
+   Success Rate: 0.0% (0/27 years)
+   Total Tax: $61,577
+   Total Benefits: $0
+   Final Estate: $0
+
+⚠️  No baseline comparison available (first simulation)
+
+⚠️ NO BASELINE
+================================================================================
 
 ================================================================================
 TESTING: helen.highincome@test.com
@@ -6217,19 +6116,30 @@ TESTING: helen.highincome@test.com
    Baseline Sims: 0
 
 🚀 Running simulation...
-❌ Simulation failed: 'tfsa_p1'
+✅ Simulation complete
+
+📊 Results:
+   Success Rate: 0.0% (0/37 years)
+   Total Tax: $1,872,464
+   Total Benefits: $0
+   Final Estate: $0
+
+⚠️  No baseline comparison available (first simulation)
+
+⚠️ NO BASELINE
+================================================================================
 
 
 ================================================================================
 PHASE 1 REGRESSION TEST SUMMARY
 ================================================================================
 ✅ Passed: 0
-❌ Failed: 0
-⚠️  Errors: 6
+❌ Failed: 6
+⚠️  Errors: 0
 ⏭️  Skipped: 0
 📊 Total: 6
 
 💾 Results saved to: phase1_regression_results.json
 
-⚠️  REGRESSION TESTS HAD ERRORS
-   Some tests could not complete
+❌ REGRESSION TESTS FAILED
+   Some tests did not match baseline expectations

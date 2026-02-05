@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Phase 1 Regression Testing: Test Accounts
+Phase 1 Regression Testing: Test Accounts (V2 - Using InputData)
 
-This script runs automated regression tests against the Priority 1 test accounts
-using their extracted baseline data. It verifies that recent changes (US-044, US-076)
-did not introduce regressions in simulation outputs.
+This script uses the EXACT inputData from historical simulations to ensure
+perfect regression testing. Instead of reconstructing simulation inputs from
+the database schema, we use the actual inputs that were used in previous runs.
 
 Test Accounts:
 1. test@example.com (181 simulations - most active!)
@@ -51,116 +51,68 @@ class Phase1RegressionTester:
         with open(baseline_file, 'r') as f:
             return json.load(f)
 
-    def convert_baseline_to_household(self, baseline: Dict) -> Optional[Household]:
-        """Convert baseline data to Household model for simulation."""
+    def convert_inputdata_to_household(self, input_data_json: str) -> Optional[Household]:
+        """Convert simulation inputData JSON to Household model.
+
+        This uses the EXACT input that was used in the original simulation,
+        ensuring perfect regression testing.
+
+        The inputData format has some legacy fields that need to be transformed:
+        - employer_pension_annual -> pension_incomes list (if non-zero)
+        - other_income_annual -> other_incomes list (if non-zero)
+        """
         try:
-            financial_data = baseline['financial_data']
-            user_profile = baseline['user_profile']
-            scenarios = baseline.get('scenarios', [])
+            input_data = json.loads(input_data_json)
 
-            if not scenarios:
-                print(f"⚠️  No scenarios found in baseline")
-                return None
+            # Helper to convert person data
+            def convert_person_data(p_data: Dict) -> Dict:
+                """Convert person data, handling legacy fields."""
+                result = p_data.copy()
 
-            # Use first scenario
-            scenario = scenarios[0]
+                # Handle employer_pension_annual -> pension_incomes
+                if 'employer_pension_annual' in result:
+                    pension_amount = result.pop('employer_pension_annual')
+                    if pension_amount > 0 and 'pension_incomes' not in result:
+                        result['pension_incomes'] = [{
+                            'name': 'Employer Pension',
+                            'amount': pension_amount,
+                            'startAge': None,  # Will start at retirement
+                            'inflationIndexed': True
+                        }]
 
-            # Build Person 1
-            p1_data = {
-                'name': f"{user_profile.get('firstName', 'User')} {user_profile.get('lastName', '')}".strip(),
-                'start_age': self._calculate_age(user_profile.get('dateOfBirth')),
-                'tfsa_balance': 0,
-                'rrsp_balance': 0,
-                'rrif_balance': 0,
-                'nonreg_balance': 0,
-                'corporate_balance': 0,
-                'cpp_start_age': None,
-                'cpp_annual_at_start': 0,
-                'oas_start_age': None,
-                'oas_annual_at_start': 0,
-                'other_incomes': []
-            }
+                # Handle other_income_annual -> other_incomes
+                if 'other_income_annual' in result:
+                    other_amount = result.pop('other_income_annual')
+                    if other_amount > 0 and 'other_incomes' not in result:
+                        result['other_incomes'] = [{
+                            'type': 'other',
+                            'amount': other_amount,
+                            'startAge': None,
+                            'endAge': None,
+                            'inflationIndexed': False
+                        }]
 
-            # Map assets
-            for asset in financial_data.get('assets', []):
-                asset_type = asset.get('type', '').lower()
-                amount = float(asset.get('value', 0))
-
-                if asset_type == 'tfsa':
-                    p1_data['tfsa_balance'] += amount
-                elif asset_type in ['rrsp', 'rrif']:
-                    if asset_type == 'rrsp':
-                        p1_data['rrsp_balance'] += amount
-                    else:
-                        p1_data['rrif_balance'] += amount
-                elif asset_type == 'nonreg':
-                    p1_data['nonreg_balance'] += amount
-                elif asset_type == 'corporate':
-                    p1_data['corporate_balance'] += amount
-
-            # Map income sources
-            for income in financial_data.get('incomeSources', []):
-                income_type = income.get('type', '').lower()
-                amount = float(income.get('amount', 0))
-                start_age = income.get('startAge')
-                end_age = income.get('endAge')
-
-                if income_type == 'cpp':
-                    p1_data['cpp_annual_at_start'] = amount
-                    p1_data['cpp_start_age'] = start_age or 65
-                elif income_type == 'oas':
-                    p1_data['oas_annual_at_start'] = amount
-                    p1_data['oas_start_age'] = start_age or 65
-                else:
-                    p1_data['other_incomes'].append({
-                        'type': income_type,
-                        'amount': amount,
-                        'startAge': start_age,
-                        'endAge': end_age,
-                        'inflationIndexed': income.get('inflationIndexed', False)
-                    })
+                return result
 
             # Create Person 1
+            p1_data = convert_person_data(input_data['p1'])
             p1 = Person(**p1_data)
 
-            # Create Person 2 (no partner for now)
-            p2 = Person(name="No Partner", start_age=p1.start_age)
+            # Create Person 2
+            p2_data = convert_person_data(input_data['p2'])
+            p2 = Person(**p2_data)
 
-            # Create Household
-            household = Household(
-                p1=p1,
-                p2=p2,
-                province=user_profile.get('province', 'ON'),
-                start_year=datetime.now().year,
-                end_age=scenario.get('endAge', 85),
-                strategy=scenario.get('strategy', 'minimize-income'),
-                spending_go_go=scenario.get('spendingGoGo', 50000),
-                spending_slow_go=scenario.get('spendingSlowGo', 40000),
-                spending_no_go=scenario.get('spendingNoGo', 30000),
-                spending_inflation=0.02,
-                general_inflation=0.02
-            )
+            # Create Household - remove p1/p2 from input_data dict
+            household_data = {k: v for k, v in input_data.items() if k not in ['p1', 'p2']}
+            household = Household(p1=p1, p2=p2, **household_data)
 
             return household
 
         except Exception as e:
-            print(f"❌ Error converting baseline: {e}")
+            print(f"❌ Error converting input data: {e}")
             import traceback
             traceback.print_exc()
             return None
-
-    def _calculate_age(self, date_of_birth: Optional[str]) -> int:
-        """Calculate age from date of birth."""
-        if not date_of_birth:
-            return 65  # Default
-
-        try:
-            dob = datetime.fromisoformat(date_of_birth.replace('Z', '+00:00'))
-            today = datetime.now()
-            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-            return age
-        except:
-            return 65  # Default
 
     def run_simulation(self, household: Household) -> Dict:
         """Run simulation and extract key metrics."""
@@ -195,29 +147,8 @@ class Phase1RegressionTester:
             'results_df': results_df
         }
 
-    def compare_with_baseline(self, current: Dict, baseline_sims: List[Dict]) -> Dict:
-        """Compare current simulation with baseline simulations."""
-        if not baseline_sims:
-            return {
-                'has_baseline': False,
-                'passed': None,
-                'notes': 'No baseline simulations found'
-            }
-
-        # Get most recent baseline simulation
-        baseline_sim = baseline_sims[0]
-        baseline_output = baseline_sim.get('outputData', {})
-
-        if not baseline_output:
-            return {
-                'has_baseline': False,
-                'passed': None,
-                'notes': 'No baseline output data'
-            }
-
-        # Extract baseline metrics
-        baseline_success_rate = baseline_output.get('successRate', baseline_sim.get('successRate', 0))
-
+    def compare_with_baseline(self, current: Dict, baseline_success_rate: float) -> Dict:
+        """Compare current simulation with baseline success rate."""
         # Compare success rates (±5% tolerance)
         success_rate_diff = abs(current['success_rate'] - baseline_success_rate)
         success_rate_match = success_rate_diff < 0.05
@@ -229,12 +160,11 @@ class Phase1RegressionTester:
             notes.append(f"Success rate changed: {baseline_success_rate:.1%} → {current['success_rate']:.1%}")
 
         return {
-            'has_baseline': True,
             'passed': passed,
             'baseline_success_rate': baseline_success_rate,
             'current_success_rate': current['success_rate'],
             'success_rate_diff': success_rate_diff,
-            'notes': '; '.join(notes) if notes else 'All metrics match baseline'
+            'notes': '; '.join(notes) if notes else 'Success rate matches baseline'
         }
 
     def test_user(self, email: str) -> Dict:
@@ -253,22 +183,43 @@ class Phase1RegressionTester:
             }
 
         print(f"✅ Baseline loaded: {baseline['user_profile']['firstName']} {baseline['user_profile'].get('lastName', '')}")
-        print(f"   Assets: {len(baseline['financial_data']['assets'])}")
-        print(f"   Income: {len(baseline['financial_data']['incomeSources'])}")
-        print(f"   Scenarios: {len(baseline.get('scenarios', []))}")
-        print(f"   Baseline Sims: {len(baseline.get('recent_simulations', []))}")
+
+        # Get recent simulations
+        recent_sims = baseline.get('recent_simulations', [])
+        if not recent_sims:
+            return {
+                'email': email,
+                'status': 'skipped',
+                'reason': 'No historical simulations found'
+            }
+
+        print(f"   Found {len(recent_sims)} historical simulations")
+
+        # Use most recent simulation
+        baseline_sim = recent_sims[0]
+        input_data_json = baseline_sim.get('inputData')
+        baseline_success_rate = baseline_sim.get('successRate', 0)
+
+        if not input_data_json:
+            return {
+                'email': email,
+                'status': 'skipped',
+                'reason': 'No inputData in baseline simulation'
+            }
+
+        print(f"   Baseline success rate: {baseline_success_rate:.1%}")
         print()
 
         # Convert to household
-        household = self.convert_baseline_to_household(baseline)
+        household = self.convert_inputdata_to_household(input_data_json)
         if not household:
             return {
                 'email': email,
                 'status': 'error',
-                'reason': 'Failed to convert baseline to household'
+                'reason': 'Failed to convert inputData to household'
             }
 
-        print("🚀 Running simulation...")
+        print("🚀 Running simulation with baseline inputs...")
 
         # Run simulation
         try:
@@ -284,21 +235,14 @@ class Phase1RegressionTester:
             print()
 
             # Compare with baseline
-            comparison = self.compare_with_baseline(
-                current_results,
-                baseline.get('recent_simulations', [])
-            )
+            comparison = self.compare_with_baseline(current_results, baseline_success_rate)
 
-            if comparison['has_baseline']:
-                status = "✅ PASS" if comparison['passed'] else "❌ FAIL"
-                print(f"🔍 Comparison: {status}")
-                print(f"   Baseline Success: {comparison['baseline_success_rate']:.1%}")
-                print(f"   Current Success: {comparison['current_success_rate']:.1%}")
-                print(f"   Difference: {comparison['success_rate_diff']:.1%}")
-                print(f"   Notes: {comparison['notes']}")
-            else:
-                print("⚠️  No baseline comparison available (first simulation)")
-                status = "⚠️ NO BASELINE"
+            status = "✅ PASS" if comparison['passed'] else "❌ FAIL"
+            print(f"🔍 Comparison: {status}")
+            print(f"   Baseline Success: {comparison['baseline_success_rate']:.1%}")
+            print(f"   Current Success: {comparison['current_success_rate']:.1%}")
+            print(f"   Difference: {comparison['success_rate_diff']:.1%}")
+            print(f"   Notes: {comparison['notes']}")
 
             print()
             print(status)
@@ -307,7 +251,7 @@ class Phase1RegressionTester:
 
             return {
                 'email': email,
-                'status': 'pass' if comparison.get('passed', True) else 'fail',
+                'status': 'pass' if comparison['passed'] else 'fail',
                 'current_results': {
                     'success_rate': current_results['success_rate'],
                     'total_tax': current_results['total_tax'],
@@ -332,7 +276,7 @@ class Phase1RegressionTester:
     def run_phase1(self):
         """Run all Phase 1 tests."""
         print("\n" + "="*80)
-        print("PHASE 1 REGRESSION TESTING: TEST ACCOUNTS")
+        print("PHASE 1 REGRESSION TESTING: TEST ACCOUNTS (V2)")
         print("="*80)
         print()
 
@@ -357,7 +301,7 @@ class Phase1RegressionTester:
         skipped = sum(1 for r in results if r['status'] == 'skipped')
 
         print("\n" + "="*80)
-        print("PHASE 1 REGRESSION TEST SUMMARY")
+        print("PHASE 1 REGRESSION TEST SUMMARY (V2)")
         print("="*80)
         print(f"✅ Passed: {passed}")
         print(f"❌ Failed: {failed}")
@@ -367,7 +311,7 @@ class Phase1RegressionTester:
         print()
 
         # Save results
-        output_file = "phase1_regression_results.json"
+        output_file = "phase1_regression_results_v2.json"
         output = {
             'timestamp': datetime.now().isoformat(),
             'test_accounts': test_accounts,
@@ -394,6 +338,10 @@ class Phase1RegressionTester:
         elif errors > 0:
             print("⚠️  REGRESSION TESTS HAD ERRORS")
             print("   Some tests could not complete")
+            return 1
+        elif skipped == len(results):
+            print("⏭️  ALL TESTS SKIPPED")
+            print("   No historical simulation data available")
             return 1
         else:
             print("✅ ALL REGRESSION TESTS PASSED")

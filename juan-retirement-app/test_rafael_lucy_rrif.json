@@ -1,0 +1,41 @@
+{
+  "p1": {
+    "name": "Rafael",
+    "start_age": 65,
+    "tfsa_balance": 95000,
+    "rrif_balance": 300000,
+    "rrsp_balance": 0,
+    "nonreg_balance": 200000,
+    "corporate_balance": 500000,
+    "cpp_annual_at_start": 10000,
+    "cpp_start_age": 65,
+    "oas_annual_at_start": 7000,
+    "oas_start_age": 65
+  },
+  "p2": {
+    "name": "Lucy",
+    "start_age": 63,
+    "tfsa_balance": 95000,
+    "rrif_balance": 300000,
+    "rrsp_balance": 0,
+    "nonreg_balance": 200000,
+    "corporate_balance": 500000,
+    "cpp_annual_at_start": 10000,
+    "cpp_start_age": 65,
+    "oas_annual_at_start": 7000,
+    "oas_start_age": 65
+  },
+  "household": {
+    "province": "ON",
+    "start_year": 2026,
+    "end_age": 95,
+    "spending_go_go": 180000,
+    "spending_slow_go": 180000,
+    "spending_no_go": 180000,
+    "go_go_end_age": 75,
+    "slow_go_end_age": 85,
+    "general_inflation": 0.02,
+    "spending_inflation": 0.02,
+    "strategy": "rrif-frontload"
+  }
+}

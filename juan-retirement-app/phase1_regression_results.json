@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-05T09:15:45.643722",
+  "timestamp": "2026-02-05T09:21:45.382386",
   "test_accounts": [
     "test@example.com",
     "claire.conservative@test.com",
@@ -10,41 +10,101 @@
   ],
   "summary": {
     "passed": 0,
-    "failed": 0,
-    "errors": 6,
+    "failed": 6,
+    "errors": 0,
     "skipped": 0,
     "total": 6
   },
   "results": [
     {
       "email": "test@example.com",
-      "status": "error",
-      "reason": "'tfsa_p1'"
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.0,
+        "total_tax": 8928.579857896577,
+        "total_benefits": 900347.3465678345,
+        "final_estate": 517299.9691551106
+      },
+      "comparison": {
+        "has_baseline": false,
+        "passed": null,
+        "notes": "No baseline output data"
+      }
     },
     {
       "email": "claire.conservative@test.com",
-      "status": "error",
-      "reason": "'tfsa_p1'"
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.0,
+        "total_tax": 390080.23070577555,
+        "total_benefits": 0.0,
+        "final_estate": 0.0
+      },
+      "comparison": {
+        "has_baseline": false,
+        "passed": null,
+        "notes": "No baseline simulations found"
+      }
     },
     {
       "email": "alex.aggressive@test.com",
-      "status": "error",
-      "reason": "'tfsa_p1'"
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.0,
+        "total_tax": 899973.2177940188,
+        "total_benefits": 0.0,
+        "final_estate": 0.0
+      },
+      "comparison": {
+        "has_baseline": false,
+        "passed": null,
+        "notes": "No baseline simulations found"
+      }
     },
     {
       "email": "mike.moderate@test.com",
-      "status": "error",
-      "reason": "'tfsa_p1'"
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.0,
+        "total_tax": 361109.63013224356,
+        "total_benefits": 0.0,
+        "final_estate": 0.0
+      },
+      "comparison": {
+        "has_baseline": false,
+        "passed": null,
+        "notes": "No baseline simulations found"
+      }
     },
     {
       "email": "sarah.struggling@test.com",
-      "status": "error",
-      "reason": "'tfsa_p1'"
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.0,
+        "total_tax": 61577.050039743684,
+        "total_benefits": 0.0,
+        "final_estate": 0.0
+      },
+      "comparison": {
+        "has_baseline": false,
+        "passed": null,
+        "notes": "No baseline simulations found"
+      }
     },
     {
       "email": "helen.highincome@test.com",
-      "status": "error",
-      "reason": "'tfsa_p1'"
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.0,
+        "total_tax": 1872464.233174832,
+        "total_benefits": 0.0,
+        "final_estate": 0.0
+      },
+      "comparison": {
+        "has_baseline": false,
+        "passed": null,
+        "notes": "No baseline simulations found"
+      }
     }
   ]
 }

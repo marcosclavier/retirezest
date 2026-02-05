@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-02-05T09:24:21.524102",
+  "test_accounts": [
+    "test@example.com",
+    "claire.conservative@test.com",
+    "alex.aggressive@test.com",
+    "mike.moderate@test.com",
+    "sarah.struggling@test.com",
+    "helen.highincome@test.com"
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 5,
+    "total": 6
+  },
+  "results": [
+    {
+      "email": "test@example.com",
+      "status": "fail",
+      "current_results": {
+        "success_rate": 0.3548387096774194,
+        "total_tax": 5.4512427144952e+30,
+        "total_benefits": "-3931419261036820616",
+        "final_estate": 1.7416067096325812e+31
+      },
+      "comparison": {
+        "passed": false,
+        "baseline_success_rate": 1,
+        "current_success_rate": 0.3548387096774194,
+        "success_rate_diff": 0.6451612903225806,
+        "notes": "Success rate changed: 100.0% \u2192 35.5%"
+      }
+    },
+    {
+      "email": "claire.conservative@test.com",
+      "status": "skipped",
+      "reason": "No historical simulations found"
+    },
+    {
+      "email": "alex.aggressive@test.com",
+      "status": "skipped",
+      "reason": "No historical simulations found"
+    },
+    {
+      "email": "mike.moderate@test.com",
+      "status": "skipped",
+      "reason": "No historical simulations found"
+    },
+    {
+      "email": "sarah.struggling@test.com",
+      "status": "skipped",
+      "reason": "No historical simulations found"
+    },
+    {
+      "email": "helen.highincome@test.com",
+      "status": "skipped",
+      "reason": "No historical simulations found"
+    }
+  ]
+}
