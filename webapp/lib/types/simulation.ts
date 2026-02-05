@@ -476,6 +476,22 @@ export interface StrategyInsights {
   data_sources?: string[];
 }
 
+// US-044: Auto-optimization result (when strategy is automatically switched)
+export interface OptimizationResult {
+  optimized: boolean;
+  original_strategy: string;
+  optimized_strategy: string;
+  optimization_reason: string;
+  original_success_rate: number;
+  optimized_success_rate: number;
+  tax_increase_pct: number;
+  tax_increase_amount: number;
+  benefits_change_pct: number;
+  estate_change_pct: number;
+  score_improvement: number;
+  gaps_eliminated: number;
+}
+
 export interface SimulationResponse {
   success: boolean;
   message: string;
@@ -495,6 +511,9 @@ export interface SimulationResponse {
 
   // AI-powered strategy insights (for minimize-income strategy)
   strategy_insights?: StrategyInsights;
+
+  // US-044: Auto-optimization result (if strategy was automatically switched)
+  optimization_result?: OptimizationResult;
 
   warnings: string[];
   error?: string;

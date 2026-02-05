@@ -386,6 +386,9 @@ class SimulationResponse(BaseModel):
     # AI-powered strategy insights
     strategy_insights: StrategyInsights | None = Field(default=None, description="AI-powered insights for minimize-income strategy")
 
+    # US-044: Auto-optimization result
+    optimization_result: dict[str, Any] | None = Field(default=None, description="Strategy auto-optimization details (if switched)")
+
     warnings: list[str] = Field(default_factory=list)
     error: str | None = None
     error_details: str | None = None

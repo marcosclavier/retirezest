@@ -152,6 +152,40 @@ async def run_simulation(
 
         logger.info(f"✅ Simulation complete: {len(df)} years simulated")
 
+        # US-044: Auto-optimize strategy if funding gaps exist
+        optimization_result = None
+        original_strategy = household.strategy
+
+        # Check if we should attempt auto-optimization
+        # Only optimize if there are funding gaps
+        logger.info(f"🔍 Checking for optimization: plan_success in columns={('plan_success' in df.columns)}")
+        if 'plan_success' in df.columns:
+            has_gaps = not df['plan_success'].all()
+            logger.info(f"🔍 Has funding gaps: {has_gaps} (success_rate={df['plan_success'].sum()}/{len(df)})")
+
+        if 'plan_success' in df.columns and not df['plan_success'].all():
+            from modules.strategy_optimizer import find_best_alternative_strategy
+
+            logger.info("🔍 Funding gaps detected - evaluating alternative strategies")
+
+            optimization_result = find_best_alternative_strategy(
+                household=household_input,  # Use original input (not modified household)
+                tax_cfg=tax_cfg,
+                original_df=df,
+                original_strategy=original_strategy,
+                simulate_func=lambda h, t: simulate(api_household_to_internal(h, t), t)
+            )
+
+            # If optimization found better strategy, prepare suggestion
+            # (Don't auto-switch - let user decide)
+            if optimization_result:
+                logger.info(
+                    f"💡 Suggestion: Switch from '{original_strategy}' to "
+                    f"'{optimization_result['optimized_strategy']}'"
+                )
+                # Keep optimization_result in response for UI to display
+                # User can re-run with suggested strategy if they want
+
         # Convert results to API models
         logger.debug("Converting results to API format")
         year_by_year = dataframe_to_year_results(df)
@@ -305,6 +339,7 @@ async def run_simulation(
             key_assumptions=key_assumptions,
             chart_data=chart_data,
             strategy_insights=strategy_insights,
+            optimization_result=optimization_result,
             warnings=warnings
         )
 

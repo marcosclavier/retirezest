@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw, Mail, CheckCircle, ArrowDown, X } from 'lucide-react';
+import { Loader2, AlertCircle, Play, UserPlus, UserMinus, RefreshCw, Mail, CheckCircle, ArrowDown, X, Lightbulb } from 'lucide-react';
 import { runSimulation, healthCheck } from '@/lib/api/simulation-client';
 import {
   defaultHouseholdInput,
@@ -16,6 +16,8 @@ import {
   type HouseholdInput,
   type PersonInput,
   type SimulationResponse,
+  type OptimizationResult,
+  getStrategyDisplayName,
 } from '@/lib/types/simulation';
 import { PersonForm } from '@/components/simulation/PersonForm';
 import { HouseholdForm } from '@/components/simulation/HouseholdForm';
@@ -32,6 +34,7 @@ import { PostSimulationFeedbackModal } from '@/components/feedback/PostSimulatio
 import { StaleDataAlert } from '@/components/simulation/StaleDataAlert';
 import { LowSuccessRateWarning } from '@/components/modals/LowSuccessRateWarning';
 import { analyzeFailureReasons, type FailureAnalysis } from '@/lib/analysis/failureReasons';
+import { OptimizationSuggestion } from '@/components/OptimizationSuggestion';
 
 // Dynamically import chart components to reduce initial bundle size
 const PortfolioChart = dynamic(() => import('@/components/simulation/PortfolioChart').then(mod => ({ default: mod.PortfolioChart })), {
@@ -101,6 +104,7 @@ export default function SimulationPage() {
   const [lastSimulationLoad] = useState<Date | null>(null);
   const [failureAnalysis, setFailureAnalysis] = useState<FailureAnalysis | null>(null);
   const [showLowSuccessWarning, setShowLowSuccessWarning] = useState(false);
+  const [showOptimizationSuggestion, setShowOptimizationSuggestion] = useState(true);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -765,6 +769,29 @@ export default function SimulationPage() {
     setShowUpgradeModal(true);
   };
 
+  // Optimization suggestion handlers
+  const handleAcceptOptimization = () => {
+    if (result?.optimization_result) {
+      console.log('✨ User accepted optimization suggestion');
+      // Update household strategy to the suggested one
+      setHousehold(prev => ({
+        ...prev,
+        strategy: result.optimization_result!.optimized_strategy
+      }));
+      // Hide the suggestion
+      setShowOptimizationSuggestion(false);
+      // Auto-run simulation with new strategy
+      setTimeout(() => {
+        handleRunSimulation();
+      }, 100);
+    }
+  };
+
+  const handleDismissOptimization = () => {
+    console.log('❌ User dismissed optimization suggestion');
+    setShowOptimizationSuggestion(false);
+  };
+
   const handleRunSimulation = async () => {
     console.log('🎯 RUN SIMULATION BUTTON CLICKED');
     console.log('🔍 Button state - isLoading:', isLoading, 'prefillLoading:', prefillLoading, 'apiHealthy:', apiHealthy);
@@ -803,6 +830,9 @@ export default function SimulationPage() {
       }
 
       setResult(response);
+
+      // Show optimization suggestion for new simulations
+      setShowOptimizationSuggestion(true);
 
       // Update free simulations remaining count if present in response
       if (response.freeSimulationsRemaining !== undefined) {
@@ -1572,6 +1602,15 @@ export default function SimulationPage() {
 
           {result ? (
             <>
+              {/* US-044: Strategy Optimization Suggestion */}
+              {result.optimization_result && result.optimization_result.optimized && showOptimizationSuggestion && (
+                <OptimizationSuggestion
+                  optimization={result.optimization_result}
+                  onAccept={handleAcceptOptimization}
+                  onDismiss={handleDismissOptimization}
+                />
+              )}
+
               {/* Health Score Card - Prominent Position */}
               {result.success && result.summary && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
