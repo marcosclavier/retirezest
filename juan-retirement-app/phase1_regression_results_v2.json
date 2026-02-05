@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-05T09:24:21.524102",
+  "timestamp": "2026-02-05T10:57:12.670727",
   "test_accounts": [
     "test@example.com",
     "claire.conservative@test.com",
@@ -9,8 +9,8 @@
     "helen.highincome@test.com"
   ],
   "summary": {
-    "passed": 0,
-    "failed": 1,
+    "passed": 1,
+    "failed": 0,
     "errors": 0,
     "skipped": 5,
     "total": 6
@@ -18,19 +18,19 @@
   "results": [
     {
       "email": "test@example.com",
-      "status": "fail",
+      "status": "pass",
       "current_results": {
-        "success_rate": 0.3548387096774194,
-        "total_tax": 5.4512427144952e+30,
-        "total_benefits": "-3931419261036820616",
-        "final_estate": 1.7416067096325812e+31
+        "success_rate": 0.967741935483871,
+        "total_tax": 2341257.4247637596,
+        "total_benefits": 1991833.7170957397,
+        "final_estate": 2161870.323334176
       },
       "comparison": {
-        "passed": false,
+        "passed": true,
         "baseline_success_rate": 1,
-        "current_success_rate": 0.3548387096774194,
-        "success_rate_diff": 0.6451612903225806,
-        "notes": "Success rate changed: 100.0% \u2192 35.5%"
+        "current_success_rate": 0.967741935483871,
+        "success_rate_diff": 0.032258064516129004,
+        "notes": "Success rate matches baseline"
       }
     },
     {
