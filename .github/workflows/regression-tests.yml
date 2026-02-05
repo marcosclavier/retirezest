@@ -1,0 +1,177 @@
+name: Regression Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'juan-retirement-app/modules/**'
+      - 'juan-retirement-app/test_regression_phase1_v2.py'
+      - 'juan-retirement-app/baselines/**'
+      - 'juan-retirement-app/requirements.txt'
+  push:
+    branches:
+      - main
+    paths:
+      - 'juan-retirement-app/modules/**'
+      - 'juan-retirement-app/test_regression_phase1_v2.py'
+      - 'juan-retirement-app/baselines/**'
+      - 'juan-retirement-app/requirements.txt'
+  workflow_dispatch:
+
+jobs:
+  regression-tests:
+    name: Run Regression Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: juan-retirement-app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify baseline files exist
+        run: |
+          echo "Checking for baseline files..."
+          ls -lh baselines/
+          echo ""
+          echo "Baseline files found:"
+          find baselines/ -name "baseline_*.json" -exec basename {} \;
+
+      - name: Run regression tests
+        id: regression
+        run: |
+          echo "Running regression tests..."
+          python3 test_regression_phase1_v2.py
+        continue-on-error: true
+
+      - name: Check regression test results
+        run: |
+          if [ -f phase1_regression_results_v2.json ]; then
+            echo "Regression test results:"
+            cat phase1_regression_results_v2.json
+
+            # Extract summary
+            PASSED=$(python3 -c "import json; data = json.load(open('phase1_regression_results_v2.json')); print(data['summary']['passed'])")
+            FAILED=$(python3 -c "import json; data = json.load(open('phase1_regression_results_v2.json')); print(data['summary']['failed'])")
+            ERRORS=$(python3 -c "import json; data = json.load(open('phase1_regression_results_v2.json')); print(data['summary']['errors'])")
+            SKIPPED=$(python3 -c "import json; data = json.load(open('phase1_regression_results_v2.json')); print(data['summary']['skipped'])")
+            TOTAL=$(python3 -c "import json; data = json.load(open('phase1_regression_results_v2.json')); print(data['summary']['total'])")
+
+            echo ""
+            echo "=========================================="
+            echo "REGRESSION TEST SUMMARY"
+            echo "=========================================="
+            echo "✅ Passed:  $PASSED"
+            echo "❌ Failed:  $FAILED"
+            echo "⚠️  Errors:  $ERRORS"
+            echo "⏭️  Skipped: $SKIPPED"
+            echo "📊 Total:   $TOTAL"
+            echo "=========================================="
+            echo ""
+
+            # Exit with error if any tests failed or had errors
+            if [ "$FAILED" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+              echo "❌ REGRESSION TESTS FAILED"
+              echo ""
+              echo "Some regression tests failed or encountered errors."
+              echo "Please review the test output above for details."
+              exit 1
+            else
+              echo "✅ ALL REGRESSION TESTS PASSED"
+              echo ""
+              echo "No regressions detected. All tests passed or were skipped (baseline not yet established)."
+              exit 0
+            fi
+          else
+            echo "❌ ERROR: Regression test results file not found"
+            echo "The test script may have failed to run or produce results."
+            exit 1
+          fi
+
+      - name: Upload regression test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-test-results
+          path: |
+            juan-retirement-app/phase1_regression_results_v2.json
+            juan-retirement-app/phase1_regression_output_*.txt
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'juan-retirement-app/phase1_regression_results_v2.json';
+
+            if (!fs.existsSync(path)) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '❌ **Regression Tests Failed**\n\nRegression test results file was not generated. The test script may have encountered an error.'
+              });
+              return;
+            }
+
+            const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const summary = results.summary;
+
+            let emoji = '✅';
+            let status = 'PASSED';
+            if (summary.failed > 0 || summary.errors > 0) {
+              emoji = '❌';
+              status = 'FAILED';
+            }
+
+            let body = `${emoji} **Regression Tests ${status}**\n\n`;
+            body += '| Metric | Count |\n';
+            body += '|--------|-------|\n';
+            body += `| ✅ Passed | ${summary.passed} |\n`;
+            body += `| ❌ Failed | ${summary.failed} |\n`;
+            body += `| ⚠️ Errors | ${summary.errors} |\n`;
+            body += `| ⏭️ Skipped | ${summary.skipped} |\n`;
+            body += `| 📊 Total | ${summary.total} |\n\n`;
+
+            if (summary.failed > 0 || summary.errors > 0) {
+              body += '### ❌ Failed Tests\n\n';
+              results.results.forEach(result => {
+                if (result.status === 'fail' || result.status === 'error') {
+                  body += `- **${result.email}**: ${result.status}\n`;
+                  if (result.comparison) {
+                    body += `  - Baseline success rate: ${(result.comparison.baseline_success_rate * 100).toFixed(1)}%\n`;
+                    body += `  - Current success rate: ${(result.comparison.current_success_rate * 100).toFixed(1)}%\n`;
+                    body += `  - Difference: ${(Math.abs(result.comparison.success_rate_diff) * 100).toFixed(1)}%\n`;
+                  }
+                }
+              });
+            } else {
+              body += '✅ All regression tests passed! No regressions detected.\n';
+            }
+
+            body += '\n---\n';
+            body += `*Regression tests run on ${results.timestamp}*`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
