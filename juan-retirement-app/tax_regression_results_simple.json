@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-02-05T08:59:50.594573",
+  "summary": {
+    "passed": 3,
+    "failed": 4,
+    "total": 7
+  },
+  "results": [
+    {
+      "test_name": "Employment Income (Age 64, $100K)",
+      "expected_tax": 21500,
+      "actual_tax": 21525.9015,
+      "variance_pct": 0.12047209302325555,
+      "tolerance_pct": 8,
+      "passed": true,
+      "timestamp": "2026-02-05T08:59:50.594347"
+    },
+    {
+      "test_name": "RRIF + CPP + OAS (Age 71)",
+      "expected_tax": 9000,
+      "actual_tax": 12625.238,
+      "variance_pct": 40.28042222222222,
+      "tolerance_pct": 10,
+      "passed": false,
+      "timestamp": "2026-02-05T08:59:50.594378"
+    },
+    {
+      "test_name": "Capital Gains (50% Inclusion)",
+      "expected_tax": 6000,
+      "actual_tax": 6252.9865,
+      "variance_pct": 4.216441666666666,
+      "tolerance_pct": 12,
+      "passed": true,
+      "timestamp": "2026-02-05T08:59:50.594400"
+    },
+    {
+      "test_name": "Eligible Dividends",
+      "expected_tax": 5000,
+      "actual_tax": 7883.552999999999,
+      "variance_pct": 57.671059999999976,
+      "tolerance_pct": 15,
+      "passed": false,
+      "timestamp": "2026-02-05T08:59:50.594417"
+    },
+    {
+      "test_name": "High Income with OAS Clawback",
+      "expected_tax": 30000,
+      "actual_tax": 46758.2171,
+      "variance_pct": 55.860723666666665,
+      "tolerance_pct": 10,
+      "passed": false,
+      "timestamp": "2026-02-05T08:59:50.594465"
+    },
+    {
+      "test_name": "Multiple Income Types",
+      "expected_tax": 17000,
+      "actual_tax": 22914.715,
+      "variance_pct": 34.79244117647059,
+      "tolerance_pct": 10,
+      "passed": false,
+      "timestamp": "2026-02-05T08:59:50.594482"
+    }
+  ]
+}
