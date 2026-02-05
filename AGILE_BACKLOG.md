@@ -1719,3 +1719,161 @@ Track velocity over sprints to improve estimation accuracy.
 **Document Version**: 1.0
 **Created**: January 29, 2026
 **Next Review**: February 5, 2026
+
+---
+
+## 🔴 CRITICAL: Regression Testing Findings (February 5, 2026)
+
+### Sprint 8 Day 2 - Regression Testing Complete
+
+**Status**: ✅ Test infrastructure working (0 errors)  
+**Critical Finding**: ❌ **MAJOR REGRESSION DETECTED**
+
+### Test Results Summary
+
+| Metric | Count |
+|--------|-------|
+| **Tests Run** | 1 |
+| **Tests Passed** | 0 |
+| **Tests Failed** | 1 (CRITICAL) |
+| **Errors** | 0 (down from 6) |
+| **Skipped** | 5 (no baseline data) |
+
+### Critical Regression: test@example.com
+
+**Impact**: MAJOR - 64.5% drop in success rate
+- **Baseline** (Jan 15, 2026): 100.0% success rate
+- **Current** (Feb 5, 2026): 35.5% success rate
+- **Regression**: 20 failed years out of 31 total
+
+**Symptoms**:
+- Exponential growth bug detected
+- Final estate: $1.74 × 10³¹ (17 quintillion dollars - impossible)
+- Total tax: $5.45 × 10³⁰ (impossible values)
+- Non-registered income components growing exponentially each year
+- GIS_NET_INCOME values reaching absurd levels
+
+**Root Cause Hypothesis**:
+- Non-registered account reinvestment logic compounding incorrectly
+- Investment returns being applied multiple times per year
+- Distribution/reinvestment loop causing exponential growth
+- Issue likely introduced between Jan 15 - Feb 5, 2026
+
+**Affected Code**:
+- `juan-retirement-app/modules/simulation.py` - Non-registered account logic
+- Likely: reinvestment, rebalancing, or distribution calculations
+
+### New User Stories Created
+
+#### US-077: Fix Exponential Growth Bug in Non-Registered Accounts
+**Priority**: P0 🔴 **CRITICAL - BLOCKS PRODUCTION**  
+**Story Points**: 5  
+**Epic**: Epic 6: Quality
+
+**As a** user with non-registered investment accounts  
+**I want** accurate simulation results without exponential value growth  
+**So that** I can trust the retirement projections
+
+**Acceptance Criteria**:
+- ✅ test@example.com regression test shows 100% success rate (matches Jan 15 baseline)
+- ✅ Final estate values are realistic (< $10M for test account)
+- ✅ Tax calculations produce reasonable values
+- ✅ Non-registered income growth follows expected 4-6% annual returns
+- ✅ All 6 regression tests pass (when baselines are generated)
+- ✅ Code changes documented and reviewed
+
+**Investigation Steps**:
+1. Compare simulation.py changes: Jan 15 vs Feb 5, 2026
+2. Review non-registered account reinvestment logic
+3. Check investment return application (should be once per year)
+4. Verify distribution calculations aren't compounding
+5. Add debug logging for non-registered account balance tracking
+
+**Technical Details**:
+- Location: `juan-retirement-app/modules/simulation.py`
+- Suspect functions: reinvestment, rebalancing, nr_invest calculations
+- Baseline comparison file: `baselines/baseline_test_example_com_1770308061217.json`
+- Test script: `test_regression_phase1_v2.py`
+
+#### US-078: Expand Regression Test Coverage
+**Priority**: P1 🟡 **HIGH**  
+**Story Points**: 3  
+**Epic**: Epic 6: Quality
+
+**As a** development team  
+**I want** comprehensive regression test coverage across all test accounts  
+**So that** we can detect regressions before they reach production
+
+**Acceptance Criteria**:
+- ✅ Run simulations for 5 remaining test accounts to establish baselines
+- ✅ All 6 test accounts have historical simulation data
+- ✅ Regression tests run automatically in CI/CD pipeline
+- ✅ Test coverage includes: single, couples, various strategies, edge cases
+- ✅ Documentation updated with how to run regression tests
+
+**Test Accounts Needing Baselines**:
+1. claire.conservative@test.com - Conservative strategy
+2. alex.aggressive@test.com - Aggressive strategy
+3. mike.moderate@test.com - Moderate strategy
+4. sarah.struggling@test.com - Insufficient assets scenario
+5. helen.highincome@test.com - High-income tax optimization
+
+**Implementation**:
+- Run each account through webapp simulation UI
+- Verify results look reasonable
+- Extract baseline data automatically
+- Add to regression test suite
+
+#### US-079: Add CI/CD Regression Testing
+**Priority**: P2 🟢 **MEDIUM**  
+**Story Points**: 2  
+**Epic**: Epic 6: Quality
+
+**As a** development team  
+**I want** automated regression tests running on every PR  
+**So that** we catch regressions before merging code
+
+**Acceptance Criteria**:
+- ✅ Regression tests run automatically on GitHub PRs
+- ✅ PRs blocked if regression tests fail
+- ✅ Test results displayed in PR checks
+- ✅ Baseline data versioned in repository
+- ✅ CI/CD configuration documented
+
+**Implementation**:
+```yaml
+# .github/workflows/regression-tests.yml
+name: Regression Tests
+on: [pull_request]
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run regression tests
+        run: |
+          cd juan-retirement-app
+          python3 test_regression_phase1_v2.py
+```
+
+### Regression Testing Infrastructure ✅ COMPLETE
+
+**Achievements**:
+- ✅ Test framework working with 0 technical errors
+- ✅ Baseline extraction from production database (6 users, 55KB)
+- ✅ InputData-based testing (uses exact historical inputs)
+- ✅ Automated comparison logic (±5% tolerance)
+- ✅ Comprehensive error reporting
+- ✅ Successfully detected major regression
+
+**Files Created**:
+- `test_regression_phase1_v2.py` (297 lines) - Working test script
+- `REGRESSION_TESTING_COMPLETE.md` - Full report
+- `phase1_regression_results_v2.json` - Test results
+- `baselines/` - 6 user baseline files (55KB)
+
+**Technical Fixes**:
+1. DataFrame column names (`end_tfsa_p1` vs `tfsa_p1`)
+2. Success rate calculation (counting True vs False)
+3. InputData legacy field transformation (`employer_pension_annual`)
+
