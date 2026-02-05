@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-02-05T09:15:45.643722",
+  "test_accounts": [
+    "test@example.com",
+    "claire.conservative@test.com",
+    "alex.aggressive@test.com",
+    "mike.moderate@test.com",
+    "sarah.struggling@test.com",
+    "helen.highincome@test.com"
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 0,
+    "errors": 6,
+    "skipped": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "email": "test@example.com",
+      "status": "error",
+      "reason": "'tfsa_p1'"
+    },
+    {
+      "email": "claire.conservative@test.com",
+      "status": "error",
+      "reason": "'tfsa_p1'"
+    },
+    {
+      "email": "alex.aggressive@test.com",
+      "status": "error",
+      "reason": "'tfsa_p1'"
+    },
+    {
+      "email": "mike.moderate@test.com",
+      "status": "error",
+      "reason": "'tfsa_p1'"
+    },
+    {
+      "email": "sarah.struggling@test.com",
+      "status": "error",
+      "reason": "'tfsa_p1'"
+    },
+    {
+      "email": "helen.highincome@test.com",
+      "status": "error",
+      "reason": "'tfsa_p1'"
+    }
+  ]
+}
