@@ -227,6 +227,43 @@ Use conventional commits:
 
 ## Key Concepts
 
+### 0. Data Format Conventions ⚠️ CRITICAL
+
+**IMPORTANT**: Before working with percentage fields (yields, inflation rates), read:
+- **DATA_FORMAT_CONVENTIONS.md** - Comprehensive guide to percentage vs decimal handling
+
+**Quick Reference**:
+- **Internal Python Code**: ALWAYS use decimals (0.06 = 6%)
+- **Database Storage**: May be percentage (6) or decimal (0.06)
+- **Conversion Pattern**: `value = value_raw / 100.0 if value_raw > 1.0 else value_raw`
+
+**Why This Matters**:
+A critical bug (US-077, Feb 2026) caused exponential growth when yield fields stored as percentages (6) were treated as decimals (600% growth!). This dropped success rates from 100% → 35.5%. See DATA_FORMAT_CONVENTIONS.md for full details.
+
+**Fields That Require Conversion**:
+- `y_nr_inv_total_return`, `y_nr_cash_interest`, `y_nr_gic_interest`
+- `y_nr_inv_elig_div`, `y_nr_inv_nonelig_div`, `y_nr_inv_capg`
+- `corp_yield_interest`, `corp_yield_elig_div`, `corp_yield_capg`
+- `general_inflation`, `spending_inflation`
+
+**Example**:
+```python
+# ✅ CORRECT - Safe for both formats
+yield_raw = float(getattr(person, "y_nr_inv_total_return", 0.06))
+yield_decimal = yield_raw / 100.0 if yield_raw > 1.0 else yield_raw
+balance_next_year = balance * (1 + yield_decimal)
+
+# ❌ WRONG - Assumes decimal format
+yield = float(getattr(person, "y_nr_inv_total_return", 0.06))
+balance_next_year = balance * (1 + yield)  # Breaks if stored as 6!
+```
+
+**Related Documentation**:
+- DATA_FORMAT_CONVENTIONS.md - Complete conventions guide
+- ROOT_CAUSE_ANALYSIS_EXPONENTIAL_GROWTH.md - US-077 bug analysis
+
+---
+
 ### 1. Simulation Engine (`modules/simulation.py`)
 
 The heart of the application. Key functions:
@@ -809,6 +846,12 @@ app.add_middleware(
 - **API Converters:** `api/utils/converters.py`
 - **Frontend Simulation Page:** `webapp/app/simulation/page.tsx`
 - **Results Dashboard:** `webapp/components/simulation/ResultsDashboard.tsx`
+
+### Critical Documentation
+
+- **DATA_FORMAT_CONVENTIONS.md** - ⚠️ Required reading for percentage/decimal handling
+- **ROOT_CAUSE_ANALYSIS_EXPONENTIAL_GROWTH.md** - US-077 bug analysis (Feb 2026)
+- **US-077_BUG_FIX_COMPLETE.md** - Bug fix implementation details
 
 ---
 

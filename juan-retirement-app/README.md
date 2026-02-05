@@ -218,7 +218,13 @@ Start with these documents in order:
    - Troubleshooting common issues
    - Code style guide
 
-3. **ARCHITECTURE.md** - Technical architecture documentation:
+3. **DATA_FORMAT_CONVENTIONS.md** - ⚠️ **CRITICAL** - Data format standards:
+   - Percentage vs decimal handling (required reading before touching yield/inflation fields)
+   - Historical context of US-077 exponential growth bug
+   - Conversion patterns and best practices
+   - Testing guidelines and common pitfalls
+
+4. **ARCHITECTURE.md** - Technical architecture documentation:
    - System architecture and data flow
    - Frontend and backend architecture
    - Core simulation engine walkthrough
@@ -231,6 +237,9 @@ Start with these documents in order:
 - **API Documentation**: http://localhost:8000/docs (when backend is running)
 - **Tax Config**: `tax_config_canada_2025.json` - Canadian tax brackets and rates
 - **Test Files**: `test_*.py` files demonstrate common scenarios
+- **Bug Fix Documentation**:
+  - `ROOT_CAUSE_ANALYSIS_EXPONENTIAL_GROWTH.md` - US-077 root cause analysis
+  - `US-077_BUG_FIX_COMPLETE.md` - Complete bug fix implementation
 
 ---
 
