@@ -104,6 +104,15 @@ class Phase1RegressionTester:
 
             # Create Household - remove p1/p2 from input_data dict
             household_data = {k: v for k, v in input_data.items() if k not in ['p1', 'p2']}
+
+            # CRITICAL FIX (US-077): Convert percentage fields to decimals
+            # Inflation rates may be stored as whole numbers (2 = 2%) or decimals (0.02 = 2%)
+            for field in ['general_inflation', 'spending_inflation']:
+                if field in household_data:
+                    value = float(household_data[field])
+                    if value > 1.0:
+                        household_data[field] = value / 100.0
+
             household = Household(p1=p1, p2=p2, **household_data)
 
             return household

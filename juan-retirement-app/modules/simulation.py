@@ -132,11 +132,20 @@ def nonreg_distributions(person: Person) -> Dict[str, float]:
         }
     else:
         # Bucketed mode: use bucketed yield fields (y_nr_* names)
-        yield_cash_interest = float(getattr(person, "y_nr_cash_interest", 0.015))
-        yield_gic_interest = float(getattr(person, "y_nr_gic_interest", 0.035))
-        yield_elig_div = float(getattr(person, "y_nr_inv_elig_div", 0.02))
-        yield_nonelig_div = float(getattr(person, "y_nr_inv_nonelig_div", 0.00))
-        yield_capg = float(getattr(person, "y_nr_inv_capg", 0.02))
+        # CRITICAL FIX (US-077): yields may be stored as percentages (2 = 2%) or decimals (0.02 = 2%)
+        # If value > 1.0, it's a percentage and needs to be divided by 100
+        yield_cash_interest_raw = float(getattr(person, "y_nr_cash_interest", 0.015))
+        yield_gic_interest_raw = float(getattr(person, "y_nr_gic_interest", 0.035))
+        yield_elig_div_raw = float(getattr(person, "y_nr_inv_elig_div", 0.02))
+        yield_nonelig_div_raw = float(getattr(person, "y_nr_inv_nonelig_div", 0.00))
+        yield_capg_raw = float(getattr(person, "y_nr_inv_capg", 0.02))
+
+        # Convert from percentage to decimal if needed
+        yield_cash_interest = yield_cash_interest_raw / 100.0 if yield_cash_interest_raw > 1.0 else yield_cash_interest_raw
+        yield_gic_interest = yield_gic_interest_raw / 100.0 if yield_gic_interest_raw > 1.0 else yield_gic_interest_raw
+        yield_elig_div = yield_elig_div_raw / 100.0 if yield_elig_div_raw > 1.0 else yield_elig_div_raw
+        yield_nonelig_div = yield_nonelig_div_raw / 100.0 if yield_nonelig_div_raw > 1.0 else yield_nonelig_div_raw
+        yield_capg = yield_capg_raw / 100.0 if yield_capg_raw > 1.0 else yield_capg_raw
 
         # Bucketed mode: each bucket gets its own yield
         # Cash bucket at cash interest rate
@@ -183,13 +192,20 @@ def corp_passive_income(person: Person) -> Dict[str, float]:
     invest = float(getattr(person, "corp_invest_bucket", 0.0))
 
     # Try bucketed yields first, fall back to simple yields if bucketed not available
-    yield_int = float(getattr(person, "corp_yield_interest",
+    # CRITICAL FIX (US-077): yields may be stored as percentages (2 = 2%) or decimals (0.02 = 2%)
+    yield_int_raw = float(getattr(person, "corp_yield_interest",
                              getattr(person, "y_corp_cash_interest", 0.0)))
-    yield_elig = float(getattr(person, "corp_yield_elig_div",
+    yield_elig_raw = float(getattr(person, "corp_yield_elig_div",
                               getattr(person, "y_corp_inv_elig_div", 0.0)))
-    yield_nonelig = float(getattr(person, "corp_yield_nonelig_div", 0.0))
-    yield_capg = float(getattr(person, "corp_yield_capg",
+    yield_nonelig_raw = float(getattr(person, "corp_yield_nonelig_div", 0.0))
+    yield_capg_raw = float(getattr(person, "corp_yield_capg",
                               getattr(person, "y_corp_inv_capg", 0.0)))
+
+    # Convert from percentage to decimal if needed
+    yield_int = yield_int_raw / 100.0 if yield_int_raw > 1.0 else yield_int_raw
+    yield_elig = yield_elig_raw / 100.0 if yield_elig_raw > 1.0 else yield_elig_raw
+    yield_nonelig = yield_nonelig_raw / 100.0 if yield_nonelig_raw > 1.0 else yield_nonelig_raw
+    yield_capg = yield_capg_raw / 100.0 if yield_capg_raw > 1.0 else yield_capg_raw
 
     # If NOT using bucketed mode (all buckets are 0), fall back to simple corporate_balance mode
     if (cash + gic + invest) < 0.01:
@@ -197,9 +213,15 @@ def corp_passive_income(person: Person) -> Dict[str, float]:
         corp_total = float(getattr(person, "corporate_balance", 0.0))
 
         # Get simple yields (with fallbacks)
-        yield_int = float(getattr(person, "yield_corp_interest", 0.0))
-        yield_elig = float(getattr(person, "yield_corp_elig_div", 0.03))
-        yield_capg = float(getattr(person, "yield_corp_capg", 0.0))
+        # CRITICAL FIX (US-077): yields may be stored as percentages (2 = 2%) or decimals (0.02 = 2%)
+        yield_int_raw = float(getattr(person, "yield_corp_interest", 0.0))
+        yield_elig_raw = float(getattr(person, "yield_corp_elig_div", 0.03))
+        yield_capg_raw = float(getattr(person, "yield_corp_capg", 0.0))
+
+        # Convert from percentage to decimal if needed
+        yield_int = yield_int_raw / 100.0 if yield_int_raw > 1.0 else yield_int_raw
+        yield_elig = yield_elig_raw / 100.0 if yield_elig_raw > 1.0 else yield_elig_raw
+        yield_capg = yield_capg_raw / 100.0 if yield_capg_raw > 1.0 else yield_capg_raw
 
         # In simple mode, assume 70% in investment portion (for dividends/gains), 30% in cash/GIC
         cash_portion = corp_total * 0.3
@@ -2480,10 +2502,16 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p1_nr_invest_after_wd = p1.nr_invest * (1 - withdrawal_ratio_p1)
 
         # Apply bucket-specific yields from person fields (yields configured in Tab 3)
-        p1_yr_cash = float(getattr(p1, "y_nr_cash_interest", 0.0))
-        p1_yr_gic = float(getattr(p1, "y_nr_gic_interest", 0.0))
-        # Use TOTAL return on investments (not average of three separate yields)
-        p1_yr_invest = float(getattr(p1, "y_nr_inv_total_return", 0.04))
+        # CRITICAL FIX (US-077): yields may be stored as percentages (6 = 6%) or decimals (0.06 = 6%)
+        # If value > 1.0, it's a percentage and needs to be divided by 100
+        p1_yr_cash_raw = float(getattr(p1, "y_nr_cash_interest", 0.0))
+        p1_yr_gic_raw = float(getattr(p1, "y_nr_gic_interest", 0.0))
+        p1_yr_invest_raw = float(getattr(p1, "y_nr_inv_total_return", 0.04))
+
+        # Convert from percentage to decimal if needed
+        p1_yr_cash = p1_yr_cash_raw / 100.0 if p1_yr_cash_raw > 1.0 else p1_yr_cash_raw
+        p1_yr_gic = p1_yr_gic_raw / 100.0 if p1_yr_gic_raw > 1.0 else p1_yr_gic_raw
+        p1_yr_invest = p1_yr_invest_raw / 100.0 if p1_yr_invest_raw > 1.0 else p1_yr_invest_raw
 
         p1_nr_cash_new = p1_nr_cash_after_wd * (1 + p1_yr_cash)
         p1_nr_gic_new = p1_nr_gic_after_wd * (1 + p1_yr_gic)
@@ -2491,10 +2519,16 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p1_nr_invest_new = p1_nr_invest_after_wd * (1 + p1_yr_invest)
 
         # Update buckets and total balance
+        # CRITICAL FIX (US-077): DO NOT add nr_reinvest_p1 to balance
+        # The y_nr_inv_total_return field (4%) represents TOTAL return = price appreciation + distributions
+        # Adding nr_reinvest_p1 would DOUBLE-COUNT distributions, causing exponential growth
+        # Distributions are handled separately:
+        # - reinvest_nonreg_dist=True: distributions NOT available for spending, but included in total return
+        # - reinvest_nonreg_dist=False: distributions available for spending, still included in total return
         p1.nr_cash = p1_nr_cash_new
         p1.nr_gic = p1_nr_gic_new
         p1.nr_invest = p1_nr_invest_new
-        p1.nonreg_balance = max(0.0, p1_nr_cash_new + p1_nr_gic_new + p1_nr_invest_new + nr_reinvest_p1)
+        p1.nonreg_balance = max(0.0, p1_nr_cash_new + p1_nr_gic_new + p1_nr_invest_new)
 
         # Person 2 non-registered bucket growth
         if (p2.nr_cash + p2.nr_gic + p2.nr_invest) > 1e-9:
@@ -2508,10 +2542,16 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p2_nr_invest_after_wd = p2.nr_invest * (1 - withdrawal_ratio_p2)
 
         # Apply bucket-specific yields from person fields
-        p2_yr_cash = float(getattr(p2, "y_nr_cash_interest", 0.0))
-        p2_yr_gic = float(getattr(p2, "y_nr_gic_interest", 0.0))
-        # Use TOTAL return on investments (not average of three separate yields)
-        p2_yr_invest = float(getattr(p2, "y_nr_inv_total_return", 0.04))
+        # CRITICAL FIX (US-077): yields may be stored as percentages (6 = 6%) or decimals (0.06 = 6%)
+        # If value > 1.0, it's a percentage and needs to be divided by 100
+        p2_yr_cash_raw = float(getattr(p2, "y_nr_cash_interest", 0.0))
+        p2_yr_gic_raw = float(getattr(p2, "y_nr_gic_interest", 0.0))
+        p2_yr_invest_raw = float(getattr(p2, "y_nr_inv_total_return", 0.04))
+
+        # Convert from percentage to decimal if needed
+        p2_yr_cash = p2_yr_cash_raw / 100.0 if p2_yr_cash_raw > 1.0 else p2_yr_cash_raw
+        p2_yr_gic = p2_yr_gic_raw / 100.0 if p2_yr_gic_raw > 1.0 else p2_yr_gic_raw
+        p2_yr_invest = p2_yr_invest_raw / 100.0 if p2_yr_invest_raw > 1.0 else p2_yr_invest_raw
 
         p2_nr_cash_new = p2_nr_cash_after_wd * (1 + p2_yr_cash)
         p2_nr_gic_new = p2_nr_gic_after_wd * (1 + p2_yr_gic)
@@ -2519,10 +2559,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest)
 
         # Update buckets and total balance
+        # CRITICAL FIX (US-077): DO NOT add nr_reinvest_p2 to balance (same fix as Person 1)
+        # See Person 1 comment above for detailed explanation
         p2.nr_cash = p2_nr_cash_new
         p2.nr_gic = p2_nr_gic_new
         p2.nr_invest = p2_nr_invest_new
-        p2.nonreg_balance = max(0.0, p2_nr_cash_new + p2_nr_gic_new + p2_nr_invest_new + nr_reinvest_p2)
+        p2.nonreg_balance = max(0.0, p2_nr_cash_new + p2_nr_gic_new + p2_nr_invest_new)
 
         # --- Account growths this year (household by account; use same yields you configured) ---
         g_rrif_p1 = max(rrif_start1 - w1["rrif"], 0.0) * p1.yield_rrif_growth
