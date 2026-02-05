@@ -1,0 +1,1553 @@
+{
+  "timestamp": "2026-02-05T11:39:42.752743",
+  "test_accounts": [
+    "test@example.com",
+    "claire.conservative@test.com",
+    "alex.aggressive@test.com",
+    "mike.moderate@test.com",
+    "sarah.struggling@test.com",
+    "helen.highincome@test.com"
+  ],
+  "results": [
+    {
+      "email": "test@example.com",
+      "status": "fail",
+      "total_tests": 20,
+      "passed": 15,
+      "failed": 5,
+      "failed_categories": [
+        "withdrawals.rrsp_rrif_withdrawals",
+        "benefits.cpp",
+        "benefits.oas",
+        "credits.basic_personal_amount",
+        "credits.age_credit"
+      ],
+      "validations": {
+        "withdrawals": {
+          "tfsa_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "rrsp_rrif_withdrawals": {
+            "passed": false,
+            "details": [
+              "Year 2053 (Age 72): Missing RRIF minimum withdrawal (Balance: $1,429,193.53)",
+              "Year 2054 (Age 73): Missing RRIF minimum withdrawal (Balance: $1,417,667.08)",
+              "Year 2055 (Age 74): Missing RRIF minimum withdrawal (Balance: $1,404,149.63)",
+              "Year 2056 (Age 75): Missing RRIF minimum withdrawal (Balance: $1,388,549.52)",
+              "Year 2057 (Age 76): Missing RRIF minimum withdrawal (Balance: $1,370,789.98)",
+              "Year 2058 (Age 77): Missing RRIF minimum withdrawal (Balance: $1,350,522.85)",
+              "Year 2059 (Age 78): Missing RRIF minimum withdrawal (Balance: $1,327,861.07)",
+              "Year 2060 (Age 79): Missing RRIF minimum withdrawal (Balance: $1,302,512.20)",
+              "Year 2061 (Age 80): Missing RRIF minimum withdrawal (Balance: $1,274,364.92)",
+              "Year 2062 (Age 81): Missing RRIF minimum withdrawal (Balance: $1,243,346.87)",
+              "Year 2063 (Age 82): Missing RRIF minimum withdrawal (Balance: $1,209,167.27)",
+              "Year 2064 (Age 83): Missing RRIF minimum withdrawal (Balance: $1,171,737.50)",
+              "Year 2065 (Age 84): Missing RRIF minimum withdrawal (Balance: $1,130,914.16)",
+              "Year 2066 (Age 85): Missing RRIF minimum withdrawal (Balance: $1,086,407.03)",
+              "Year 2067 (Age 86): Missing RRIF minimum withdrawal (Balance: $1,038,175.99)",
+              "Year 2068 (Age 87): Missing RRIF minimum withdrawal (Balance: $985,981.70)",
+              "Year 2069 (Age 88): Missing RRIF minimum withdrawal (Balance: $929,578.61)",
+              "Year 2070 (Age 89): Missing RRIF minimum withdrawal (Balance: $868,788.82)",
+              "Year 2071 (Age 90): Missing RRIF minimum withdrawal (Balance: $803,490.65)",
+              "Year 2072 (Age 91): Missing RRIF minimum withdrawal (Balance: $733,482.51)",
+              "Year 2073 (Age 92): Missing RRIF minimum withdrawal (Balance: $658,560.94)",
+              "Year 2074 (Age 93): Missing RRIF minimum withdrawal (Balance: $578,499.69)",
+              "Year 2075 (Age 94): Missing RRIF minimum withdrawal (Balance: $493,289.58)",
+              "Year 2076 (Age 95): Missing RRIF minimum withdrawal (Balance: $414,363.24)"
+            ]
+          },
+          "nonreg_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "total_withdrawals": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "benefits": {
+          "cpp": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 71): CPP exceeds maximum ($20,081.02)",
+              "Year 2053 (Age 72): CPP exceeds maximum ($20,482.64)",
+              "Year 2054 (Age 73): CPP exceeds maximum ($20,892.29)",
+              "Year 2055 (Age 74): CPP exceeds maximum ($21,310.14)",
+              "Year 2056 (Age 75): CPP exceeds maximum ($21,736.34)",
+              "Year 2057 (Age 76): CPP exceeds maximum ($22,171.07)",
+              "Year 2058 (Age 77): CPP exceeds maximum ($22,614.49)",
+              "Year 2059 (Age 78): CPP exceeds maximum ($23,066.78)",
+              "Year 2060 (Age 79): CPP exceeds maximum ($23,528.11)",
+              "Year 2061 (Age 80): CPP exceeds maximum ($23,998.67)",
+              "Year 2062 (Age 81): CPP exceeds maximum ($24,478.65)",
+              "Year 2063 (Age 82): CPP exceeds maximum ($24,968.22)",
+              "Year 2064 (Age 83): CPP exceeds maximum ($25,467.59)",
+              "Year 2065 (Age 84): CPP exceeds maximum ($25,976.94)",
+              "Year 2066 (Age 85): CPP exceeds maximum ($26,496.48)",
+              "Year 2067 (Age 86): CPP exceeds maximum ($27,026.41)",
+              "Year 2068 (Age 87): CPP exceeds maximum ($27,566.93)",
+              "Year 2069 (Age 88): CPP exceeds maximum ($28,118.27)",
+              "Year 2070 (Age 89): CPP exceeds maximum ($28,680.64)",
+              "Year 2071 (Age 90): CPP exceeds maximum ($29,254.25)",
+              "Year 2072 (Age 91): CPP exceeds maximum ($29,839.34)",
+              "Year 2073 (Age 92): CPP exceeds maximum ($30,436.12)",
+              "Year 2074 (Age 93): CPP exceeds maximum ($31,044.84)",
+              "Year 2075 (Age 94): CPP exceeds maximum ($31,665.74)",
+              "Year 2076 (Age 95): CPP exceeds maximum ($32,299.06)"
+            ]
+          },
+          "oas": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 69): OAS exceeds maximum ($12,063.28)",
+              "Year 2051 (Age 70): OAS exceeds maximum ($12,304.54)",
+              "Year 2052 (Age 71): OAS exceeds maximum ($12,550.64)",
+              "Year 2053 (Age 72): OAS exceeds maximum ($12,801.65)",
+              "Year 2054 (Age 73): OAS exceeds maximum ($13,057.68)",
+              "Year 2055 (Age 74): OAS exceeds maximum ($13,318.84)",
+              "Year 2056 (Age 75): OAS exceeds maximum ($13,585.21)",
+              "Year 2057 (Age 76): OAS exceeds maximum ($13,856.92)",
+              "Year 2058 (Age 77): OAS exceeds maximum ($14,134.05)",
+              "Year 2059 (Age 78): OAS exceeds maximum ($14,416.74)",
+              "Year 2060 (Age 79): OAS exceeds maximum ($14,705.07)",
+              "Year 2061 (Age 80): OAS exceeds maximum ($14,999.17)",
+              "Year 2062 (Age 81): OAS exceeds maximum ($15,299.16)",
+              "Year 2063 (Age 82): OAS exceeds maximum ($15,605.14)",
+              "Year 2064 (Age 83): OAS exceeds maximum ($15,917.24)",
+              "Year 2065 (Age 84): OAS exceeds maximum ($16,235.59)",
+              "Year 2066 (Age 85): OAS exceeds maximum ($16,560.30)",
+              "Year 2067 (Age 86): OAS exceeds maximum ($16,891.50)",
+              "Year 2068 (Age 87): OAS exceeds maximum ($17,229.33)",
+              "Year 2069 (Age 88): OAS exceeds maximum ($17,573.92)",
+              "Year 2070 (Age 89): OAS exceeds maximum ($17,925.40)",
+              "Year 2071 (Age 90): OAS exceeds maximum ($18,283.91)",
+              "Year 2072 (Age 91): OAS exceeds maximum ($18,649.58)",
+              "Year 2073 (Age 92): OAS exceeds maximum ($19,022.58)",
+              "Year 2074 (Age 93): OAS exceeds maximum ($19,403.03)",
+              "Year 2075 (Age 94): OAS exceeds maximum ($19,791.09)",
+              "Year 2076 (Age 95): OAS exceeds maximum ($20,186.91)"
+            ]
+          },
+          "gis": {
+            "passed": true,
+            "details": []
+          },
+          "oas_clawback": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "taxes": {
+          "federal_tax": {
+            "passed": true,
+            "details": []
+          },
+          "provincial_tax": {
+            "passed": true,
+            "details": []
+          },
+          "total_tax": {
+            "passed": true,
+            "details": []
+          },
+          "effective_tax_rate": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "credits": {
+          "basic_personal_amount": {
+            "passed": false,
+            "details": [
+              "Year 2026: Missing basic personal amount",
+              "Year 2027: Missing basic personal amount",
+              "Year 2028: Missing basic personal amount",
+              "Year 2029: Missing basic personal amount",
+              "Year 2030: Missing basic personal amount",
+              "Year 2031: Missing basic personal amount",
+              "Year 2032: Missing basic personal amount",
+              "Year 2033: Missing basic personal amount",
+              "Year 2034: Missing basic personal amount",
+              "Year 2035: Missing basic personal amount",
+              "Year 2036: Missing basic personal amount",
+              "Year 2037: Missing basic personal amount",
+              "Year 2038: Missing basic personal amount",
+              "Year 2039: Missing basic personal amount",
+              "Year 2040: Missing basic personal amount",
+              "Year 2041: Missing basic personal amount",
+              "Year 2042: Missing basic personal amount",
+              "Year 2043: Missing basic personal amount",
+              "Year 2044: Missing basic personal amount",
+              "Year 2045: Missing basic personal amount",
+              "Year 2046: Missing basic personal amount",
+              "Year 2047: Missing basic personal amount",
+              "Year 2048: Missing basic personal amount",
+              "Year 2049: Missing basic personal amount",
+              "Year 2050: Missing basic personal amount",
+              "Year 2051: Missing basic personal amount",
+              "Year 2052: Missing basic personal amount",
+              "Year 2053: Missing basic personal amount",
+              "Year 2054: Missing basic personal amount",
+              "Year 2055: Missing basic personal amount",
+              "Year 2056: Missing basic personal amount",
+              "Year 2057: Missing basic personal amount",
+              "Year 2058: Missing basic personal amount",
+              "Year 2059: Missing basic personal amount",
+              "Year 2060: Missing basic personal amount",
+              "Year 2061: Missing basic personal amount",
+              "Year 2062: Missing basic personal amount",
+              "Year 2063: Missing basic personal amount",
+              "Year 2064: Missing basic personal amount",
+              "Year 2065: Missing basic personal amount",
+              "Year 2066: Missing basic personal amount",
+              "Year 2067: Missing basic personal amount",
+              "Year 2068: Missing basic personal amount",
+              "Year 2069: Missing basic personal amount",
+              "Year 2070: Missing basic personal amount",
+              "Year 2071: Missing basic personal amount",
+              "Year 2072: Missing basic personal amount",
+              "Year 2073: Missing basic personal amount",
+              "Year 2074: Missing basic personal amount",
+              "Year 2075: Missing basic personal amount",
+              "Year 2076: Missing basic personal amount"
+            ]
+          },
+          "age_credit": {
+            "passed": false,
+            "details": [
+              "Year 2046 (Age 65): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2047 (Age 66): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2048 (Age 67): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2049 (Age 68): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2050 (Age 69): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2051 (Age 70): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2052 (Age 71): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2053 (Age 72): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2054 (Age 73): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2055 (Age 74): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2056 (Age 75): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2057 (Age 76): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2058 (Age 77): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2059 (Age 78): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2060 (Age 79): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2061 (Age 80): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2062 (Age 81): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2063 (Age 82): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2064 (Age 83): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2065 (Age 84): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2066 (Age 85): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2067 (Age 86): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2068 (Age 87): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2069 (Age 88): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2070 (Age 89): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2071 (Age 90): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2072 (Age 91): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2073 (Age 92): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2074 (Age 93): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2075 (Age 94): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2076 (Age 95): Missing age credit (Income: $0.00 below threshold)"
+            ]
+          },
+          "pension_income_credit": {
+            "passed": true,
+            "details": []
+          },
+          "dividend_tax_credit": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "accuracy": {
+          "balance_growth": {
+            "passed": true,
+            "details": []
+          },
+          "spending_coverage": {
+            "passed": true,
+            "details": []
+          },
+          "estate_value": {
+            "passed": true,
+            "details": []
+          },
+          "no_exponential_growth": {
+            "passed": true,
+            "details": []
+          }
+        }
+      },
+      "simulation_years": 51,
+      "final_estate": 0.0
+    },
+    {
+      "email": "claire.conservative@test.com",
+      "status": "fail",
+      "total_tests": 20,
+      "passed": 15,
+      "failed": 5,
+      "failed_categories": [
+        "withdrawals.rrsp_rrif_withdrawals",
+        "benefits.cpp",
+        "benefits.oas",
+        "credits.basic_personal_amount",
+        "credits.age_credit"
+      ],
+      "validations": {
+        "withdrawals": {
+          "tfsa_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "rrsp_rrif_withdrawals": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 72): Missing RRIF minimum withdrawal (Balance: $522,548.82)",
+              "Year 2053 (Age 73): Missing RRIF minimum withdrawal (Balance: $515,754.22)",
+              "Year 2054 (Age 74): Missing RRIF minimum withdrawal (Balance: $507,950.93)",
+              "Year 2055 (Age 75): Missing RRIF minimum withdrawal (Balance: $499,075.20)",
+              "Year 2056 (Age 76): Missing RRIF minimum withdrawal (Balance: $489,059.79)",
+              "Year 2057 (Age 77): Missing RRIF minimum withdrawal (Balance: $477,833.54)",
+              "Year 2058 (Age 78): Missing RRIF minimum withdrawal (Balance: $465,321.97)",
+              "Year 2059 (Age 79): Missing RRIF minimum withdrawal (Balance: $451,446.12)",
+              "Year 2060 (Age 80): Missing RRIF minimum withdrawal (Balance: $436,123.15)",
+              "Year 2061 (Age 81): Missing RRIF minimum withdrawal (Balance: $419,265.66)",
+              "Year 2062 (Age 82): Missing RRIF minimum withdrawal (Balance: $400,781.37)",
+              "Year 2063 (Age 83): Missing RRIF minimum withdrawal (Balance: $380,573.36)",
+              "Year 2064 (Age 84): Missing RRIF minimum withdrawal (Balance: $358,539.38)",
+              "Year 2065 (Age 85): Missing RRIF minimum withdrawal (Balance: $334,572.13)",
+              "Year 2066 (Age 86): Missing RRIF minimum withdrawal (Balance: $308,558.04)",
+              "Year 2067 (Age 87): Missing RRIF minimum withdrawal (Balance: $280,377.92)",
+              "Year 2068 (Age 88): Missing RRIF minimum withdrawal (Balance: $249,906.06)",
+              "Year 2069 (Age 89): Missing RRIF minimum withdrawal (Balance: $217,010.17)",
+              "Year 2070 (Age 90): Missing RRIF minimum withdrawal (Balance: $181,551.21)",
+              "Year 2071 (Age 91): Missing RRIF minimum withdrawal (Balance: $143,382.40)",
+              "Year 2072 (Age 92): Missing RRIF minimum withdrawal (Balance: $102,349.86)",
+              "Year 2073 (Age 93): Missing RRIF minimum withdrawal (Balance: $58,291.05)",
+              "Year 2074 (Age 94): Missing RRIF minimum withdrawal (Balance: $11,035.31)"
+            ]
+          },
+          "nonreg_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "total_withdrawals": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "benefits": {
+          "cpp": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 72): CPP exceeds maximum ($20,081.02)",
+              "Year 2053 (Age 73): CPP exceeds maximum ($20,482.64)",
+              "Year 2054 (Age 74): CPP exceeds maximum ($20,892.29)",
+              "Year 2055 (Age 75): CPP exceeds maximum ($21,310.14)",
+              "Year 2056 (Age 76): CPP exceeds maximum ($21,736.34)",
+              "Year 2057 (Age 77): CPP exceeds maximum ($22,171.07)",
+              "Year 2058 (Age 78): CPP exceeds maximum ($22,614.49)",
+              "Year 2059 (Age 79): CPP exceeds maximum ($23,066.78)",
+              "Year 2060 (Age 80): CPP exceeds maximum ($23,528.11)",
+              "Year 2061 (Age 81): CPP exceeds maximum ($23,998.67)",
+              "Year 2062 (Age 82): CPP exceeds maximum ($24,478.65)",
+              "Year 2063 (Age 83): CPP exceeds maximum ($24,968.22)",
+              "Year 2064 (Age 84): CPP exceeds maximum ($25,467.59)",
+              "Year 2065 (Age 85): CPP exceeds maximum ($25,976.94)",
+              "Year 2066 (Age 86): CPP exceeds maximum ($26,496.48)",
+              "Year 2067 (Age 87): CPP exceeds maximum ($27,026.41)",
+              "Year 2068 (Age 88): CPP exceeds maximum ($27,566.93)",
+              "Year 2069 (Age 89): CPP exceeds maximum ($28,118.27)",
+              "Year 2070 (Age 90): CPP exceeds maximum ($28,680.64)",
+              "Year 2071 (Age 91): CPP exceeds maximum ($29,254.25)",
+              "Year 2072 (Age 92): CPP exceeds maximum ($29,839.34)",
+              "Year 2073 (Age 93): CPP exceeds maximum ($30,436.12)",
+              "Year 2074 (Age 94): CPP exceeds maximum ($31,044.84)",
+              "Year 2075 (Age 95): CPP exceeds maximum ($31,665.74)"
+            ]
+          },
+          "oas": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 70): OAS exceeds maximum ($12,063.28)",
+              "Year 2051 (Age 71): OAS exceeds maximum ($12,304.54)",
+              "Year 2052 (Age 72): OAS exceeds maximum ($12,550.64)",
+              "Year 2053 (Age 73): OAS exceeds maximum ($12,801.65)",
+              "Year 2054 (Age 74): OAS exceeds maximum ($13,057.68)",
+              "Year 2055 (Age 75): OAS exceeds maximum ($13,318.84)",
+              "Year 2056 (Age 76): OAS exceeds maximum ($13,585.21)",
+              "Year 2057 (Age 77): OAS exceeds maximum ($13,856.92)",
+              "Year 2058 (Age 78): OAS exceeds maximum ($14,134.05)",
+              "Year 2059 (Age 79): OAS exceeds maximum ($14,416.74)",
+              "Year 2060 (Age 80): OAS exceeds maximum ($14,705.07)",
+              "Year 2061 (Age 81): OAS exceeds maximum ($14,999.17)",
+              "Year 2062 (Age 82): OAS exceeds maximum ($15,299.16)",
+              "Year 2063 (Age 83): OAS exceeds maximum ($15,605.14)",
+              "Year 2064 (Age 84): OAS exceeds maximum ($15,917.24)",
+              "Year 2065 (Age 85): OAS exceeds maximum ($16,235.59)",
+              "Year 2066 (Age 86): OAS exceeds maximum ($16,560.30)",
+              "Year 2067 (Age 87): OAS exceeds maximum ($16,891.50)",
+              "Year 2068 (Age 88): OAS exceeds maximum ($17,229.33)",
+              "Year 2069 (Age 89): OAS exceeds maximum ($17,573.92)",
+              "Year 2070 (Age 90): OAS exceeds maximum ($17,925.40)",
+              "Year 2071 (Age 91): OAS exceeds maximum ($18,283.91)",
+              "Year 2072 (Age 92): OAS exceeds maximum ($18,649.58)",
+              "Year 2073 (Age 93): OAS exceeds maximum ($19,022.58)",
+              "Year 2074 (Age 94): OAS exceeds maximum ($19,403.03)",
+              "Year 2075 (Age 95): OAS exceeds maximum ($19,791.09)"
+            ]
+          },
+          "gis": {
+            "passed": true,
+            "details": []
+          },
+          "oas_clawback": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "taxes": {
+          "federal_tax": {
+            "passed": true,
+            "details": []
+          },
+          "provincial_tax": {
+            "passed": true,
+            "details": []
+          },
+          "total_tax": {
+            "passed": true,
+            "details": []
+          },
+          "effective_tax_rate": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "credits": {
+          "basic_personal_amount": {
+            "passed": false,
+            "details": [
+              "Year 2026: Missing basic personal amount",
+              "Year 2027: Missing basic personal amount",
+              "Year 2028: Missing basic personal amount",
+              "Year 2029: Missing basic personal amount",
+              "Year 2030: Missing basic personal amount",
+              "Year 2031: Missing basic personal amount",
+              "Year 2032: Missing basic personal amount",
+              "Year 2033: Missing basic personal amount",
+              "Year 2034: Missing basic personal amount",
+              "Year 2035: Missing basic personal amount",
+              "Year 2036: Missing basic personal amount",
+              "Year 2037: Missing basic personal amount",
+              "Year 2038: Missing basic personal amount",
+              "Year 2039: Missing basic personal amount",
+              "Year 2040: Missing basic personal amount",
+              "Year 2041: Missing basic personal amount",
+              "Year 2042: Missing basic personal amount",
+              "Year 2043: Missing basic personal amount",
+              "Year 2044: Missing basic personal amount",
+              "Year 2045: Missing basic personal amount",
+              "Year 2046: Missing basic personal amount",
+              "Year 2047: Missing basic personal amount",
+              "Year 2048: Missing basic personal amount",
+              "Year 2049: Missing basic personal amount",
+              "Year 2050: Missing basic personal amount",
+              "Year 2051: Missing basic personal amount",
+              "Year 2052: Missing basic personal amount",
+              "Year 2053: Missing basic personal amount",
+              "Year 2054: Missing basic personal amount",
+              "Year 2055: Missing basic personal amount",
+              "Year 2056: Missing basic personal amount",
+              "Year 2057: Missing basic personal amount",
+              "Year 2058: Missing basic personal amount",
+              "Year 2059: Missing basic personal amount",
+              "Year 2060: Missing basic personal amount",
+              "Year 2061: Missing basic personal amount",
+              "Year 2062: Missing basic personal amount",
+              "Year 2063: Missing basic personal amount",
+              "Year 2064: Missing basic personal amount",
+              "Year 2065: Missing basic personal amount",
+              "Year 2066: Missing basic personal amount",
+              "Year 2067: Missing basic personal amount",
+              "Year 2068: Missing basic personal amount",
+              "Year 2069: Missing basic personal amount",
+              "Year 2070: Missing basic personal amount",
+              "Year 2071: Missing basic personal amount",
+              "Year 2072: Missing basic personal amount",
+              "Year 2073: Missing basic personal amount",
+              "Year 2074: Missing basic personal amount",
+              "Year 2075: Missing basic personal amount"
+            ]
+          },
+          "age_credit": {
+            "passed": false,
+            "details": [
+              "Year 2045 (Age 65): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2046 (Age 66): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2047 (Age 67): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2048 (Age 68): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2049 (Age 69): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2050 (Age 70): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2051 (Age 71): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2052 (Age 72): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2053 (Age 73): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2054 (Age 74): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2055 (Age 75): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2056 (Age 76): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2057 (Age 77): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2058 (Age 78): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2059 (Age 79): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2060 (Age 80): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2061 (Age 81): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2062 (Age 82): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2063 (Age 83): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2064 (Age 84): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2065 (Age 85): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2066 (Age 86): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2067 (Age 87): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2068 (Age 88): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2069 (Age 89): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2070 (Age 90): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2071 (Age 91): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2072 (Age 92): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2073 (Age 93): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2074 (Age 94): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2075 (Age 95): Missing age credit (Income: $0.00 below threshold)"
+            ]
+          },
+          "pension_income_credit": {
+            "passed": true,
+            "details": []
+          },
+          "dividend_tax_credit": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "accuracy": {
+          "balance_growth": {
+            "passed": true,
+            "details": []
+          },
+          "spending_coverage": {
+            "passed": true,
+            "details": []
+          },
+          "estate_value": {
+            "passed": true,
+            "details": []
+          },
+          "no_exponential_growth": {
+            "passed": true,
+            "details": []
+          }
+        }
+      },
+      "simulation_years": 50,
+      "final_estate": 0.0
+    },
+    {
+      "email": "alex.aggressive@test.com",
+      "status": "fail",
+      "total_tests": 20,
+      "passed": 15,
+      "failed": 5,
+      "failed_categories": [
+        "withdrawals.rrsp_rrif_withdrawals",
+        "benefits.cpp",
+        "benefits.oas",
+        "credits.basic_personal_amount",
+        "credits.age_credit"
+      ],
+      "validations": {
+        "withdrawals": {
+          "tfsa_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "rrsp_rrif_withdrawals": {
+            "passed": false,
+            "details": [
+              "Year 2057 (Age 72): Missing RRIF minimum withdrawal (Balance: $1,120,778.27)",
+              "Year 2058 (Age 73): Missing RRIF minimum withdrawal (Balance: $1,111,739.20)",
+              "Year 2059 (Age 74): Missing RRIF minimum withdrawal (Balance: $1,101,138.76)",
+              "Year 2060 (Age 75): Missing RRIF minimum withdrawal (Balance: $1,088,905.11)",
+              "Year 2061 (Age 76): Missing RRIF minimum withdrawal (Balance: $1,074,978.02)",
+              "Year 2062 (Age 77): Missing RRIF minimum withdrawal (Balance: $1,059,084.47)",
+              "Year 2063 (Age 78): Missing RRIF minimum withdrawal (Balance: $1,041,313.03)",
+              "Year 2064 (Age 79): Missing RRIF minimum withdrawal (Balance: $1,021,434.36)",
+              "Year 2065 (Age 80): Missing RRIF minimum withdrawal (Balance: $999,361.17)",
+              "Year 2066 (Age 81): Missing RRIF minimum withdrawal (Balance: $975,036.72)",
+              "Year 2067 (Age 82): Missing RRIF minimum withdrawal (Balance: $948,232.96)",
+              "Year 2068 (Age 83): Missing RRIF minimum withdrawal (Balance: $918,880.41)",
+              "Year 2069 (Age 84): Missing RRIF minimum withdrawal (Balance: $886,866.61)",
+              "Year 2070 (Age 85): Missing RRIF minimum withdrawal (Balance: $851,963.98)",
+              "Year 2071 (Age 86): Missing RRIF minimum withdrawal (Balance: $814,141.04)",
+              "Year 2072 (Age 87): Missing RRIF minimum withdrawal (Balance: $773,210.10)",
+              "Year 2073 (Age 88): Missing RRIF minimum withdrawal (Balance: $728,978.61)",
+              "Year 2074 (Age 89): Missing RRIF minimum withdrawal (Balance: $681,307.06)",
+              "Year 2075 (Age 90): Missing RRIF minimum withdrawal (Balance: $630,100.02)",
+              "Year 2076 (Age 91): Missing RRIF minimum withdrawal (Balance: $575,199.40)",
+              "Year 2077 (Age 92): Missing RRIF minimum withdrawal (Balance: $516,445.66)",
+              "Year 2078 (Age 93): Missing RRIF minimum withdrawal (Balance: $453,661.36)",
+              "Year 2079 (Age 94): Missing RRIF minimum withdrawal (Balance: $386,839.31)",
+              "Year 2080 (Age 95): Missing RRIF minimum withdrawal (Balance: $324,945.02)"
+            ]
+          },
+          "nonreg_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "total_withdrawals": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "benefits": {
+          "cpp": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 67): CPP exceeds maximum ($20,081.02)",
+              "Year 2053 (Age 68): CPP exceeds maximum ($20,482.64)",
+              "Year 2054 (Age 69): CPP exceeds maximum ($20,892.29)",
+              "Year 2055 (Age 70): CPP exceeds maximum ($21,310.14)",
+              "Year 2056 (Age 71): CPP exceeds maximum ($21,736.34)",
+              "Year 2057 (Age 72): CPP exceeds maximum ($22,171.07)",
+              "Year 2058 (Age 73): CPP exceeds maximum ($22,614.49)",
+              "Year 2059 (Age 74): CPP exceeds maximum ($23,066.78)",
+              "Year 2060 (Age 75): CPP exceeds maximum ($23,528.11)",
+              "Year 2061 (Age 76): CPP exceeds maximum ($23,998.67)",
+              "Year 2062 (Age 77): CPP exceeds maximum ($24,478.65)",
+              "Year 2063 (Age 78): CPP exceeds maximum ($24,968.22)",
+              "Year 2064 (Age 79): CPP exceeds maximum ($25,467.59)",
+              "Year 2065 (Age 80): CPP exceeds maximum ($25,976.94)",
+              "Year 2066 (Age 81): CPP exceeds maximum ($26,496.48)",
+              "Year 2067 (Age 82): CPP exceeds maximum ($27,026.41)",
+              "Year 2068 (Age 83): CPP exceeds maximum ($27,566.93)",
+              "Year 2069 (Age 84): CPP exceeds maximum ($28,118.27)",
+              "Year 2070 (Age 85): CPP exceeds maximum ($28,680.64)",
+              "Year 2071 (Age 86): CPP exceeds maximum ($29,254.25)",
+              "Year 2072 (Age 87): CPP exceeds maximum ($29,839.34)",
+              "Year 2073 (Age 88): CPP exceeds maximum ($30,436.12)",
+              "Year 2074 (Age 89): CPP exceeds maximum ($31,044.84)",
+              "Year 2075 (Age 90): CPP exceeds maximum ($31,665.74)",
+              "Year 2076 (Age 91): CPP exceeds maximum ($32,299.06)",
+              "Year 2077 (Age 92): CPP exceeds maximum ($32,945.04)",
+              "Year 2078 (Age 93): CPP exceeds maximum ($33,603.94)",
+              "Year 2079 (Age 94): CPP exceeds maximum ($34,276.02)",
+              "Year 2080 (Age 95): CPP exceeds maximum ($34,961.54)"
+            ]
+          },
+          "oas": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 65): OAS exceeds maximum ($12,063.28)",
+              "Year 2051 (Age 66): OAS exceeds maximum ($12,304.54)",
+              "Year 2052 (Age 67): OAS exceeds maximum ($12,550.64)",
+              "Year 2053 (Age 68): OAS exceeds maximum ($12,801.65)",
+              "Year 2054 (Age 69): OAS exceeds maximum ($13,057.68)",
+              "Year 2055 (Age 70): OAS exceeds maximum ($13,318.84)",
+              "Year 2056 (Age 71): OAS exceeds maximum ($13,585.21)",
+              "Year 2057 (Age 72): OAS exceeds maximum ($13,856.92)",
+              "Year 2058 (Age 73): OAS exceeds maximum ($14,134.05)",
+              "Year 2059 (Age 74): OAS exceeds maximum ($14,416.74)",
+              "Year 2060 (Age 75): OAS exceeds maximum ($14,705.07)",
+              "Year 2061 (Age 76): OAS exceeds maximum ($14,999.17)",
+              "Year 2062 (Age 77): OAS exceeds maximum ($15,299.16)",
+              "Year 2063 (Age 78): OAS exceeds maximum ($15,605.14)",
+              "Year 2064 (Age 79): OAS exceeds maximum ($15,917.24)",
+              "Year 2065 (Age 80): OAS exceeds maximum ($16,235.59)",
+              "Year 2066 (Age 81): OAS exceeds maximum ($16,560.30)",
+              "Year 2067 (Age 82): OAS exceeds maximum ($16,891.50)",
+              "Year 2068 (Age 83): OAS exceeds maximum ($17,229.33)",
+              "Year 2069 (Age 84): OAS exceeds maximum ($17,573.92)",
+              "Year 2070 (Age 85): OAS exceeds maximum ($17,925.40)",
+              "Year 2071 (Age 86): OAS exceeds maximum ($18,283.91)",
+              "Year 2072 (Age 87): OAS exceeds maximum ($18,649.58)",
+              "Year 2073 (Age 88): OAS exceeds maximum ($19,022.58)",
+              "Year 2074 (Age 89): OAS exceeds maximum ($19,403.03)",
+              "Year 2075 (Age 90): OAS exceeds maximum ($19,791.09)",
+              "Year 2076 (Age 91): OAS exceeds maximum ($20,186.91)",
+              "Year 2077 (Age 92): OAS exceeds maximum ($20,590.65)",
+              "Year 2078 (Age 93): OAS exceeds maximum ($21,002.46)",
+              "Year 2079 (Age 94): OAS exceeds maximum ($21,422.51)",
+              "Year 2080 (Age 95): OAS exceeds maximum ($21,850.96)"
+            ]
+          },
+          "gis": {
+            "passed": true,
+            "details": []
+          },
+          "oas_clawback": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "taxes": {
+          "federal_tax": {
+            "passed": true,
+            "details": []
+          },
+          "provincial_tax": {
+            "passed": true,
+            "details": []
+          },
+          "total_tax": {
+            "passed": true,
+            "details": []
+          },
+          "effective_tax_rate": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "credits": {
+          "basic_personal_amount": {
+            "passed": false,
+            "details": [
+              "Year 2026: Missing basic personal amount",
+              "Year 2027: Missing basic personal amount",
+              "Year 2028: Missing basic personal amount",
+              "Year 2029: Missing basic personal amount",
+              "Year 2030: Missing basic personal amount",
+              "Year 2031: Missing basic personal amount",
+              "Year 2032: Missing basic personal amount",
+              "Year 2033: Missing basic personal amount",
+              "Year 2034: Missing basic personal amount",
+              "Year 2035: Missing basic personal amount",
+              "Year 2036: Missing basic personal amount",
+              "Year 2037: Missing basic personal amount",
+              "Year 2038: Missing basic personal amount",
+              "Year 2039: Missing basic personal amount",
+              "Year 2040: Missing basic personal amount",
+              "Year 2041: Missing basic personal amount",
+              "Year 2042: Missing basic personal amount",
+              "Year 2043: Missing basic personal amount",
+              "Year 2044: Missing basic personal amount",
+              "Year 2045: Missing basic personal amount",
+              "Year 2046: Missing basic personal amount",
+              "Year 2047: Missing basic personal amount",
+              "Year 2048: Missing basic personal amount",
+              "Year 2049: Missing basic personal amount",
+              "Year 2050: Missing basic personal amount",
+              "Year 2051: Missing basic personal amount",
+              "Year 2052: Missing basic personal amount",
+              "Year 2053: Missing basic personal amount",
+              "Year 2054: Missing basic personal amount",
+              "Year 2055: Missing basic personal amount",
+              "Year 2056: Missing basic personal amount",
+              "Year 2057: Missing basic personal amount",
+              "Year 2058: Missing basic personal amount",
+              "Year 2059: Missing basic personal amount",
+              "Year 2060: Missing basic personal amount",
+              "Year 2061: Missing basic personal amount",
+              "Year 2062: Missing basic personal amount",
+              "Year 2063: Missing basic personal amount",
+              "Year 2064: Missing basic personal amount",
+              "Year 2065: Missing basic personal amount",
+              "Year 2066: Missing basic personal amount",
+              "Year 2067: Missing basic personal amount",
+              "Year 2068: Missing basic personal amount",
+              "Year 2069: Missing basic personal amount",
+              "Year 2070: Missing basic personal amount",
+              "Year 2071: Missing basic personal amount",
+              "Year 2072: Missing basic personal amount",
+              "Year 2073: Missing basic personal amount",
+              "Year 2074: Missing basic personal amount",
+              "Year 2075: Missing basic personal amount",
+              "Year 2076: Missing basic personal amount",
+              "Year 2077: Missing basic personal amount",
+              "Year 2078: Missing basic personal amount",
+              "Year 2079: Missing basic personal amount",
+              "Year 2080: Missing basic personal amount"
+            ]
+          },
+          "age_credit": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 65): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2051 (Age 66): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2052 (Age 67): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2053 (Age 68): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2054 (Age 69): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2055 (Age 70): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2056 (Age 71): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2057 (Age 72): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2058 (Age 73): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2059 (Age 74): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2060 (Age 75): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2061 (Age 76): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2062 (Age 77): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2063 (Age 78): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2064 (Age 79): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2065 (Age 80): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2066 (Age 81): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2067 (Age 82): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2068 (Age 83): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2069 (Age 84): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2070 (Age 85): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2071 (Age 86): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2072 (Age 87): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2073 (Age 88): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2074 (Age 89): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2075 (Age 90): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2076 (Age 91): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2077 (Age 92): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2078 (Age 93): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2079 (Age 94): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2080 (Age 95): Missing age credit (Income: $0.00 below threshold)"
+            ]
+          },
+          "pension_income_credit": {
+            "passed": true,
+            "details": []
+          },
+          "dividend_tax_credit": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "accuracy": {
+          "balance_growth": {
+            "passed": true,
+            "details": []
+          },
+          "spending_coverage": {
+            "passed": true,
+            "details": []
+          },
+          "estate_value": {
+            "passed": true,
+            "details": []
+          },
+          "no_exponential_growth": {
+            "passed": true,
+            "details": []
+          }
+        }
+      },
+      "simulation_years": 55,
+      "final_estate": 0.0
+    },
+    {
+      "email": "mike.moderate@test.com",
+      "status": "fail",
+      "total_tests": 20,
+      "passed": 15,
+      "failed": 5,
+      "failed_categories": [
+        "withdrawals.rrsp_rrif_withdrawals",
+        "benefits.cpp",
+        "benefits.oas",
+        "credits.basic_personal_amount",
+        "credits.age_credit"
+      ],
+      "validations": {
+        "withdrawals": {
+          "tfsa_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "rrsp_rrif_withdrawals": {
+            "passed": false,
+            "details": [
+              "Year 2047 (Age 72): Missing RRIF minimum withdrawal (Balance: $493,522.21)",
+              "Year 2048 (Age 73): Missing RRIF minimum withdrawal (Balance: $488,351.65)",
+              "Year 2049 (Age 74): Missing RRIF minimum withdrawal (Balance: $482,314.85)",
+              "Year 2050 (Age 75): Missing RRIF minimum withdrawal (Balance: $475,356.83)",
+              "Year 2051 (Age 76): Missing RRIF minimum withdrawal (Balance: $467,418.83)",
+              "Year 2052 (Age 77): Missing RRIF minimum withdrawal (Balance: $458,439.33)",
+              "Year 2053 (Age 78): Missing RRIF minimum withdrawal (Balance: $448,353.12)",
+              "Year 2054 (Age 79): Missing RRIF minimum withdrawal (Balance: $437,092.05)",
+              "Year 2055 (Age 80): Missing RRIF minimum withdrawal (Balance: $424,583.60)",
+              "Year 2056 (Age 81): Missing RRIF minimum withdrawal (Balance: $410,751.94)",
+              "Year 2057 (Age 82): Missing RRIF minimum withdrawal (Balance: $395,517.07)",
+              "Year 2058 (Age 83): Missing RRIF minimum withdrawal (Balance: $378,794.40)",
+              "Year 2059 (Age 84): Missing RRIF minimum withdrawal (Balance: $360,495.29)",
+              "Year 2060 (Age 85): Missing RRIF minimum withdrawal (Balance: $340,525.74)",
+              "Year 2061 (Age 86): Missing RRIF minimum withdrawal (Balance: $318,787.40)",
+              "Year 2062 (Age 87): Missing RRIF minimum withdrawal (Balance: $295,176.18)",
+              "Year 2063 (Age 88): Missing RRIF minimum withdrawal (Balance: $269,582.88)",
+              "Year 2064 (Age 89): Missing RRIF minimum withdrawal (Balance: $241,892.40)",
+              "Year 2065 (Age 90): Missing RRIF minimum withdrawal (Balance: $211,983.52)",
+              "Year 2066 (Age 91): Missing RRIF minimum withdrawal (Balance: $179,728.47)",
+              "Year 2067 (Age 92): Missing RRIF minimum withdrawal (Balance: $144,993.06)",
+              "Year 2068 (Age 93): Missing RRIF minimum withdrawal (Balance: $107,635.85)",
+              "Year 2069 (Age 94): Missing RRIF minimum withdrawal (Balance: $67,508.06)",
+              "Year 2070 (Age 95): Missing RRIF minimum withdrawal (Balance: $24,453.13)"
+            ]
+          },
+          "nonreg_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "total_withdrawals": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "benefits": {
+          "cpp": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 77): CPP exceeds maximum ($20,081.02)",
+              "Year 2053 (Age 78): CPP exceeds maximum ($20,482.64)",
+              "Year 2054 (Age 79): CPP exceeds maximum ($20,892.29)",
+              "Year 2055 (Age 80): CPP exceeds maximum ($21,310.14)",
+              "Year 2056 (Age 81): CPP exceeds maximum ($21,736.34)",
+              "Year 2057 (Age 82): CPP exceeds maximum ($22,171.07)",
+              "Year 2058 (Age 83): CPP exceeds maximum ($22,614.49)",
+              "Year 2059 (Age 84): CPP exceeds maximum ($23,066.78)",
+              "Year 2060 (Age 85): CPP exceeds maximum ($23,528.11)",
+              "Year 2061 (Age 86): CPP exceeds maximum ($23,998.67)",
+              "Year 2062 (Age 87): CPP exceeds maximum ($24,478.65)",
+              "Year 2063 (Age 88): CPP exceeds maximum ($24,968.22)",
+              "Year 2064 (Age 89): CPP exceeds maximum ($25,467.59)",
+              "Year 2065 (Age 90): CPP exceeds maximum ($25,976.94)",
+              "Year 2066 (Age 91): CPP exceeds maximum ($26,496.48)",
+              "Year 2067 (Age 92): CPP exceeds maximum ($27,026.41)",
+              "Year 2068 (Age 93): CPP exceeds maximum ($27,566.93)",
+              "Year 2069 (Age 94): CPP exceeds maximum ($28,118.27)",
+              "Year 2070 (Age 95): CPP exceeds maximum ($28,680.64)"
+            ]
+          },
+          "oas": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 75): OAS exceeds maximum ($12,063.28)",
+              "Year 2051 (Age 76): OAS exceeds maximum ($12,304.54)",
+              "Year 2052 (Age 77): OAS exceeds maximum ($12,550.64)",
+              "Year 2053 (Age 78): OAS exceeds maximum ($12,801.65)",
+              "Year 2054 (Age 79): OAS exceeds maximum ($13,057.68)",
+              "Year 2055 (Age 80): OAS exceeds maximum ($13,318.84)",
+              "Year 2056 (Age 81): OAS exceeds maximum ($13,585.21)",
+              "Year 2057 (Age 82): OAS exceeds maximum ($13,856.92)",
+              "Year 2058 (Age 83): OAS exceeds maximum ($14,134.05)",
+              "Year 2059 (Age 84): OAS exceeds maximum ($14,416.74)",
+              "Year 2060 (Age 85): OAS exceeds maximum ($14,705.07)",
+              "Year 2061 (Age 86): OAS exceeds maximum ($14,999.17)",
+              "Year 2062 (Age 87): OAS exceeds maximum ($15,299.16)",
+              "Year 2063 (Age 88): OAS exceeds maximum ($15,605.14)",
+              "Year 2064 (Age 89): OAS exceeds maximum ($15,917.24)",
+              "Year 2065 (Age 90): OAS exceeds maximum ($16,235.59)",
+              "Year 2066 (Age 91): OAS exceeds maximum ($16,560.30)",
+              "Year 2067 (Age 92): OAS exceeds maximum ($16,891.50)",
+              "Year 2068 (Age 93): OAS exceeds maximum ($17,229.33)",
+              "Year 2069 (Age 94): OAS exceeds maximum ($17,573.92)",
+              "Year 2070 (Age 95): OAS exceeds maximum ($17,925.40)"
+            ]
+          },
+          "gis": {
+            "passed": true,
+            "details": []
+          },
+          "oas_clawback": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "taxes": {
+          "federal_tax": {
+            "passed": true,
+            "details": []
+          },
+          "provincial_tax": {
+            "passed": true,
+            "details": []
+          },
+          "total_tax": {
+            "passed": true,
+            "details": []
+          },
+          "effective_tax_rate": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "credits": {
+          "basic_personal_amount": {
+            "passed": false,
+            "details": [
+              "Year 2026: Missing basic personal amount",
+              "Year 2027: Missing basic personal amount",
+              "Year 2028: Missing basic personal amount",
+              "Year 2029: Missing basic personal amount",
+              "Year 2030: Missing basic personal amount",
+              "Year 2031: Missing basic personal amount",
+              "Year 2032: Missing basic personal amount",
+              "Year 2033: Missing basic personal amount",
+              "Year 2034: Missing basic personal amount",
+              "Year 2035: Missing basic personal amount",
+              "Year 2036: Missing basic personal amount",
+              "Year 2037: Missing basic personal amount",
+              "Year 2038: Missing basic personal amount",
+              "Year 2039: Missing basic personal amount",
+              "Year 2040: Missing basic personal amount",
+              "Year 2041: Missing basic personal amount",
+              "Year 2042: Missing basic personal amount",
+              "Year 2043: Missing basic personal amount",
+              "Year 2044: Missing basic personal amount",
+              "Year 2045: Missing basic personal amount",
+              "Year 2046: Missing basic personal amount",
+              "Year 2047: Missing basic personal amount",
+              "Year 2048: Missing basic personal amount",
+              "Year 2049: Missing basic personal amount",
+              "Year 2050: Missing basic personal amount",
+              "Year 2051: Missing basic personal amount",
+              "Year 2052: Missing basic personal amount",
+              "Year 2053: Missing basic personal amount",
+              "Year 2054: Missing basic personal amount",
+              "Year 2055: Missing basic personal amount",
+              "Year 2056: Missing basic personal amount",
+              "Year 2057: Missing basic personal amount",
+              "Year 2058: Missing basic personal amount",
+              "Year 2059: Missing basic personal amount",
+              "Year 2060: Missing basic personal amount",
+              "Year 2061: Missing basic personal amount",
+              "Year 2062: Missing basic personal amount",
+              "Year 2063: Missing basic personal amount",
+              "Year 2064: Missing basic personal amount",
+              "Year 2065: Missing basic personal amount",
+              "Year 2066: Missing basic personal amount",
+              "Year 2067: Missing basic personal amount",
+              "Year 2068: Missing basic personal amount",
+              "Year 2069: Missing basic personal amount",
+              "Year 2070: Missing basic personal amount"
+            ]
+          },
+          "age_credit": {
+            "passed": false,
+            "details": [
+              "Year 2040 (Age 65): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2041 (Age 66): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2042 (Age 67): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2043 (Age 68): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2044 (Age 69): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2045 (Age 70): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2046 (Age 71): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2047 (Age 72): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2048 (Age 73): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2049 (Age 74): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2050 (Age 75): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2051 (Age 76): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2052 (Age 77): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2053 (Age 78): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2054 (Age 79): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2055 (Age 80): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2056 (Age 81): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2057 (Age 82): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2058 (Age 83): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2059 (Age 84): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2060 (Age 85): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2061 (Age 86): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2062 (Age 87): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2063 (Age 88): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2064 (Age 89): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2065 (Age 90): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2066 (Age 91): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2067 (Age 92): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2068 (Age 93): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2069 (Age 94): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2070 (Age 95): Missing age credit (Income: $0.00 below threshold)"
+            ]
+          },
+          "pension_income_credit": {
+            "passed": true,
+            "details": []
+          },
+          "dividend_tax_credit": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "accuracy": {
+          "balance_growth": {
+            "passed": true,
+            "details": []
+          },
+          "spending_coverage": {
+            "passed": true,
+            "details": []
+          },
+          "estate_value": {
+            "passed": true,
+            "details": []
+          },
+          "no_exponential_growth": {
+            "passed": true,
+            "details": []
+          }
+        }
+      },
+      "simulation_years": 45,
+      "final_estate": 0.0
+    },
+    {
+      "email": "sarah.struggling@test.com",
+      "status": "fail",
+      "total_tests": 20,
+      "passed": 15,
+      "failed": 5,
+      "failed_categories": [
+        "withdrawals.rrsp_rrif_withdrawals",
+        "benefits.cpp",
+        "benefits.oas",
+        "credits.basic_personal_amount",
+        "credits.age_credit"
+      ],
+      "validations": {
+        "withdrawals": {
+          "tfsa_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "rrsp_rrif_withdrawals": {
+            "passed": false,
+            "details": [
+              "Year 2039 (Age 72): Missing RRIF minimum withdrawal (Balance: $43,186.13)",
+              "Year 2040 (Age 73): Missing RRIF minimum withdrawal (Balance: $20,015.19)"
+            ]
+          },
+          "nonreg_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "total_withdrawals": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "benefits": {
+          "cpp": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 85): CPP exceeds maximum ($20,081.02)",
+              "Year 2053 (Age 86): CPP exceeds maximum ($20,482.64)",
+              "Year 2054 (Age 87): CPP exceeds maximum ($20,892.29)",
+              "Year 2055 (Age 88): CPP exceeds maximum ($21,310.14)",
+              "Year 2056 (Age 89): CPP exceeds maximum ($21,736.34)",
+              "Year 2057 (Age 90): CPP exceeds maximum ($22,171.07)",
+              "Year 2058 (Age 91): CPP exceeds maximum ($22,614.49)",
+              "Year 2059 (Age 92): CPP exceeds maximum ($23,066.78)",
+              "Year 2060 (Age 93): CPP exceeds maximum ($23,528.11)",
+              "Year 2061 (Age 94): CPP exceeds maximum ($23,998.67)",
+              "Year 2062 (Age 95): CPP exceeds maximum ($24,478.65)"
+            ]
+          },
+          "oas": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 83): OAS exceeds maximum ($12,063.28)",
+              "Year 2051 (Age 84): OAS exceeds maximum ($12,304.54)",
+              "Year 2052 (Age 85): OAS exceeds maximum ($12,550.64)",
+              "Year 2053 (Age 86): OAS exceeds maximum ($12,801.65)",
+              "Year 2054 (Age 87): OAS exceeds maximum ($13,057.68)",
+              "Year 2055 (Age 88): OAS exceeds maximum ($13,318.84)",
+              "Year 2056 (Age 89): OAS exceeds maximum ($13,585.21)",
+              "Year 2057 (Age 90): OAS exceeds maximum ($13,856.92)",
+              "Year 2058 (Age 91): OAS exceeds maximum ($14,134.05)",
+              "Year 2059 (Age 92): OAS exceeds maximum ($14,416.74)",
+              "Year 2060 (Age 93): OAS exceeds maximum ($14,705.07)",
+              "Year 2061 (Age 94): OAS exceeds maximum ($14,999.17)",
+              "Year 2062 (Age 95): OAS exceeds maximum ($15,299.16)"
+            ]
+          },
+          "gis": {
+            "passed": true,
+            "details": []
+          },
+          "oas_clawback": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "taxes": {
+          "federal_tax": {
+            "passed": true,
+            "details": []
+          },
+          "provincial_tax": {
+            "passed": true,
+            "details": []
+          },
+          "total_tax": {
+            "passed": true,
+            "details": []
+          },
+          "effective_tax_rate": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "credits": {
+          "basic_personal_amount": {
+            "passed": false,
+            "details": [
+              "Year 2026: Missing basic personal amount",
+              "Year 2027: Missing basic personal amount",
+              "Year 2028: Missing basic personal amount",
+              "Year 2029: Missing basic personal amount",
+              "Year 2030: Missing basic personal amount",
+              "Year 2031: Missing basic personal amount",
+              "Year 2032: Missing basic personal amount",
+              "Year 2033: Missing basic personal amount",
+              "Year 2034: Missing basic personal amount",
+              "Year 2035: Missing basic personal amount",
+              "Year 2036: Missing basic personal amount",
+              "Year 2037: Missing basic personal amount",
+              "Year 2038: Missing basic personal amount",
+              "Year 2039: Missing basic personal amount",
+              "Year 2040: Missing basic personal amount",
+              "Year 2041: Missing basic personal amount",
+              "Year 2042: Missing basic personal amount",
+              "Year 2043: Missing basic personal amount",
+              "Year 2044: Missing basic personal amount",
+              "Year 2045: Missing basic personal amount",
+              "Year 2046: Missing basic personal amount",
+              "Year 2047: Missing basic personal amount",
+              "Year 2048: Missing basic personal amount",
+              "Year 2049: Missing basic personal amount",
+              "Year 2050: Missing basic personal amount",
+              "Year 2051: Missing basic personal amount",
+              "Year 2052: Missing basic personal amount",
+              "Year 2053: Missing basic personal amount",
+              "Year 2054: Missing basic personal amount",
+              "Year 2055: Missing basic personal amount",
+              "Year 2056: Missing basic personal amount",
+              "Year 2057: Missing basic personal amount",
+              "Year 2058: Missing basic personal amount",
+              "Year 2059: Missing basic personal amount",
+              "Year 2060: Missing basic personal amount",
+              "Year 2061: Missing basic personal amount",
+              "Year 2062: Missing basic personal amount"
+            ]
+          },
+          "age_credit": {
+            "passed": false,
+            "details": [
+              "Year 2032 (Age 65): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2033 (Age 66): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2034 (Age 67): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2035 (Age 68): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2036 (Age 69): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2037 (Age 70): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2038 (Age 71): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2039 (Age 72): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2040 (Age 73): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2041 (Age 74): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2042 (Age 75): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2043 (Age 76): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2044 (Age 77): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2045 (Age 78): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2046 (Age 79): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2047 (Age 80): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2048 (Age 81): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2049 (Age 82): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2050 (Age 83): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2051 (Age 84): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2052 (Age 85): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2053 (Age 86): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2054 (Age 87): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2055 (Age 88): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2056 (Age 89): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2057 (Age 90): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2058 (Age 91): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2059 (Age 92): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2060 (Age 93): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2061 (Age 94): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2062 (Age 95): Missing age credit (Income: $0.00 below threshold)"
+            ]
+          },
+          "pension_income_credit": {
+            "passed": true,
+            "details": []
+          },
+          "dividend_tax_credit": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "accuracy": {
+          "balance_growth": {
+            "passed": true,
+            "details": []
+          },
+          "spending_coverage": {
+            "passed": true,
+            "details": []
+          },
+          "estate_value": {
+            "passed": true,
+            "details": []
+          },
+          "no_exponential_growth": {
+            "passed": true,
+            "details": []
+          }
+        }
+      },
+      "simulation_years": 37,
+      "final_estate": 0.0
+    },
+    {
+      "email": "helen.highincome@test.com",
+      "status": "fail",
+      "total_tests": 20,
+      "passed": 15,
+      "failed": 5,
+      "failed_categories": [
+        "withdrawals.rrsp_rrif_withdrawals",
+        "benefits.cpp",
+        "benefits.oas",
+        "credits.basic_personal_amount",
+        "credits.age_credit"
+      ],
+      "validations": {
+        "withdrawals": {
+          "tfsa_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "rrsp_rrif_withdrawals": {
+            "passed": false,
+            "details": [
+              "Year 2049 (Age 72): Missing RRIF minimum withdrawal (Balance: $1,213,738.96)",
+              "Year 2050 (Age 73): Missing RRIF minimum withdrawal (Balance: $1,203,950.16)",
+              "Year 2051 (Age 74): Missing RRIF minimum withdrawal (Balance: $1,192,470.49)",
+              "Year 2052 (Age 75): Missing RRIF minimum withdrawal (Balance: $1,179,222.15)",
+              "Year 2053 (Age 76): Missing RRIF minimum withdrawal (Balance: $1,164,139.90)",
+              "Year 2054 (Age 77): Missing RRIF minimum withdrawal (Balance: $1,146,928.09)",
+              "Year 2055 (Age 78): Missing RRIF minimum withdrawal (Balance: $1,127,682.63)",
+              "Year 2056 (Age 79): Missing RRIF minimum withdrawal (Balance: $1,106,155.17)",
+              "Year 2057 (Age 80): Missing RRIF minimum withdrawal (Balance: $1,082,251.16)",
+              "Year 2058 (Age 81): Missing RRIF minimum withdrawal (Balance: $1,055,909.17)",
+              "Year 2059 (Age 82): Missing RRIF minimum withdrawal (Balance: $1,026,882.22)",
+              "Year 2060 (Age 83): Missing RRIF minimum withdrawal (Balance: $995,095.08)",
+              "Year 2061 (Age 84): Missing RRIF minimum withdrawal (Balance: $960,425.97)",
+              "Year 2062 (Age 85): Missing RRIF minimum withdrawal (Balance: $922,628.41)",
+              "Year 2063 (Age 86): Missing RRIF minimum withdrawal (Balance: $881,668.32)",
+              "Year 2064 (Age 87): Missing RRIF minimum withdrawal (Balance: $837,342.44)",
+              "Year 2065 (Age 88): Missing RRIF minimum withdrawal (Balance: $789,442.27)",
+              "Year 2066 (Age 89): Missing RRIF minimum withdrawal (Balance: $737,816.69)",
+              "Year 2067 (Age 90): Missing RRIF minimum withdrawal (Balance: $682,362.39)",
+              "Year 2068 (Age 91): Missing RRIF minimum withdrawal (Balance: $622,908.15)",
+              "Year 2069 (Age 92): Missing RRIF minimum withdrawal (Balance: $559,281.20)",
+              "Year 2070 (Age 93): Missing RRIF minimum withdrawal (Balance: $491,289.39)",
+              "Year 2071 (Age 94): Missing RRIF minimum withdrawal (Balance: $418,924.92)",
+              "Year 2072 (Age 95): Missing RRIF minimum withdrawal (Balance: $351,896.93)"
+            ]
+          },
+          "nonreg_withdrawals": {
+            "passed": true,
+            "details": []
+          },
+          "total_withdrawals": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "benefits": {
+          "cpp": {
+            "passed": false,
+            "details": [
+              "Year 2052 (Age 75): CPP exceeds maximum ($20,081.02)",
+              "Year 2053 (Age 76): CPP exceeds maximum ($20,482.64)",
+              "Year 2054 (Age 77): CPP exceeds maximum ($20,892.29)",
+              "Year 2055 (Age 78): CPP exceeds maximum ($21,310.14)",
+              "Year 2056 (Age 79): CPP exceeds maximum ($21,736.34)",
+              "Year 2057 (Age 80): CPP exceeds maximum ($22,171.07)",
+              "Year 2058 (Age 81): CPP exceeds maximum ($22,614.49)",
+              "Year 2059 (Age 82): CPP exceeds maximum ($23,066.78)",
+              "Year 2060 (Age 83): CPP exceeds maximum ($23,528.11)",
+              "Year 2061 (Age 84): CPP exceeds maximum ($23,998.67)",
+              "Year 2062 (Age 85): CPP exceeds maximum ($24,478.65)",
+              "Year 2063 (Age 86): CPP exceeds maximum ($24,968.22)",
+              "Year 2064 (Age 87): CPP exceeds maximum ($25,467.59)",
+              "Year 2065 (Age 88): CPP exceeds maximum ($25,976.94)",
+              "Year 2066 (Age 89): CPP exceeds maximum ($26,496.48)",
+              "Year 2067 (Age 90): CPP exceeds maximum ($27,026.41)",
+              "Year 2068 (Age 91): CPP exceeds maximum ($27,566.93)",
+              "Year 2069 (Age 92): CPP exceeds maximum ($28,118.27)",
+              "Year 2070 (Age 93): CPP exceeds maximum ($28,680.64)",
+              "Year 2071 (Age 94): CPP exceeds maximum ($29,254.25)",
+              "Year 2072 (Age 95): CPP exceeds maximum ($29,839.34)"
+            ]
+          },
+          "oas": {
+            "passed": false,
+            "details": [
+              "Year 2050 (Age 73): OAS exceeds maximum ($12,063.28)",
+              "Year 2051 (Age 74): OAS exceeds maximum ($12,304.54)",
+              "Year 2052 (Age 75): OAS exceeds maximum ($12,550.64)",
+              "Year 2053 (Age 76): OAS exceeds maximum ($12,801.65)",
+              "Year 2054 (Age 77): OAS exceeds maximum ($13,057.68)",
+              "Year 2055 (Age 78): OAS exceeds maximum ($13,318.84)",
+              "Year 2056 (Age 79): OAS exceeds maximum ($13,585.21)",
+              "Year 2057 (Age 80): OAS exceeds maximum ($13,856.92)",
+              "Year 2058 (Age 81): OAS exceeds maximum ($14,134.05)",
+              "Year 2059 (Age 82): OAS exceeds maximum ($14,416.74)",
+              "Year 2060 (Age 83): OAS exceeds maximum ($14,705.07)",
+              "Year 2061 (Age 84): OAS exceeds maximum ($14,999.17)",
+              "Year 2062 (Age 85): OAS exceeds maximum ($15,299.16)",
+              "Year 2063 (Age 86): OAS exceeds maximum ($15,605.14)",
+              "Year 2064 (Age 87): OAS exceeds maximum ($15,917.24)",
+              "Year 2065 (Age 88): OAS exceeds maximum ($16,235.59)",
+              "Year 2066 (Age 89): OAS exceeds maximum ($16,560.30)",
+              "Year 2067 (Age 90): OAS exceeds maximum ($16,891.50)",
+              "Year 2068 (Age 91): OAS exceeds maximum ($17,229.33)",
+              "Year 2069 (Age 92): OAS exceeds maximum ($17,573.92)",
+              "Year 2070 (Age 93): OAS exceeds maximum ($17,925.40)",
+              "Year 2071 (Age 94): OAS exceeds maximum ($18,283.91)",
+              "Year 2072 (Age 95): OAS exceeds maximum ($18,649.58)"
+            ]
+          },
+          "gis": {
+            "passed": true,
+            "details": []
+          },
+          "oas_clawback": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "taxes": {
+          "federal_tax": {
+            "passed": true,
+            "details": []
+          },
+          "provincial_tax": {
+            "passed": true,
+            "details": []
+          },
+          "total_tax": {
+            "passed": true,
+            "details": []
+          },
+          "effective_tax_rate": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "credits": {
+          "basic_personal_amount": {
+            "passed": false,
+            "details": [
+              "Year 2026: Missing basic personal amount",
+              "Year 2027: Missing basic personal amount",
+              "Year 2028: Missing basic personal amount",
+              "Year 2029: Missing basic personal amount",
+              "Year 2030: Missing basic personal amount",
+              "Year 2031: Missing basic personal amount",
+              "Year 2032: Missing basic personal amount",
+              "Year 2033: Missing basic personal amount",
+              "Year 2034: Missing basic personal amount",
+              "Year 2035: Missing basic personal amount",
+              "Year 2036: Missing basic personal amount",
+              "Year 2037: Missing basic personal amount",
+              "Year 2038: Missing basic personal amount",
+              "Year 2039: Missing basic personal amount",
+              "Year 2040: Missing basic personal amount",
+              "Year 2041: Missing basic personal amount",
+              "Year 2042: Missing basic personal amount",
+              "Year 2043: Missing basic personal amount",
+              "Year 2044: Missing basic personal amount",
+              "Year 2045: Missing basic personal amount",
+              "Year 2046: Missing basic personal amount",
+              "Year 2047: Missing basic personal amount",
+              "Year 2048: Missing basic personal amount",
+              "Year 2049: Missing basic personal amount",
+              "Year 2050: Missing basic personal amount",
+              "Year 2051: Missing basic personal amount",
+              "Year 2052: Missing basic personal amount",
+              "Year 2053: Missing basic personal amount",
+              "Year 2054: Missing basic personal amount",
+              "Year 2055: Missing basic personal amount",
+              "Year 2056: Missing basic personal amount",
+              "Year 2057: Missing basic personal amount",
+              "Year 2058: Missing basic personal amount",
+              "Year 2059: Missing basic personal amount",
+              "Year 2060: Missing basic personal amount",
+              "Year 2061: Missing basic personal amount",
+              "Year 2062: Missing basic personal amount",
+              "Year 2063: Missing basic personal amount",
+              "Year 2064: Missing basic personal amount",
+              "Year 2065: Missing basic personal amount",
+              "Year 2066: Missing basic personal amount",
+              "Year 2067: Missing basic personal amount",
+              "Year 2068: Missing basic personal amount",
+              "Year 2069: Missing basic personal amount",
+              "Year 2070: Missing basic personal amount",
+              "Year 2071: Missing basic personal amount",
+              "Year 2072: Missing basic personal amount"
+            ]
+          },
+          "age_credit": {
+            "passed": false,
+            "details": [
+              "Year 2042 (Age 65): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2043 (Age 66): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2044 (Age 67): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2045 (Age 68): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2046 (Age 69): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2047 (Age 70): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2048 (Age 71): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2049 (Age 72): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2050 (Age 73): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2051 (Age 74): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2052 (Age 75): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2053 (Age 76): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2054 (Age 77): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2055 (Age 78): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2056 (Age 79): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2057 (Age 80): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2058 (Age 81): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2059 (Age 82): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2060 (Age 83): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2061 (Age 84): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2062 (Age 85): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2063 (Age 86): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2064 (Age 87): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2065 (Age 88): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2066 (Age 89): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2067 (Age 90): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2068 (Age 91): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2069 (Age 92): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2070 (Age 93): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2071 (Age 94): Missing age credit (Income: $0.00 below threshold)",
+              "Year 2072 (Age 95): Missing age credit (Income: $0.00 below threshold)"
+            ]
+          },
+          "pension_income_credit": {
+            "passed": true,
+            "details": []
+          },
+          "dividend_tax_credit": {
+            "passed": true,
+            "details": []
+          }
+        },
+        "accuracy": {
+          "balance_growth": {
+            "passed": true,
+            "details": []
+          },
+          "spending_coverage": {
+            "passed": true,
+            "details": []
+          },
+          "estate_value": {
+            "passed": true,
+            "details": []
+          },
+          "no_exponential_growth": {
+            "passed": true,
+            "details": []
+          }
+        }
+      },
+      "simulation_years": 47,
+      "final_estate": 0.0
+    }
+  ]
+}
