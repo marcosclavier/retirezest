@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-02-05T09:05:37.890765",
+  "summary": {
+    "passed": 0,
+    "failed": 1,
+    "total": 1
+  },
+  "results": [
+    {
+      "test_name": "Daniel Gonzalez Employment Income",
+      "passed": false,
+      "expected": {
+        "age_64_tax": ">$50,000",
+        "age_65_tax": ">$50,000",
+        "age_66_tax": "<$20,000",
+        "success_rate": ">90%"
+      },
+      "actual": {
+        "age_64_tax": "$60,896",
+        "age_65_tax": "$82,950",
+        "age_66_tax": "$0",
+        "success_rate": "0.0%"
+      },
+      "notes": "Success rate 0.0% < 90%",
+      "timestamp": "2026-02-05T09:05:37.881166"
+    }
+  ]
+}

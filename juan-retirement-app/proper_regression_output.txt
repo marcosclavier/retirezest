@@ -1,0 +1,1538 @@
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $29,000 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 65 Year 2026:
+  Strategy: minimize-income
+  After-tax target: $29,000
+  Base after-tax: $0
+  Initial shortfall: $29,000
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS FINAL [2026]: t1[gis]=$0.00 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $29,915 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 65 Year 2027:
+  Strategy: minimize-income
+  After-tax target: $29,580
+  Base after-tax: $-61,790
+  Initial shortfall: $29,915
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$52,000 TFSA=$9,455
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG GIS [Daniel Gonzalez] Age 65:
+  nr_interest=0, nr_elig_div=1040, nr_capg_dist=1040
+  rrif_wd=0, corp_wd=0
+  cpp=0, oas=8160
+  GIS_NET_INCOME=1560, GIS_BENEFIT=11862
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $22,580 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 66 Year 2027:
+  Strategy: minimize-income
+  After-tax target: $29,580
+  Base after-tax: $0
+  Initial shortfall: $22,580
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$7,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2027]: P1_income=$1,560 (OAS=$8,160) P2_income=$0 (OAS=$0) Combined=$1,560 threshold=$54,884
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2027]: gis_p1=$6,950.48
+DEBUG HH GIS FINAL [2027]: t1[gis]=$6,950.48 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $6,242 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 66 Year 2028:
+  Strategy: minimize-income
+  After-tax target: $30,172
+  Base after-tax: $23,929
+  Initial shortfall: $6,242
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG GIS [Daniel Gonzalez] Age 66:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=0, corp_wd=0
+  cpp=15606, oas=8323
+  GIS_NET_INCOME=15606, GIS_BENEFIT=12099
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $30,172 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 67 Year 2028:
+  Strategy: minimize-income
+  After-tax target: $30,172
+  Base after-tax: $0
+  Initial shortfall: $30,172
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2028]: P1_income=$15,606 (OAS=$8,323) P2_income=$0 (OAS=$0) Combined=$15,606 threshold=$55,982
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2028]: gis_p1=$7,089.49
+DEBUG HH GIS FINAL [2028]: t1[gis]=$7,089.49 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $511 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 67 Year 2029:
+  Strategy: minimize-income
+  After-tax target: $30,775
+  Base after-tax: $24,408
+  Initial shortfall: $511
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$5,856
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG GIS [Daniel Gonzalez] Age 67:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=0, corp_wd=0
+  cpp=15918, oas=8490
+  GIS_NET_INCOME=15918, GIS_BENEFIT=12341
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $30,775 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 68 Year 2029:
+  Strategy: minimize-income
+  After-tax target: $30,775
+  Base after-tax: $0
+  Initial shortfall: $30,775
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2029]: P1_income=$15,918 (OAS=$8,490) P2_income=$0 (OAS=$0) Combined=$15,918 threshold=$57,101
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2029]: gis_p1=$7,231.28
+DEBUG HH GIS FINAL [2029]: t1[gis]=$7,231.28 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Daniel Gonzalez] Age 68:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=0, corp_wd=0
+  cpp=16236, oas=8659
+  GIS_NET_INCOME=16236, GIS_BENEFIT=12588
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $31,391 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 69 Year 2030:
+  Strategy: minimize-income
+  After-tax target: $31,391
+  Base after-tax: $0
+  Initial shortfall: $31,391
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2030]: P1_income=$16,236 (OAS=$8,659) P2_income=$0 (OAS=$0) Combined=$16,236 threshold=$58,244
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2030]: gis_p1=$7,375.91
+DEBUG HH GIS FINAL [2030]: t1[gis]=$7,375.91 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Daniel Gonzalez] Age 69:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=0, corp_wd=0
+  cpp=16561, oas=8833
+  GIS_NET_INCOME=16561, GIS_BENEFIT=12839
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $32,018 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 70 Year 2031:
+  Strategy: minimize-income
+  After-tax target: $32,018
+  Base after-tax: $0
+  Initial shortfall: $32,018
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2031]: P1_income=$16,561 (OAS=$8,833) P2_income=$0 (OAS=$0) Combined=$16,561 threshold=$59,408
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2031]: gis_p1=$7,523.43
+DEBUG HH GIS FINAL [2031]: t1[gis]=$7,523.43 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Daniel Gonzalez] Age 70:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=0, corp_wd=0
+  cpp=16892, oas=9009
+  GIS_NET_INCOME=16892, GIS_BENEFIT=13096
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $32,659 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 71 Year 2032:
+  Strategy: minimize-income
+  After-tax target: $32,659
+  Base after-tax: $0
+  Initial shortfall: $32,659
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2032]: P1_income=$16,892 (OAS=$9,009) P2_income=$0 (OAS=$0) Combined=$16,892 threshold=$60,597
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2032]: gis_p1=$7,673.90
+DEBUG HH GIS FINAL [2032]: t1[gis]=$7,673.90 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,932 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 71 Year 2033:
+  Strategy: minimize-income
+  After-tax target: $33,312
+  Base after-tax: $26,420
+  Initial shortfall: $2,932
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$738,728 CORP=$0 NONREG=$0 TFSA=$32,181
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$699,723, shortfall=$2,932
+  -> RRIF withdrawal: $18,552 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 71:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=57556, corp_wd=0
+  cpp=17230, oas=9189
+  GIS_NET_INCOME=74787, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $33,312 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 72 Year 2033:
+  Strategy: minimize-income
+  After-tax target: $33,312
+  Base after-tax: $0
+  Initial shortfall: $33,312
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2033]: P1_income=$74,787 (OAS=$9,189) P2_income=$0 (OAS=$0) Combined=$74,787 threshold=$61,808
+DEBUG HH GIS CASE2 P1 CLAWBACK [2033]: excess=$12,978 gis_p1=$1,338.26
+DEBUG HH GIS FINAL [2033]: t1[gis]=$1,338.26 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,893 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 72 Year 2034:
+  Strategy: minimize-income
+  After-tax target: $33,978
+  Base after-tax: $26,948
+  Initial shortfall: $2,893
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$715,230 CORP=$0 NONREG=$0 TFSA=$68,637
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$676,607, shortfall=$2,893
+  -> RRIF withdrawal: $18,184 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 72:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=56806, corp_wd=0
+  cpp=17575, oas=9373
+  GIS_NET_INCOME=74381, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $33,978 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 73 Year 2034:
+  Strategy: minimize-income
+  After-tax target: $33,978
+  Base after-tax: $0
+  Initial shortfall: $33,978
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2034]: P1_income=$74,381 (OAS=$9,373) P2_income=$0 (OAS=$0) Combined=$74,381 threshold=$63,045
+DEBUG HH GIS CASE2 P1 CLAWBACK [2034]: excess=$11,336 gis_p1=$2,315.80
+DEBUG HH GIS FINAL [2034]: t1[gis]=$2,315.80 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,853 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 73 Year 2035:
+  Strategy: minimize-income
+  After-tax target: $34,658
+  Base after-tax: $27,487
+  Initial shortfall: $2,853
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$691,345 CORP=$0 NONREG=$0 TFSA=$106,347
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$653,114, shortfall=$2,853
+  -> RRIF withdrawal: $17,808 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 73:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=56039, corp_wd=0
+  cpp=17926, oas=9561
+  GIS_NET_INCOME=73966, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $34,658 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 74 Year 2035:
+  Strategy: minimize-income
+  After-tax target: $34,658
+  Base after-tax: $0
+  Initial shortfall: $34,658
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2035]: P1_income=$73,966 (OAS=$9,561) P2_income=$0 (OAS=$0) Combined=$73,966 threshold=$64,306
+DEBUG HH GIS CASE2 P1 CLAWBACK [2035]: excess=$9,660 gis_p1=$3,313.53
+DEBUG HH GIS FINAL [2035]: t1[gis]=$3,313.53 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,811 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 74 Year 2036:
+  Strategy: minimize-income
+  After-tax target: $35,351
+  Base after-tax: $28,037
+  Initial shortfall: $2,811
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$667,071 CORP=$0 NONREG=$0 TFSA=$145,362
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$629,248, shortfall=$2,811
+  -> RRIF withdrawal: $17,418 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 74:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=55241, corp_wd=0
+  cpp=18285, oas=9752
+  GIS_NET_INCOME=73526, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $35,351 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 75 Year 2036:
+  Strategy: minimize-income
+  After-tax target: $35,351
+  Base after-tax: $0
+  Initial shortfall: $35,351
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2036]: P1_income=$73,526 (OAS=$9,752) P2_income=$0 (OAS=$0) Combined=$73,526 threshold=$65,592
+DEBUG HH GIS CASE2 P1 CLAWBACK [2036]: excess=$7,934 gis_p1=$4,339.22
+DEBUG HH GIS FINAL [2036]: t1[gis]=$4,339.22 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,768 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 75 Year 2037:
+  Strategy: minimize-income
+  After-tax target: $36,058
+  Base after-tax: $28,598
+  Initial shortfall: $2,768
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$642,421 CORP=$0 NONREG=$0 TFSA=$185,726
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$605,032, shortfall=$2,768
+  -> RRIF withdrawal: $17,010 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 75:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=54398, corp_wd=0
+  cpp=18651, oas=9947
+  GIS_NET_INCOME=73049, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $36,058 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 76 Year 2037:
+  Strategy: minimize-income
+  After-tax target: $36,058
+  Base after-tax: $0
+  Initial shortfall: $36,058
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2037]: P1_income=$73,049 (OAS=$9,947) P2_income=$0 (OAS=$0) Combined=$73,049 threshold=$66,903
+DEBUG HH GIS CASE2 P1 CLAWBACK [2037]: excess=$6,146 gis_p1=$5,399.80
+DEBUG HH GIS FINAL [2037]: t1[gis]=$5,399.80 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,721 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 76 Year 2038:
+  Strategy: minimize-income
+  After-tax target: $36,779
+  Base after-tax: $29,170
+  Initial shortfall: $2,721
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$617,424 CORP=$0 NONREG=$0 TFSA=$206,961
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$580,502, shortfall=$2,721
+  -> RRIF withdrawal: $16,577 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 76:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=53499, corp_wd=0
+  cpp=19024, oas=10146
+  GIS_NET_INCOME=72522, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $16,266 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 77 Year 2038:
+  Strategy: minimize-income
+  After-tax target: $36,779
+  Base after-tax: $0
+  Initial shortfall: $16,266
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$20,513
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2038]: P1_income=$72,522 (OAS=$10,146) P2_income=$0 (OAS=$0) Combined=$72,522 threshold=$68,242
+DEBUG HH GIS CASE2 P1 CLAWBACK [2038]: excess=$4,281 gis_p1=$6,501.67
+DEBUG HH GIS FINAL [2038]: t1[gis]=$6,501.67 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,681 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 77 Year 2039:
+  Strategy: minimize-income
+  After-tax target: $37,515
+  Base after-tax: $29,753
+  Initial shortfall: $2,681
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$592,122 CORP=$0 NONREG=$0 TFSA=$223,868
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$555,588, shortfall=$2,681
+  -> RRIF withdrawal: $16,193 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 77:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=52727, corp_wd=0
+  cpp=19404, oas=10349
+  GIS_NET_INCOME=72131, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $12,285 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 78 Year 2039:
+  Strategy: minimize-income
+  After-tax target: $37,515
+  Base after-tax: $0
+  Initial shortfall: $12,285
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$25,229
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2039]: P1_income=$72,131 (OAS=$10,349) P2_income=$0 (OAS=$0) Combined=$72,131 threshold=$69,606
+DEBUG HH GIS CASE2 P1 CLAWBACK [2039]: excess=$2,525 gis_p1=$7,552.53
+DEBUG HH GIS FINAL [2039]: t1[gis]=$7,552.53 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,630 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 78 Year 2040:
+  Strategy: minimize-income
+  After-tax target: $38,265
+  Base after-tax: $30,348
+  Initial shortfall: $2,630
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$566,364 CORP=$0 NONREG=$0 TFSA=$241,615
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$530,343, shortfall=$2,630
+  -> RRIF withdrawal: $15,725 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 78:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=51746, corp_wd=0
+  cpp=19792, oas=10556
+  GIS_NET_INCOME=71538, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $13,619 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 79 Year 2040:
+  Strategy: minimize-income
+  After-tax target: $38,265
+  Base after-tax: $0
+  Initial shortfall: $13,619
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$24,645
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2040]: P1_income=$71,538 (OAS=$10,556) P2_income=$0 (OAS=$0) Combined=$71,538 threshold=$70,999
+DEBUG HH GIS CASE2 P1 CLAWBACK [2040]: excess=$540 gis_p1=$8,721.37
+DEBUG HH GIS FINAL [2040]: t1[gis]=$8,721.37 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,583 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 79 Year 2041:
+  Strategy: minimize-income
+  After-tax target: $39,030
+  Base after-tax: $30,955
+  Initial shortfall: $2,583
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$540,349 CORP=$0 NONREG=$0 TFSA=$260,226
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$504,794, shortfall=$2,583
+  -> RRIF withdrawal: $15,285 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 79:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=50840, corp_wd=0
+  cpp=20188, oas=10767
+  GIS_NET_INCOME=71028, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $15,090 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 80 Year 2041:
+  Strategy: minimize-income
+  After-tax target: $39,030
+  Base after-tax: $0
+  Initial shortfall: $15,090
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$23,940
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2041]: P1_income=$71,028 (OAS=$10,767) P2_income=$0 (OAS=$0) Combined=$71,028 threshold=$72,418
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2041]: gis_p1=$9,171.02
+DEBUG HH GIS FINAL [2041]: t1[gis]=$9,171.02 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,533 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 80 Year 2042:
+  Strategy: minimize-income
+  After-tax target: $39,811
+  Base after-tax: $31,574
+  Initial shortfall: $2,533
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$513,984 CORP=$0 NONREG=$0 TFSA=$279,757
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$478,931, shortfall=$2,533
+  -> RRIF withdrawal: $14,820 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 80:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=49874, corp_wd=0
+  cpp=20592, oas=10982
+  GIS_NET_INCOME=70465, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $16,543 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 81 Year 2042:
+  Strategy: minimize-income
+  After-tax target: $39,811
+  Base after-tax: $0
+  Initial shortfall: $16,543
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$23,268
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2042]: P1_income=$70,465 (OAS=$10,982) P2_income=$0 (OAS=$0) Combined=$70,465 threshold=$73,867
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2042]: gis_p1=$9,354.44
+DEBUG HH GIS FINAL [2042]: t1[gis]=$9,354.44 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,478 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 81 Year 2043:
+  Strategy: minimize-income
+  After-tax target: $40,607
+  Base after-tax: $32,206
+  Initial shortfall: $2,478
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$487,316 CORP=$0 NONREG=$0 TFSA=$300,248
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$452,814, shortfall=$2,478
+  -> RRIF withdrawal: $14,319 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 81:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=48821, corp_wd=0
+  cpp=21004, oas=11202
+  GIS_NET_INCOME=69824, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $18,046 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 82 Year 2043:
+  Strategy: minimize-income
+  After-tax target: $40,607
+  Base after-tax: $0
+  Initial shortfall: $18,046
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$22,561
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2043]: P1_income=$69,824 (OAS=$11,202) P2_income=$0 (OAS=$0) Combined=$69,824 threshold=$75,344
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2043]: gis_p1=$9,541.53
+DEBUG HH GIS FINAL [2043]: t1[gis]=$9,541.53 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,426 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 82 Year 2044:
+  Strategy: minimize-income
+  After-tax target: $41,419
+  Base after-tax: $32,850
+  Initial shortfall: $2,426
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$460,420 CORP=$0 NONREG=$0 TFSA=$321,745
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$426,441, shortfall=$2,426
+  -> RRIF withdrawal: $13,834 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 82:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=47813, corp_wd=0
+  cpp=21424, oas=11426
+  GIS_NET_INCOME=69236, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $19,621 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 83 Year 2044:
+  Strategy: minimize-income
+  After-tax target: $41,419
+  Base after-tax: $0
+  Initial shortfall: $19,621
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$21,798
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2044]: P1_income=$69,236 (OAS=$11,426) P2_income=$0 (OAS=$0) Combined=$69,236 threshold=$76,851
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2044]: gis_p1=$9,732.36
+DEBUG HH GIS FINAL [2044]: t1[gis]=$9,732.36 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,369 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 83 Year 2045:
+  Strategy: minimize-income
+  After-tax target: $42,248
+  Base after-tax: $33,507
+  Initial shortfall: $2,369
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$433,238 CORP=$0 NONREG=$0 TFSA=$344,304
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$399,836, shortfall=$2,369
+  -> RRIF withdrawal: $13,401 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 83:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=46804, corp_wd=0
+  cpp=21852, oas=11654
+  GIS_NET_INCOME=68656, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $21,192 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 84 Year 2045:
+  Strategy: minimize-income
+  After-tax target: $42,248
+  Base after-tax: $0
+  Initial shortfall: $21,192
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$21,056
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2045]: P1_income=$68,656 (OAS=$11,654) P2_income=$0 (OAS=$0) Combined=$68,656 threshold=$78,388
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2045]: gis_p1=$9,927.00
+DEBUG HH GIS FINAL [2045]: t1[gis]=$9,927.00 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,308 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 84 Year 2046:
+  Strategy: minimize-income
+  After-tax target: $43,092
+  Base after-tax: $34,177
+  Initial shortfall: $2,308
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$405,756 CORP=$0 NONREG=$0 TFSA=$367,973
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$372,971, shortfall=$2,308
+  -> RRIF withdrawal: $13,013 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 84:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=45798, corp_wd=0
+  cpp=22289, oas=11888
+  GIS_NET_INCOME=68087, GIS_BENEFIT=0
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $22,834 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 85 Year 2046:
+  Strategy: minimize-income
+  After-tax target: $43,092
+  Base after-tax: $0
+  Initial shortfall: $22,834
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$20,259
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2046]: P1_income=$68,087 (OAS=$11,888) P2_income=$0 (OAS=$0) Combined=$68,087 threshold=$79,956
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2046]: gis_p1=$10,125.54
+DEBUG HH GIS FINAL [2046]: t1[gis]=$10,125.54 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $2,247 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [Daniel Gonzalez] Age 85 Year 2047:
+  Strategy: minimize-income
+  After-tax target: $43,954
+  Base after-tax: $34,860
+  Initial shortfall: $2,247
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$377,956 CORP=$0 NONREG=$0 TFSA=$392,805
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$345,792, shortfall=$2,247
+  -> RRIF withdrawal: $12,621 (after-tax cost)
+DEBUG GIS [Daniel Gonzalez] Age 85:
+  nr_interest=0, nr_elig_div=0, nr_capg_dist=0
+  rrif_wd=44785, corp_wd=0
+  cpp=22735, oas=12125
+  GIS_NET_INCOME=67520, GIS_BENEFIT=126
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $24,541 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 86 Year 2047:
+  Strategy: minimize-income
+  After-tax target: $43,954
+  Base after-tax: $0
+  Initial shortfall: $24,541
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$19,413
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2047]: P1_income=$67,520 (OAS=$12,125) P2_income=$0 (OAS=$0) Combined=$67,520 threshold=$81,555
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2047]: gis_p1=$10,328.05
+DEBUG HH GIS FINAL [2047]: t1[gis]=$10,328.05 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 65: AFTER OAS, RRIF 8% of $280,000 = $22,400
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 65:
+  nr_interest=0, nr_elig_div=1200, nr_capg_dist=1200
+  rrif_wd=22400, corp_wd=0
+  cpp=15000, oas=8000
+  GIS_NET_INCOME=39200, GIS_BENEFIT=2757
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 65 Year 2026:
+  Strategy: rrif-frontload
+  After-tax target: $22,500
+  Base after-tax: $0
+  Initial shortfall: $22,500
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2026]: P1_income=$39,200 (OAS=$8,000) P2_income=$0 (OAS=$0) Combined=$39,200 threshold=$53,808
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2026]: gis_p1=$6,814.20
+DEBUG HH GIS FINAL [2026]: t1[gis]=$6,814.20 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 66: AFTER OAS, RRIF 8% of $270,480 = $21,638
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 66:
+  nr_interest=0, nr_elig_div=1248, nr_capg_dist=1248
+  rrif_wd=21638, corp_wd=0
+  cpp=15300, oas=8160
+  GIS_NET_INCOME=38810, GIS_BENEFIT=3399
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 66 Year 2027:
+  Strategy: rrif-frontload
+  After-tax target: $22,950
+  Base after-tax: $0
+  Initial shortfall: $22,950
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$7,000
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$7,000, shortfall=$22,950
+  -> TFSA withdrawal: $7,000
+DEBUG HH GIS CASE2 (One OAS) [2027]: P1_income=$38,810 (OAS=$8,160) P2_income=$0 (OAS=$0) Combined=$38,810 threshold=$54,884
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2027]: gis_p1=$6,950.48
+DEBUG HH GIS FINAL [2027]: t1[gis]=$6,950.48 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 67: AFTER OAS, RRIF 8% of $261,284 = $20,903
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 67:
+  nr_interest=0, nr_elig_div=1298, nr_capg_dist=1298
+  rrif_wd=20903, corp_wd=0
+  cpp=15606, oas=8323
+  GIS_NET_INCOME=38456, GIS_BENEFIT=4032
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 67 Year 2028:
+  Strategy: rrif-frontload
+  After-tax target: $23,409
+  Base after-tax: $0
+  Initial shortfall: $23,409
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$7,000
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$7,000, shortfall=$23,409
+  -> TFSA withdrawal: $7,000
+DEBUG HH GIS CASE2 (One OAS) [2028]: P1_income=$38,456 (OAS=$8,323) P2_income=$0 (OAS=$0) Combined=$38,456 threshold=$55,982
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2028]: gis_p1=$7,089.49
+DEBUG HH GIS FINAL [2028]: t1[gis]=$7,089.49 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 68: AFTER OAS, RRIF 8% of $252,400 = $20,192
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 68:
+  nr_interest=0, nr_elig_div=1350, nr_capg_dist=1350
+  rrif_wd=20192, corp_wd=0
+  cpp=15918, oas=8490
+  GIS_NET_INCOME=38135, GIS_BENEFIT=4658
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 68 Year 2029:
+  Strategy: rrif-frontload
+  After-tax target: $23,877
+  Base after-tax: $0
+  Initial shortfall: $23,877
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$14,000
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$14,000, shortfall=$23,877
+  -> TFSA withdrawal: $14,000
+DEBUG HH GIS CASE2 (One OAS) [2029]: P1_income=$38,135 (OAS=$8,490) P2_income=$0 (OAS=$0) Combined=$38,135 threshold=$57,101
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2029]: gis_p1=$7,231.28
+DEBUG HH GIS FINAL [2029]: t1[gis]=$7,231.28 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 69: AFTER OAS, RRIF 8% of $243,818 = $19,505
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 69:
+  nr_interest=0, nr_elig_div=1404, nr_capg_dist=1404
+  rrif_wd=19505, corp_wd=0
+  cpp=16236, oas=8659
+  GIS_NET_INCOME=37848, GIS_BENEFIT=5276
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 69 Year 2030:
+  Strategy: rrif-frontload
+  After-tax target: $24,355
+  Base after-tax: $0
+  Initial shortfall: $24,355
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$14,000
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$14,000, shortfall=$24,355
+  -> TFSA withdrawal: $14,000
+DEBUG HH GIS CASE2 (One OAS) [2030]: P1_income=$37,848 (OAS=$8,659) P2_income=$0 (OAS=$0) Combined=$37,848 threshold=$58,244
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2030]: gis_p1=$7,375.91
+DEBUG HH GIS FINAL [2030]: t1[gis]=$7,375.91 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 70: AFTER OAS, RRIF 8% of $235,529 = $18,842
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 70:
+  nr_interest=0, nr_elig_div=1460, nr_capg_dist=1460
+  rrif_wd=18842, corp_wd=0
+  cpp=16561, oas=8833
+  GIS_NET_INCOME=37593, GIS_BENEFIT=5887
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 70 Year 2031:
+  Strategy: rrif-frontload
+  After-tax target: $24,842
+  Base after-tax: $0
+  Initial shortfall: $24,842
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$21,000
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$21,000, shortfall=$24,842
+  -> TFSA withdrawal: $21,000
+DEBUG HH GIS CASE2 (One OAS) [2031]: P1_income=$37,593 (OAS=$8,833) P2_income=$0 (OAS=$0) Combined=$37,593 threshold=$59,408
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2031]: gis_p1=$7,523.43
+DEBUG HH GIS FINAL [2031]: t1[gis]=$7,523.43 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 71: AFTER OAS, RRIF 8% of $227,521 = $18,202
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 71:
+  nr_interest=0, nr_elig_div=1518, nr_capg_dist=1518
+  rrif_wd=18202, corp_wd=0
+  cpp=16892, oas=9009
+  GIS_NET_INCOME=37372, GIS_BENEFIT=6492
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 71 Year 2032:
+  Strategy: rrif-frontload
+  After-tax target: $25,339
+  Base after-tax: $0
+  Initial shortfall: $25,339
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$21,000
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$21,000, shortfall=$25,339
+  -> TFSA withdrawal: $21,000
+DEBUG HH GIS CASE2 (One OAS) [2032]: P1_income=$37,372 (OAS=$9,009) P2_income=$0 (OAS=$0) Combined=$37,372 threshold=$60,597
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2032]: gis_p1=$7,673.90
+DEBUG HH GIS FINAL [2032]: t1[gis]=$7,673.90 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 72: AFTER OAS, RRIF 8% of $219,785 = $17,583
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 72:
+  nr_interest=0, nr_elig_div=1579, nr_capg_dist=1579
+  rrif_wd=17583, corp_wd=0
+  cpp=17230, oas=9189
+  GIS_NET_INCOME=37182, GIS_BENEFIT=7090
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 72 Year 2033:
+  Strategy: rrif-frontload
+  After-tax target: $25,845
+  Base after-tax: $0
+  Initial shortfall: $25,845
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$24,844
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$24,844, shortfall=$25,845
+  -> TFSA withdrawal: $24,844
+DEBUG HH GIS CASE2 (One OAS) [2033]: P1_income=$37,182 (OAS=$9,189) P2_income=$0 (OAS=$0) Combined=$37,182 threshold=$61,808
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2033]: gis_p1=$7,827.37
+DEBUG HH GIS FINAL [2033]: t1[gis]=$7,827.37 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 73: AFTER OAS, RRIF 8% of $212,312 = $16,985
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 73:
+  nr_interest=0, nr_elig_div=1642, nr_capg_dist=1642
+  rrif_wd=16985, corp_wd=0
+  cpp=17575, oas=9373
+  GIS_NET_INCOME=37023, GIS_BENEFIT=7683
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 73 Year 2034:
+  Strategy: rrif-frontload
+  After-tax target: $26,362
+  Base after-tax: $0
+  Initial shortfall: $26,362
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$25,082
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$25,082, shortfall=$26,362
+  -> TFSA withdrawal: $25,082
+DEBUG HH GIS CASE2 (One OAS) [2034]: P1_income=$37,023 (OAS=$9,373) P2_income=$0 (OAS=$0) Combined=$37,023 threshold=$63,045
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2034]: gis_p1=$7,983.92
+DEBUG HH GIS FINAL [2034]: t1[gis]=$7,983.92 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 74: AFTER OAS, RRIF 8% of $205,094 = $16,407
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 74:
+  nr_interest=0, nr_elig_div=1708, nr_capg_dist=1708
+  rrif_wd=16407, corp_wd=0
+  cpp=17926, oas=9561
+  GIS_NET_INCOME=36896, GIS_BENEFIT=8271
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 74 Year 2035:
+  Strategy: rrif-frontload
+  After-tax target: $26,890
+  Base after-tax: $0
+  Initial shortfall: $26,890
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$25,337
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$25,337, shortfall=$26,890
+  -> TFSA withdrawal: $25,337
+DEBUG HH GIS CASE2 (One OAS) [2035]: P1_income=$36,896 (OAS=$9,561) P2_income=$0 (OAS=$0) Combined=$36,896 threshold=$64,306
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2035]: gis_p1=$8,143.60
+DEBUG HH GIS FINAL [2035]: t1[gis]=$8,143.60 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 75: AFTER OAS, RRIF 8% of $198,120 = $15,850
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 75:
+  nr_interest=0, nr_elig_div=1776, nr_capg_dist=1776
+  rrif_wd=15850, corp_wd=0
+  cpp=18285, oas=9752
+  GIS_NET_INCOME=36799, GIS_BENEFIT=8854
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 75 Year 2036:
+  Strategy: rrif-frontload
+  After-tax target: $24,380
+  Base after-tax: $0
+  Initial shortfall: $24,380
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$25,602
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$25,602, shortfall=$24,380
+  -> TFSA withdrawal: $24,380
+DEBUG HH GIS CASE2 (One OAS) [2036]: P1_income=$36,799 (OAS=$9,752) P2_income=$0 (OAS=$0) Combined=$36,799 threshold=$65,592
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2036]: gis_p1=$8,306.47
+DEBUG HH GIS FINAL [2036]: t1[gis]=$8,306.47 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 76: AFTER OAS, RRIF 8% of $191,384 = $15,311
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 76:
+  nr_interest=0, nr_elig_div=1847, nr_capg_dist=1847
+  rrif_wd=15311, corp_wd=0
+  cpp=18651, oas=9947
+  GIS_NET_INCOME=36732, GIS_BENEFIT=9432
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 76 Year 2037:
+  Strategy: rrif-frontload
+  After-tax target: $24,867
+  Base after-tax: $0
+  Initial shortfall: $24,867
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$30,213
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$30,213, shortfall=$24,867
+  -> TFSA withdrawal: $24,867
+DEBUG HH GIS CASE2 (One OAS) [2037]: P1_income=$36,732 (OAS=$9,947) P2_income=$0 (OAS=$0) Combined=$36,732 threshold=$66,903
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2037]: gis_p1=$8,472.60
+DEBUG HH GIS FINAL [2037]: t1[gis]=$8,472.60 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 77: AFTER OAS, RRIF 8% of $184,877 = $14,790
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 77:
+  nr_interest=0, nr_elig_div=1921, nr_capg_dist=1921
+  rrif_wd=14790, corp_wd=0
+  cpp=19024, oas=10146
+  GIS_NET_INCOME=36696, GIS_BENEFIT=10006
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 77 Year 2038:
+  Strategy: rrif-frontload
+  After-tax target: $25,365
+  Base after-tax: $0
+  Initial shortfall: $25,365
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$34,900
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$34,900, shortfall=$25,365
+  -> TFSA withdrawal: $25,365
+DEBUG HH GIS CASE2 (One OAS) [2038]: P1_income=$36,696 (OAS=$10,146) P2_income=$0 (OAS=$0) Combined=$36,696 threshold=$68,242
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2038]: gis_p1=$8,642.05
+DEBUG HH GIS FINAL [2038]: t1[gis]=$8,642.05 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 78: AFTER OAS, RRIF 8% of $178,591 = $14,287
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 78:
+  nr_interest=0, nr_elig_div=1998, nr_capg_dist=1998
+  rrif_wd=14287, corp_wd=0
+  cpp=19404, oas=10349
+  GIS_NET_INCOME=36689, GIS_BENEFIT=10577
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 78 Year 2039:
+  Strategy: rrif-frontload
+  After-tax target: $25,872
+  Base after-tax: $0
+  Initial shortfall: $25,872
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$39,675
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$39,675, shortfall=$25,872
+  -> TFSA withdrawal: $25,872
+DEBUG HH GIS CASE2 (One OAS) [2039]: P1_income=$36,689 (OAS=$10,349) P2_income=$0 (OAS=$0) Combined=$36,689 threshold=$69,606
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2039]: gis_p1=$8,814.89
+DEBUG HH GIS FINAL [2039]: t1[gis]=$8,814.89 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 79: AFTER OAS, RRIF 8% of $172,519 = $13,802
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 79:
+  nr_interest=0, nr_elig_div=2078, nr_capg_dist=2078
+  rrif_wd=13802, corp_wd=0
+  cpp=19792, oas=10556
+  GIS_NET_INCOME=36711, GIS_BENEFIT=11144
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 79 Year 2040:
+  Strategy: rrif-frontload
+  After-tax target: $26,390
+  Base after-tax: $0
+  Initial shortfall: $26,390
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$44,548
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$44,548, shortfall=$26,390
+  -> TFSA withdrawal: $26,390
+DEBUG HH GIS CASE2 (One OAS) [2040]: P1_income=$36,711 (OAS=$10,556) P2_income=$0 (OAS=$0) Combined=$36,711 threshold=$70,999
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2040]: gis_p1=$8,991.19
+DEBUG HH GIS FINAL [2040]: t1[gis]=$8,991.19 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 80: AFTER OAS, RRIF 8% of $166,654 = $13,332
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 80:
+  nr_interest=0, nr_elig_div=2161, nr_capg_dist=2161
+  rrif_wd=13332, corp_wd=0
+  cpp=20188, oas=10767
+  GIS_NET_INCOME=36762, GIS_BENEFIT=11709
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 80 Year 2041:
+  Strategy: rrif-frontload
+  After-tax target: $26,917
+  Base after-tax: $0
+  Initial shortfall: $26,917
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$49,532
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$49,532, shortfall=$26,917
+  -> TFSA withdrawal: $26,917
+DEBUG HH GIS CASE2 (One OAS) [2041]: P1_income=$36,762 (OAS=$10,767) P2_income=$0 (OAS=$0) Combined=$36,762 threshold=$72,418
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2041]: gis_p1=$9,171.02
+DEBUG HH GIS FINAL [2041]: t1[gis]=$9,171.02 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 81: AFTER OAS, RRIF 8% of $160,987 = $12,879
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 81:
+  nr_interest=0, nr_elig_div=2248, nr_capg_dist=2248
+  rrif_wd=12879, corp_wd=0
+  cpp=20592, oas=10982
+  GIS_NET_INCOME=36842, GIS_BENEFIT=12270
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 81 Year 2042:
+  Strategy: rrif-frontload
+  After-tax target: $27,456
+  Base after-tax: $0
+  Initial shortfall: $27,456
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$54,641
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$54,641, shortfall=$27,456
+  -> TFSA withdrawal: $27,456
+DEBUG HH GIS CASE2 (One OAS) [2042]: P1_income=$36,842 (OAS=$10,982) P2_income=$0 (OAS=$0) Combined=$36,842 threshold=$73,867
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2042]: gis_p1=$9,354.44
+DEBUG HH GIS FINAL [2042]: t1[gis]=$9,354.44 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 82: AFTER OAS, RRIF 8% of $155,514 = $12,441
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 82:
+  nr_interest=0, nr_elig_div=2337, nr_capg_dist=2337
+  rrif_wd=12441, corp_wd=0
+  cpp=21004, oas=11202
+  GIS_NET_INCOME=36951, GIS_BENEFIT=12830
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 82 Year 2043:
+  Strategy: rrif-frontload
+  After-tax target: $28,005
+  Base after-tax: $0
+  Initial shortfall: $28,005
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$59,886
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$59,886, shortfall=$28,005
+  -> TFSA withdrawal: $28,005
+DEBUG HH GIS CASE2 (One OAS) [2043]: P1_income=$36,951 (OAS=$11,202) P2_income=$0 (OAS=$0) Combined=$36,951 threshold=$75,344
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2043]: gis_p1=$9,541.53
+DEBUG HH GIS FINAL [2043]: t1[gis]=$9,541.53 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 83: AFTER OAS, RRIF 8% of $150,226 = $12,018
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 83:
+  nr_interest=0, nr_elig_div=2431, nr_capg_dist=2431
+  rrif_wd=12018, corp_wd=0
+  cpp=21424, oas=11426
+  GIS_NET_INCOME=37088, GIS_BENEFIT=13387
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 83 Year 2044:
+  Strategy: rrif-frontload
+  After-tax target: $28,565
+  Base after-tax: $0
+  Initial shortfall: $28,565
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$65,282
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$65,282, shortfall=$28,565
+  -> TFSA withdrawal: $28,565
+DEBUG HH GIS CASE2 (One OAS) [2044]: P1_income=$37,088 (OAS=$11,426) P2_income=$0 (OAS=$0) Combined=$37,088 threshold=$76,851
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2044]: gis_p1=$9,732.36
+DEBUG HH GIS FINAL [2044]: t1[gis]=$9,732.36 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 84: AFTER OAS, RRIF 8% of $145,119 = $11,726
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 84:
+  nr_interest=0, nr_elig_div=2528, nr_capg_dist=2528
+  rrif_wd=11726, corp_wd=0
+  cpp=21852, oas=11654
+  GIS_NET_INCOME=37370, GIS_BENEFIT=13885
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 84 Year 2045:
+  Strategy: rrif-frontload
+  After-tax target: $29,136
+  Base after-tax: $0
+  Initial shortfall: $29,136
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$70,844
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$70,844, shortfall=$29,136
+  -> TFSA withdrawal: $29,136
+DEBUG HH GIS CASE2 (One OAS) [2045]: P1_income=$37,370 (OAS=$11,654) P2_income=$0 (OAS=$0) Combined=$37,370 threshold=$78,388
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2045]: gis_p1=$9,927.00
+DEBUG HH GIS FINAL [2045]: t1[gis]=$9,927.00 t2[gis]=$0.00
+DEBUG RRIF-FRONTLOAD [Test User] Age 85: AFTER OAS, RRIF 8% of $140,063 = $11,919
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 85:
+  nr_interest=0, nr_elig_div=2629, nr_capg_dist=2629
+  rrif_wd=11919, corp_wd=0
+  cpp=22289, oas=11888
+  GIS_NET_INCOME=38153, GIS_BENEFIT=14145
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+
+DEBUG WITHDRAWAL [No Partner] Age 85 Year 2046:
+  Strategy: rrif-frontload
+  After-tax target: $26,004
+  Base after-tax: $0
+  Initial shortfall: $26,004
+  Order: ['nonreg', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$76,621
+  NONREG: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+  TFSA: available=$76,621, shortfall=$26,004
+  -> TFSA withdrawal: $26,004
+DEBUG HH GIS CASE2 (One OAS) [2046]: P1_income=$38,153 (OAS=$11,888) P2_income=$0 (OAS=$0) Combined=$38,153 threshold=$79,956
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2046]: gis_p1=$10,125.54
+DEBUG HH GIS FINAL [2046]: t1[gis]=$10,125.54 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 65:
+  nr_interest=0, nr_elig_div=2000, nr_capg_dist=2000
+  rrif_wd=8000, corp_wd=0
+  cpp=15000, oas=8000
+  GIS_NET_INCOME=26000, GIS_BENEFIT=9357
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $22,500 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 65 Year 2026:
+  Strategy: minimize-income
+  After-tax target: $22,500
+  Base after-tax: $0
+  Initial shortfall: $22,500
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$0
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2026]: P1_income=$26,000 (OAS=$8,000) P2_income=$0 (OAS=$0) Combined=$26,000 threshold=$53,808
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2026]: gis_p1=$6,814.20
+DEBUG HH GIS FINAL [2026]: t1[gis]=$6,814.20 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 66:
+  nr_interest=0, nr_elig_div=2080, nr_capg_dist=2080
+  rrif_wd=8225, corp_wd=0
+  cpp=15300, oas=8160
+  GIS_NET_INCOME=26645, GIS_BENEFIT=9482
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $15,950 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 66 Year 2027:
+  Strategy: minimize-income
+  After-tax target: $22,950
+  Base after-tax: $0
+  Initial shortfall: $15,950
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$7,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2027]: P1_income=$26,645 (OAS=$8,160) P2_income=$0 (OAS=$0) Combined=$26,645 threshold=$54,884
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2027]: gis_p1=$6,950.48
+DEBUG HH GIS FINAL [2027]: t1[gis]=$6,950.48 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 67:
+  nr_interest=0, nr_elig_div=2163, nr_capg_dist=2163
+  rrif_wd=8467, corp_wd=0
+  cpp=15606, oas=8323
+  GIS_NET_INCOME=27318, GIS_BENEFIT=9601
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $16,409 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 67 Year 2028:
+  Strategy: minimize-income
+  After-tax target: $23,409
+  Base after-tax: $0
+  Initial shortfall: $16,409
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$7,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2028]: P1_income=$27,318 (OAS=$8,323) P2_income=$0 (OAS=$0) Combined=$27,318 threshold=$55,982
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2028]: gis_p1=$7,089.49
+DEBUG HH GIS FINAL [2028]: t1[gis]=$7,089.49 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 68:
+  nr_interest=0, nr_elig_div=2250, nr_capg_dist=2250
+  rrif_wd=8703, corp_wd=0
+  cpp=15918, oas=8490
+  GIS_NET_INCOME=27996, GIS_BENEFIT=9727
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $9,877 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 68 Year 2029:
+  Strategy: minimize-income
+  After-tax target: $23,877
+  Base after-tax: $0
+  Initial shortfall: $9,877
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$14,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2029]: P1_income=$27,996 (OAS=$8,490) P2_income=$0 (OAS=$0) Combined=$27,996 threshold=$57,101
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2029]: gis_p1=$7,231.28
+DEBUG HH GIS FINAL [2029]: t1[gis]=$7,231.28 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 69:
+  nr_interest=0, nr_elig_div=2340, nr_capg_dist=2340
+  rrif_wd=8955, corp_wd=0
+  cpp=16236, oas=8659
+  GIS_NET_INCOME=28701, GIS_BENEFIT=9850
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $10,355 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 69 Year 2030:
+  Strategy: minimize-income
+  After-tax target: $24,355
+  Base after-tax: $0
+  Initial shortfall: $10,355
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$14,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2030]: P1_income=$28,701 (OAS=$8,659) P2_income=$0 (OAS=$0) Combined=$28,701 threshold=$58,244
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2030]: gis_p1=$7,375.91
+DEBUG HH GIS FINAL [2030]: t1[gis]=$7,375.91 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 70:
+  nr_interest=0, nr_elig_div=2433, nr_capg_dist=2433
+  rrif_wd=9219, corp_wd=0
+  cpp=16561, oas=8833
+  GIS_NET_INCOME=29430, GIS_BENEFIT=9969
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $3,842 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 70 Year 2031:
+  Strategy: minimize-income
+  After-tax target: $24,842
+  Base after-tax: $0
+  Initial shortfall: $3,842
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$21,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2031]: P1_income=$29,430 (OAS=$8,833) P2_income=$0 (OAS=$0) Combined=$29,430 threshold=$59,408
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2031]: gis_p1=$7,523.43
+DEBUG HH GIS FINAL [2031]: t1[gis]=$7,523.43 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 71:
+  nr_interest=0, nr_elig_div=2531, nr_capg_dist=2531
+  rrif_wd=10923, corp_wd=0
+  cpp=16892, oas=9009
+  GIS_NET_INCOME=31612, GIS_BENEFIT=9372
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $4,339 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 71 Year 2032:
+  Strategy: minimize-income
+  After-tax target: $25,339
+  Base after-tax: $0
+  Initial shortfall: $4,339
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$21,000
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2032]: P1_income=$31,612 (OAS=$9,009) P2_income=$0 (OAS=$0) Combined=$31,612 threshold=$60,597
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2032]: gis_p1=$7,673.90
+DEBUG HH GIS FINAL [2032]: t1[gis]=$7,673.90 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 72:
+  nr_interest=0, nr_elig_div=2632, nr_capg_dist=2632
+  rrif_wd=11111, corp_wd=0
+  cpp=17230, oas=9189
+  GIS_NET_INCOME=32289, GIS_BENEFIT=9537
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+  WARNING: GIS optimization left $12 shortfall, using fallback order
+
+DEBUG WITHDRAWAL [No Partner] Age 72 Year 2033:
+  Strategy: minimize-income
+  After-tax target: $25,845
+  Base after-tax: $0
+  Initial shortfall: $12
+  Order: ['nonreg', 'rrif', 'tfsa']
+  Starting balances: RRIF=$0 CORP=$0 NONREG=$0 TFSA=$25,833
+  NONREG: available=$0 (skipping, no funds)
+  RRIF: available=$0 (skipping, no funds)
+  TFSA guard check - rrif_left=$0 corp_left=$0 nonreg_left=$0
+DEBUG HH GIS CASE2 (One OAS) [2033]: P1_income=$32,289 (OAS=$9,189) P2_income=$0 (OAS=$0) Combined=$32,289 threshold=$61,808
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2033]: gis_p1=$7,827.37
+DEBUG HH GIS FINAL [2033]: t1[gis]=$7,827.37 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 73:
+  nr_interest=0, nr_elig_div=2737, nr_capg_dist=2737
+  rrif_wd=11302, corp_wd=0
+  cpp=17575, oas=9373
+  GIS_NET_INCOME=32983, GIS_BENEFIT=9703
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2034]: P1_income=$32,983 (OAS=$9,373) P2_income=$0 (OAS=$0) Combined=$32,983 threshold=$63,045
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2034]: gis_p1=$7,983.92
+DEBUG HH GIS FINAL [2034]: t1[gis]=$7,983.92 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 74:
+  nr_interest=0, nr_elig_div=2847, nr_capg_dist=2847
+  rrif_wd=11495, corp_wd=0
+  cpp=17926, oas=9561
+  GIS_NET_INCOME=33691, GIS_BENEFIT=9873
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2035]: P1_income=$33,691 (OAS=$9,561) P2_income=$0 (OAS=$0) Combined=$33,691 threshold=$64,306
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2035]: gis_p1=$8,143.60
+DEBUG HH GIS FINAL [2035]: t1[gis]=$8,143.60 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 75:
+  nr_interest=0, nr_elig_div=2960, nr_capg_dist=2960
+  rrif_wd=11686, corp_wd=0
+  cpp=18285, oas=9752
+  GIS_NET_INCOME=34412, GIS_BENEFIT=10047
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2036]: P1_income=$34,412 (OAS=$9,752) P2_income=$0 (OAS=$0) Combined=$34,412 threshold=$65,592
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2036]: gis_p1=$8,306.47
+DEBUG HH GIS FINAL [2036]: t1[gis]=$8,306.47 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 76:
+  nr_interest=0, nr_elig_div=3079, nr_capg_dist=3079
+  rrif_wd=11874, corp_wd=0
+  cpp=18651, oas=9947
+  GIS_NET_INCOME=35143, GIS_BENEFIT=10227
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2037]: P1_income=$35,143 (OAS=$9,947) P2_income=$0 (OAS=$0) Combined=$35,143 threshold=$66,903
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2037]: gis_p1=$8,472.60
+DEBUG HH GIS FINAL [2037]: t1[gis]=$8,472.60 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 77:
+  nr_interest=0, nr_elig_div=3202, nr_capg_dist=3202
+  rrif_wd=12095, corp_wd=0
+  cpp=19024, oas=10146
+  GIS_NET_INCOME=35921, GIS_BENEFIT=10393
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2038]: P1_income=$35,921 (OAS=$10,146) P2_income=$0 (OAS=$0) Combined=$35,921 threshold=$68,242
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2038]: gis_p1=$8,642.05
+DEBUG HH GIS FINAL [2038]: t1[gis]=$8,642.05 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 78:
+  nr_interest=0, nr_elig_div=3330, nr_capg_dist=3330
+  rrif_wd=12283, corp_wd=0
+  cpp=19404, oas=10349
+  GIS_NET_INCOME=36682, GIS_BENEFIT=10580
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2039]: P1_income=$36,682 (OAS=$10,349) P2_income=$0 (OAS=$0) Combined=$36,682 threshold=$69,606
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2039]: gis_p1=$8,814.89
+DEBUG HH GIS FINAL [2039]: t1[gis]=$8,814.89 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 79:
+  nr_interest=0, nr_elig_div=3463, nr_capg_dist=3463
+  rrif_wd=12495, corp_wd=0
+  cpp=19792, oas=10556
+  GIS_NET_INCOME=37482, GIS_BENEFIT=10759
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2040]: P1_income=$37,482 (OAS=$10,556) P2_income=$0 (OAS=$0) Combined=$37,482 threshold=$70,999
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2040]: gis_p1=$8,991.19
+DEBUG HH GIS FINAL [2040]: t1[gis]=$8,991.19 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 80:
+  nr_interest=0, nr_elig_div=3602, nr_capg_dist=3602
+  rrif_wd=12703, corp_wd=0
+  cpp=20188, oas=10767
+  GIS_NET_INCOME=38294, GIS_BENEFIT=10943
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2041]: P1_income=$38,294 (OAS=$10,767) P2_income=$0 (OAS=$0) Combined=$38,294 threshold=$72,418
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2041]: gis_p1=$9,171.02
+DEBUG HH GIS FINAL [2041]: t1[gis]=$9,171.02 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 81:
+  nr_interest=0, nr_elig_div=3746, nr_capg_dist=3746
+  rrif_wd=12902, corp_wd=0
+  cpp=20592, oas=10982
+  GIS_NET_INCOME=39113, GIS_BENEFIT=11135
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2042]: P1_income=$39,113 (OAS=$10,982) P2_income=$0 (OAS=$0) Combined=$39,113 threshold=$73,867
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2042]: gis_p1=$9,354.44
+DEBUG HH GIS FINAL [2042]: t1[gis]=$9,354.44 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 82:
+  nr_interest=0, nr_elig_div=3896, nr_capg_dist=3896
+  rrif_wd=13122, corp_wd=0
+  cpp=21004, oas=11202
+  GIS_NET_INCOME=39969, GIS_BENEFIT=11321
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2043]: P1_income=$39,969 (OAS=$11,202) P2_income=$0 (OAS=$0) Combined=$39,969 threshold=$75,344
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2043]: gis_p1=$9,541.53
+DEBUG HH GIS FINAL [2043]: t1[gis]=$9,541.53 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 83:
+  nr_interest=0, nr_elig_div=4052, nr_capg_dist=4052
+  rrif_wd=13332, corp_wd=0
+  cpp=21424, oas=11426
+  GIS_NET_INCOME=40833, GIS_BENEFIT=11515
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2044]: P1_income=$40,833 (OAS=$11,426) P2_income=$0 (OAS=$0) Combined=$40,833 threshold=$76,851
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2044]: gis_p1=$9,732.36
+DEBUG HH GIS FINAL [2044]: t1[gis]=$9,732.36 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 84:
+  nr_interest=0, nr_elig_div=4214, nr_capg_dist=4214
+  rrif_wd=13539, corp_wd=0
+  cpp=21852, oas=11654
+  GIS_NET_INCOME=41712, GIS_BENEFIT=11714
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2045]: P1_income=$41,712 (OAS=$11,654) P2_income=$0 (OAS=$0) Combined=$41,712 threshold=$78,388
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2045]: gis_p1=$9,927.00
+DEBUG HH GIS FINAL [2045]: t1[gis]=$9,927.00 t2[gis]=$0.00
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG GIS [Test User] Age 85:
+  nr_interest=0, nr_elig_div=4382, nr_capg_dist=4382
+  rrif_wd=13763, corp_wd=0
+  cpp=22289, oas=11888
+  GIS_NET_INCOME=42625, GIS_BENEFIT=11909
+  WARNING: TaxOptimizer failed (name 'tax_optimizer' is not defined), falling back to strategy order
+DEBUG HH GIS CASE2 (One OAS) [2046]: P1_income=$42,625 (OAS=$11,888) P2_income=$0 (OAS=$0) Combined=$42,625 threshold=$79,956
+DEBUG HH GIS CASE2 P1 BELOW_THRESHOLD [2046]: gis_p1=$10,125.54
+DEBUG HH GIS FINAL [2046]: t1[gis]=$10,125.54 t2[gis]=$0.00
+
+================================================================================
+PROPER TAX REGRESSION TEST SUITE
+Using baseline data from pre-change documentation
+================================================================================
+
+================================================================================
+TEST 1: Daniel Gonzalez Employment Income (Baseline from test_daniel_direct.py)
+================================================================================
+Running simulation...
+✅ Simulation complete
+
+Year   Age   Tax             Status     Result
+--------------------------------------------------------------------------------
+2026   64    $       60,896 ✅ PASS     Tax=$60,896 (expected >$50,000)
+2027   65    $       82,950 ✅ PASS     Tax=$82,950 (expected >$50,000)
+2028   66    $            0 ✅ PASS     Tax=$0 (expected <$20,000)
+
+📈 Success Rate: 0.0% (expected >90%)
+❌ FAIL: Success rate too low
+
+❌ TEST FAILED
+================================================================================
+
+================================================================================
+TEST 2: Optimization Scenario - Insufficient Assets (Baseline from US044)
+================================================================================
+Running simulation...
+✅ Simulation complete
+
+
+❌ ERROR: Test 'test_2_optimization_scenario_insufficient_assets' crashed with exception:
+   'tfsa_p1'
+================================================================================
+TEST 3: Optimization Scenario - All Strategies Equivalent (Baseline from US044)
+================================================================================
+Running simulation...
+✅ Simulation complete
+
+
+❌ ERROR: Test 'test_3_optimization_scenario_all_strategies_equivalent' crashed with exception:
+   'tfsa_p1'
+
+📄 Detailed results saved to: proper_regression_results.json
+
+================================================================================
+PROPER REGRESSION TEST SUMMARY
+================================================================================
+Tests Passed: 0
+Tests Failed: 3
+Total Tests: 3
+
+❌ 3 TEST(S) FAILED - REGRESSIONS DETECTED
+
+Conclusion:
+  Tax calculations DO NOT match baseline values
+  Investigation required to determine if this indicates bugs
+  Review proper_regression_results.json for details
