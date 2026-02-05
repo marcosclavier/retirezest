@@ -1,6 +1,6 @@
 # RetireZest - Agile Product Backlog
 
-**Last Updated**: February 5, 2026 (Sprint 9 COMPLETE ✅ - 100% on Day 1! 🚀)
+**Last Updated**: February 5, 2026 (Sprint 9 COMPLETE ✅ + 5 Calculation Validation Issues Added)
 **Product Owner**: JRCB
 **Development Team**: RetireZest Team
 **Sprint Duration**: 7 days (default)
@@ -62,6 +62,27 @@
 | US-079 | Add CI/CD Regression Testing | 2 | P2 🟢 | Epic 6: Quality | ✅ **COMPLETE DAY 1** |
 
 **Velocity**: 10 story points completed on Day 1 (100% sprint complete! 🚀)
+
+### Sprint 9 Follow-Up: Calculation Validation Testing (Day 1)
+
+**Post-Sprint Activity**: Comprehensive calculation validation testing completed on all 6 test accounts
+
+**Test Results**:
+- ✅ 15/20 validation categories passing (75% success rate)
+- ❌ 5 consistent issues identified across all 6 accounts
+- ✅ US-077 fix verified: No exponential growth detected
+- 📄 Documentation: CALCULATION_VALIDATION_TEST_RESULTS.md created (270+ lines)
+
+**Issues Identified and Added to Backlog**:
+1. **US-080** (P0, 5 pts): Fix RRIF Minimum Withdrawal Enforcement - CRITICAL legal compliance
+2. **US-081** (P1, 3 pts): Cap CPP Benefits at Legislated Maximum - Long-term accuracy
+3. **US-082** (P1, 3 pts): Cap OAS Benefits at Legislated Maximum - Long-term accuracy
+4. **US-083** (P2, 2 pts): Add Basic Personal Amount to Simulation Output - Data completeness
+5. **US-084** (P2, 2 pts): Add Age Credit to Simulation Output - Data completeness
+
+**Total New Issues**: 15 story points added to Epic 5 (Simulation Accuracy & Features)
+
+**Next Steps**: Prioritize US-080 (RRIF minimums) for Sprint 10 as P0 critical issue
 
 ---
 
@@ -1542,9 +1563,9 @@ Tests Passed: 8/8 (100%)
 
 ### Epic 5: Simulation Accuracy & Features
 **Goal**: Ensure simulation results are accurate and trustworthy
-**Total Story Points**: 78 (was 73, +5 for US-075)
+**Total Story Points**: 93 (was 78, +15 for US-080 to US-084 from calculation validation testing)
 **Status**: 🔄 In Progress
-**User Stories**: US-011 (✅), US-012 (✅), US-013, US-023, US-031, US-036, US-037, US-046, US-047, US-048, US-049, US-072 (✅), US-073 (✅), US-074, US-075
+**User Stories**: US-011 (✅), US-012 (✅), US-013, US-023, US-031, US-036, US-037, US-046, US-047, US-048, US-049, US-072 (✅), US-073 (✅), US-074, US-075, US-080, US-081, US-082, US-083, US-084
 
 ### Epic 6: Testing & Quality
 **Goal**: Achieve >80% test coverage and prevent regression bugs
