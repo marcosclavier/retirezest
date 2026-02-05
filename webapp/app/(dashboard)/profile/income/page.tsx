@@ -9,6 +9,7 @@ interface IncomeSource {
   amount: number;
   frequency: string;
   startAge?: number;
+  endAge?: number;
   owner?: string;
   notes?: string;
   inflationIndexed?: boolean;
@@ -35,6 +36,7 @@ export default function IncomePage() {
     amount: 0,
     frequency: 'annual',
     startAge: undefined,
+    endAge: undefined,
     owner: 'person1',
     notes: '',
     inflationIndexed: true, // Default to true for pensions
@@ -157,6 +159,7 @@ export default function IncomePage() {
           amount: 0,
           frequency: 'annual',
           startAge: undefined,
+          endAge: undefined,
           owner: 'person1',
           notes: '',
           inflationIndexed: true,
@@ -521,6 +524,30 @@ export default function IncomePage() {
                 </select>
               </div>
 
+              {/* End Age field for employment, rental, business, and other income types */}
+              {(formData.type === 'employment' || formData.type === 'rental' || formData.type === 'business' || formData.type === 'other') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    End Age (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.endAge || ''}
+                    onChange={(e) => setFormData({ ...formData, endAge: parseInt(e.target.value) || undefined })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="e.g., 70"
+                    min="1"
+                    max="100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.type === 'employment' && 'Age when employment income will stop (e.g., retirement age)'}
+                    {formData.type === 'rental' && 'Age when rental income will stop (e.g., when property is sold)'}
+                    {formData.type === 'business' && 'Age when business income will stop (e.g., when business is sold)'}
+                    {formData.type === 'other' && 'Age when this income will stop'}
+                  </p>
+                </div>
+              )}
+
               {(formData.type === 'cpp' || formData.type === 'oas' || formData.type === 'pension') && (
                 <>
                   <div>
@@ -597,6 +624,7 @@ export default function IncomePage() {
                       amount: 0,
                       frequency: 'annual',
                       startAge: undefined,
+                      endAge: undefined,
                       owner: 'person1',
                       notes: '',
                       inflationIndexed: true,
@@ -647,9 +675,11 @@ export default function IncomePage() {
                         <p className="text-2xl font-bold text-green-600">
                           ${income.amount.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
-                        {income.startAge && (
+                        {(income.startAge || income.endAge) && (
                           <p className="text-sm text-gray-600 mt-1">
-                            Starts at age {income.startAge}
+                            {income.startAge && `Starts at age ${income.startAge}`}
+                            {income.startAge && income.endAge && ' • '}
+                            {income.endAge && `Ends at age ${income.endAge}`}
                           </p>
                         )}
                         {income.notes && (

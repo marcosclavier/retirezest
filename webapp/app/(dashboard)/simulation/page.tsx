@@ -17,6 +17,7 @@ import {
   type PersonInput,
   type SimulationResponse,
   type OptimizationResult,
+  type WithdrawalStrategy,
   getStrategyDisplayName,
 } from '@/lib/types/simulation';
 import { PersonForm } from '@/components/simulation/PersonForm';
@@ -776,7 +777,7 @@ export default function SimulationPage() {
       // Update household strategy to the suggested one
       setHousehold(prev => ({
         ...prev,
-        strategy: result.optimization_result!.optimized_strategy
+        strategy: result.optimization_result!.optimized_strategy as WithdrawalStrategy
       }));
       // Hide the suggestion
       setShowOptimizationSuggestion(false);
