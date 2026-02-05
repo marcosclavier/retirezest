@@ -628,13 +628,15 @@ Tests Passed: 8/8 (100%)
 
 #### Epic 1: User Retention & Engagement
 
-**Context**: February 3, 2026 analysis revealed critical conversion funnel issue: 20 users entered $24.4M in assets but ran ZERO simulations. Root causes: (1) Simulation button disabled bug (fixed Feb 1), (2) Poor UX/onboarding. See [USER_CONVERSION_ANALYSIS_FEBRUARY_2026.md](USER_CONVERSION_ANALYSIS_FEBRUARY_2026.md) for full analysis.
+**Context**: February 3, 2026 analysis revealed critical conversion funnel issue: 20 users entered $24.4M in assets but ran ZERO simulations. Root causes: (1) Simulation button disabled bug (fixed Feb 1), (2) Poor UX/onboarding, **(3) Likely missing/incomplete data in required categories**. See [USER_CONVERSION_ANALYSIS_FEBRUARY_2026.md](USER_CONVERSION_ANALYSIS_FEBRUARY_2026.md) for full analysis.
 
-**Goal**: Increase simulation conversion from 0-20% to 80-90% through UX improvements and re-engagement.
+**HYPOTHESIS UPDATE** (February 5, 2026): Users may not be running simulations because they're missing required data categories (assets, income, expenses), NOT because the button is hard to find. Need to investigate data completeness before assuming UX is the issue.
+
+**Goal**: Increase simulation conversion from 0-20% to 80-90% through data completeness validation and UX improvements.
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
-| **US-066** | **Make "Run Simulation" Button Prominent and Impossible to Miss** | **2** | **P0** 🔴 | **📋 To Do** |
+| ~~**US-066**~~ | ~~**Make "Run Simulation" Button Prominent and Impossible to Miss**~~ | ~~**2**~~ | ~~**P0**~~ | **✅ Already Done** |
 | **Description** | As a user who has entered my assets and created a scenario, I want the "Run Simulation" button to be prominent and obvious so that I know exactly how to see my retirement projection |
 | **Acceptance Criteria** | - [ ] Button size increased 2x (large size)<br>- [ ] Vibrant gradient background (blue-500 to blue-600)<br>- [ ] Positioned at top of page (above the fold)<br>- [ ] Clear label: "🚀 Run Your Retirement Simulation"<br>- [ ] Subtle pulsing animation for first-time users<br>- [ ] Hover effect: scale + shadow increase<br>- [ ] Mobile-responsive (full width on mobile) |
 | **Tasks** | - [ ] Update button size and styling in simulation/page.tsx<br>- [ ] Add gradient background class<br>- [ ] Position button above all other content<br>- [ ] Add Lucide icon (Rocket) to button<br>- [ ] Implement CSS animation (pulse-once for first-time users)<br>- [ ] Add hover state with transform and shadow<br>- [ ] Test on mobile devices (iPhone, Android)<br>- [ ] Update button in mobile layout (full width) |
@@ -646,7 +648,7 @@ Tests Passed: 8/8 (100%)
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
-| **US-067** | **Add Post-Onboarding Redirect and Welcome Modal** | **2** | **P0** 🔴 | **📋 To Do** |
+| **US-067** | **Add Post-Onboarding Redirect and Welcome Modal** | **2** | **P2** 🟢 | **📋 To Do** |
 | **Description** | As a new user who just completed onboarding, I want to be automatically taken to the simulation page with clear guidance on what to do next so that I can immediately run my first simulation |
 | **Acceptance Criteria** | - [ ] After creating baseline scenario, redirect to `/simulation?welcome=true`<br>- [ ] Show welcome modal on first visit (check localStorage)<br>- [ ] Modal explains: "Click Run Simulation to see your projection"<br>- [ ] Arrow graphic pointing to button<br>- [ ] Dismissible with "Got it!" button<br>- [ ] Modal doesn't show again after dismissal<br>- [ ] Optional tooltip pointing to button (for users who dismiss modal) |
 | **Tasks** | - [ ] Add redirect after scenario creation: `router.push('/simulation?welcome=true')`<br>- [ ] Create WelcomeModal component<br>- [ ] Add modal trigger based on URL param `?welcome=true`<br>- [ ] Check localStorage for `welcome_modal_seen: true`<br>- [ ] Design modal content (heading, explanation, arrow graphic)<br>- [ ] Implement arrow SVG pointing down to button<br>- [ ] Add "Got it!" dismiss button<br>- [ ] Set localStorage on dismiss<br>- [ ] Add fallback tooltip if modal dismissed too quickly<br>- [ ] Test on mobile and desktop |
@@ -658,7 +660,7 @@ Tests Passed: 8/8 (100%)
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
-| **US-068** | **Add Empty State on Results Tab** | **1** | **P0** 🔴 | **📋 To Do** |
+| **US-068** | **Add Empty State on Results Tab** | **1** | **P2** 🟢 | **📋 To Do** |
 | **Description** | As a user who clicks the "Results" tab before running a simulation, I want to see a helpful empty state that tells me what to do so that I understand I need to run a simulation first |
 | **Acceptance Criteria** | - [ ] Empty state shown when no simulation results exist<br>- [ ] Large icon (📊) and clear heading<br>- [ ] Explanation: "Click Run Simulation to see your projection"<br>- [ ] Arrow pointing up to button location<br>- [ ] Call-to-action button: "Run My First Simulation"<br>- [ ] Mobile-friendly layout |
 | **Tasks** | - [ ] Update ResultsDashboard component<br>- [ ] Add conditional rendering: if (!simulationResults) show empty state<br>- [ ] Design empty state layout (centered, icon, text, CTA)<br>- [ ] Add Chart icon from Lucide (large, 96x96)<br>- [ ] Add heading: "No simulation results yet"<br>- [ ] Add explanation text<br>- [ ] Add arrow SVG pointing up/left to button<br>- [ ] Add CTA button that scrolls to Run Simulation button<br>- [ ] Test on mobile (ensure arrow/text makes sense)<br>- [ ] Test with screen readers (accessibility) |
@@ -685,7 +687,7 @@ Tests Passed: 8/8 (100%)
 
 | ID | User Story | Story Points | Priority | Status |
 |----|------------|--------------|----------|--------|
-| **US-071** | **Re-engagement Email Campaign for Users with Assets but No Simulations** | **2** | **P0** 🔴 | **📋 To Do** |
+| **US-071** | **Re-engagement Email Campaign for Users with Assets but No Simulations** | **2** | **P2** 🟢 | **📋 To Do** |
 | **Description** | As the product owner, I want to send re-engagement emails to users who loaded assets but never ran simulations so that we can recover these high-value users and prevent churn |
 | **Acceptance Criteria** | - [ ] Query database for users: assets > 0, scenarios = 0<br>- [ ] Personalized email with actual asset amount<br>- [ ] Clear CTA: Link to /simulation page<br>- [ ] Explain what they'll see (benefits)<br>- [ ] Track email opens and clicks<br>- [ ] Track simulation runs within 48 hours<br>- [ ] Success metric: 60%+ run simulations (12/19 users) |
 | **Tasks** | - [ ] Query database: `SELECT id, email, COUNT(assets) FROM User WHERE assets > 0 AND scenarios = 0`<br>- [ ] Create email template (personalized with asset amount)<br>- [ ] Send via Resend API (batch email)<br>- [ ] Add tracking links (UTM params)<br>- [ ] Monitor opens/clicks in Resend dashboard<br>- [ ] Query simulation runs 48 hours after send<br>- [ ] Document results in report |
