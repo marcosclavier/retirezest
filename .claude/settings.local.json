@@ -51,7 +51,9 @@
       "Bash(do)",
       "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_KEgfJlvIM27u@ep-muddy-band-adte7s70.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require\" node scripts/extract_user_baseline.js:*)",
       "Bash(phase1_regression_output.txt)",
-      "Bash(phase1_regression_output_v2.txt)"
+      "Bash(phase1_regression_output_v2.txt)",
+      "Bash(timeout 180 python3:*)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []
