@@ -7,12 +7,13 @@ export const metadata: Metadata = {
   description: 'You have been unsubscribed from RetireZest emails',
 };
 
-export default function UnsubscribeSuccessPage({
+export default async function UnsubscribeSuccessPage({
   searchParams,
 }: {
-  searchParams: { type?: string };
+  searchParams: Promise<{ type?: string }>;
 }) {
-  const type = searchParams.type || 'all';
+  const params = await searchParams;
+  const type = params.type || 'all';
 
   const getTypeDescription = () => {
     switch (type) {
