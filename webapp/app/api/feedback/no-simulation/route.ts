@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth-options';
+import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
 
-    if (!session?.user) {
+    if (!session?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Get user to find their ID
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email! },
+      where: { email: session.email },
       select: { id: true, email: true },
     });
 
@@ -37,7 +36,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         action: 'NO_SIMULATION_FEEDBACK',
-        details: JSON.stringify({
+        metadata: JSON.stringify({
           reasons,
           otherText: otherText || null,
           additionalComments: additionalComments || null,

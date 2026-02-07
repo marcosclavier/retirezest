@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/auth-options";
+import { getSession } from "@/lib/auth";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
@@ -9,14 +8,14 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const session = await getSession();
+    if (!session?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email! },
+      where: { email: session.email },
       select: { role: true },
     });
 
@@ -49,6 +48,10 @@ export async function POST(req: NextRequest) {
 
     if (!feedback) {
       return NextResponse.json({ error: "Feedback not found" }, { status: 404 });
+    }
+
+    if (!feedback.user) {
+      return NextResponse.json({ error: "Feedback user not found" }, { status: 404 });
     }
 
     const userName = feedback.user.firstName || "there";
@@ -218,7 +221,7 @@ This email was sent because you recently used RetireZest and provided feedback. 
       data: {
         responded: true,
         respondedAt: new Date(),
-        respondedBy: session.user.email!,
+        respondedBy: session.email,
         status: "in_progress",
       },
     });
