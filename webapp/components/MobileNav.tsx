@@ -45,7 +45,14 @@ export function MobileNav() {
         { href: '/early-retirement', label: 'Early Retirement' },
       ],
     },
-    { href: '/account/billing', label: 'Account' },
+    {
+      href: '/account',
+      label: 'Account',
+      subItems: [
+        { href: '/account/billing', label: 'Billing & Subscription' },
+        { href: '/settings/notifications', label: 'Email Preferences' },
+      ],
+    },
     { href: '/help', label: 'Help' },
   ];
 

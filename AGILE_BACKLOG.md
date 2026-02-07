@@ -1626,9 +1626,9 @@ Tests Passed: 8/8 (100%)
 
 ### Epic 4: UX Improvements
 **Goal**: Reduce onboarding abandonment and improve user satisfaction
-**Total Story Points**: 15
+**Total Story Points**: 23 (was 15, +8 for feedback modal improvements)
 **Status**: 🔄 In Progress
-**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025, US-026
+**User Stories**: US-008 (✅), US-009, US-010 (✅), US-025, US-026, US-093, US-094, US-095, US-096, US-097, US-098
 
 ### Epic 5: Simulation Accuracy & Features
 **Goal**: Ensure simulation results are accurate and trustworthy
@@ -2100,4 +2100,266 @@ jobs:
 1. DataFrame column names (`end_tfsa_p1` vs `tfsa_p1`)
 2. Success rate calculation (counting True vs False)
 3. InputData legacy field transformation (`employer_pension_annual`)
+
+
+---
+
+## 📋 User Feedback System Improvements (February 7, 2026)
+
+### Context
+Following the deployment of the No-Simulation Feedback Survey (email sent to 45 users on February 7, 2026), code review identified several improvements needed for the in-app feedback modal component.
+
+**Components Created**:
+- `NoSimulationFeedbackModal.tsx` - Feedback survey modal
+- `NoSimulationFeedbackTrigger.tsx` - Conditional trigger logic
+- `app/api/feedback/no-simulation/route.ts` - API endpoint
+- `scripts/send-no-simulation-survey.js` - Email survey script (✅ sent to 45 users)
+
+**Epic**: Epic 4: UX Improvements  
+**Related Epic**: Epic 1: User Retention & Engagement
+
+---
+
+#### US-093: Add Error Handling to No-Simulation Feedback Modal
+**Priority**: P1 🟡 **HIGH**  
+**Story Points**: 2  
+**Epic**: Epic 4: UX Improvements
+
+**As a** user providing feedback  
+**I want** to see clear error messages when my feedback fails to submit  
+**So that** I know whether my feedback was received and can retry if needed
+
+**Acceptance Criteria**:
+- [ ] Add error state variable to track API failures
+- [ ] Display user-friendly error message when submission fails
+- [ ] Show specific error messages from API response (not just generic "Failed")
+- [ ] Add retry functionality (don't auto-close modal on error)
+- [ ] Parse JSON response body from API for detailed error messages
+- [ ] Log errors to console for debugging while showing friendly message to user
+- [ ] Test error scenarios: network failure, 401 unauthorized, 500 server error
+
+**Current Issue**:
+```typescript
+// NoSimulationFeedbackModal.tsx:88-96
+if (response.ok) {
+  setIsSubmitted(true);
+} else {
+  console.error('Failed to submit feedback'); // ❌ User sees nothing!
+}
+```
+
+**Files to Modify**:
+- `webapp/components/feedback/NoSimulationFeedbackModal.tsx:88-96`
+
+**Technical Notes**:
+- Add `const [error, setError] = useState<string | null>(null)`
+- Show error with Alert component or inline error text
+- Clear error on retry attempt
+- Don't mark survey as completed in localStorage if submission fails
+
+---
+
+#### US-094: Validate "Other" Field in Feedback Modal
+**Priority**: P1 🟡 **HIGH**  
+**Story Points**: 1  
+**Epic**: Epic 4: UX Improvements
+
+**As a** product owner reviewing feedback  
+**I want** users to provide explanation text when they select "Other"  
+**So that** I can understand their specific reasons for not using the simulation
+
+**Acceptance Criteria**:
+- [ ] Require `otherText` field when "other" checkbox is selected
+- [ ] Show validation error if "other" selected but text is empty
+- [ ] Disable submit button if "other" selected without text
+- [ ] Add visual indicator (red border, error message) for empty "other" field
+- [ ] Validation should happen on-change and on-submit
+- [ ] Clear validation error when user starts typing
+
+**Current Issue**:
+```typescript
+// NoSimulationFeedbackModal.tsx:83
+otherText: selectedReasons.includes('other') ? otherText : null,
+// ❌ If otherText is empty string, it's sent as empty string (not useful)
+```
+
+**Files to Modify**:
+- `webapp/components/feedback/NoSimulationFeedbackModal.tsx:68-71` (validation logic)
+- `webapp/components/feedback/NoSimulationFeedbackModal.tsx:197-208` (add error display)
+
+**Technical Notes**:
+- Add `otherText.trim().length === 0` check
+- Update submit button disabled condition
+- Consider minimum character count (e.g., 10 chars)
+
+---
+
+#### US-095: Prevent Accidental Feedback Modal Dismissal
+**Priority**: P1 🟡 **HIGH**  
+**Story Points**: 1  
+**Epic**: Epic 4: UX Improvements
+
+**As a** user providing feedback  
+**I want** to prevent accidentally closing the modal before submitting  
+**So that** I don't lose my partially completed feedback
+
+**Acceptance Criteria**:
+- [ ] Prevent modal dismissal by clicking outside (backdrop click)
+- [ ] Prevent modal dismissal by pressing ESC key
+- [ ] Users must explicitly click "Submit" or "Skip" buttons
+- [ ] Add confirmation dialog if user tries to close with selections made
+- [ ] Document this UX decision in code comments
+
+**Current Issue**:
+```typescript
+// NoSimulationFeedbackModal.tsx:155
+<Dialog open={open} onOpenChange={onOpenChange}>
+// ❌ Allows dismissal by clicking outside or pressing ESC
+```
+
+**Files to Modify**:
+- `webapp/components/feedback/NoSimulationFeedbackModal.tsx:155,117` (both Dialog instances)
+
+**Technical Notes**:
+- Add `onInteractOutside={(e) => e.preventDefault()}` to DialogContent
+- Add `onEscapeKeyDown={(e) => e.preventDefault()}` to DialogContent
+- Or use `modal={true}` prop if available in Dialog component
+- Test keyboard navigation still works properly
+
+---
+
+#### US-096: Reset Feedback Modal State on Close
+**Priority**: P2 🟢 **MEDIUM**  
+**Story Points**: 1  
+**Epic**: Epic 4: UX Improvements
+
+**As a** user  
+**I want** the feedback modal to start fresh each time it appears  
+**So that** I don't see my previous incomplete selections
+
+**Acceptance Criteria**:
+- [ ] Clear all selections when modal closes
+- [ ] Reset `selectedReasons` to empty array
+- [ ] Reset `otherText` to empty string
+- [ ] Reset `additionalComments` to empty string
+- [ ] Reset `error` state (from US-093)
+- [ ] Only reset if user dismissed (not if they completed survey)
+- [ ] Test that re-opening modal shows blank form
+
+**Current Issue**:
+- If user partially completes modal and dismisses, state persists
+- If modal shows again after 7 days, previous selections still visible
+- Confusing UX - users expect fresh start
+
+**Files to Modify**:
+- `webapp/components/feedback/NoSimulationFeedbackModal.tsx` (add reset logic)
+- `webapp/components/feedback/NoSimulationFeedbackTrigger.tsx` (potentially)
+
+**Technical Notes**:
+- Add `useEffect` that watches `open` prop
+- When `open` changes from true to false, reset state after delay
+- Or pass reset callback to `onOpenChange` handler
+- Don't reset if `isSubmitted === true`
+
+---
+
+#### US-097: Add Analytics Tracking to Feedback Modal
+**Priority**: P2 🟢 **MEDIUM**  
+**Story Points**: 2  
+**Epic**: Epic 4: UX Improvements
+
+**As a** product owner  
+**I want** to track user interactions with the feedback modal  
+**So that** I can measure conversion rates and improve the survey
+
+**Acceptance Criteria**:
+- [ ] Track "modal shown" event
+- [ ] Track "modal dismissed" event (clicked Skip)
+- [ ] Track "feedback submitted" event with reason counts
+- [ ] Track "clicked Yes, Show Me My Plan!" after submission
+- [ ] Track "clicked Maybe Later" after submission
+- [ ] Include time-to-submit metric
+- [ ] Add to existing analytics system (if available) or use console logging
+
+**Events to Track**:
+1. `feedback_modal_shown` - { visitCount, hasData }
+2. `feedback_modal_dismissed` - { hadSelections: boolean }
+3. `feedback_submitted` - { reasonCount, hasOther, hasComments }
+4. `feedback_cta_accepted` - { navigatedToSimulation: true }
+5. `feedback_cta_declined` - { dismissedFor7Days: true }
+
+**Files to Modify**:
+- `webapp/components/feedback/NoSimulationFeedbackModal.tsx` (add tracking calls)
+- `webapp/components/feedback/NoSimulationFeedbackTrigger.tsx` (add modal shown event)
+
+**Technical Notes**:
+- Check if Google Analytics, Mixpanel, or Plausible already integrated
+- Use existing analytics helper functions if available
+- If no analytics system, add TODO comments for future integration
+- Consider adding user ID (anonymized) to track individual journeys
+
+---
+
+#### US-098: Make Visit Count Threshold Configurable
+**Priority**: P3 🟣 **LOW**  
+**Story Points**: 1  
+**Epic**: Epic 4: UX Improvements
+
+**As a** product owner  
+**I want** to easily adjust the visit count threshold for showing the feedback modal  
+**So that** I can optimize the timing without changing code
+
+**Acceptance Criteria**:
+- [ ] Move hardcoded `visitCount < 2` to component prop
+- [ ] Add default value of 2 visits
+- [ ] Add TypeScript type for the prop
+- [ ] Document prop in component JSDoc comments
+- [ ] Consider environment variable for global config
+
+**Current Issue**:
+```typescript
+// NoSimulationFeedbackTrigger.tsx:34
+if (visitCount < 2) return; // ❌ Hardcoded threshold
+```
+
+**Files to Modify**:
+- `webapp/components/feedback/NoSimulationFeedbackTrigger.tsx:6-10,34`
+
+**Technical Notes**:
+- Add optional `minVisitCount?: number = 2` prop
+- Or create `config/feedback.ts` with configurable thresholds
+- Consider A/B testing different thresholds in future
+
+---
+
+### Summary of Feedback Modal Improvements
+
+**High Priority (P1)** - Should be done before enabling modal in production:
+1. **US-093**: Error handling (2 pts) - Critical for user trust
+2. **US-094**: Validate "Other" field (1 pt) - Ensures data quality
+3. **US-095**: Prevent accidental dismissal (1 pt) - Prevents user frustration
+**Subtotal**: 4 story points
+
+**Medium Priority (P2)** - Should be done soon:
+4. **US-096**: Reset state on close (1 pt) - Better UX
+5. **US-097**: Analytics tracking (2 pts) - Measure effectiveness
+**Subtotal**: 3 story points
+
+**Low Priority (P3)** - Nice to have:
+6. **US-098**: Configurable visit threshold (1 pt) - Easier optimization
+**Subtotal**: 1 story point
+
+**Total**: 8 story points (1 sprint)
+
+---
+
+### Related Updates
+
+**Epic 4: UX Improvements** - Add to epic summary:
+- Total Story Points: 15 → **23** (+8)
+- User Stories: US-008 (✅), US-009, US-010 (✅), US-025, US-026 → **+US-093, US-094, US-095, US-096, US-097, US-098**
+
+**Epic 1: User Retention & Engagement** - Note cross-reference:
+- Feedback modal improvements support retention goals
+- Related to understanding why users don't engage with core features
 

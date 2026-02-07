@@ -81,6 +81,12 @@ model User {
   // Free simulation tracking (for unverified users - 3 lifetime before email verification)
   freeSimulationsUsed Int @default(0) // Simulations run before email verification
 
+  // Email preferences and unsubscribe tracking
+  marketingEmailsEnabled Boolean   @default(true) // Product updates, tips, surveys
+  feedbackEmailsEnabled  Boolean   @default(true) // Feedback requests, user research
+  unsubscribedAt         DateTime? // When user unsubscribed from all emails
+  unsubscribeToken       String?   @unique // Token for one-click unsubscribe
+
   // Account deletion (soft delete with 30-day grace period)
   deletedAt           DateTime? // When account was marked for deletion
   scheduledDeletionAt DateTime? // When permanent deletion will occur (deletedAt + 30 days)
@@ -105,6 +111,7 @@ model User {
   @@index([createdAt])
   @@index([resetToken])
   @@index([emailVerificationToken])
+  @@index([unsubscribeToken])
   @@index([deletedAt])
   @@index([scheduledDeletionAt])
   @@index([role])

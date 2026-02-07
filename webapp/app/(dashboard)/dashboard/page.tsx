@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { DashboardFeedbackPanel } from '@/components/feedback/DashboardFeedbackPanel';
 import { GettingStartedChecklistWrapper } from '@/components/dashboard/GettingStartedChecklistWrapper';
+import { NoSimulationFeedbackTrigger } from '@/components/feedback/NoSimulationFeedbackTrigger';
 
 export default async function DashboardPage() {
   const session = await getSession();

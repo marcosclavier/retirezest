@@ -19,7 +19,7 @@ export function DesktopNav() {
   const isDashboardActive = pathname === '/dashboard';
   const isProfileActive = isActive('/profile', ['/profile', '/benefits']);
   const isPlanActive = isActive('/simulation', ['/simulation', '/scenarios', '/early-retirement']);
-  const isAccountActive = isActive('/account', ['/account']);
+  const isAccountActive = isActive('/account', ['/account', '/settings']);
   const isHelpActive = isActive('/help', ['/help']);
 
   const linkClasses = (active: boolean) =>
@@ -130,10 +130,29 @@ export function DesktopNav() {
             </div>
           </div>
 
-          {/* Account */}
-          <Link href="/account/billing" className={linkClasses(isAccountActive)}>
-            Account
-          </Link>
+          {/* Account Dropdown */}
+          <div className="relative group">
+            <button
+              className={`${linkClasses(isAccountActive)} flex items-center gap-1 cursor-pointer`}
+            >
+              Account
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-lg rounded-b-lg border border-gray-200 py-2 min-w-[220px] z-50">
+              <Link
+                href="/account/billing"
+                className={dropdownLinkClasses(pathname === '/account/billing')}
+              >
+                Billing & Subscription
+              </Link>
+              <Link
+                href="/settings/notifications"
+                className={dropdownLinkClasses(pathname === '/settings/notifications')}
+              >
+                Email Preferences
+              </Link>
+            </div>
+          </div>
 
           {/* Help */}
           <Link href="/help" className={linkClasses(isHelpActive)}>
