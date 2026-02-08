@@ -34,15 +34,53 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Session found:', session.email);
 
-    // LIMIT CHECK 1: Email verification (3 free simulations for unverified users)
-    console.log('🔍 Step 1: Checking email verification limit...');
+    // VALIDATION: Check required profile fields (province and date of birth)
+    console.log('🔍 Step 0: Validating required profile fields...');
     const { prisma } = await import('@/lib/prisma');
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { emailVerified: true },
+      select: {
+        emailVerified: true,
+        province: true,
+        dateOfBirth: true,
+      },
     });
 
-    console.log('✅ User found, emailVerified:', user?.emailVerified);
+    if (!user) {
+      console.log('❌ User not found');
+      throw new AuthenticationError('User not found');
+    }
+
+    // Check for missing required fields
+    const missingFields: string[] = [];
+    if (!user.province) missingFields.push('province');
+    if (!user.dateOfBirth) missingFields.push('date of birth');
+
+    if (missingFields.length > 0) {
+      console.log('❌ Missing required profile fields:', missingFields.join(', '));
+      logger.info('Simulation blocked - missing required profile fields', {
+        user: session.email,
+        missingFields,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Please complete your profile to run simulations',
+          error: 'Missing required profile information',
+          error_details: `We need your ${missingFields.join(' and ')} to calculate accurate retirement projections. Your province determines tax rates, and your date of birth is needed to calculate age-related tax credits (Basic Personal Amount, Age Credit) and government benefit eligibility (CPP, OAS). Please update your profile to continue.`,
+          missingFields,
+          requiresProfileUpdate: true,
+          warnings: [],
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('✅ User profile complete, province:', user.province, 'dateOfBirth:', user.dateOfBirth);
+
+    // LIMIT CHECK 1: Email verification (3 free simulations for unverified users)
+    console.log('🔍 Step 1: Checking email verification limit...');
 
     const { checkFreeSimulationLimit, checkDailySimulationLimit } = await import('@/lib/subscription');
     const emailLimitCheck = await checkFreeSimulationLimit(session.email, user?.emailVerified || false);

@@ -520,6 +520,10 @@ export interface SimulationResponse {
   error_details?: string;
   errors?: ValidationError[];  // Validation errors from backend
 
+  // Profile validation flags
+  requiresProfileUpdate?: boolean;  // True if province or date of birth is missing
+  missingFields?: string[];  // List of missing required profile fields
+
   // Free simulation tracking for unverified users
   freeSimulationsRemaining?: number;  // -1 for verified users, 0-3 for unverified
 

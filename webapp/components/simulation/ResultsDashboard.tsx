@@ -139,6 +139,31 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
 
   // Error state
   if (!result.success) {
+    // Special handling for profile update required error (missing province or date of birth)
+    if ((result as any).requiresProfileUpdate) {
+      return (
+        <Alert variant="default" className="border-blue-300 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-900">Profile Information Required</AlertTitle>
+          <AlertDescription className="text-blue-800">
+            <div className="space-y-3">
+              <p className="font-medium">{result.message || 'Please complete your profile to run simulations'}</p>
+              {result.error_details && <p className="text-sm leading-relaxed">{result.error_details}</p>}
+              <Button
+                onClick={() => window.location.href = '/dashboard/profile'}
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-blue-50 border-blue-300 text-blue-900"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Update Profile
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
     // Special handling for email verification required error
     if ((result as any).requiresVerification) {
       return (

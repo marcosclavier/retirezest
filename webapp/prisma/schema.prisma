@@ -16,8 +16,8 @@ model User {
   passwordHash  String
   firstName     String?
   lastName      String?
-  dateOfBirth   DateTime?
-  province      String?
+  dateOfBirth   DateTime // Required: needed to calculate age for tax credits, CPP/OAS eligibility
+  province      String   // Required: needed for provincial tax calculations
   maritalStatus String?
 
   // Couples planning
