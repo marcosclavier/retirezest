@@ -8,7 +8,7 @@ export const simulationTooltips = {
   person: {
     name: "Your name as it appears in your retirement plan",
 
-    startAge: "Your current age. This is used as the starting point for all retirement projections.",
+    startAge: "Age to start your retirement simulation from. This can be your current age or a future age (e.g., your planned retirement age). Used as the starting point for all projections.",
 
     tfsaBalance: "Tax-Free Savings Account balance. Withdrawals are tax-free in retirement. Example: $75,000",
 

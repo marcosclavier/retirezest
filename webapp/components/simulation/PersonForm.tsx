@@ -101,13 +101,14 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 htmlFor={`${personNumber}-start-age`}
                 tooltip={simulationTooltips.person.startAge}
               >
-                Current Age
+                Planning Age
               </LabelWithTooltip>
               <Input
                 id={`${personNumber}-start-age`}
                 type="number"
                 value={person.start_age}
                 onChange={(e) => onChange('start_age', parseInt(e.target.value) || 0)}
+                placeholder="Age to start simulation"
               />
             </div>
           </div>
