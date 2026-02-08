@@ -94,6 +94,14 @@ class PersonInput(BaseModel):
     downsize_new_home_cost: float = Field(default=0, ge=0, description="Cost of new (smaller) home")
     downsize_is_principal_residence: bool = Field(default=True, description="Is this the principal residence (0% cap gains)")
 
+    # Early RRIF/RRSP withdrawal customization (before age 71)
+    enable_early_rrif_withdrawal: bool = Field(default=False, description="Enable early RRIF/RRSP withdrawals")
+    early_rrif_withdrawal_start_age: int = Field(default=65, ge=50, le=70, description="Age to start early withdrawals")
+    early_rrif_withdrawal_end_age: int = Field(default=70, ge=50, le=70, description="Age to end early withdrawals")
+    early_rrif_withdrawal_annual: float = Field(default=20000, ge=0, le=200000, description="Fixed annual withdrawal amount")
+    early_rrif_withdrawal_percentage: float = Field(default=5.0, ge=0, le=100, description="Withdrawal as % of RRIF/RRSP balance")
+    early_rrif_withdrawal_mode: Literal["fixed", "percentage"] = Field(default="fixed", description="Withdrawal mode: fixed amount or percentage")
+
     @field_validator('nr_invest_pct')
     @classmethod
     def validate_nr_allocation(cls, v, info):

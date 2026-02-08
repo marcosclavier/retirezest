@@ -78,6 +78,121 @@ def rrif_minimum(balance: float, age: int) -> float:
     return balance * factor
 
 
+def calculate_early_rrif_withdrawal(person: Person, current_age: int) -> float:
+    """
+    Calculate early RRIF/RRSP withdrawal amount (before age 71).
+
+    This feature allows users to customize RRIF/RRSP withdrawals before the mandatory
+    age 71 conversion and minimum withdrawal requirements kick in. Useful for:
+    - Tax planning (withdrawing in lower income years)
+    - Income splitting strategies
+    - Reducing future OAS clawback risk
+
+    Args:
+        person (Person): Person with RRIF/RRSP balances and withdrawal settings
+        current_age (int): Current age of the person
+
+    Returns:
+        float: Withdrawal amount for this year ($), or 0.0 if not applicable
+
+    Examples:
+        >>> person = Person(name="Test", start_age=65)
+        >>> person.rrsp_balance = 500000
+        >>> person.enable_early_rrif_withdrawal = True
+        >>> person.early_rrif_withdrawal_start_age = 65
+        >>> person.early_rrif_withdrawal_end_age = 70
+        >>> person.early_rrif_withdrawal_annual = 25000
+        >>> person.early_rrif_withdrawal_mode = "fixed"
+        >>> calculate_early_rrif_withdrawal(person, 67)
+        25000.0
+    """
+    # Check if feature is enabled
+    if not person.enable_early_rrif_withdrawal:
+        return 0.0
+
+    # Check if current age is within the configured range
+    if current_age < person.early_rrif_withdrawal_start_age:
+        return 0.0
+    if current_age > person.early_rrif_withdrawal_end_age:
+        return 0.0
+
+    # Check if age 71+ (mandatory RRIF minimum takes over)
+    if current_age >= 71:
+        return 0.0
+
+    # Calculate total RRIF/RRSP balance (early withdrawals can come from either)
+    total_rrif_rrsp_balance = person.rrif_balance + person.rrsp_balance
+
+    # If no balance, no withdrawal
+    if total_rrif_rrsp_balance <= 0:
+        return 0.0
+
+    # Calculate withdrawal based on mode
+    if person.early_rrif_withdrawal_mode == "fixed":
+        # Fixed dollar amount
+        withdrawal = person.early_rrif_withdrawal_annual
+    elif person.early_rrif_withdrawal_mode == "percentage":
+        # Percentage of balance
+        withdrawal = total_rrif_rrsp_balance * (person.early_rrif_withdrawal_percentage / 100.0)
+    else:
+        # Invalid mode - return 0
+        return 0.0
+
+    # Cap withdrawal at available balance
+    withdrawal = min(withdrawal, total_rrif_rrsp_balance)
+
+    return withdrawal
+
+
+def validate_early_rrif_settings(person: Person) -> List[str]:
+    """
+    Validate early RRIF withdrawal settings.
+
+    Args:
+        person (Person): Person with early RRIF withdrawal settings
+
+    Returns:
+        List[str]: List of validation error messages (empty if valid)
+
+    Examples:
+        >>> person = Person(name="Test", start_age=65)
+        >>> person.enable_early_rrif_withdrawal = True
+        >>> person.early_rrif_withdrawal_start_age = 65
+        >>> person.early_rrif_withdrawal_end_age = 70
+        >>> person.early_rrif_withdrawal_mode = "fixed"
+        >>> validate_early_rrif_settings(person)
+        []
+    """
+    errors = []
+
+    # If disabled, no validation needed
+    if not person.enable_early_rrif_withdrawal:
+        return errors
+
+    # Validate mode
+    if person.early_rrif_withdrawal_mode not in ["fixed", "percentage"]:
+        errors.append(f"Invalid withdrawal mode: {person.early_rrif_withdrawal_mode}. Must be 'fixed' or 'percentage'.")
+
+    # Validate age range
+    if person.early_rrif_withdrawal_end_age >= 71:
+        errors.append("Early RRIF withdrawal end age must be less than 71 (mandatory RRIF minimum takes over at 71).")
+
+    if person.early_rrif_withdrawal_start_age > person.early_rrif_withdrawal_end_age:
+        errors.append(f"Start age ({person.early_rrif_withdrawal_start_age}) must be before end age ({person.early_rrif_withdrawal_end_age}).")
+
+    # Validate percentage range
+    if person.early_rrif_withdrawal_mode == "percentage":
+        if person.early_rrif_withdrawal_percentage < 0 or person.early_rrif_withdrawal_percentage > 100:
+            errors.append(f"Withdrawal percentage must be between 0 and 100, got {person.early_rrif_withdrawal_percentage}.")
+
+    # Validate fixed amount is non-negative
+    if person.early_rrif_withdrawal_mode == "fixed":
+        if person.early_rrif_withdrawal_annual < 0:
+            errors.append(f"Fixed withdrawal amount must be non-negative, got {person.early_rrif_withdrawal_annual}.")
+
+    return errors
+
+
 def nonreg_distributions(person: Person) -> Dict[str, float]:
     """
     Calculate non-registered account baseline distributions.
@@ -1164,7 +1279,7 @@ def calculate_gis_optimization_withdrawal(
     return withdrawals, effective_rate, analysis
 
 
-def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params, info_dict=None) -> tuple[float, float, float]:
+def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params, prov_params, info_dict=None) -> tuple[float, float, float, float, float]:
     bd       = taxd.get("breakdown", {})
     ordinary = float(bd.get("nr_interest", 0.0))
     eligd    = float(bd.get("nr_elig_div", 0.0))
@@ -1222,7 +1337,12 @@ def recompute_tax(age, rrif_amt, add_rrif_delta, taxd, person, wself, fed_params
         fed_tax += max(float(fed_res.get("oas_clawback", 0.0)), 0.0)
 
     total = fed_tax + prov_tax
-    return total, fed_tax, prov_tax
+
+    # Extract tax credits for US-083 and US-084
+    bpa_credit_combined = fed_res.get("bpa_credit", 0.0) + prov_res.get("bpa_credit", 0.0)
+    age_credit_combined = fed_res.get("age_credit", 0.0) + prov_res.get("age_credit", 0.0)
+
+    return total, fed_tax, prov_tax, bpa_credit_combined, age_credit_combined
 
 
 def _get_strategy_order(strategy_name: str) -> List[str]:
@@ -1350,7 +1470,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     cpp = 0.0
     if age >= person.cpp_start_age:
-        cpp = person.cpp_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)
+        cpp_uncapped = person.cpp_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)
+
+        # Cap CPP at legislated maximum (US-081)
+        # 2025 CPP maximum: $17,196 annually, indexed at 2% per year
+        cpp_max_2025 = 17196.0
+        cpp_indexing_rate = 0.02
+        years_since_2025 = years_since_start  # Assumes simulation starts in 2025
+        cpp_max_current_year = cpp_max_2025 * ((1 + cpp_indexing_rate) ** years_since_2025)
+
+        cpp = min(cpp_uncapped, cpp_max_current_year)
 
     # DEBUG: Log if CPP is unexpectedly 0 (only if person should be eligible)
     if person.cpp_annual_at_start > 0 and cpp == 0 and age >= person.cpp_start_age:
@@ -1359,7 +1488,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     oas = 0.0
     if age >= person.oas_start_age:
-        oas = person.oas_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)
+        oas_uncapped = person.oas_annual_at_start * ((1 + hh.general_inflation) ** years_since_start)
+
+        # Cap OAS at legislated maximum (US-082)
+        # 2025 OAS maximum: $8,988 annually, indexed at 2% per year
+        oas_max_2025 = 8988.0
+        oas_indexing_rate = 0.02
+        years_since_2025 = years_since_start  # Assumes simulation starts in 2025
+        oas_max_current_year = oas_max_2025 * ((1 + oas_indexing_rate) ** years_since_2025)
+
+        oas = min(oas_uncapped, oas_max_current_year)
 
     # Get rental income from real estate properties
     rental_income = real_estate.get_rental_income(person)
@@ -1428,7 +1566,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     downsizing_capgains = getattr(person, "downsizing_capital_gains_this_year", 0.0)
 
     # Convert  RRSP to RRIF if needed (this may be zero RRSP and add RRIF)
-    if rrsp_to_rrif and person.rrsp_balance > 0:
+    # Also convert if early RRIF withdrawals are enabled and we're in the withdrawal age range
+    should_convert_rrsp = rrsp_to_rrif  # Standard conversion at age 71
+
+    # Early RRIF withdrawal: Convert RRSP to RRIF when early withdrawals start
+    if (person.enable_early_rrif_withdrawal and
+        age >= person.early_rrif_withdrawal_start_age and
+        age < 71):  # Don't override standard conversion
+        should_convert_rrsp = True
+
+    if should_convert_rrsp and person.rrsp_balance > 0:
         person.rrif_balance += person.rrsp_balance
         person.rrsp_balance = 0.0
 
@@ -1451,7 +1598,15 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     person.corp_rdtoh += rdtoh_add
 
     # -----  RRIF minimum must be defined before withdrawals for this age -----
-    rrif_min = rrif_minimum(person.rrif_balance, age)
+    # Check for early RRIF withdrawal customization (before age 71)
+    early_rrif_amount = calculate_early_rrif_withdrawal(person, age)
+
+    if early_rrif_amount > 0 and age < 71:
+        # Use early withdrawal amount instead of standard minimum
+        rrif_min = early_rrif_amount
+    else:
+        # Use standard RRIF minimum calculation
+        rrif_min = rrif_minimum(person.rrif_balance, age)
 
     # FIX: RRIF minimum is MANDATORY by Canadian tax law, but should be enforced
     # AFTER the withdrawal strategy order is applied, not BEFORE.
@@ -2152,6 +2307,13 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     year = hh.start_year; age1 = hh.p1.start_age; age2 = hh.p2.start_age
     p1 = hh.p1; p2 = hh.p2
 
+    # Validate early RRIF withdrawal settings for both persons
+    for person in [p1, p2]:
+        validation_errors = validate_early_rrif_settings(person)
+        if validation_errors:
+            error_msg = f"Early RRIF withdrawal validation failed for {person.name}: " + "; ".join(validation_errors)
+            raise ValueError(error_msg)
+
     # US-074: Auto-calculate endAge for rental income linked to downsizing (one-time initialization)
     for person in [p1, p2]:
         for other_income in getattr(person, 'other_incomes', []):
@@ -2422,8 +2584,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
       
         # == After calling recompute_tax for each person ==
         # FIX: Pass info1/info2 dicts so recompute_tax can include pension_income and other_income
-        tax1_after, tax1_fed, tax1_prov = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y, info1)
-        tax2_after, tax2_fed, tax2_prov = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, info2)
+        # US-083, US-084: Capture BPA and age credits from recompute_tax
+        tax1_after, tax1_fed, tax1_prov, bpa_credit1, age_credit1 = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y, info1)
+        tax2_after, tax2_fed, tax2_prov, bpa_credit2, age_credit2 = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, info2)
 
 
         # Rebuild per-person and household totals ONLY from recompute outputs
@@ -2766,6 +2929,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             other_income_p1=other_income_p1, other_income_p2=other_income_p2,
             #OAS Clawback
             oas_clawback_p1=float(t1.get("oas_clawback", 0.0)), oas_clawback_p2=float(t2.get("oas_clawback", 0.0)),
+            # Tax credits (US-083, US-084) - from recompute_tax after income splitting
+            bpa_credit_p1=float(bpa_credit1), bpa_credit_p2=float(bpa_credit2),
+            age_credit_p1=float(age_credit1), age_credit_p2=float(age_credit2),
             #withdrawls
             withdraw_nonreg_p1=w1["nonreg"], withdraw_nonreg_p2=w2["nonreg"],
             withdraw_rrif_p1=w1["rrif"], withdraw_rrif_p2=w2["rrif"],

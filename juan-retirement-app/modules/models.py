@@ -167,6 +167,14 @@ class Person:
     # Temporary field for current year's downsizing capital gains (cleared each year)
     downsizing_capital_gains_this_year: float = 0.0
 
+    # Early RRIF/RRSP withdrawal customization (before age 71)
+    enable_early_rrif_withdrawal: bool = False
+    early_rrif_withdrawal_start_age: int = 65
+    early_rrif_withdrawal_end_age: int = 70
+    early_rrif_withdrawal_annual: float = 20000.0
+    early_rrif_withdrawal_percentage: float = 5.0
+    early_rrif_withdrawal_mode: str = "fixed"  # "fixed" or "percentage"
+
     # GIC assets (List of dicts from database)
     gic_assets: List[Dict[str, Any]] = field(default_factory=list)
 
@@ -292,6 +300,12 @@ class YearResult:
     # OAS Clawback (recovery tax)
     oas_clawback_p1: float = 0.0
     oas_clawback_p2: float = 0.0
+
+    # Tax credits per person (US-083, US-084)
+    bpa_credit_p1: float = 0.0
+    bpa_credit_p2: float = 0.0
+    age_credit_p1: float = 0.0
+    age_credit_p2: float = 0.0
 
     # Private pension and other income (from pension_incomes and other_incomes lists)
     pension_income_p1: float = 0.0

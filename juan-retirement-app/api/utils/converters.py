@@ -108,6 +108,14 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         downsize_year=api_person.downsize_year,
         downsize_new_home_cost=api_person.downsize_new_home_cost,
         downsize_is_principal_residence=api_person.downsize_is_principal_residence,
+
+        # Early RRIF/RRSP withdrawal customization (before age 71)
+        enable_early_rrif_withdrawal=api_person.enable_early_rrif_withdrawal,
+        early_rrif_withdrawal_start_age=api_person.early_rrif_withdrawal_start_age,
+        early_rrif_withdrawal_end_age=api_person.early_rrif_withdrawal_end_age,
+        early_rrif_withdrawal_annual=api_person.early_rrif_withdrawal_annual,
+        early_rrif_withdrawal_percentage=api_person.early_rrif_withdrawal_percentage,
+        early_rrif_withdrawal_mode=api_person.early_rrif_withdrawal_mode,
     )
 
 
