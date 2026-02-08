@@ -77,6 +77,9 @@ class AssetAnalyzer:
         rrif_total = (
             household.p1.rrif_balance + household.p2.rrif_balance
         )
+        rrsp_total = (
+            household.p1.rrsp_balance + household.p2.rrsp_balance
+        )
         nonreg_total = (
             household.p1.nonreg_balance + household.p2.nonreg_balance
         )
@@ -84,11 +87,13 @@ class AssetAnalyzer:
             household.p1.corporate_balance + household.p2.corporate_balance
         )
 
-        total = tfsa_total + rrif_total + nonreg_total + corporate_total
+        # Total portfolio includes RRSP (will convert to RRIF at age 71)
+        total = tfsa_total + rrif_total + rrsp_total + nonreg_total + corporate_total
 
         # Debug logging
         print(f"🔍 Portfolio Validation:")
         print(f"   TFSA: ${tfsa_total:,.0f}")
+        print(f"   RRSP: ${rrsp_total:,.0f}")
         print(f"   RRIF: ${rrif_total:,.0f}")
         print(f"   NonReg: ${nonreg_total:,.0f}")
         print(f"   Corporate: ${corporate_total:,.0f}")
