@@ -2176,6 +2176,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         "tfsa_withdraw" : tfsa_withdraw,
         "corp_retained": corp_retained,
         "unmet_after_tax": unmet_after_tax,  # NEW: report unmet after-tax need
+        "total_after_tax_cash": total_after_tax_cash,  # NEW: total after-tax cash available for this person
+        "after_tax_target": after_tax_target,  # NEW: spending target for this person
         "tfsa_room_after": tfsa_room,  # Return updated TFSA room after reinvestment
         "surplus_for_reinvest": surplus_for_reinvest,  # Surplus to be reinvested after growth
         "gis_net_income": gis_net_income,  # GIS income for household-level recalculation
@@ -2565,7 +2567,22 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             print(f"DEBUG HH GIS FINAL [{year}]: t1[gis]=${t1.get('gis', 0):,.2f} t2[gis]=${t2.get('gis', 0):,.2f}", file=sys.stderr)
 
         # Household-level funding gap in this year
-        hh_gap = float(info1.get("unmet_after_tax", 0.0) + info2.get("unmet_after_tax", 0.0))
+        # CRITICAL FIX: For married couples sharing finances, calculate gap at household level
+        # Old logic (WRONG): hh_gap = sum of individual shortfalls (ignores one person's surplus)
+        # New logic (CORRECT): hh_gap = max(0, total_target - total_available) across household
+        #
+        # Example: If P1 has $35k available with $30k target (surplus $5k) and
+        #          P2 has $20k available with $30k target (deficit $10k),
+        #          OLD: hh_gap = $0 + $10k = $10k (WRONG - ignores P1's $5k surplus)
+        #          NEW: hh_gap = max(0, $60k - $55k) = $5k (CORRECT - real household deficit)
+        total_available_p1 = float(info1.get("total_after_tax_cash", 0.0))
+        total_available_p2 = float(info2.get("total_after_tax_cash", 0.0))
+        total_target_p1 = float(info1.get("after_tax_target", 0.0))
+        total_target_p2 = float(info2.get("after_tax_target", 0.0))
+
+        household_total_available = total_available_p1 + total_available_p2
+        household_total_target = total_target_p1 + total_target_p2
+        hh_gap = max(0.0, household_total_target - household_total_available)
         is_fail = hh_gap > hh.gap_tolerance
         
         # HARD CLAMP: (again, to be extra safe)
