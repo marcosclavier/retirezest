@@ -2306,11 +2306,13 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     # Negative: deficit that needs to be made up
     cash_buffer = 0.0
 
-    year = hh.start_year; age1 = hh.p1.start_age; age2 = hh.p2.start_age
+    year = hh.start_year; age1 = hh.p1.start_age
+    age2 = hh.p2.start_age if hh.p2 else None
     p1 = hh.p1; p2 = hh.p2
 
     # Validate early RRIF withdrawal settings for both persons
-    for person in [p1, p2]:
+    persons_to_validate = [p1] if p2 is None else [p1, p2]
+    for person in persons_to_validate:
         validation_errors = validate_early_rrif_settings(person)
         if validation_errors:
             error_msg = f"Early RRIF withdrawal validation failed for {person.name}: " + "; ".join(validation_errors)
@@ -2333,13 +2335,13 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
     rows = []
     tfsa_room1 = p1.tfsa_room_start
-    tfsa_room2 = p2.tfsa_room_start
+    tfsa_room2 = p2.tfsa_room_start if p2 else 0.0
 
     # Pre-init to avoid "not associated with a value" on any odd code path
     rrsp_to_rrif1 = (age1 >= 71)
-    rrsp_to_rrif2 = (age2 >= 71)
+    rrsp_to_rrif2 = (age2 >= 71) if p2 else False
 
-    while age1 <= hh.end_age or age2 <= hh.end_age:
+    while age1 <= hh.end_age or (p2 and age2 <= hh.end_age):
         # At start of year: Add annual room growth + last year's withdrawals
         tfsa_room1 += p1.tfsa_room_annual_growth + tfsa_withdraw_last_year1
         tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
@@ -2584,7 +2586,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         household_total_target = total_target_p1 + total_target_p2
         hh_gap = max(0.0, household_total_target - household_total_available)
         is_fail = hh_gap > hh.gap_tolerance
-        
         # HARD CLAMP: (again, to be extra safe)
         if w1["corp"] > corp_start1 + 1e-9: w1["corp"] = corp_start1
         if w2["corp"] > corp_start2 + 1e-9: w2["corp"] = corp_start2
