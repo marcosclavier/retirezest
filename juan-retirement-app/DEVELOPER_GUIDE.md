@@ -2,6 +2,9 @@
 
 Welcome to the RetireZest project! This guide will help you understand the codebase architecture, development workflow, and key concepts.
 
+**Last Updated:** February 8, 2026 (Sprint 10 Complete)
+**Current Version:** 1.2 (RRIF Minimums + Government Benefit Caps + Future Retirement Planning)
+
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
@@ -22,10 +25,33 @@ Welcome to the RetireZest project! This guide will help you understand the codeb
 RetireZest is a comprehensive Canadian retirement planning application that simulates retirement scenarios with tax optimization strategies. It helps users plan their retirement by modeling:
 
 - Multi-account withdrawals (RRIF, TFSA, Non-Registered, Corporate)
-- Government benefits (CPP, OAS, GIS)
+- Government benefits (CPP, OAS, GIS) with legislated caps
 - Tax-optimized withdrawal strategies
+- RRIF minimum withdrawal enforcement (CRA compliance)
+- Early RRIF/RRSP withdrawal customization (age 55-70)
+- Future retirement age planning (ages 50-90)
 - Inflation-adjusted spending patterns
 - Multi-year cash flow projections
+
+### Recent Improvements (Sprint 10 - February 2026)
+
+**✅ US-080: RRIF Minimum Withdrawal Enforcement (P0 Critical)**
+- Fixed critical legal compliance issue for RRIF minimum withdrawals
+- Implemented CRA minimum percentage table (ages 72-95+)
+- Added support for early RRIF withdrawals (ages 55-71)
+- Location: `modules/tax_engine.py` and `tax_config_canada_2025.json`
+
+**✅ US-081 & US-082: Government Benefit Caps**
+- CPP benefits capped at legislated maximum (~$17K/year in 2025)
+- OAS benefits capped at legislated maximum (~$8.5K/year in 2025)
+- Both indexed at 2%/year for long-term projections
+- Location: `modules/simulation.py` and `tax_config_canada_2025.json`
+
+**✅ US-085: Future Retirement Age Planning UX**
+- Changed "Current Age" label to "Planning Age" for clarity
+- Updated tooltips to explicitly allow future ages (50-90)
+- Enables users to plan for future retirement scenarios
+- Location: `webapp/components/PersonForm.tsx`, `webapp/lib/simulation-tooltips.ts`
 
 ---
 
@@ -852,6 +878,15 @@ app.add_middleware(
 - **DATA_FORMAT_CONVENTIONS.md** - ⚠️ Required reading for percentage/decimal handling
 - **ROOT_CAUSE_ANALYSIS_EXPONENTIAL_GROWTH.md** - US-077 bug analysis (Feb 2026)
 - **US-077_BUG_FIX_COMPLETE.md** - Bug fix implementation details
+- **SPRINT_10_PLAN.md** - Sprint 10 planning and completion (RRIF minimums, government caps)
+- **SPRINT_10_REVIEW.md** - Sprint 10 retrospective and achievements
+- **AGILE_BACKLOG.md** - Product backlog and sprint history
+
+### Sprint History
+
+- **Sprint 10 (Feb 6-8, 2026):** ✅ COMPLETE - RRIF minimums + CPP/OAS caps + Future planning UX (14 story points)
+- **Sprint 9 (Jan 2026):** ✅ COMPLETE - Calculation validation testing infrastructure (10 story points)
+- **Sprint 8 (Jan 2026):** ✅ COMPLETE - US-077 exponential growth bug fix (23 story points)
 
 ---
 

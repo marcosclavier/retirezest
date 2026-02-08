@@ -2,9 +2,16 @@
 
 A comprehensive web application to help Canadian seniors plan their retirement by calculating government benefits, projecting income, and comparing different retirement scenarios.
 
-![Version](https://img.shields.io/badge/version-1.0-blue)
-![Status](https://img.shields.io/badge/status-MVP%20Complete-success)
+![Version](https://img.shields.io/badge/version-1.2-blue)
+![Status](https://img.shields.io/badge/status-Production-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Sprint](https://img.shields.io/badge/sprint-10%20complete-brightgreen)
+
+**Latest Updates (February 2026):**
+- ✅ RRIF minimum withdrawal enforcement (CRA compliance)
+- ✅ CPP/OAS benefit caps at legislated maximums
+- ✅ Early RRIF/RRSP withdrawal customization (age 55-70)
+- ✅ Future retirement age planning UX improvements
 
 ## Features
 
@@ -17,7 +24,9 @@ A comprehensive web application to help Canadian seniors plan their retirement b
   - Track income sources, assets, expenses, and debts
   - Year-by-year retirement projection to age 95
   - Tax-efficient withdrawal strategies
-  - RRSP/RRIF conversion and minimum withdrawal calculations
+  - RRSP/RRIF conversion with CRA-compliant minimum withdrawals
+  - Early RRIF withdrawal planning (ages 55-70)
+  - Future retirement age scenario planning
 
 - **Scenario Comparison**
   - Create and save multiple retirement scenarios
@@ -182,10 +191,21 @@ npx prisma migrate deploy
 
 ## Documentation
 
+### Getting Started
 - **[CODEBASE-INTRODUCTION.md](CODEBASE-INTRODUCTION.md)** - Complete codebase guide
+- **[juan-retirement-app/DEVELOPER_GUIDE.md](juan-retirement-app/DEVELOPER_GUIDE.md)** - Developer guide with architecture and workflows
 - **[README-DOCKER.md](README-DOCKER.md)** - Docker deployment
-- **[MVP-COMPLETION-TASKS.md](MVP-COMPLETION-TASKS.md)** - Development tasks
 - **[MANUAL-TESTING-CHECKLIST.md](MANUAL-TESTING-CHECKLIST.md)** - Testing guide
+
+### Project Management
+- **[AGILE_BACKLOG.md](AGILE_BACKLOG.md)** - Product backlog and sprint planning
+- **[juan-retirement-app/SPRINT_10_PLAN.md](juan-retirement-app/SPRINT_10_PLAN.md)** - Sprint 10 plan
+- **[SPRINT_10_REVIEW.md](SPRINT_10_REVIEW.md)** - Sprint 10 retrospective
+
+### Technical Documentation
+- **[juan-retirement-app/DATA_FORMAT_CONVENTIONS.md](juan-retirement-app/DATA_FORMAT_CONVENTIONS.md)** - Data format conventions
+- **[juan-retirement-app/US080_RRIF_MINIMUM_FIX_COMPLETE.md](juan-retirement-app/US080_RRIF_MINIMUM_FIX_COMPLETE.md)** - RRIF minimum withdrawal implementation
+- **[juan-retirement-app/US081_US082_CPP_OAS_CAPS_COMPLETE.md](juan-retirement-app/US081_US082_CPP_OAS_CAPS_COMPLETE.md)** - Government benefit caps implementation
 
 ## Production Deployment
 
@@ -225,8 +245,20 @@ For questions or issues, please open a GitHub issue.
 
 ## Roadmap
 
+### Completed ✅
+- [x] RRIF minimum withdrawal enforcement (CRA compliance) - Sprint 10
+- [x] CPP/OAS benefit caps at legislated maximums - Sprint 10
+- [x] Early RRIF/RRSP withdrawal customization (age 55-70) - Sprint 10
+- [x] Future retirement age planning UX - Sprint 10
+- [x] Calculation validation testing infrastructure - Sprint 9
+- [x] Bug fix: Exponential growth from percentage/decimal handling - Sprint 8
+
+### In Progress 🔄
+- [ ] Tax credit visibility (BPA, age credit) in simulation output
+
+### Planned 📋
 - [ ] Unit and integration tests
-- [ ] Multi-province tax support
+- [ ] Multi-province tax support (currently Ontario)
 - [ ] French language support
 - [ ] Mobile app (React Native)
 - [ ] Advanced Monte Carlo simulations
