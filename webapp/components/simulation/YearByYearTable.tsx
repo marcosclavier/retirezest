@@ -319,91 +319,91 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                     {/* Expanded Detail Row */}
                     {isExpanded && (
                       <TableRow key={`${year.year}-detail`}>
-                        <TableCell colSpan={11} className="bg-muted/20 p-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <TableCell colSpan={11} className="bg-muted/20 p-3 sm:p-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                             {/* COLUMN 1: GOV BENEFITS (per person) */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm uppercase text-green-700 dark:text-green-400 mb-3">
+                            <div className="space-y-2 sm:space-y-3">
+                              <h4 className="font-semibold text-xs sm:text-sm uppercase text-green-700 dark:text-green-400 mb-2 sm:mb-3">
                                 💰 Gov Benefits
                               </h4>
-                              <div className="space-y-2 text-sm">
+                              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                                 <div className="font-semibold text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>CPP</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>CPP</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.cpp_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>OAS</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>OAS</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.oas_p1)}
                                   </span>
                                 </div>
                                 {(year.oas_clawback_p1 ?? 0) > 0 && (
-                                  <div className="flex justify-between">
-                                    <span style={{ color: '#DC2626' }}>OAS Clawback</span>
-                                    <span className="font-medium" style={{ color: '#DC2626' }}>
+                                  <div className="flex justify-between items-center gap-2">
+                                    <span className="truncate" style={{ color: '#DC2626' }}>OAS Clawback</span>
+                                    <span className="font-medium whitespace-nowrap" style={{ color: '#DC2626' }}>
                                       -{formatCurrency(year.oas_clawback_p1 ?? 0)}
                                     </span>
                                   </div>
                                 )}
                                 {(year.gis_p1 ?? 0) > 0 && (
-                                  <div className="flex justify-between">
-                                    <span style={{ color: '#111827' }}>GIS</span>
-                                    <span className="font-medium" style={{ color: '#10B981' }}>
+                                  <div className="flex justify-between items-center gap-2">
+                                    <span className="truncate" style={{ color: '#111827' }}>GIS</span>
+                                    <span className="font-medium whitespace-nowrap" style={{ color: '#10B981' }}>
                                       {formatCurrency(year.gis_p1 ?? 0)}
                                     </span>
                                   </div>
                                 )}
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>NonReg Dist</span>
-                                  <span className="font-medium" style={{ color: '#10B981' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Dist</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#10B981' }}>
                                     {formatCurrency(nonregDistributions / 2)}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>CPP</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>CPP</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.cpp_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>OAS</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>OAS</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.oas_p2)}
                                   </span>
                                 </div>
                                 {(year.oas_clawback_p2 ?? 0) > 0 && (
-                                  <div className="flex justify-between">
-                                    <span style={{ color: '#DC2626' }}>OAS Clawback</span>
-                                    <span className="font-medium" style={{ color: '#DC2626' }}>
+                                  <div className="flex justify-between items-center gap-2">
+                                    <span className="truncate" style={{ color: '#DC2626' }}>OAS Clawback</span>
+                                    <span className="font-medium whitespace-nowrap" style={{ color: '#DC2626' }}>
                                       -{formatCurrency(year.oas_clawback_p2 ?? 0)}
                                     </span>
                                   </div>
                                 )}
                                 {(year.gis_p2 ?? 0) > 0 && (
-                                  <div className="flex justify-between">
-                                    <span style={{ color: '#111827' }}>GIS</span>
-                                    <span className="font-medium" style={{ color: '#10B981' }}>
+                                  <div className="flex justify-between items-center gap-2">
+                                    <span className="truncate" style={{ color: '#111827' }}>GIS</span>
+                                    <span className="font-medium whitespace-nowrap" style={{ color: '#10B981' }}>
                                       {formatCurrency(year.gis_p2 ?? 0)}
                                     </span>
                                   </div>
                                 )}
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>NonReg Dist</span>
-                                  <span className="font-medium" style={{ color: '#10B981' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Dist</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#10B981' }}>
                                     {formatCurrency(nonregDistributions / 2)}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between pt-2 border-t">
-                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2 pt-2 border-t">
+                                  <span className="font-semibold truncate" style={{ color: '#111827' }}>
                                     Total Gov Benefits
                                   </span>
-                                  <span className="font-semibold" style={{ color: '#10B981' }}>
+                                  <span className="font-semibold whitespace-nowrap" style={{ color: '#10B981' }}>
                                     {formatCurrency(totalBenefits + nonregDistributions)}
                                   </span>
                                 </div>
@@ -411,68 +411,68 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                             </div>
 
                             {/* COLUMN 2: WITHDRAWALS/CASH FLOW (per person) */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm uppercase text-blue-700 dark:text-blue-400 mb-3">
+                            <div className="space-y-2 sm:space-y-3">
+                              <h4 className="font-semibold text-xs sm:text-sm uppercase text-blue-700 dark:text-blue-400 mb-2 sm:mb-3">
                                 💵 Withdrawals
                               </h4>
-                              <div className="space-y-2 text-sm">
+                              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                                 <div className="font-semibold text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>RRIF</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_withdrawal_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Corporate</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.corporate_withdrawal_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>TFSA</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.tfsa_withdrawal_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Non-Reg</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.nonreg_withdrawal_p1)}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>RRIF</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_withdrawal_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Corporate</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.corporate_withdrawal_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>TFSA</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.tfsa_withdrawal_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Non-Reg</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.nonreg_withdrawal_p2)}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between pt-2 border-t">
-                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2 pt-2 border-t">
+                                  <span className="font-semibold truncate" style={{ color: '#111827' }}>
                                     Total Withdrawals
                                   </span>
-                                  <span className="font-semibold" style={{ color: '#2563EB' }}>
+                                  <span className="font-semibold whitespace-nowrap" style={{ color: '#2563EB' }}>
                                     {formatCurrency(totalWithdrawals)}
                                   </span>
                                 </div>
@@ -480,48 +480,48 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                             </div>
 
                             {/* COLUMN 3: CASH FLOW SUMMARY */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm uppercase text-orange-700 dark:text-orange-400 mb-3">
+                            <div className="space-y-2 sm:space-y-3">
+                              <h4 className="font-semibold text-xs sm:text-sm uppercase text-orange-700 dark:text-orange-400 mb-2 sm:mb-3">
                                 💸 Cash Flow Summary
                               </h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between pt-2 border-t-2 border-green-600">
-                                  <span className="font-bold" style={{ color: '#059669' }}>
+                              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+                                <div className="flex justify-between items-center gap-2 pt-2 border-t-2 border-green-600">
+                                  <span className="font-bold truncate" style={{ color: '#059669' }}>
                                     Gross Cash Inflows
                                   </span>
-                                  <span className="font-bold" style={{ color: '#059669' }}>
+                                  <span className="font-bold whitespace-nowrap" style={{ color: '#059669' }}>
                                     {formatCurrency(totalBenefits + nonregDistributions + totalWithdrawals)}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-3" style={{ color: '#6B7280' }}>OUTFLOWS</div>
+                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>OUTFLOWS</div>
 
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Spending Target</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Spending Target</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.spending_need)}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>TFSA Contrib</span>
-                                  <span className="font-medium" style={{ color: '#8B5CF6' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>TFSA Contrib</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#8B5CF6' }}>
                                     {formatCurrency(tfsaContributions)}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Taxes</span>
-                                  <span className="font-medium" style={{ color: '#EA580C' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Taxes</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#EA580C' }}>
                                     {formatCurrency(year.total_tax)}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between pt-2 border-t">
-                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2 pt-2 border-t">
+                                  <span className="font-semibold truncate" style={{ color: '#111827' }}>
                                     Total Outflows
                                   </span>
-                                  <span className="font-semibold" style={{ color: '#EA580C' }}>
+                                  <span className="font-semibold whitespace-nowrap" style={{ color: '#EA580C' }}>
                                     {formatCurrency(year.spending_need + tfsaContributions + year.total_tax)}
                                   </span>
                                 </div>
@@ -532,11 +532,11 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                   const netCashFlow = grossCashInflows - totalOutflows;
                                   const isBalanced = Math.abs(netCashFlow) < 1.0;
                                   return (
-                                    <div className={`flex justify-between pt-2 border-t-2 ${isBalanced ? 'border-green-600' : 'border-amber-600'}`}>
-                                      <span className="font-bold" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
+                                    <div className={`flex justify-between items-center gap-2 pt-2 border-t-2 ${isBalanced ? 'border-green-600' : 'border-amber-600'}`}>
+                                      <span className="font-bold truncate" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
                                         Net Cash Flow
                                       </span>
-                                      <span className="font-bold" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
+                                      <span className="font-bold whitespace-nowrap" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
                                         {netCashFlow >= 0 ? '' : '-'}{formatCurrency(Math.abs(netCashFlow))}
                                       </span>
                                     </div>
@@ -546,68 +546,68 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                             </div>
 
                             {/* COLUMN 4: END-OF-YEAR BALANCES (per person) */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm uppercase text-gray-700 dark:text-gray-400 mb-3">
+                            <div className="space-y-2 sm:space-y-3">
+                              <h4 className="font-semibold text-xs sm:text-sm uppercase text-gray-700 dark:text-gray-400 mb-2 sm:mb-3">
                                 💼 End Balances
                               </h4>
-                              <div className="space-y-2 text-sm">
+                              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                                 <div className="font-semibold text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>RRIF</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_balance_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>TFSA</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.tfsa_balance_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Non-Reg</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.nonreg_balance_p1)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Corporate</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.corporate_balance_p1)}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>RRIF</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_balance_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>TFSA</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.tfsa_balance_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Non-Reg</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.nonreg_balance_p2)}
                                   </span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: '#111827' }}>Corporate</span>
-                                  <span className="font-medium" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2">
+                                  <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
+                                  <span className="font-medium whitespace-nowrap" style={{ color: '#111827' }}>
                                     {formatCurrency(year.corporate_balance_p2)}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between pt-2 border-t">
-                                  <span className="font-semibold" style={{ color: '#111827' }}>
+                                <div className="flex justify-between items-center gap-2 pt-2 border-t">
+                                  <span className="font-semibold truncate" style={{ color: '#111827' }}>
                                     Net Worth
                                   </span>
-                                  <span className="font-semibold text-green-600">
+                                  <span className="font-semibold whitespace-nowrap text-green-600">
                                     {formatCurrency(year.total_value)}
                                   </span>
                                 </div>
