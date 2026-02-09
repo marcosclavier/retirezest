@@ -2,8 +2,8 @@
 
 Welcome to the RetireZest project! This guide will help you understand the codebase architecture, development workflow, and key concepts.
 
-**Last Updated:** February 8, 2026 (Sprint 10 Complete)
-**Current Version:** 1.2 (RRIF Minimums + Government Benefit Caps + Future Retirement Planning)
+**Last Updated:** February 9, 2026 (Pension Income Chart Fix)
+**Current Version:** 1.2.1 (RRIF Minimums + Government Benefit Caps + Pension Income Display Fix)
 
 ## Table of Contents
 
@@ -52,6 +52,16 @@ RetireZest is a comprehensive Canadian retirement planning application that simu
 - Updated tooltips to explicitly allow future ages (50-90)
 - Enables users to plan for future retirement scenarios
 - Location: `webapp/components/PersonForm.tsx`, `webapp/lib/simulation-tooltips.ts`
+
+**✅ Pension Income Chart Fix (P1 Critical - February 9, 2026)**
+- Fixed user-facing bug where private pension income was missing from Income Composition charts
+- **Issue:** Pension income was correctly included in tax calculations but NOT displayed in charts
+- **Impact:** Users with private pensions, employment, or rental income saw incomplete income picture
+- **Fix:** Updated chart data converter to include pension_income and other_income fields
+- **Testing:** 5/5 comprehensive test scenarios passed (100%)
+- **Location:** `api/utils/converters.py` lines 995-1002
+- **Documentation:** See `BUGFIX_PENSION_INCOME_CHART.md` for full details
+- **Reporter:** Marc Rondeau <mrondeau205@gmail.com> - Thank you!
 
 ---
 
@@ -127,15 +137,29 @@ converters.py (API models → Internal models)
 simulation.py (Core engine)
     ↓
 YearResult objects (one per year)
+    - Includes ALL income sources:
+      • CPP, OAS, GIS (government benefits)
+      • RRSP/RRIF withdrawals
+      • TFSA, Non-Reg, Corporate withdrawals
+      • pension_income_p1/p2 (private pensions)
+      • other_income_p1/p2 (employment, rental, etc.)
     ↓
 Pandas DataFrame
     ↓
 converters.py (DataFrame → API models)
+    - extract_chart_data() includes pension + other income ✅
+    - Ensures charts display complete income picture
     ↓
 JSON Response
     ↓
 Frontend Components (Charts, Tables)
 ```
+
+**Important:** When adding new income sources, ensure they are included in:
+1. YearResult model (`modules/models.py`)
+2. Simulation calculations (`modules/simulation.py`)
+3. **Chart data extraction** (`api/utils/converters.py` - don't forget this!)
+4. Frontend display components
 
 ---
 
@@ -503,6 +527,47 @@ print(results[['year', 'age_p1', 'end_rrif_p1', 'end_tfsa_p1', 'underfunded_afte
 | `test_all_years_balances.py` | Prints EOY balances for all years |
 | `test_bucket_debug.py` | Debugs non-reg bucket initialization |
 | `test_when_depleted.py` | Identifies exact year of account depletion |
+| `test_income_chart_pension_fix.py` | Regression test for pension income in charts ✅ NEW |
+| `test_pension_comprehensive.py` | Comprehensive 5-scenario pension test suite ✅ NEW |
+| `test_pension_income_e2e.py` | End-to-end API test for pension income ✅ NEW |
+
+### Testing Pension Income Display (February 2026 Fix)
+
+**Quick Regression Test:**
+```bash
+# Verify pension income appears in charts
+python3 test_income_chart_pension_fix.py
+# Expected: ✅ PASS - Pension income correctly included
+```
+
+**Comprehensive Test Suite:**
+```bash
+# Run all 5 pension income scenarios
+python3 test_pension_comprehensive.py
+# Expected: 5/5 tests passed (100%)
+
+# Scenarios tested:
+# 1. Single person with pension
+# 2. Couple with multiple pensions
+# 3. No pension (backward compatibility)
+# 4. Deferred pension (starts mid-retirement)
+# 5. Multiple income sources (pension + employment + rental)
+```
+
+**Production Validation:**
+```bash
+# Check which users have pension income
+node scripts/validate_pension_income_fix.js
+
+# Check specific user
+node scripts/validate_pension_income_fix.js user@example.com
+```
+
+**What to Test When Modifying Chart Code:**
+- Run `test_pension_comprehensive.py` after any changes to `api/utils/converters.py`
+- Verify chart taxable_income matches sum of all income sources
+- Check that pension_income and other_income are included
+- Ensure backward compatibility (users without pensions still work)
 
 ---
 
