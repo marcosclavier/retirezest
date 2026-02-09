@@ -986,14 +986,20 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         effective_tax_rate = (total_tax / taxable_income_raw * 100) if taxable_income_raw > 0 else 0
 
         # Income composition for charts
-        # Taxable income includes: RRSP/RRIF withdrawals, CPP, OAS, NonReg distributions, Corporate dividends
+        # Taxable income includes: RRSP/RRIF withdrawals, CPP, OAS, NonReg distributions, Corporate dividends, Private pensions, Other income
         # Tax-free income includes: TFSA withdrawals, GIS
         rrsp_withdrawal_p1 = float(row.get('withdraw_rrsp_p1', 0))
         rrsp_withdrawal_p2 = float(row.get('withdraw_rrsp_p2', 0))
         rrsp_withdrawal = rrsp_withdrawal_p1 + rrsp_withdrawal_p2
 
+        # Get pension and other income (private pensions, employment, business, rental, investment)
+        pension_income_total = float(row.get('pension_income_p1', 0)) + float(row.get('pension_income_p2', 0))
+        other_income_total = float(row.get('other_income_p1', 0)) + float(row.get('other_income_p2', 0))
+
         # Calculate taxable income for chart display (all taxable sources)
-        taxable_income = rrif_withdrawal + rrsp_withdrawal + cpp_total + oas_total + nonreg_withdrawal + corporate_withdrawal
+        taxable_income = (rrif_withdrawal + rrsp_withdrawal + cpp_total + oas_total +
+                         nonreg_withdrawal + corporate_withdrawal +
+                         pension_income_total + other_income_total)
 
         # Tax-free income (TFSA + GIS)
         tax_free_income = tfsa_withdrawal + gis_total
