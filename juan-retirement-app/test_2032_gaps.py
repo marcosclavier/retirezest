@@ -109,12 +109,12 @@ for idx, row in years_2032_2050.iterrows():
     is_underfunded = row['is_underfunded']
 
     # Account balances
-    tfsa_p1 = row.get('tfsa_balance_p1', 0)
-    tfsa_p2 = row.get('tfsa_balance_p2', 0)
-    rrif_p1 = row.get('rrif_balance_p1', 0)
-    rrif_p2 = row.get('rrif_balance_p2', 0)
-    nonreg_p1 = row.get('nonreg_balance_p1', 0)
-    nonreg_p2 = row.get('nonreg_balance_p2', 0)
+    tfsa_p1 = row.get('end_tfsa_p1', 0)
+    tfsa_p2 = row.get('end_tfsa_p2', 0)
+    rrif_p1 = row.get('end_rrif_p1', 0)
+    rrif_p2 = row.get('end_rrif_p2', 0)
+    nonreg_p1 = row.get('end_nonreg_p1', 0)
+    nonreg_p2 = row.get('end_nonreg_p2', 0)
 
     total_assets = tfsa_p1 + tfsa_p2 + rrif_p1 + rrif_p2 + nonreg_p1 + nonreg_p2
 

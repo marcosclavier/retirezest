@@ -357,12 +357,6 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     </span>
                                   </div>
                                 )}
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Dist</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#10B981' }}>
-                                    {formatCurrency(nonregDistributions / 2)}
-                                  </span>
-                                </div>
 
                                 <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
@@ -393,19 +387,13 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     </span>
                                   </div>
                                 )}
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Dist</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#10B981' }}>
-                                    {formatCurrency(nonregDistributions / 2)}
-                                  </span>
-                                </div>
 
                                 <div className="flex justify-between items-center gap-2 pt-2 border-t">
                                   <span className="font-semibold truncate" style={{ color: '#111827' }}>
                                     Total Gov Benefits
                                   </span>
                                   <span className="font-semibold whitespace-nowrap" style={{ color: '#10B981' }}>
-                                    {formatCurrency(totalBenefits + nonregDistributions)}
+                                    {formatCurrency(totalBenefits)}
                                   </span>
                                 </div>
                               </div>
@@ -442,6 +430,12 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(year.nonreg_withdrawal_p1)}
                                   </span>
                                 </div>
+                                <div className="flex justify-between items-center gap-1 min-w-0">
+                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Passive</span>
+                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                    {formatCurrency(nonregDistributions / 2)}
+                                  </span>
+                                </div>
 
                                 <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
@@ -468,13 +462,19 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     {formatCurrency(year.nonreg_withdrawal_p2)}
                                   </span>
                                 </div>
+                                <div className="flex justify-between items-center gap-1 min-w-0">
+                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Passive</span>
+                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                    {formatCurrency(nonregDistributions / 2)}
+                                  </span>
+                                </div>
 
                                 <div className="flex justify-between items-center gap-2 pt-2 border-t">
                                   <span className="font-semibold truncate" style={{ color: '#111827' }}>
                                     Total Withdrawals
                                   </span>
                                   <span className="font-semibold whitespace-nowrap" style={{ color: '#2563EB' }}>
-                                    {formatCurrency(totalWithdrawals)}
+                                    {formatCurrency(totalWithdrawals + nonregDistributions)}
                                   </span>
                                 </div>
                               </div>

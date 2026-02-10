@@ -273,6 +273,9 @@ class ChartDataPoint(BaseModel):
     tfsa_withdrawal: float = Field(default=0.0)
     corporate_withdrawal: float = Field(default=0.0)
 
+    # Passive income from non-registered accounts (interest, dividends, capital gains)
+    nonreg_distributions: float = Field(default=0.0)
+
 
 class ChartData(BaseModel):
     """Pre-computed chart data for frontend visualization."""

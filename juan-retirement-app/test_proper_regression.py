@@ -250,8 +250,8 @@ class ProperRegressionTest:
         total_tax = results_df['total_tax_after_split'].sum()
         total_benefits = (results_df['cpp_p1'].sum() + results_df['oas_p1'].sum() +
                          results_df['cpp_p2'].sum() + results_df['oas_p2'].sum())
-        final_estate = (results_df.iloc[-1]['tfsa_p1'] + results_df.iloc[-1]['rrif_p1'] +
-                       results_df.iloc[-1]['nonreg_p1'])
+        final_estate = (results_df.iloc[-1]['end_tfsa_p1'] + results_df.iloc[-1]['end_rrif_p1'] +
+                       results_df.iloc[-1]['end_nonreg_p1'])
 
         # BASELINE VALUES
         expected_success_rate = 0.095  # 9.5%
@@ -369,8 +369,8 @@ class ProperRegressionTest:
         total_tax = results_df['total_tax_after_split'].sum()
         total_benefits = (results_df['cpp_p1'].sum() + results_df['oas_p1'].sum() +
                          results_df['cpp_p2'].sum() + results_df['oas_p2'].sum())
-        final_estate = (results_df.iloc[-1]['tfsa_p1'] + results_df.iloc[-1]['rrif_p1'] +
-                       results_df.iloc[-1]['nonreg_p1'])
+        final_estate = (results_df.iloc[-1]['end_tfsa_p1'] + results_df.iloc[-1]['end_rrif_p1'] +
+                       results_df.iloc[-1]['end_nonreg_p1'])
 
         # BASELINE VALUES
         expected_success_rate = 0.381  # 38.1%

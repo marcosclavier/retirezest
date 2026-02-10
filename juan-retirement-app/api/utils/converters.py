@@ -996,10 +996,20 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         pension_income_total = float(row.get('pension_income_p1', 0)) + float(row.get('pension_income_p2', 0))
         other_income_total = float(row.get('other_income_p1', 0)) + float(row.get('other_income_p2', 0))
 
+        # Calculate NonReg distributions (passive income: interest, dividends, capital gains)
+        nonreg_distributions = float(
+            row.get('nr_interest_p1', 0) + row.get('nr_interest_p2', 0) +
+            row.get('nr_elig_div_p1', 0) + row.get('nr_elig_div_p2', 0) +
+            row.get('nr_nonelig_div_p1', 0) + row.get('nr_nonelig_div_p2', 0) +
+            row.get('nr_capg_dist_p1', 0) + row.get('nr_capg_dist_p2', 0)
+        )
+
         # Calculate taxable income for chart display (all taxable sources)
+        # Includes: RRIF/RRSP withdrawals, CPP, OAS, account withdrawals, pensions, and NonReg distributions
         taxable_income = (rrif_withdrawal + rrsp_withdrawal + cpp_total + oas_total +
                          nonreg_withdrawal + corporate_withdrawal +
-                         pension_income_total + other_income_total)
+                         pension_income_total + other_income_total +
+                         nonreg_distributions)
 
         # Tax-free income (TFSA + GIS)
         tax_free_income = tfsa_withdrawal + gis_total
@@ -1033,6 +1043,7 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
             nonreg_withdrawal=nonreg_withdrawal,
             tfsa_withdrawal=tfsa_withdrawal,
             corporate_withdrawal=corporate_withdrawal,
+            nonreg_distributions=nonreg_distributions,
         ))
 
     return ChartData(data_points=data_points)
