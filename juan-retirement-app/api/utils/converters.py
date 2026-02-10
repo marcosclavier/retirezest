@@ -191,6 +191,8 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 gis_p2=float(row.get('gis_p2', 0)),
                 oas_clawback_p1=float(row.get('oas_clawback_p1', 0)),
                 oas_clawback_p2=float(row.get('oas_clawback_p2', 0)),
+                employer_pension_p1=float(row.get('pension_income_p1', 0)),
+                employer_pension_p2=float(row.get('pension_income_p2', 0)),
 
                 # Withdrawals (handle various column naming conventions)
                 tfsa_withdrawal_p1=float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))),
@@ -793,6 +795,18 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
     for i in range(years_to_extract):
         row = df.iloc[i]
 
+        # Get income sources
+        cpp_p1 = float(row.get('cpp_p1', 0))
+        cpp_p2 = float(row.get('cpp_p2', 0))
+        oas_p1 = float(row.get('oas_p1', 0))
+        oas_p2 = float(row.get('oas_p2', 0))
+        pension_p1 = float(row.get('pension_income_p1', 0))
+        pension_p2 = float(row.get('pension_income_p2', 0))
+        rental_p1 = float(row.get('rental_income_p1', 0))
+        rental_p2 = float(row.get('rental_income_p2', 0))
+        other_p1 = float(row.get('other_income_p1', 0))
+        other_p2 = float(row.get('other_income_p2', 0))
+
         # Get withdrawals by source
         rrif_p1 = float(row.get('withdraw_rrif_p1', 0))
         rrif_p2 = float(row.get('withdraw_rrif_p2', 0))
@@ -803,8 +817,19 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         corp_p1 = float(row.get('withdraw_corp_p1', 0))
         corp_p2 = float(row.get('withdraw_corp_p2', 0))
 
-        total_p1 = rrif_p1 + nonreg_p1 + tfsa_p1 + corp_p1
-        total_p2 = rrif_p2 + nonreg_p2 + tfsa_p2 + corp_p2
+        # Get NonReg distributions (passive income)
+        nonreg_dist_p1 = float(
+            row.get('nr_interest_p1', 0) + row.get('nr_elig_div_p1', 0) +
+            row.get('nr_nonelig_div_p1', 0) + row.get('nr_capg_dist_p1', 0)
+        )
+        nonreg_dist_p2 = float(
+            row.get('nr_interest_p2', 0) + row.get('nr_elig_div_p2', 0) +
+            row.get('nr_nonelig_div_p2', 0) + row.get('nr_capg_dist_p2', 0)
+        )
+
+        # Calculate total withdrawals per person (income + withdrawals)
+        total_p1 = cpp_p1 + oas_p1 + pension_p1 + rental_p1 + other_p1 + rrif_p1 + nonreg_p1 + tfsa_p1 + corp_p1 + nonreg_dist_p1
+        total_p2 = cpp_p2 + oas_p2 + pension_p2 + rental_p2 + other_p2 + rrif_p2 + nonreg_p2 + tfsa_p2 + corp_p2 + nonreg_dist_p2
 
         spending_target = float(row.get('spend_target_after_tax', 0))
 
@@ -815,6 +840,16 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             spending_target=spending_target,
             spending_target_p1=spending_target / 2,  # Split evenly for now
             spending_target_p2=spending_target / 2,
+            cpp_p1=cpp_p1,
+            cpp_p2=cpp_p2,
+            oas_p1=oas_p1,
+            oas_p2=oas_p2,
+            employer_pension_p1=pension_p1,
+            employer_pension_p2=pension_p2,
+            rental_income_p1=rental_p1,
+            rental_income_p2=rental_p2,
+            other_income_p1=other_p1,
+            other_income_p2=other_p2,
             rrif_withdrawal_p1=rrif_p1,
             rrif_withdrawal_p2=rrif_p2,
             nonreg_withdrawal_p1=nonreg_p1,
@@ -823,6 +858,9 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
             tfsa_withdrawal_p2=tfsa_p2,
             corp_withdrawal_p1=corp_p1,
             corp_withdrawal_p2=corp_p2,
+            nonreg_distributions_p1=nonreg_dist_p1,
+            nonreg_distributions_p2=nonreg_dist_p2,
+            nonreg_distributions_total=nonreg_dist_p1 + nonreg_dist_p2,
             total_withdrawn_p1=total_p1,
             total_withdrawn_p2=total_p2,
             total_withdrawn=total_p1 + total_p2,
