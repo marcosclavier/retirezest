@@ -212,6 +212,10 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                     row.get('nr_capg_dist_p1', 0) + row.get('nr_capg_dist_p2', 0)
                 ),
 
+                # TFSA contributions (includes both contributions and surplus reinvestment)
+                tfsa_contribution_p1=float(row.get('contrib_tfsa_p1', 0) + row.get('reinvest_tfsa_p1', 0)),
+                tfsa_contribution_p2=float(row.get('contrib_tfsa_p2', 0) + row.get('reinvest_tfsa_p2', 0)),
+
                 # Balances
                 tfsa_balance_p1=float(row.get('end_tfsa_p1', row.get('tfsa_balance_p1', 0))),
                 tfsa_balance_p2=float(row.get('end_tfsa_p2', row.get('tfsa_balance_p2', 0))),
@@ -1082,6 +1086,8 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
             tfsa_withdrawal=tfsa_withdrawal,
             corporate_withdrawal=corporate_withdrawal,
             nonreg_distributions=nonreg_distributions,
+            pension_income_total=pension_income_total,
+            other_income_total=other_income_total,
         ))
 
     return ChartData(data_points=data_points)

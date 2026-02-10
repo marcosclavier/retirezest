@@ -276,6 +276,10 @@ class ChartDataPoint(BaseModel):
     # Passive income from non-registered accounts (interest, dividends, capital gains)
     nonreg_distributions: float = Field(default=0.0)
 
+    # Private pension and other income (for Income Composition breakdown)
+    pension_income_total: float = Field(default=0.0, description="Private pension income (employer pensions)")
+    other_income_total: float = Field(default=0.0, description="Other income (employment, business, rental, investment)")
+
 
 class ChartData(BaseModel):
     """Pre-computed chart data for frontend visualization."""

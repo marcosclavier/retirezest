@@ -13,7 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, Download, ChevronRight, Lock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download, ChevronRight, Lock, Info } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface YearByYearTableProps {
   yearByYear: YearResult[];
@@ -100,8 +106,8 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       'OAS P2',
       'GIS P1',
       'GIS P2',
-      'RRIF WD P1',
-      'RRIF WD P2',
+      'RRSP/RRIF WD P1',
+      'RRSP/RRIF WD P2',
       'NonReg WD P1',
       'NonReg WD P2',
       'TFSA WD P1',
@@ -111,8 +117,8 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       'Corp WD P1',
       'Corp WD P2',
       'NonReg Dist',
-      'RRIF Bal P1',
-      'RRIF Bal P2',
+      'RRSP/RRIF Bal P1',
+      'RRSP/RRIF Bal P2',
       'TFSA Bal P1',
       'TFSA Bal P2',
       'NonReg Bal P1',
@@ -407,7 +413,22 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                               <div className="space-y-0.5 sm:space-y-2 text-[10px] sm:text-sm">
                                 <div className="font-semibold text-[9px] sm:text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="truncate flex items-center gap-1" style={{ color: '#111827' }}>
+                                          RRSP/RRIF
+                                          <Info className="h-3 w-3 text-gray-400" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p className="text-sm">
+                                          Registered Retirement Savings Plan (RRSP) or Registered Retirement Income Fund (RRIF).
+                                          RRSPs automatically convert to RRIFs by age 71, or earlier if you enable early retirement withdrawals.
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_withdrawal_p1)}
                                   </span>
@@ -439,7 +460,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
 
                                 <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <span className="truncate" style={{ color: '#111827' }}>RRSP/RRIF</span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_withdrawal_p2)}
                                   </span>
@@ -554,7 +575,22 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                               <div className="space-y-0.5 sm:space-y-2 text-[10px] sm:text-sm">
                                 <div className="font-semibold text-[9px] sm:text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="truncate flex items-center gap-1" style={{ color: '#111827' }}>
+                                          RRSP/RRIF
+                                          <Info className="h-3 w-3 text-gray-400" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p className="text-sm">
+                                          Registered Retirement Savings Plan (RRSP) or Registered Retirement Income Fund (RRIF).
+                                          RRSPs automatically convert to RRIFs by age 71, or earlier if you enable early retirement withdrawals.
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_balance_p1)}
                                   </span>
@@ -580,7 +616,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
 
                                 <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>RRIF</span>
+                                  <span className="truncate" style={{ color: '#111827' }}>RRSP/RRIF</span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
                                     {formatCurrency(year.rrif_balance_p2)}
                                   </span>
