@@ -216,7 +216,27 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 tfsa_contribution_p1=float(row.get('contrib_tfsa_p1', 0) + row.get('reinvest_tfsa_p1', 0)),
                 tfsa_contribution_p2=float(row.get('contrib_tfsa_p2', 0) + row.get('reinvest_tfsa_p2', 0)),
 
-                # Balances
+                # Starting balances - NEW FIELDS
+                rrsp_start_p1=float(row.get('start_rrsp_p1', 0)),
+                rrsp_start_p2=float(row.get('start_rrsp_p2', 0)),
+                rrif_start_p1=float(row.get('start_rrif_p1', 0)),
+                rrif_start_p2=float(row.get('start_rrif_p2', 0)),
+                tfsa_start_p1=float(row.get('start_tfsa_p1', 0)),
+                tfsa_start_p2=float(row.get('start_tfsa_p2', 0)),
+                nonreg_start_p1=float(row.get('start_nonreg_p1', 0)),
+                nonreg_start_p2=float(row.get('start_nonreg_p2', 0)),
+                corporate_start_p1=float(row.get('start_corp_p1', 0)),
+                corporate_start_p2=float(row.get('start_corp_p2', 0)),
+
+                # RRSP to RRIF conversion tracking - NEW FIELDS
+                rrsp_to_rrif_p1=float(row.get('rrsp_to_rrif_p1', 0)),
+                rrsp_to_rrif_p2=float(row.get('rrsp_to_rrif_p2', 0)),
+
+                # RRSP ending balances - NEW FIELDS
+                rrsp_end_p1=float(row.get('end_rrsp_p1', 0)),
+                rrsp_end_p2=float(row.get('end_rrsp_p2', 0)),
+
+                # Ending balances (existing fields)
                 tfsa_balance_p1=float(row.get('end_tfsa_p1', row.get('tfsa_balance_p1', 0))),
                 tfsa_balance_p2=float(row.get('end_tfsa_p2', row.get('tfsa_balance_p2', 0))),
                 rrif_balance_p1=float(row.get('end_rrif_p1', row.get('rrif_balance_p1', 0))),

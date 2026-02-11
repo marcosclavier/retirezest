@@ -43,7 +43,27 @@ class YearResult(BaseModel):
     tfsa_contribution_p1: float = Field(default=0.0, description="TFSA contribution for person 1")
     tfsa_contribution_p2: float = Field(default=0.0, description="TFSA contribution for person 2")
 
-    # Balances
+    # Starting balances (RRSP/RRIF/TFSA/NonReg/Corporate)
+    rrsp_start_p1: float = Field(default=0.0, description="RRSP starting balance P1")
+    rrsp_start_p2: float = Field(default=0.0, description="RRSP starting balance P2")
+    rrif_start_p1: float = Field(default=0.0, description="RRIF starting balance P1")
+    rrif_start_p2: float = Field(default=0.0, description="RRIF starting balance P2")
+    tfsa_start_p1: float = Field(default=0.0, description="TFSA starting balance P1")
+    tfsa_start_p2: float = Field(default=0.0, description="TFSA starting balance P2")
+    nonreg_start_p1: float = Field(default=0.0, description="Non-reg starting balance P1")
+    nonreg_start_p2: float = Field(default=0.0, description="Non-reg starting balance P2")
+    corporate_start_p1: float = Field(default=0.0, description="Corporate starting balance P1")
+    corporate_start_p2: float = Field(default=0.0, description="Corporate starting balance P2")
+
+    # RRSP to RRIF conversion tracking
+    rrsp_to_rrif_p1: float = Field(default=0.0, description="RRSP to RRIF conversion P1")
+    rrsp_to_rrif_p2: float = Field(default=0.0, description="RRSP to RRIF conversion P2")
+
+    # Ending balances (RRSP - only before age 71, then converted to RRIF)
+    rrsp_end_p1: float = Field(default=0.0, description="RRSP ending balance P1")
+    rrsp_end_p2: float = Field(default=0.0, description="RRSP ending balance P2")
+
+    # Ending balances (existing fields - renamed for clarity but keeping original names for backwards compatibility)
     tfsa_balance_p1: float
     tfsa_balance_p2: float
     rrif_balance_p1: float

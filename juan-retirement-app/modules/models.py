@@ -249,53 +249,85 @@ class YearResult:
     gis_p1: float
     gis_p2: float
 
-    # RRIF withdrawals
-    withdraw_rrif_p1: float
-    withdraw_rrif_p2: float
+    # RRSP starting balances
+    start_rrsp_p1: float = 0.0
+    start_rrsp_p2: float = 0.0
 
-    # TFSA withdrawals
-    withdraw_tfsa_p1: float
-    withdraw_tfsa_p2: float
+    # RRSP ending balances
+    end_rrsp_p1: float = 0.0
+    end_rrsp_p2: float = 0.0
+
+    # RRSP withdrawals
+    withdraw_rrsp_p1: float = 0.0
+    withdraw_rrsp_p2: float = 0.0
+
+    # RRSP to RRIF conversion
+    rrsp_to_rrif_p1: float = 0.0
+    rrsp_to_rrif_p2: float = 0.0
+
+    # RRIF starting balances
+    start_rrif_p1: float = 0.0
+    start_rrif_p2: float = 0.0
+
+    # RRIF withdrawals
+    withdraw_rrif_p1: float = 0.0
+    withdraw_rrif_p2: float = 0.0
 
     # RRIF ending balances
-    end_rrif_p1: float
-    end_rrif_p2: float
+    end_rrif_p1: float = 0.0
+    end_rrif_p2: float = 0.0
+
+    # TFSA starting balances
+    start_tfsa_p1: float = 0.0
+    start_tfsa_p2: float = 0.0
+
+    # TFSA withdrawals
+    withdraw_tfsa_p1: float = 0.0
+    withdraw_tfsa_p2: float = 0.0
 
     # TFSA ending balances
-    end_tfsa_p1: float
-    end_tfsa_p2: float
+    end_tfsa_p1: float = 0.0
+    end_tfsa_p2: float = 0.0
 
     # TFSA room tracking
-    tfsa_room_p1: float
-    tfsa_room_p2: float
+    tfsa_room_p1: float = 0.0
+    tfsa_room_p2: float = 0.0
+
+    # Non-registered starting balances
+    start_nonreg_p1: float = 0.0
+    start_nonreg_p2: float = 0.0
 
     # Non-registered
-    nonreg_acb_p1: float
-    nonreg_acb_p2: float
-    end_nonreg_p1: float
-    end_nonreg_p2: float
-    withdraw_nonreg_p1: float
-    withdraw_nonreg_p2: float
+    nonreg_acb_p1: float = 0.0
+    nonreg_acb_p2: float = 0.0
+    end_nonreg_p1: float = 0.0
+    end_nonreg_p2: float = 0.0
+    withdraw_nonreg_p1: float = 0.0
+    withdraw_nonreg_p2: float = 0.0
+
+    # Corporate starting balances
+    start_corp_p1: float = 0.0
+    start_corp_p2: float = 0.0
 
     # Corporate
-    withdraw_corp_p1: float
-    withdraw_corp_p2: float
-    corp_rdtoh_p1: float
-    corp_rdtoh_p2: float
-    corp_capg_gen_p1: float
-    corp_capg_gen_p2: float
-    end_corp_p1: float
-    end_corp_p2: float
+    withdraw_corp_p1: float = 0.0
+    withdraw_corp_p2: float = 0.0
+    corp_rdtoh_p1: float = 0.0
+    corp_rdtoh_p2: float = 0.0
+    corp_capg_gen_p1: float = 0.0
+    corp_capg_gen_p2: float = 0.0
+    end_corp_p1: float = 0.0
+    end_corp_p2: float = 0.0
 
     # Totals & estate
-    net_worth_end: float
-    total_tax_after_split: float
+    net_worth_end: float = 0.0
+    total_tax_after_split: float = 0.0
 
     # Tax per person
-    tax_p1: float
-    tax_p2: float
-    tax_after_split_p1: float
-    tax_after_split_p2: float
+    tax_p1: float = 0.0
+    tax_p2: float = 0.0
+    tax_after_split_p1: float = 0.0
+    tax_after_split_p2: float = 0.0
 
     # OAS Clawback (recovery tax)
     oas_clawback_p1: float = 0.0

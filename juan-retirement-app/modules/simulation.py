@@ -2428,6 +2428,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         real_estate.appreciate_property(p2, hh.general_inflation)
 
         #Capture starting balances for growth reporting and clamps
+        rrsp_start1 = float(p1.rrsp_balance)
+        rrsp_start2 = float(p2.rrsp_balance)
         corp_start1 = float(p1.corporate_balance)
         corp_start2 = float(p2.corporate_balance)
         rrif_start1, tfsa_start1, nonreg_start1 = p1.rrif_balance, p1.tfsa_balance, p1.nonreg_balance
@@ -2443,6 +2445,111 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # DO NOT adjust targets based on buffer - use original targets
         target_p1_adjusted = target_each
         target_p2_adjusted = target_each
+
+        # CRITICAL FIX: Calculate pension and other income for each person to reduce withdrawal needs
+        # Previously, pension/other income was only used for tax calculations but never reduced the
+        # withdrawal target, causing the simulator to over-withdraw from accounts.
+
+        # Calculate Person 1 pension and other income
+        p1_pension_income = 0.0
+        p1_pension_incomes = getattr(p1, 'pension_incomes', [])
+        for pension in p1_pension_incomes:
+            pension_start_age = pension.get('startAge', 65)
+            if age1 >= pension_start_age:
+                annual_amount = pension.get('amount', 0.0)
+                if pension.get('inflationIndexed', True):
+                    years_since_pension_start = age1 - pension_start_age
+                    annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+                p1_pension_income += annual_amount
+
+        p1_other_income = 0.0
+        p1_other_incomes = getattr(p1, 'other_incomes', [])
+        for other_income in p1_other_incomes:
+            income_type = other_income.get('type', '')
+            income_start_age = other_income.get('startAge')
+            income_end_age = other_income.get('endAge')
+
+            if income_type == 'employment':
+                if income_start_age is None:
+                    income_start_age = p1.start_age
+                if income_end_age is None:
+                    income_end_age = p1.cpp_start_age
+
+            is_active = True
+            if income_start_age is not None and age1 < income_start_age:
+                is_active = False
+            if income_end_age is not None and age1 >= income_end_age:
+                is_active = False
+
+            if is_active:
+                annual_amount = other_income.get('amount', 0.0)
+                if other_income.get('inflationIndexed', True):
+                    if income_start_age:
+                        years_since_start = age1 - income_start_age
+                        annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                    else:
+                        annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                p1_other_income += annual_amount
+
+        # Add rental income for Person 1
+        p1_rental_income = real_estate.get_rental_income(p1)
+        p1_other_income += p1_rental_income
+
+        # Calculate Person 2 pension and other income
+        p2_pension_income = 0.0
+        p2_pension_incomes = getattr(p2, 'pension_incomes', [])
+        for pension in p2_pension_incomes:
+            pension_start_age = pension.get('startAge', 65)
+            if age2 >= pension_start_age:
+                annual_amount = pension.get('amount', 0.0)
+                if pension.get('inflationIndexed', True):
+                    years_since_pension_start = age2 - pension_start_age
+                    annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+                p2_pension_income += annual_amount
+
+        p2_other_income = 0.0
+        p2_other_incomes = getattr(p2, 'other_incomes', [])
+        for other_income in p2_other_incomes:
+            income_type = other_income.get('type', '')
+            income_start_age = other_income.get('startAge')
+            income_end_age = other_income.get('endAge')
+
+            if income_type == 'employment':
+                if income_start_age is None:
+                    income_start_age = p2.start_age
+                if income_end_age is None:
+                    income_end_age = p2.cpp_start_age
+
+            is_active = True
+            if income_start_age is not None and age2 < income_start_age:
+                is_active = False
+            if income_end_age is not None and age2 >= income_end_age:
+                is_active = False
+
+            if is_active:
+                annual_amount = other_income.get('amount', 0.0)
+                if other_income.get('inflationIndexed', True):
+                    if income_start_age:
+                        years_since_start = age2 - income_start_age
+                        annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                    else:
+                        annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                p2_other_income += annual_amount
+
+        # Add rental income for Person 2
+        p2_rental_income = real_estate.get_rental_income(p2)
+        p2_other_income += p2_rental_income
+
+        # Subtract pension and other income from withdrawal targets (after-tax income)
+        # These income sources are already taxed, so we subtract them from after-tax target
+        target_p1_adjusted -= p1_pension_income
+        target_p1_adjusted -= p1_other_income
+        target_p2_adjusted -= p2_pension_income
+        target_p2_adjusted -= p2_other_income
+
+        # Ensure targets don't go negative (pension/other income may exceed spending need)
+        target_p1_adjusted = max(target_p1_adjusted, 0.0)
+        target_p2_adjusted = max(target_p2_adjusted, 0.0)
 
         # Add mortgage payments to after-tax spending targets (not tax-deductible in Canada for principal residences)
         mortgage_p1 = real_estate.calculate_annual_mortgage_payment(p1)
@@ -2930,6 +3037,21 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         buffer_end_year = cash_buffer
         buffer_flow_year = year_cash_flow
 
+        # Calculate RRSP to RRIF conversion amounts (difference between start and end RRSP after growth)
+        # If RRSP decreased to 0 and RRIF increased, that's the conversion amount
+        rrsp_to_rrif1_amt = 0.0
+        rrsp_to_rrif2_amt = 0.0
+
+        # If conversion happened this year (age >= 71), calculate the conversion amount
+        # The RRSP balance at start of withdrawals (after growth) minus the end RRSP (should be 0)
+        if rrsp_to_rrif1 and rrsp_start1 > 0 and p1.rrsp_balance == 0:
+            # The RRSP grew, then was converted to RRIF
+            # The conversion amount is the grown RRSP balance
+            rrsp_to_rrif1_amt = rrsp_start1
+
+        if rrsp_to_rrif2 and rrsp_start2 > 0 and p2.rrsp_balance == 0:
+            rrsp_to_rrif2_amt = rrsp_start2
+
         rows.append(YearResult(
             year=year, age_p1=age1, age_p2=age2, years_since_start=years_since_start,
             spend_target_after_tax=spend,
@@ -2950,12 +3072,29 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             # Tax credits (US-083, US-084) - from recompute_tax after income splitting
             bpa_credit_p1=float(bpa_credit1), bpa_credit_p2=float(bpa_credit2),
             age_credit_p1=float(age_credit1), age_credit_p2=float(age_credit2),
+
+            # RRSP balances and tracking
+            start_rrsp_p1=rrsp_start1, start_rrsp_p2=rrsp_start2,
+            end_rrsp_p1=p1.rrsp_balance, end_rrsp_p2=p2.rrsp_balance,
+            withdraw_rrsp_p1=0.0,  # RRSP withdrawals not tracked separately (converted to RRIF first)
+            withdraw_rrsp_p2=0.0,
+            rrsp_to_rrif_p1=rrsp_to_rrif1_amt, rrsp_to_rrif_p2=rrsp_to_rrif2_amt,
+
+            # RRIF balances and tracking
+            start_rrif_p1=rrif_start1, start_rrif_p2=rrif_start2,
+
             #withdrawls
             withdraw_nonreg_p1=w1["nonreg"], withdraw_nonreg_p2=w2["nonreg"],
             withdraw_rrif_p1=w1["rrif"], withdraw_rrif_p2=w2["rrif"],
             withdraw_tfsa_p1=w1["tfsa"], withdraw_tfsa_p2=w2["tfsa"],
             withdraw_corp_p1=w1["corp"], withdraw_corp_p2=w2["corp"],
             total_withdrawals=sum(w1.values()) + sum(w2.values()),
+
+            # Starting balances for other accounts
+            start_tfsa_p1=tfsa_start1, start_tfsa_p2=tfsa_start2,
+            start_nonreg_p1=nonreg_start1, start_nonreg_p2=nonreg_start2,
+            start_corp_p1=corp_start1, start_corp_p2=corp_start2,
+
             #ending balances
             end_rrif_p1=p1.rrif_balance, end_rrif_p2=p2.rrif_balance,
             end_tfsa_p1=p1.tfsa_balance, end_tfsa_p2=p2.tfsa_balance,
@@ -2964,9 +3103,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             end_corp_p1=p1.corporate_balance, end_corp_p2=p2.corporate_balance,
 
             net_worth_end=(
+                            p1.rrsp_balance + p2.rrsp_balance +
                             p1.rrif_balance + p2.rrif_balance +
-                            p1.tfsa_balance + p2.tfsa_balance + 
-                            p1.nonreg_balance + p2.nonreg_balance + 
+                            p1.tfsa_balance + p2.tfsa_balance +
+                            p1.nonreg_balance + p2.nonreg_balance +
                             p1.corporate_balance + p2.corporate_balance
                           ),
             
