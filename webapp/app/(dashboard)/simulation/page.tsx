@@ -408,6 +408,14 @@ export default function SimulationPage() {
           'corp_cash_bucket',
           'corp_gic_bucket',
           'corp_invest_bucket',
+          // CRITICAL FIX: Include income arrays from database
+          // Bug fix for Marc's issue: employment/pension income was being dropped during merge
+          'pension_incomes',
+          'other_incomes',
+          'cpp_start_age',
+          'cpp_annual_at_start',
+          'oas_start_age',
+          'oas_annual_at_start',
         ];
 
         // Helper to merge person data: use fresh assets, preserve custom settings
