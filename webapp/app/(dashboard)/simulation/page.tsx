@@ -440,6 +440,14 @@ export default function SimulationPage() {
             merged.name = freshPerson.name;
           }
 
+          // VALIDATION: Log income arrays to help debug if they're ever missing
+          if (freshPerson.pension_incomes && freshPerson.pension_incomes.length > 0) {
+            console.log('✅ Merged pension_incomes:', freshPerson.pension_incomes.length, 'items');
+          }
+          if (freshPerson.other_incomes && freshPerson.other_incomes.length > 0) {
+            console.log('✅ Merged other_incomes:', freshPerson.other_incomes.length, 'items');
+          }
+
           return merged;
         };
 
@@ -816,6 +824,13 @@ export default function SimulationPage() {
         };
 
     try {
+      // VALIDATION: Ensure income arrays are present (helps debug Marc's issue)
+      console.log('🔍 VALIDATION - Income arrays check:');
+      console.log('  P1 pension_incomes:', simulationData.p1.pension_incomes?.length || 0, 'items');
+      console.log('  P1 other_incomes:', simulationData.p1.other_incomes?.length || 0, 'items');
+      console.log('  P2 pension_incomes:', simulationData.p2.pension_incomes?.length || 0, 'items');
+      console.log('  P2 other_incomes:', simulationData.p2.other_incomes?.length || 0, 'items');
+
       console.log('📡 Calling runSimulation...');
       const response = await runSimulation(simulationData, csrfToken);
       console.log('📥 Received response from runSimulation:', response.success ? 'SUCCESS' : 'FAILED');

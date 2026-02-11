@@ -68,14 +68,95 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     .filter(a => a.type === 'corporate')
     .reduce((sum, a) => sum + a.balance, 0);
 
-  // Calculate annual income from income sources
-  const annualIncome = user.incomeSources.reduce((sum, income) => {
-    let annualAmount = income.amount;
+  // Extract income data by owner (same logic as prefill API)
+  const incomeByOwner = user.incomeSources.reduce((acc, income) => {
+    const owner = income.owner || 'person1';
+    const type = income.type.toLowerCase();
+
+    if (!acc[owner]) {
+      acc[owner] = {
+        cpp_start_age: null,
+        cpp_annual_at_start: null,
+        oas_start_age: null,
+        oas_annual_at_start: null,
+        pension_incomes: [],
+        other_incomes: [],
+      };
+    }
 
     // Convert to annual based on frequency
-    switch (income.frequency) {
+    const frequency = (income.frequency || 'annual').toLowerCase();
+    let annualAmount = income.amount;
+
+    switch (frequency) {
+      case 'monthly':
+        annualAmount = income.amount * 12;
+        break;
+      case 'quarterly':
+        annualAmount = income.amount * 4;
+        break;
+      case 'weekly':
+        annualAmount = income.amount * 52;
+        break;
+      case 'biweekly':
+        annualAmount = income.amount * 26;
+        break;
+      default:
+        annualAmount = income.amount;
+    }
+
+    if (type === 'cpp') {
+      acc[owner].cpp_start_age = income.startAge;
+      acc[owner].cpp_annual_at_start = annualAmount;
+    } else if (type === 'oas') {
+      acc[owner].oas_start_age = income.startAge;
+      acc[owner].oas_annual_at_start = annualAmount;
+    } else if (type === 'pension') {
+      acc[owner].pension_incomes.push({
+        name: (income as any).description || 'Pension',
+        amount: annualAmount,
+        startAge: income.startAge || 65,
+        inflationIndexed: (income as any).inflationIndexed !== false,
+      });
+    } else if (type === 'rental') {
+      acc[owner].other_incomes.push({
+        type: 'rental',
+        name: (income as any).description || 'Rental Income',
+        amount: annualAmount,
+        startAge: income.startAge || undefined,
+        inflationIndexed: (income as any).inflationIndexed !== false,
+      });
+    } else if (['employment', 'business', 'investment', 'other'].includes(type)) {
+      acc[owner].other_incomes.push({
+        type,
+        name: (income as any).description || type.charAt(0).toUpperCase() + type.slice(1),
+        amount: annualAmount,
+        startAge: income.startAge || undefined,
+        inflationIndexed: (income as any).inflationIndexed !== false,
+      });
+    }
+
+    return acc;
+  }, {} as Record<string, {
+    cpp_start_age: number | null;
+    cpp_annual_at_start: number | null;
+    oas_start_age: number | null;
+    oas_annual_at_start: number | null;
+    pension_incomes: Array<{name: string; amount: number; startAge: number; inflationIndexed: boolean}>;
+    other_incomes: Array<{type: string; name: string; amount: number; startAge?: number; inflationIndexed: boolean}>;
+  }>);
+
+  // Calculate total annual income for spending estimation
+  const annualIncome = user.incomeSources.reduce((sum, income) => {
+    let annualAmount = income.amount;
+    const frequency = (income.frequency || 'annual').toLowerCase();
+
+    switch (frequency) {
       case 'monthly':
         annualAmount *= 12;
+        break;
+      case 'quarterly':
+        annualAmount *= 4;
         break;
       case 'biweekly':
         annualAmount *= 26;
@@ -83,7 +164,6 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
       case 'weekly':
         annualAmount *= 52;
         break;
-      // 'annual' stays as is
     }
 
     return sum + annualAmount;
@@ -123,26 +203,36 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     spendingNoGo = spendingGoGo * 0.6;
   }
 
-  // Smart defaults for CPP/OAS - use default values
-  const cppStartAge = 65;
-  const oasStartAge = 65;
-  const cppAnnual = 15000; // Max CPP estimate
-  const oasAnnual = 8500; // Max OAS estimate
+  // Get income data for person 1 (or use defaults)
+  const p1Income = incomeByOwner['person1'] || {
+    cpp_start_age: null,
+    cpp_annual_at_start: null,
+    oas_start_age: null,
+    oas_annual_at_start: null,
+    pension_incomes: [],
+    other_incomes: [],
+  };
+
+  // Smart defaults for CPP/OAS if not in database
+  const p1CppStartAge = p1Income.cpp_start_age || 65;
+  const p1OasStartAge = p1Income.oas_start_age || 65;
+  const p1CppAnnual = p1Income.cpp_annual_at_start || 15000; // Max CPP estimate
+  const p1OasAnnual = p1Income.oas_annual_at_start || 8500; // Max OAS estimate
 
   // Build person 1 input with all required fields
   const person1: PersonInput = {
     name: user.firstName || 'You',
     start_age: retirementAge,
 
-    // Government benefits
-    cpp_start_age: cppStartAge,
-    cpp_annual_at_start: cppAnnual,
-    oas_start_age: oasStartAge,
-    oas_annual_at_start: oasAnnual,
+    // Government benefits (from database or defaults)
+    cpp_start_age: p1CppStartAge,
+    cpp_annual_at_start: p1CppAnnual,
+    oas_start_age: p1OasStartAge,
+    oas_annual_at_start: p1OasAnnual,
 
-    // Pension and other income lists
-    pension_incomes: [],
-    other_incomes: [],
+    // CRITICAL FIX: Include income arrays from database (Marc's bug fix)
+    pension_incomes: p1Income.pension_incomes,
+    other_incomes: p1Income.other_incomes,
 
     // Account balances
     rrsp_balance: actualRRSP,
@@ -204,18 +294,36 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     early_rrif_withdrawal_mode: 'fixed',
   };
 
+  // Get income data for person 2 (or use defaults)
+  const p2Income = incomeByOwner['person2'] || {
+    cpp_start_age: null,
+    cpp_annual_at_start: null,
+    oas_start_age: null,
+    oas_annual_at_start: null,
+    pension_incomes: [],
+    other_incomes: [],
+  };
+
+  // Smart defaults for CPP/OAS if not in database
+  const p2CppStartAge = p2Income.cpp_start_age || 65;
+  const p2OasStartAge = p2Income.oas_start_age || 65;
+  const p2CppAnnual = p2Income.cpp_annual_at_start || 15000;
+  const p2OasAnnual = p2Income.oas_annual_at_start || 8500;
+
   // Partner defaults (if applicable) - use defaultPersonInput as base
   const person2: PersonInput = user.includePartner ? {
     name: user.partnerFirstName || 'Partner',
     start_age: retirementAge,
 
-    cpp_start_age: 65,
-    cpp_annual_at_start: 15000,
-    oas_start_age: 65,
-    oas_annual_at_start: 8500,
+    // Government benefits (from database or defaults)
+    cpp_start_age: p2CppStartAge,
+    cpp_annual_at_start: p2CppAnnual,
+    oas_start_age: p2OasStartAge,
+    oas_annual_at_start: p2OasAnnual,
 
-    pension_incomes: [],
-    other_incomes: [],
+    // CRITICAL FIX: Include income arrays from database (Marc's bug fix)
+    pension_incomes: p2Income.pension_incomes,
+    other_incomes: p2Income.other_incomes,
 
     rrsp_balance: 0,
     rrif_balance: 0,
