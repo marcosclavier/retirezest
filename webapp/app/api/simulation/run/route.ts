@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
 
             // Store full data for "view last simulation" feature
             // CRITICAL FIX: Save original user input, not Python API's transformed structure
-            inputData: body,  // Original user input from form
+            inputData: JSON.stringify(body),  // Original user input from form (stringified for DB)
             fullResults: JSON.stringify(responseData),
           },
         });
