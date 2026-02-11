@@ -244,7 +244,8 @@ export async function POST(request: NextRequest) {
             initialNetWorth: responseData.summary.initial_net_worth,
 
             // Store full data for "view last simulation" feature
-            inputData: JSON.stringify(responseData.household_input),
+            // CRITICAL FIX: Save original user input, not Python API's transformed structure
+            inputData: body,  // Original user input from form
             fullResults: JSON.stringify(responseData),
           },
         });
