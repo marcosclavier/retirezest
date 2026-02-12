@@ -1,17 +1,8 @@
 # Nixpacks Configuration for Railway
-# Deploys the Python FastAPI backend from webapp/python-api
-
-providers = ["python"]
+# Let Nixpacks auto-detect Python from requirements.txt at root
 
 [variables]
-PIP_NO_CACHE_DIR = "1"
 PYTHONPATH = "/app/webapp/python-api"
-
-[phases.setup]
-nixPkgs = ["python311Full"]
-
-[phases.install]
-cmds = ["python -m pip install -r webapp/requirements-api.txt"]
 
 [start]
 cmd = "cd webapp/python-api && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT"

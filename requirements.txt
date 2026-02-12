@@ -1,0 +1,3 @@
+# Root-level requirements for Railway deployment
+# References the actual requirements in webapp/
+-r webapp/requirements-api.txt
