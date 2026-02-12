@@ -1,9 +1,9 @@
 # Canadian Retirement Planning Application - Codebase Introduction
 
-**Version:** 2.0
-**Last Updated:** February 11, 2026
+**Version:** 2.1
+**Last Updated:** February 12, 2026
 **Status:** 🎉 MVP Complete (100% Priority 1 Features) + 🐳 Docker Ready + 🐍 Python API Consolidated
-**Tech Stack:** Next.js 15, TypeScript, Prisma, SQLite, Tailwind CSS, jsPDF, Radix UI, Docker, Python FastAPI
+**Tech Stack:** Next.js 15, TypeScript, Prisma, PostgreSQL (Neon), Tailwind CSS, jsPDF, Radix UI, Docker, Python FastAPI
 **Deployment:** Fully containerized with Docker & Docker Compose
 
 ---
@@ -69,7 +69,7 @@ This is a full-stack web application designed to help Canadian seniors plan thei
                                     │                        │
                                     │                        ▼
                          ┌──────────▼──────────┐  ┌─────────────────────┐
-                         │  Python Modules     │  │   SQLite Database   │
+                         │  Python Modules     │  │  PostgreSQL (Neon)  │
                          │  - simulation.py    │  │   (User data)       │
                          │  - tax_engine.py    │  └─────────────────────┘
                          │  - benefits.py      │
@@ -98,7 +98,7 @@ The application uses **two calculation engines** that work together:
 - **TypeScript**: Full type safety across frontend and API gateway
 - **Python FastAPI**: High-performance simulation engine
 - **Prisma**: Type-safe database ORM with migrations
-- **SQLite**: Local database (easy to migrate to PostgreSQL)
+- **PostgreSQL (Neon)**: Serverless PostgreSQL for production
 - **Tailwind CSS**: Utility-first styling
 - **Recharts**: Data visualization library
 - **jsPDF + html2canvas**: PDF report generation
@@ -334,7 +334,7 @@ retirement-app/
 
 ## Database Schema
 
-**Database:** SQLite (`prisma/dev.db`)
+**Database:** PostgreSQL (Neon serverless) for production
 **ORM:** Prisma
 
 ### Models
@@ -909,7 +909,7 @@ cd python-api && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
 ### Health Check Integration
 
 The Next.js health endpoint (`/api/health`) checks both:
-1. **Database** - Prisma connection to SQLite
+1. **Database** - Prisma connection to PostgreSQL
 2. **Python API** - Connection to FastAPI backend
 
 ```typescript
@@ -1502,7 +1502,7 @@ export async function GET(request: NextRequest) {
 ### Current Optimizations
 - Client-side rendering for interactive pages
 - Server-side data fetching where possible
-- SQLite for fast local queries
+- PostgreSQL (Neon) with connection pooling for production
 - Prisma query optimization (select specific fields)
 
 ### Future Optimizations
@@ -1583,7 +1583,7 @@ docker-compose down
 │  └────────────────┬───────────────────────┘ │
 │                   │                          │
 │  ┌────────────────▼───────────────────────┐ │
-│  │   SQLite Database (Volume Mounted)     │ │
+│  │   PostgreSQL (External/Neon)           │ │
 │  └────────────────────────────────────────┘ │
 └─────────────────────────────────────────────┘
          │
@@ -1600,9 +1600,9 @@ docker-compose down
 - Cached dependency layers for faster rebuilds
 
 **Data Persistence:**
-- SQLite database stored in named Docker volume
-- Data persists across container restarts
-- Easy backup and restore
+- PostgreSQL database hosted on Neon (serverless)
+- Data persists independently of container lifecycle
+- Easy backup and restore via Neon dashboard
 
 **Auto-Initialization:**
 - Database automatically created on first run
@@ -1661,7 +1661,7 @@ environment:
 
 ### Docker Volumes
 
-**retirement-data:** Persists SQLite database
+**retirement-data:** Persists application data (logs, cache)
 ```bash
 # View volumes
 docker volume ls
@@ -1782,16 +1782,17 @@ npm start
 4. Set root directory to `webapp`
 5. Deploy
 
-### Database Migration (SQLite → PostgreSQL)
-1. Update `DATABASE_URL` in `.env`
-2. Change provider in `schema.prisma`:
+### Database Configuration
+The application uses PostgreSQL (Neon serverless) for production:
+1. Set `DATABASE_URL` in environment variables (Vercel)
+2. The `schema.prisma` is configured for PostgreSQL:
    ```prisma
    datasource db {
      provider = "postgresql"
      url      = env("DATABASE_URL")
    }
    ```
-3. Run migration:
+3. Run migrations:
    ```bash
    npx prisma migrate deploy
    ```
@@ -1920,7 +1921,7 @@ cat .env.local | grep JWT_SECRET
 
 ```
 PROJECT: Canadian Retirement Planning App
-TECH: Next.js 15 + TypeScript + Python FastAPI + Prisma + SQLite + Docker
+TECH: Next.js 15 + TypeScript + Python FastAPI + Prisma + PostgreSQL + Docker
 STATUS: 100% MVP Complete + Python API Consolidated
 DEPLOYMENT: Containerized with Docker
 
