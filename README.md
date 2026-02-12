@@ -2,12 +2,12 @@
 
 A comprehensive web application to help Canadian seniors plan their retirement by calculating government benefits, projecting income, and comparing different retirement scenarios.
 
-![Version](https://img.shields.io/badge/version-1.2-blue)
+![Version](https://img.shields.io/badge/version-2.0-blue)
 ![Status](https://img.shields.io/badge/status-Production-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Sprint](https://img.shields.io/badge/sprint-10%20complete-brightgreen)
 
 **Latest Updates (February 2026):**
+- ✅ Consolidated monorepo architecture (webapp + Python API)
 - ✅ RRIF minimum withdrawal enforcement (CRA compliance)
 - ✅ CPP/OAS benefit caps at legislated maximums
 - ✅ Early RRIF/RRSP withdrawal customization (age 55-70)
@@ -41,72 +41,80 @@ A comprehensive web application to help Canadian seniors plan their retirement b
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: SQLite (production-ready for PostgreSQL migration)
+- **Backend**:
+  - Next.js API Routes (authentication, data persistence)
+  - Python FastAPI (retirement simulation engine)
+- **Database**: SQLite with Prisma ORM (PostgreSQL-ready)
 - **Charts**: Recharts
 - **PDF Generation**: jsPDF + html2canvas
 - **Authentication**: JWT with httpOnly cookies
-- **Deployment**: Docker-ready, Vercel-compatible
+- **Deployment**:
+  - Frontend: Vercel
+  - Python API: Railway
 
 ## Quick Start
 
-### Local Development (Traditional)
+### Local Development
 
+**1. Start the Python API:**
 ```bash
-# Navigate to webapp directory
+cd webapp/python-api
+pip install -r ../requirements-api.txt
+python -m uvicorn api.main:app --reload --port 8000
+```
+
+**2. Start the Next.js Frontend (in another terminal):**
+```bash
 cd webapp
-
-# Install dependencies
 npm install
-
-# Set up environment variables
 cp .env.example .env.local
-# Edit .env.local with your DATABASE_URL and JWT_SECRET
+# Edit .env.local - set PYTHON_API_URL=http://localhost:8000
 
-# Initialize database
 npx prisma generate
 npx prisma migrate dev
-
-# Run development server
 npm run dev
 ```
 
-Visit `http://localhost:3002`
+- Frontend: `http://localhost:3000`
+- Python API: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
 
 ### Docker Deployment
 
 ```bash
-# Build and start with Docker Compose
 docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop
-docker-compose down
 ```
 
 Visit `http://localhost:3100`
 
-See [README-DOCKER.md](README-DOCKER.md) for detailed Docker deployment instructions.
-
 ## Project Structure
 
 ```
-retirement-app/
-├── webapp/                      # Next.js application
-│   ├── app/                     # App Router
+retirezest/
+├── webapp/                      # Unified application
+│   ├── app/                     # Next.js App Router
 │   │   ├── (auth)/             # Authentication pages
 │   │   ├── (dashboard)/        # Dashboard pages
-│   │   └── api/                # API routes
+│   │   └── api/                # Next.js API routes
 │   ├── components/             # React components
 │   ├── lib/                    # Utilities & business logic
-│   │   └── calculations/       # CPP/OAS/GIS/Tax/Projection engines
+│   │   └── calculations/       # TypeScript calculation helpers
 │   ├── prisma/                 # Database schema & migrations
-│   └── public/                 # Static assets
-├── Dockerfile                  # Docker configuration
+│   ├── public/                 # Static assets
+│   └── python-api/             # Python FastAPI backend
+│       ├── api/                # FastAPI routes & models
+│       │   ├── main.py         # FastAPI app entry point
+│       │   ├── routes/         # API endpoints
+│       │   └── models/         # Pydantic request/response models
+│       ├── modules/            # Core simulation engine
+│       │   ├── simulation.py   # Main retirement simulation
+│       │   ├── benefits.py     # CPP/OAS/GIS calculations
+│       │   ├── tax_engine.py   # Tax calculations
+│       │   └── ...
+│       └── utils/              # Helper utilities
 ├── docker-compose.yml          # Docker orchestration
-└── Documentation/              # Project documentation
+├── railway.toml                # Railway deployment config
+└── CODEBASE-INTRODUCTION.md    # Complete architecture guide
 ```
 
 ## Key Capabilities
@@ -159,7 +167,7 @@ NODE_ENV="development"
 
 ## Deployment
 
-### Vercel (Recommended for Production)
+### Vercel (Frontend)
 
 1. Push code to GitHub
 2. Import repository in Vercel
@@ -167,11 +175,15 @@ NODE_ENV="development"
 4. Add environment variables:
    - `DATABASE_URL` (PostgreSQL connection string)
    - `JWT_SECRET`
+   - `PYTHON_API_URL` (Railway URL)
 5. Deploy
 
-### Docker
+### Railway (Python API)
 
-See [README-DOCKER.md](README-DOCKER.md) for complete Docker deployment guide.
+1. Connect repository to Railway
+2. Set root directory to `/` (repository root)
+3. Railway auto-detects Python and deploys
+4. Copy the deployment URL to Vercel's `PYTHON_API_URL`
 
 ## Database Migration (SQLite → PostgreSQL)
 
@@ -191,41 +203,34 @@ npx prisma migrate deploy
 
 ## Documentation
 
-### Getting Started
-- **[CODEBASE-INTRODUCTION.md](CODEBASE-INTRODUCTION.md)** - Complete codebase guide
-- **[juan-retirement-app/DEVELOPER_GUIDE.md](juan-retirement-app/DEVELOPER_GUIDE.md)** - Developer guide with architecture and workflows
-- **[README-DOCKER.md](README-DOCKER.md)** - Docker deployment
-- **[MANUAL-TESTING-CHECKLIST.md](MANUAL-TESTING-CHECKLIST.md)** - Testing guide
-
-### Project Management
-- **[AGILE_BACKLOG.md](AGILE_BACKLOG.md)** - Product backlog and sprint planning
-- **[juan-retirement-app/SPRINT_10_PLAN.md](juan-retirement-app/SPRINT_10_PLAN.md)** - Sprint 10 plan
-- **[SPRINT_10_REVIEW.md](SPRINT_10_REVIEW.md)** - Sprint 10 retrospective
-
-### Technical Documentation
-- **[juan-retirement-app/DATA_FORMAT_CONVENTIONS.md](juan-retirement-app/DATA_FORMAT_CONVENTIONS.md)** - Data format conventions
-- **[juan-retirement-app/US080_RRIF_MINIMUM_FIX_COMPLETE.md](juan-retirement-app/US080_RRIF_MINIMUM_FIX_COMPLETE.md)** - RRIF minimum withdrawal implementation
-- **[juan-retirement-app/US081_US082_CPP_OAS_CAPS_COMPLETE.md](juan-retirement-app/US081_US082_CPP_OAS_CAPS_COMPLETE.md)** - Government benefit caps implementation
+- **[CODEBASE-INTRODUCTION.md](CODEBASE-INTRODUCTION.md)** - Complete architecture guide and codebase overview
+- **[webapp/consolidation.md](webapp/consolidation.md)** - Monorepo consolidation documentation
+- **[webapp/API-README.md](webapp/API-README.md)** - Python API documentation
 
 ## Production Deployment
+
+### Architecture
+- **Frontend (Vercel)**: Next.js webapp with API routes for auth/data
+- **Backend (Railway)**: Python FastAPI for retirement simulations
 
 ### GitHub Repository
 - **Repository**: https://github.com/marcosclavier/retirezest
 - **Branch**: `main` (production branch)
-- **Auto-Deploy**: Vercel connected to GitHub for automatic deployments
+- **Auto-Deploy**: Both Vercel and Railway connected for automatic deployments
 
-### Deployment Flow
-1. Push changes to `main` branch
-2. GitHub webhook triggers Vercel build
-3. Vercel builds and deploys automatically
-4. Production URL updates on successful build
-
-### Vercel Configuration
-- **Project**: `webapp`
+### Vercel Configuration (Frontend)
 - **Root Directory**: `webapp/`
 - **Framework**: Next.js 15
-- **Build Command**: `npm run build`
-- **Output Directory**: `.next`
+- **Environment Variables**:
+  - `DATABASE_URL` - PostgreSQL connection string
+  - `JWT_SECRET` - Authentication secret
+  - `PYTHON_API_URL` - Railway API URL (e.g., `https://retirezest-production.up.railway.app`)
+
+### Railway Configuration (Python API)
+- **Root Directory**: `/` (repository root)
+- **Build**: Nixpacks auto-detects Python from `requirements.txt`
+- **Start Command**: `cd webapp/python-api && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT`
+- **Health Check**: `GET /api/health`
 
 ## Contributing
 
@@ -246,24 +251,20 @@ For questions or issues, please open a GitHub issue.
 ## Roadmap
 
 ### Completed ✅
-- [x] RRIF minimum withdrawal enforcement (CRA compliance) - Sprint 10
-- [x] CPP/OAS benefit caps at legislated maximums - Sprint 10
-- [x] Early RRIF/RRSP withdrawal customization (age 55-70) - Sprint 10
-- [x] Future retirement age planning UX - Sprint 10
-- [x] Calculation validation testing infrastructure - Sprint 9
-- [x] Bug fix: Exponential growth from percentage/decimal handling - Sprint 8
-
-### In Progress 🔄
-- [ ] Tax credit visibility (BPA, age credit) in simulation output
+- [x] Monorepo consolidation (webapp + Python API unified)
+- [x] RRIF minimum withdrawal enforcement (CRA compliance)
+- [x] CPP/OAS benefit caps at legislated maximums
+- [x] Early RRIF/RRSP withdrawal customization (age 55-70)
+- [x] Future retirement age planning UX
+- [x] Calculation validation testing infrastructure
+- [x] Bug fix: Exponential growth from percentage/decimal handling
 
 ### Planned 📋
+- [ ] Tax credit visibility (BPA, age credit) in simulation output
 - [ ] Unit and integration tests
 - [ ] Multi-province tax support (currently Ontario)
 - [ ] French language support
-- [ ] Mobile app (React Native)
 - [ ] Advanced Monte Carlo simulations
-- [ ] Financial advisor collaboration features
-- [ ] Bank account integration
 
 ---
 
