@@ -1,0 +1,30 @@
+{
+  "household_input": {
+    "province": "AB",
+    "p1": {
+      "name": "Test User",
+      "birth_year": 1965,
+      "start_age": 60,
+      "rrsp_balance": 100000,
+      "tfsa_balance": 50000,
+      "nonreg_balance": 200000,
+      "rrif_balance": 0,
+      "corporate_balance": 0,
+      "cpp_start_age": 65,
+      "oas_start_age": 65,
+      "avg_career_income": 60000,
+      "years_of_cpp": 40,
+      "years_in_canada": 40,
+      "pension_income": 0,
+      "other_income": 0
+    },
+    "p2": {},
+    "strategy": "minimize-income",
+    "spending_go_go": 60000,
+    "spending_slow_go": 50000,
+    "spending_no_go": 40000,
+    "end_age": 95,
+    "inflation_rate": 2.0,
+    "return_rate": 5.0
+  }
+}

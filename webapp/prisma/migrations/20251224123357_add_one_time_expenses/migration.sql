@@ -1,1 +1,0 @@
--- Manual migration already applied

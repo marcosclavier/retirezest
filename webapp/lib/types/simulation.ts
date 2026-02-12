@@ -103,6 +103,7 @@ export type WithdrawalStrategy =
   | 'capital-gains-optimized'
   | 'tfsa-first'
   | 'balanced'
+  | 'Balanced'  // Capital B for Python backend compatibility
   | 'rrif-frontload';
 
 export interface HouseholdInput {
