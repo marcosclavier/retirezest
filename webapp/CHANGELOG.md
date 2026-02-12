@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-02-12 - CRITICAL: Fix TFSA Contribution Bug
+- **CRITICAL FIX:** Python backend was defaulting to $7,000 TFSA contribution even with spending gaps
+- **FIX:** Now explicitly sends `tfsa_contribution_each: 0` to override Python's default
+- **FIX:** This prevents the system from contributing to TFSA when retirement spending isn't fully funded
+- **Impact:** Rafael's simulation will now use the $14k for spending instead of TFSA contributions
+
 ## 2026-02-12 - Critical Fix for RRSP/RRIF Withdrawals
 - **CRITICAL FIX:** Discovered Python backend "Balanced" strategy only withdraws RRIF minimum, creating spending gaps
 - **FIX:** Changed strategy recommendation from "balanced" to "rrif-frontload" for users with >40% RRSP/RRIF

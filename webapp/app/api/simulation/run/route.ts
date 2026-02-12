@@ -155,6 +155,9 @@ export async function POST(request: NextRequest) {
     // Otherwise use as-is for backward compatibility
     const pythonPayload = body.household_input ? {
       ...body.household_input,
+      // CRITICAL: Set TFSA contributions to 0 unless explicitly provided
+      // Python backend defaults to 7000 which causes spending gaps
+      tfsa_contribution_each: body.household_input.tfsa_contribution_each ?? 0,
       // Ensure p2 has valid default values when no partner
       p2: body.household_input.p2 && body.household_input.p2.name ? body.household_input.p2 : {
         name: "",
@@ -191,6 +194,7 @@ export async function POST(request: NextRequest) {
     console.log('  - Strategy:', pythonPayload.strategy);
     console.log('  - Start Year:', pythonPayload.start_year);
     console.log('  - P1 Start Age:', pythonPayload.p1.start_age);
+    console.log('  - TFSA Contribution Each:', pythonPayload.tfsa_contribution_each);
 
     // Forward request to Python API
     const pythonResponse = await fetch(`${PYTHON_API_URL}/api/run-simulation`, {
