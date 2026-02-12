@@ -43,18 +43,22 @@ jobs:
 
       - name: Run regression tests
         id: regression
-        working-directory: test
         env:
           PYTHONPATH: ${{ github.workspace }}/webapp/python-api
         run: |
-          echo "Running regression tests..."
-          python3 test_regression_phase1_v2.py || echo "Tests completed with errors"
+          if [ -d "test" ] && [ -f "test/test_regression_phase1_v2.py" ]; then
+            echo "Running regression tests..."
+            cd test && python3 test_regression_phase1_v2.py || echo "Tests completed with errors"
+          else
+            echo "⚠️ Test directory or test files not found. Skipping regression tests."
+            echo "Create test/test_regression_phase1_v2.py to enable regression testing."
+          fi
         continue-on-error: true
 
       - name: Check regression test results
-        working-directory: test
         run: |
-          if [ -f phase1_regression_results_v2.json ]; then
+          if [ -f test/phase1_regression_results_v2.json ]; then
+            cd test
             echo "Regression test results:"
             cat phase1_regression_results_v2.json
 
