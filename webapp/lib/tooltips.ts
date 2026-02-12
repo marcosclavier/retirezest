@@ -31,7 +31,7 @@ export const STRATEGY_TOOLTIPS = {
   STANDARD: 'Balanced withdrawal strategy following CRA minimum RRIF withdrawals. Good for most retirees.',
   TAX_EFFICIENT: 'Minimizes lifetime taxes by strategically timing withdrawals from different account types. Recommended for higher net worth.',
   PRESERVE_TFSA: 'Withdraws from TFSA last to maximize tax-free growth. Good if you want flexibility or to leave a tax-free inheritance.',
-  EARLY_RRSP: 'Draws down RRSP/RRIF before OAS to avoid clawback. Best if you have large RRSP and expect OAS clawback.',
+  RRSP_FRONTLOAD: 'Draws down RRSP/RRIF before OAS to avoid clawback. Best if you have large RRSP and expect OAS clawback.',
 };
 
 export const INVESTMENT_TOOLTIPS = {

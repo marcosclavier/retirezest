@@ -20,6 +20,7 @@ import {
   type WithdrawalStrategy,
   getStrategyDisplayName,
 } from '@/lib/types/simulation';
+import { emptyPersonInput } from '@/lib/types/emptyPersonInput';
 import { PersonForm } from '@/components/simulation/PersonForm';
 import { HouseholdForm } from '@/components/simulation/HouseholdForm';
 import { Collapsible } from '@/components/ui/collapsible';
@@ -487,6 +488,7 @@ export default function SimulationPage() {
         setHousehold(prev => ({
           ...prev,
           province: data.province || prev.province,
+          start_year: data.calculatedStartYear || prev.start_year, // Use calculated start year based on retirement age
           end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
           strategy: data.recommendedStrategy || prev.strategy, // Use smart recommended strategy
           spending_inflation: data.spendingInflation !== undefined ? data.spendingInflation : prev.spending_inflation, // From scenario
@@ -573,6 +575,7 @@ export default function SimulationPage() {
           setHousehold(prev => ({
             ...prev,
             province: data.province || prev.province,
+            start_year: data.calculatedStartYear || prev.start_year, // Use calculated start year based on retirement age
             end_age: data.lifeExpectancy || prev.end_age, // Use life expectancy from profile
             strategy: data.recommendedStrategy || prev.strategy, // Use smart recommended strategy
             spending_inflation: data.spendingInflation !== undefined ? data.spendingInflation : prev.spending_inflation, // From scenario
@@ -638,7 +641,7 @@ export default function SimulationPage() {
     setIncludePartner(false);
     setHousehold((prev) => ({
       ...prev,
-      p2: { ...defaultPersonInput, name: '' },
+      p2: emptyPersonInput, // Use empty input with zero CPP/OAS
     }));
   };
 
@@ -815,12 +818,12 @@ export default function SimulationPage() {
     setIsLoading(true);
     setResult(null);
 
-    // If no partner, zero out p2 values
+    // If no partner, use emptyPersonInput which has all zeros for CPP/OAS
     const simulationData: HouseholdInput = includePartner
       ? household
       : {
           ...household,
-          p2: { ...defaultPersonInput, name: '' },
+          p2: emptyPersonInput, // Use empty input with zero CPP/OAS for single person
         };
 
     try {
@@ -1556,6 +1559,7 @@ export default function SimulationPage() {
                 onChange={updateHousehold}
                 isPrefilled={prefillAvailable}
                 userProfileProvince={userProfileProvince}
+                planningAge={household.p1.start_age}
               />
             </div>
 

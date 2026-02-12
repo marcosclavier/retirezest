@@ -588,12 +588,12 @@ export const defaultPersonInput: PersonInput = {
   tfsa_contribution_annual: 0,
 
   // Early RRIF withdrawal defaults (disabled by default)
-  enable_early_rrif_withdrawal: false,
-  early_rrif_withdrawal_start_age: 65,
-  early_rrif_withdrawal_end_age: 70,
+  enable_early_rrif_withdrawal: true, // Default to true - RRSP/RRIF can be accessed at any age
+  early_rrif_withdrawal_start_age: 65, // Start at retirement age
+  early_rrif_withdrawal_end_age: 70, // Until mandatory conversion at 71
   early_rrif_withdrawal_annual: 20000,
   early_rrif_withdrawal_percentage: 5.0,
-  early_rrif_withdrawal_mode: 'fixed',
+  early_rrif_withdrawal_mode: 'percentage', // Use percentage to adjust to balance
 
   // Real estate defaults (no property by default)
   rental_income_annual: 0,
@@ -671,7 +671,7 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
   },
   {
     value: 'rrif-frontload',
-    label: 'Early RRIF Withdrawals (Income Splitting)',
+    label: 'RRSP/RRIF Frontload (Income Splitting)',
     description: 'Ideal for couples with income imbalance. Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
   },
 ];

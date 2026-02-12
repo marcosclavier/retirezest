@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         partnerLastName: true,
         partnerDateOfBirth: true,
         lifeExpectancy: true,
+        targetRetirementAge: true, // Add retirement age for single source of truth
       },
     });
 
@@ -145,6 +146,12 @@ export async function GET(request: NextRequest) {
         partnerAge--;
       }
     }
+
+    // Calculate start year based on target retirement age
+    const currentYear = new Date().getFullYear();
+    const retirementAge = user?.targetRetirementAge || age;
+    const yearsUntilRetirement = Math.max(0, retirementAge - age);
+    const calculatedStartYear = currentYear + yearsUntilRetirement;
 
     // Extract all income data by owner
     const incomeByOwner = incomeSources.reduce((acc, income) => {
@@ -345,7 +352,7 @@ export async function GET(request: NextRequest) {
     const person1Input: PersonInput = {
       ...defaultPersonInput,
       name: user?.firstName || 'Me',
-      start_age: age,
+      start_age: user?.targetRetirementAge || age, // Use targetRetirementAge from profile as primary source
 
       // Government benefits with 3-tier priority: IncomeSource → Scenario → fallback
       // This fixes Bug #1: Users who configured CPP/OAS in Scenario but not IncomeSource now get correct values
@@ -380,6 +387,15 @@ export async function GET(request: NextRequest) {
       corp_cash_bucket: person1Totals.corporate_balance * 0.05,
       corp_gic_bucket: person1Totals.corporate_balance * 0.10,
       corp_invest_bucket: person1Totals.corporate_balance * 0.85,
+
+      // RRSP/RRIF withdrawal settings
+      // Automatically enable if person has RRSP and is at/near retirement age
+      enable_early_rrif_withdrawal: person1Totals.rrsp_balance > 0 || person1Totals.rrif_balance > 0,
+      early_rrif_withdrawal_start_age: user?.targetRetirementAge || age,
+      early_rrif_withdrawal_end_age: 70, // Until mandatory conversion at 71
+      early_rrif_withdrawal_annual: 0, // Not using fixed amount
+      early_rrif_withdrawal_percentage: 5.0, // Use minimum RRIF percentage
+      early_rrif_withdrawal_mode: 'percentage', // Percentage mode for flexibility
     };
 
     // Map real estate data to person1
@@ -422,7 +438,7 @@ export async function GET(request: NextRequest) {
       person2Input = {
         ...defaultPersonInput,
         name: user?.partnerFirstName || 'Partner',
-        start_age: partnerAge,
+        start_age: user?.targetRetirementAge || partnerAge, // Use same targetRetirementAge for partner
 
         // Government benefits with 3-tier priority: IncomeSource → Scenario → fallback
         // Same fix as person1 for Bug #1
@@ -457,6 +473,14 @@ export async function GET(request: NextRequest) {
         corp_cash_bucket: person2Totals.corporate_balance * 0.05,
         corp_gic_bucket: person2Totals.corporate_balance * 0.10,
         corp_invest_bucket: person2Totals.corporate_balance * 0.85,
+
+        // RRSP/RRIF withdrawal settings (same as person1)
+        enable_early_rrif_withdrawal: person2Totals.rrsp_balance > 0 || person2Totals.rrif_balance > 0,
+        early_rrif_withdrawal_start_age: user?.targetRetirementAge || partnerAge,
+        early_rrif_withdrawal_end_age: 70,
+        early_rrif_withdrawal_annual: 0,
+        early_rrif_withdrawal_percentage: 5.0,
+        early_rrif_withdrawal_mode: 'percentage',
       };
 
       // Map real estate data to person2
@@ -577,6 +601,8 @@ export async function GET(request: NextRequest) {
 
       // Calculate percentages
       const rrifPct = totalRRIF / totalNetWorth;
+      const rrspPct = totalRRSP / totalNetWorth;
+      const registeredPct = (totalRRSP + totalRRIF) / totalNetWorth; // Combined RRSP+RRIF
       const tfsaPct = totalTFSA / totalNetWorth;
       const nonregPct = totalNonReg / totalNetWorth;
       const corporatePct = totalCorporate / totalNetWorth;
@@ -594,11 +620,11 @@ export async function GET(request: NextRequest) {
       const totalOtherIncome = person1OtherIncome + person2OtherIncome;
 
       // Smart strategy selection logic
-      if (rrifPct > 0.4) {
-        // Large RRIF balance (>40%) - front-load withdrawals to minimize tax over lifetime
-        recommendedStrategy = 'rrif-frontload';
-      } else if (tfsaPct > 0.3 && totalRRIF > 0) {
-        // Large TFSA (>30%) with some RRIF - use TFSA first to preserve tax-deferred growth
+      if (registeredPct > 0.4) {
+        // Large RRSP/RRIF balance (>40%) - front-load withdrawals to minimize tax over lifetime
+        recommendedStrategy = 'balanced'; // Use balanced for RRSP access
+      } else if (tfsaPct > 0.3 && (totalRRIF > 0 || totalRRSP > 0)) {
+        // Large TFSA (>30%) with some RRSP/RRIF - use TFSA first to preserve tax-deferred growth
         recommendedStrategy = 'tfsa-first';
       } else if (corporatePct > 0.3) {
         // Significant corporate holdings (>30%) - use balanced approach for corporate optimization
@@ -619,7 +645,9 @@ export async function GET(request: NextRequest) {
 
       logger.info('Smart strategy recommendation', {
         totalNetWorth,
+        rrspPct: `${(rrspPct * 100).toFixed(1)}%`,
         rrifPct: `${(rrifPct * 100).toFixed(1)}%`,
+        registeredPct: `${(registeredPct * 100).toFixed(1)}%`,
         tfsaPct: `${(tfsaPct * 100).toFixed(1)}%`,
         nonregPct: `${(nonregPct * 100).toFixed(1)}%`,
         corporatePct: `${(corporatePct * 100).toFixed(1)}%`,
@@ -645,6 +673,7 @@ export async function GET(request: NextRequest) {
       recommendedStrategy, // Smart default strategy based on user's profile
       spendingInflation: baselineScenario?.expenseInflationRate || 2.0, // Default 2%
       generalInflation: baselineScenario?.inflationRate || 2.0, // Default 2%
+      calculatedStartYear, // Automatically calculated based on targetRetirementAge
       realEstate: {
         assets: realEstateAssets,
         totalEquity: totalRealEstateEquity,

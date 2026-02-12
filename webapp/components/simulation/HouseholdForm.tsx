@@ -32,9 +32,10 @@ interface HouseholdFormProps {
   onChange: <K extends keyof HouseholdInput>(field: K, value: HouseholdInput[K]) => void;
   isPrefilled?: boolean;
   userProfileProvince?: string | null;
+  planningAge?: number;
 }
 
-export function HouseholdForm({ household, onChange, isPrefilled = false, userProfileProvince = null }: HouseholdFormProps) {
+export function HouseholdForm({ household, onChange, isPrefilled = false, userProfileProvince = null, planningAge }: HouseholdFormProps) {
   // Helper function to get full province name
   const getProvinceName = (code: string): string => {
     const provinceNames: Record<string, string> = {
@@ -128,16 +129,39 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
               </p>
             </div>
             <div className="space-y-2">
-              <div className="min-h-[20px]">
+              <div className="min-h-[20px] flex items-center justify-between">
                 <Label htmlFor="start-year">Start Year</Label>
+                {isPrefilled && planningAge && (
+                  <span className="text-xs text-green-600 font-medium">✓ Auto-calculated</span>
+                )}
               </div>
-              <Input
-                id="start-year"
-                type="number"
-                value={household.start_year}
-                onChange={(e) => onChange('start_year', parseInt(e.target.value) || 2025)}
-              />
-              <div className="min-h-[32px]"></div>
+              {isPrefilled && planningAge ? (
+                <div className="relative">
+                  <Input
+                    id="start-year"
+                    type="number"
+                    value={household.start_year}
+                    disabled
+                    className="bg-gray-50 cursor-not-allowed"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-600">
+                    (retirement at age {planningAge})
+                  </div>
+                </div>
+              ) : (
+                <Input
+                  id="start-year"
+                  type="number"
+                  value={household.start_year}
+                  onChange={(e) => onChange('start_year', parseInt(e.target.value) || 2025)}
+                />
+              )}
+              <div className="min-h-[32px] text-xs text-gray-600">
+                {isPrefilled && planningAge ?
+                  `Automatically set based on retirement age ${planningAge}` :
+                  'Year when retirement planning begins'
+                }
+              </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between min-h-[20px]">

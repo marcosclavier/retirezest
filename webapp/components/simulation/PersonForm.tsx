@@ -103,13 +103,35 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
               >
                 Planning Age
               </LabelWithTooltip>
-              <Input
-                id={`${personNumber}-start-age`}
-                type="number"
-                value={person.start_age}
-                onChange={(e) => onChange('start_age', parseInt(e.target.value) || 0)}
-                placeholder="Age to start simulation"
-              />
+              {isPrefilled && personNumber === 'p1' ? (
+                <div className="relative">
+                  <Input
+                    id={`${personNumber}-start-age`}
+                    type="number"
+                    value={person.start_age}
+                    disabled
+                    className="bg-gray-50 cursor-not-allowed pr-24"
+                    placeholder="Age to start simulation"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    <span className="text-xs text-green-600 font-medium">✓ From profile</span>
+                    <a
+                      href="/profile/settings"
+                      className="text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                    >
+                      Edit
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <Input
+                  id={`${personNumber}-start-age`}
+                  type="number"
+                  value={person.start_age}
+                  onChange={(e) => onChange('start_age', parseInt(e.target.value) || 0)}
+                  placeholder="Age to start simulation"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -189,7 +211,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
             </div>
           </div>
 
-          {/* Early RRIF Withdrawal Control - Show only if RRSP/RRIF balance > 0 */}
+          {/* RRSP/RRIF Withdrawal Control - Show only if RRSP/RRIF balance > 0 */}
           {((person.rrsp_balance ?? 0) > 0 || (person.rrif_balance ?? 0) > 0) && (
             <div className="mt-6">
               <EarlyRrifWithdrawalControl

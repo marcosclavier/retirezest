@@ -166,14 +166,31 @@ export async function POST(request: NextRequest) {
         rrif_balance: 0,
         corporate_balance: 0,
         cpp_start_age: 65,  // Minimum 60 required
+        cpp_annual_at_start: 0,  // MUST be 0 for single person
         oas_start_age: 65,  // Minimum 65 required
+        oas_annual_at_start: 0,  // MUST be 0 for single person
         avg_career_income: 0,
         years_of_cpp: 0,
         years_in_canada: 0,
         pension_income: 0,
-        other_income: 0
+        other_income: 0,
+        pension_incomes: [],  // Empty for single person
+        other_incomes: []     // Empty for single person
       }
     } : body;
+
+    // Log RRSP withdrawal settings for debugging
+    console.log('📊 RRSP/RRIF Withdrawal Settings for P1:');
+    console.log('  - RRSP Balance:', pythonPayload.p1.rrsp_balance);
+    console.log('  - RRIF Balance:', pythonPayload.p1.rrif_balance);
+    console.log('  - Enable withdrawals:', pythonPayload.p1.enable_early_rrif_withdrawal);
+    console.log('  - Start age:', pythonPayload.p1.early_rrif_withdrawal_start_age);
+    console.log('  - End age:', pythonPayload.p1.early_rrif_withdrawal_end_age);
+    console.log('  - Mode:', pythonPayload.p1.early_rrif_withdrawal_mode);
+    console.log('  - Percentage:', pythonPayload.p1.early_rrif_withdrawal_percentage);
+    console.log('  - Strategy:', pythonPayload.strategy);
+    console.log('  - Start Year:', pythonPayload.start_year);
+    console.log('  - P1 Start Age:', pythonPayload.p1.start_age);
 
     // Forward request to Python API
     const pythonResponse = await fetch(`${PYTHON_API_URL}/api/run-simulation`, {
@@ -185,6 +202,18 @@ export async function POST(request: NextRequest) {
     });
 
     const responseData = await pythonResponse.json();
+
+    // Log first year results for debugging RRSP issue
+    if (responseData.year_results && responseData.year_results.length > 0) {
+      const firstYear = responseData.year_results[0];
+      console.log('📊 First Year Results:');
+      console.log('  - Year:', firstYear.year);
+      console.log('  - RRSP/RRIF withdrawal:', firstYear.rrsp_rrif_withdrawal_p1);
+      console.log('  - RRSP end balance:', firstYear.rrsp_end_p1);
+      console.log('  - RRIF end balance:', firstYear.rrif_end_p1);
+      console.log('  - Total withdrawals:', firstYear.total_withdrawals);
+      console.log('  - Net worth:', firstYear.net_worth);
+    }
 
     // Calculate processing time
     const duration = Date.now() - startTime;

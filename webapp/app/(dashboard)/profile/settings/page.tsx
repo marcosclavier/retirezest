@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import DeleteAccountModal from '@/components/account/DeleteAccountModal';
 import ExportDataButton from '@/components/account/ExportDataButton';
+import { calculateAgeFromDOB, calculateRetirementDate } from '@/lib/utils/age';
 
 interface ProfileSettings {
   includePartner: boolean;
@@ -331,34 +332,55 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Retirement Goals */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Retirement Goals</CardTitle>
+        {/* Retirement Goals - PRIMARY CONFIGURATION */}
+        <Card className="mt-6 border-2 border-blue-500">
+          <CardHeader className="bg-blue-50">
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-2xl">🎯</span> Retirement Goals
+            </CardTitle>
             <CardDescription>
-              Set your retirement planning targets to improve simulation accuracy
+              <strong>This is your master retirement configuration</strong> - Used across all simulations and planning tools
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="retirement-age">Target Retirement Age</Label>
+                <Label htmlFor="retirement-age" className="text-base font-semibold">
+                  Retirement Age <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="retirement-age"
                   type="number"
                   min="50"
-                  max="75"
+                  max="80"
                   value={settings.targetRetirementAge || ''}
                   onChange={(e) => setSettings({ ...settings, targetRetirementAge: e.target.value ? parseInt(e.target.value) : null })}
                   placeholder="e.g., 65"
+                  className="text-lg font-medium"
                 />
-                <p className="text-xs text-gray-600">
-                  When do you plan to retire? (typically 60-70)
+                <p className="text-sm text-gray-600">
+                  The age when you plan to retire
                 </p>
+
+                {/* Dynamic Information Based on Retirement Age */}
+                {settings.dateOfBirth && settings.targetRetirementAge && (
+                  <div className="bg-blue-100 rounded-lg p-3 mt-2">
+                    <p className="text-sm font-medium text-blue-900">
+                      📅 You'll retire in: {new Date().getFullYear() + (settings.targetRetirementAge - calculateAgeFromDOB(settings.dateOfBirth))}
+                    </p>
+                    <p className="text-xs text-blue-700 mt-1">
+                      {settings.targetRetirementAge - calculateAgeFromDOB(settings.dateOfBirth) > 0
+                        ? `(in ${settings.targetRetirementAge - calculateAgeFromDOB(settings.dateOfBirth)} years)`
+                        : '(already at retirement age)'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="life-expectancy">Life Expectancy</Label>
+                <Label htmlFor="life-expectancy" className="text-base font-semibold">
+                  Life Expectancy
+                </Label>
                 <Input
                   id="life-expectancy"
                   type="number"
@@ -367,23 +389,43 @@ export default function SettingsPage() {
                   value={settings.lifeExpectancy || ''}
                   onChange={(e) => setSettings({ ...settings, lifeExpectancy: e.target.value ? parseInt(e.target.value) : null })}
                   placeholder="e.g., 95"
+                  className="text-lg font-medium"
                 />
-                <p className="text-xs text-gray-600">
+                <p className="text-sm text-gray-600">
                   Plan for longevity (default: 95 years)
                 </p>
+
+                {/* Years in Retirement Calculation */}
+                {settings.targetRetirementAge && settings.lifeExpectancy && (
+                  <div className="bg-green-100 rounded-lg p-3 mt-2">
+                    <p className="text-sm font-medium text-green-900">
+                      📊 Years in retirement: {settings.lifeExpectancy - settings.targetRetirementAge}
+                    </p>
+                    <p className="text-xs text-green-700 mt-1">
+                      Your plan will cover {settings.lifeExpectancy - settings.targetRetirementAge} years of retirement
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            {/* Master Configuration Notice */}
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                <svg className="w-6 h-6 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 12a1 1 0 102 0v2a1 1 0 10-2 0v-2zm1-4a1 1 0 00-1 1v1a1 1 0 102 0V9a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 <div>
-                  <h4 className="font-semibold text-green-900 text-sm">Profile Completion</h4>
-                  <p className="text-xs text-green-800 mt-1">
-                    Setting these values helps complete your profile and enables more accurate retirement projections
+                  <h4 className="font-bold text-amber-900">Single Source of Truth</h4>
+                  <p className="text-sm text-amber-800 mt-1">
+                    These values are automatically used in:
                   </p>
+                  <ul className="text-sm text-amber-700 mt-2 space-y-1">
+                    <li>✓ Simulation Planning Age</li>
+                    <li>✓ Scenario Start Year calculations</li>
+                    <li>✓ Government benefits timing (CPP/OAS)</li>
+                    <li>✓ All retirement projections</li>
+                  </ul>
                 </div>
               </div>
             </div>

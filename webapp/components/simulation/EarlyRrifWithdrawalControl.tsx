@@ -64,13 +64,13 @@ export default function EarlyRrifWithdrawalControl({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h4 className="text-sm font-medium text-gray-900">
-            Early RRIF/RRSP Withdrawals {personName && `(${personName})`}
+            RRSP/RRIF Withdrawals {personName && `(${personName})`}
           </h4>
           <div className="group relative">
             <Info className="h-4 w-4 text-gray-400 cursor-help" />
             <div className="invisible group-hover:visible absolute left-0 top-6 z-10 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
-              Configure custom RRSP/RRIF withdrawals before age 71 (when minimum withdrawals become mandatory).
-              This is useful for filling lower tax brackets, income splitting, or avoiding future OAS clawback.
+              Configure RRSP/RRIF withdrawals. You can convert RRSP to RRIF at any age and withdraw as needed.
+              Age 71 is the mandatory conversion deadline. Enable this to access your RRSP funds at retirement.
             </div>
           </div>
         </div>

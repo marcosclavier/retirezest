@@ -71,7 +71,7 @@ export const prisma =
         transactionOptions: {
           timeout: 10000, // 10 seconds
           maxWait: 5000,  // 5 seconds
-          isolationLevel: 'ReadCommitted',
+          isolationLevel: 'Serializable', // SQLite only supports Serializable
         },
       }));
 
