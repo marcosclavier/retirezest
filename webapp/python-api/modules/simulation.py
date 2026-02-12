@@ -1379,7 +1379,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                   fed: TaxParams, prov: TaxParams,
                   rrsp_to_rrif: bool, custom_withdraws: Dict[str, float],
                   strategy_name: str, hybrid_topup_amt: float, hh: Household, year: int = None,
-                  tfsa_room: float = 0.0) -> Tuple[Dict[str, float], Dict[str, float],Dict[str, float]]:
+                  tfsa_room: float = 0.0, tax_optimizer: "TaxOptimizer" = None) -> Tuple[Dict[str, float], Dict[str, float],Dict[str, float]]:
                   
     
     """
@@ -1792,28 +1792,27 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # PHASE 5a: Call TaxOptimizer to get intelligent withdrawal order
     # The optimizer will return a withdrawal order that minimizes lifetime taxes
     # (retirement + death), taking into account GIS/OAS clawback, TFSA strategic placement, etc.
-    try:
-        optimizer_plan = tax_optimizer.optimize_withdrawals(
-            person=person,
-            household=hh,
-            year=year
-        )
-        optimizer_order = optimizer_plan.withdrawal_order
+    order = _get_strategy_order(strategy_name)  # Default fallback
 
-        # Use optimizer order if it returned a valid list
-        if optimizer_order and len(optimizer_order) > 0:
-            order = optimizer_order
-            if shortfall > 1e-6:
-                import sys
-                print(f"  TaxOptimizer selected order: {order}", file=sys.stderr)
-        else:
-            # Fallback to strategy-based order if optimizer returned empty
-            order = _get_strategy_order(strategy_name)
-    except Exception as e:
-        # Fallback to strategy-based order on any optimizer error
-        import sys
-        print(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order", file=sys.stderr)
-        order = _get_strategy_order(strategy_name)
+    if tax_optimizer is not None:
+        try:
+            optimizer_plan = tax_optimizer.optimize_withdrawals(
+                person=person,
+                household=hh,
+                year=year
+            )
+            optimizer_order = optimizer_plan.withdrawal_order
+
+            # Use optimizer order if it returned a valid list
+            if optimizer_order and len(optimizer_order) > 0:
+                order = optimizer_order
+                if shortfall > 1e-6:
+                    import sys
+                    print(f"  TaxOptimizer selected order: {order}", file=sys.stderr)
+        except Exception as e:
+            # Fallback to strategy-based order on any optimizer error
+            import sys
+            print(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order", file=sys.stderr)
 
     if "GIS-Optimized" in strategy_name or "minimize-income" in strategy_name.lower() or "minimize_income" in strategy_name.lower():
         # GIS optimization already handled withdrawals above
@@ -2563,11 +2562,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Then call simulate_year with fed_y/prov_y (not the base fed/prov):
         w1, t1, info1 = simulate_year(
             p1, age1, target_p1_adjusted, fed_y, prov_y, rrsp_to_rrif1, cust["p1"],
-            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1
+            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1, tax_optimizer
             )
         w2, t2, info2 = simulate_year(
             p2, age2, target_p2_adjusted, fed_y, prov_y, rrsp_to_rrif2, cust["p2"],
-            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2
+            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2, tax_optimizer
             )
 
         # Update TFSA room after surplus reinvestment (from simulate_year)
