@@ -665,14 +665,14 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
     description: 'Withdraws from tax-free accounts first for maximum flexibility',
   },
   {
-    value: 'balanced',
-    label: 'Balanced',
-    description: 'Balanced approach across all account types',
+    value: 'rrif-frontload',
+    label: 'RRSP/RRIF Focused (RECOMMENDED for RRSP holders)',
+    description: '✓ BEST for significant RRSP/RRIF balances. Withdraws 15% before OAS/CPP, 8% after. Ensures retirement spending is funded',
   },
   {
-    value: 'rrif-frontload',
-    label: 'RRSP/RRIF Frontload (Income Splitting)',
-    description: 'Ideal for couples with income imbalance. Withdraws 15% of RRIF before OAS/CPP starts, then 8% after. Automatically avoids OAS clawback by switching to TFSA/NonReg when approaching threshold',
+    value: 'Balanced',
+    label: 'Balanced (Minimum Only)',
+    description: '⚠️ WARNING: Only withdraws RRIF minimum. May create spending gaps if RRIF is your main retirement source',
   },
 ];
 

@@ -622,7 +622,7 @@ export async function GET(request: NextRequest) {
       // Smart strategy selection logic
       if (registeredPct > 0.4) {
         // Large RRSP/RRIF balance (>40%) - front-load withdrawals to minimize tax over lifetime
-        recommendedStrategy = 'balanced'; // Use balanced for RRSP access
+        recommendedStrategy = 'rrif-frontload'; // Use RRIF-frontload to actually access RRSP funds
       } else if (tfsaPct > 0.3 && (totalRRIF > 0 || totalRRSP > 0)) {
         // Large TFSA (>30%) with some RRSP/RRIF - use TFSA first to preserve tax-deferred growth
         recommendedStrategy = 'tfsa-first';
