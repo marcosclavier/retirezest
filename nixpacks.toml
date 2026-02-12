@@ -2,12 +2,11 @@
 # Forces Railway to build the Python API from webapp/python-api directory
 
 [phases.setup]
-nixPkgs = ["python39", "pip"]
+nixPkgs = ["python311"]
 
 [phases.install]
 cmds = [
-  "cd webapp",
-  "pip install -r requirements-api.txt"
+  "pip install -r webapp/requirements-api.txt"
 ]
 
 [start]
