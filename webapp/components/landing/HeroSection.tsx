@@ -24,6 +24,14 @@ export default function HeroSection() {
                 <span className="text-blue-600">Confidence</span>
               </h1>
 
+              {/* Beta Notice */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <span className="text-amber-600 font-semibold">BETA</span>
+                <span className="text-sm text-amber-700">
+                  This application is currently in beta testing. Calculations are being validated for accuracy.
+                </span>
+              </div>
+
               <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
                 Calculate CPP, OAS, and project your retirement income in minutes—no spreadsheets required.
               </p>

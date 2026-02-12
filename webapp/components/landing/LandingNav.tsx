@@ -22,16 +22,22 @@ export default function LandingNav() {
         <div className="flex justify-between items-center h-[74px]">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center pb-[9px]">
-            <Image
-              src="/retire-zest-logo.png"
-              alt="Retire Zest"
-              width={296}
-              height={89}
-              className="h-[59px] w-auto"
-              priority
-            />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center pb-[9px]">
+              <Image
+                src="/retire-zest-logo.png"
+                alt="Retire Zest"
+                width={296}
+                height={89}
+                className="h-[59px] w-auto"
+                priority
+              />
+            </Link>
+            {/* Beta Badge */}
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+              BETA
+            </span>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">

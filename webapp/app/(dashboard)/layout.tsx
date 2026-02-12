@@ -37,7 +37,7 @@ export default async function DashboardLayout({
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-[74px]">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2 md:gap-3">
               <Link href="/dashboard" className="flex items-center">
                 <Image
                   src="/retire-zest-logo.png"
@@ -48,6 +48,10 @@ export default async function DashboardLayout({
                   priority
                 />
               </Link>
+              {/* Beta Badge */}
+              <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                BETA
+              </span>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <span className="hidden sm:inline text-xs md:text-sm text-gray-600 truncate max-w-[120px] md:max-w-none">

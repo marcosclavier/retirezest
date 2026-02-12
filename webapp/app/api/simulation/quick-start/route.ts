@@ -377,11 +377,11 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
     early_rrif_withdrawal_mode: 'fixed',
   } : {
     name: '',
-    start_age: 0,
+    start_age: 60,  // Minimum age 50 required by Python API
 
-    cpp_start_age: 0,
+    cpp_start_age: 65,  // Minimum 60 required by Python API
     cpp_annual_at_start: 0,
-    oas_start_age: 0,
+    oas_start_age: 65,  // Minimum 65 required by Python API
     oas_annual_at_start: 0,
 
     pension_incomes: [],

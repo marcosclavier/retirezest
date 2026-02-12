@@ -150,13 +150,38 @@ export async function POST(request: NextRequest) {
       endpoint: '/api/simulation/run'
     });
 
+    // Transform data to match Python API format
+    // If data comes wrapped in household_input, extract it
+    // Otherwise use as-is for backward compatibility
+    const pythonPayload = body.household_input ? {
+      ...body.household_input,
+      // Ensure p2 has valid default values when no partner
+      p2: body.household_input.p2 && body.household_input.p2.name ? body.household_input.p2 : {
+        name: "",
+        birth_year: 1960,  // Provide valid year for calculations
+        start_age: 60,  // Minimum age 50 required by Python API
+        rrsp_balance: 0,
+        tfsa_balance: 0,
+        nonreg_balance: 0,
+        rrif_balance: 0,
+        corporate_balance: 0,
+        cpp_start_age: 65,  // Minimum 60 required
+        oas_start_age: 65,  // Minimum 65 required
+        avg_career_income: 0,
+        years_of_cpp: 0,
+        years_in_canada: 0,
+        pension_income: 0,
+        other_income: 0
+      }
+    } : body;
+
     // Forward request to Python API
     const pythonResponse = await fetch(`${PYTHON_API_URL}/api/run-simulation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(pythonPayload),
     });
 
     const responseData = await pythonResponse.json();
@@ -280,6 +305,7 @@ export async function POST(request: NextRequest) {
     // Return successful response with metadata
     const responseWithMeta = {
       ...responseData,
+      success: responseData.success !== false, // Ensure success field is included
       freeSimulationsRemaining: !user?.emailVerified ? Math.max(0, emailLimitCheck.remaining - 1) : -1,
       dailySimulationsRemaining: !dailyLimitCheck.isPremium ? Math.max(0, dailyLimitCheck.remaining - 1) : -1,
     };
