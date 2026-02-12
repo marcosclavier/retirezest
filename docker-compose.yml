@@ -21,7 +21,7 @@ services:
   # Next.js Application
   retirement-app:
     build:
-      context: .
+      context: ./webapp
       dockerfile: Dockerfile
     container_name: retirement-app
     ports:

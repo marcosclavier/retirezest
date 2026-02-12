@@ -1,14 +1,14 @@
 # Nixpacks Configuration for Railway
-# Forces Railway to build the Python API from juan-retirement-app directory
+# Forces Railway to build the Python API from webapp/python-api directory
 
 [phases.setup]
 nixPkgs = ["python39", "pip"]
 
 [phases.install]
 cmds = [
-  "cd juan-retirement-app",
-  "pip install -r requirements.txt"
+  "cd webapp",
+  "pip install -r requirements-api.txt"
 ]
 
 [start]
-cmd = "cd juan-retirement-app && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT"
+cmd = "cd webapp/python-api && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT"

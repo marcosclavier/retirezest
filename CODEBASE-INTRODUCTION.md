@@ -1,9 +1,9 @@
 # Canadian Retirement Planning Application - Codebase Introduction
 
-**Version:** 1.1
-**Last Updated:** November 14, 2025
-**Status:** 🎉 MVP Complete (100% Priority 1 Features) + 🐳 Docker Ready
-**Tech Stack:** Next.js 15, TypeScript, Prisma, SQLite, Tailwind CSS, jsPDF, Radix UI, Docker
+**Version:** 2.0
+**Last Updated:** February 11, 2026
+**Status:** 🎉 MVP Complete (100% Priority 1 Features) + 🐳 Docker Ready + 🐍 Python API Consolidated
+**Tech Stack:** Next.js 15, TypeScript, Prisma, SQLite, Tailwind CSS, jsPDF, Radix UI, Docker, Python FastAPI
 **Deployment:** Fully containerized with Docker & Docker Compose
 
 ---
@@ -43,38 +43,60 @@ This is a full-stack web application designed to help Canadian seniors plan thei
 ## Application Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      Frontend (Next.js)                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Dashboard  │  │  Calculator  │  │  Projection  │  │
-│  │    Pages     │  │    Pages     │  │    Pages     │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│         │                  │                  │          │
-│         └──────────────────┴──────────────────┘          │
-│                            │                              │
-│                    ┌───────▼────────┐                     │
-│                    │   API Routes   │                     │
-│                    └───────┬────────┘                     │
-└────────────────────────────┼──────────────────────────────┘
-                             │
-                    ┌────────▼─────────┐
-                    │  Calculation     │
-                    │  Engines         │
-                    │ (CPP/OAS/GIS/Tax)│
-                    └────────┬─────────┘
-                             │
-                    ┌────────▼─────────┐
-                    │  Prisma ORM      │
-                    └────────┬─────────┘
-                             │
-                    ┌────────▼─────────┐
-                    │  SQLite Database │
-                    └──────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Frontend (Next.js)                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
+│  │   Dashboard  │  │  Calculator  │  │  Simulation  │  │   Profile  │  │
+│  │    Pages     │  │    Pages     │  │    Pages     │  │    Pages   │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘  │
+│         │                  │                  │               │          │
+│         └──────────────────┴──────────────────┴───────────────┘          │
+│                                    │                                      │
+│                    ┌───────────────▼───────────────┐                     │
+│                    │      Next.js API Routes       │                     │
+│                    │  (Auth, Profile, Simulation)  │                     │
+│                    └───────────────┬───────────────┘                     │
+└────────────────────────────────────┼─────────────────────────────────────┘
+                                     │
+              ┌──────────────────────┼──────────────────────┐
+              │                      │                      │
+              ▼                      ▼                      ▼
+┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
+│   TypeScript Calc   │  │   Python FastAPI    │  │    Prisma ORM       │
+│   (CPP/OAS/GIS/Tax) │  │   (Simulation API)  │  │                     │
+│   lib/calculations/ │  │   python-api/       │  │                     │
+└─────────────────────┘  └──────────┬──────────┘  └──────────┬──────────┘
+                                    │                        │
+                                    │                        ▼
+                         ┌──────────▼──────────┐  ┌─────────────────────┐
+                         │  Python Modules     │  │   SQLite Database   │
+                         │  - simulation.py    │  │   (User data)       │
+                         │  - tax_engine.py    │  └─────────────────────┘
+                         │  - benefits.py      │
+                         │  - withdrawal.py    │
+                         └─────────────────────┘
 ```
+
+**Dual Calculation Architecture:**
+
+The application uses **two calculation engines** that work together:
+
+1. **TypeScript Calculations** (`lib/calculations/`): Simple benefit calculators for the UI
+   - CPP/OAS/GIS estimators for the benefits pages
+   - Basic tax calculations for profile pages
+   - Lightweight projections for quick feedback
+
+2. **Python FastAPI Backend** (`python-api/`): Advanced simulation engine
+   - Full retirement simulation with 18+ modules
+   - Tax-optimized withdrawal strategies
+   - Monte Carlo analysis
+   - Strategy optimization
+   - Called via Next.js API routes that proxy to `http://localhost:8000`
 
 **Technology Choices:**
 - **Next.js 15**: App Router, Server & Client Components, API Routes
-- **TypeScript**: Full type safety across frontend and backend
+- **TypeScript**: Full type safety across frontend and API gateway
+- **Python FastAPI**: High-performance simulation engine
 - **Prisma**: Type-safe database ORM with migrations
 - **SQLite**: Local database (easy to migrate to PostgreSQL)
 - **Tailwind CSS**: Utility-first styling
@@ -87,107 +109,127 @@ This is a full-stack web application designed to help Canadian seniors plan thei
 
 ```
 retirement-app/
-├── webapp/                          # Main Next.js application
+├── webapp/                          # Unified monorepo (Next.js + Python)
+│   │
+│   ├── python-api/                  # Python FastAPI Backend (simulation engine)
+│   │   ├── api/                     # FastAPI application
+│   │   │   ├── main.py              # FastAPI app entry point, CORS, health
+│   │   │   ├── models/              # Pydantic request/response models
+│   │   │   │   ├── requests.py      # Input validation schemas
+│   │   │   │   └── responses.py     # Output schemas
+│   │   │   ├── routes/              # API endpoints
+│   │   │   │   ├── simulation.py    # POST /api/run-simulation
+│   │   │   │   ├── monte_carlo.py   # Monte Carlo endpoints
+│   │   │   │   └── optimization.py  # Strategy optimization
+│   │   │   └── utils/
+│   │   │       └── converters.py    # API ↔ internal model converters
+│   │   │
+│   │   ├── modules/                 # Core calculation engine (18 modules)
+│   │   │   ├── simulation.py        # Main simulation engine (158KB)
+│   │   │   ├── tax_engine.py        # Canadian tax calculations
+│   │   │   ├── benefits.py          # CPP/OAS/GIS calculations
+│   │   │   ├── withdrawal_strategies.py # RRIF/TFSA/NonReg strategies
+│   │   │   ├── asset_aware_withdrawal.py
+│   │   │   ├── strategy_optimizer.py
+│   │   │   ├── tax_optimizer.py
+│   │   │   ├── estate_tax_calculator.py
+│   │   │   ├── real_estate.py
+│   │   │   ├── gic_calculator.py
+│   │   │   ├── spending.py
+│   │   │   ├── plan_reliability_analyzer.py
+│   │   │   ├── scenario_comparison.py
+│   │   │   ├── metrics_tracker.py
+│   │   │   ├── strategy_insights.py
+│   │   │   ├── models.py            # Core data models
+│   │   │   ├── config.py            # Configuration loader
+│   │   │   ├── database.py          # Database setup
+│   │   │   └── db_service.py        # Database service
+│   │   │
+│   │   └── utils/                   # Python utilities
+│   │       ├── helpers.py
+│   │       ├── asset_analyzer.py
+│   │       ├── tax_efficiency.py
+│   │       ├── strategy_recommender.py
+│   │       └── file_io.py
+│   │
 │   ├── app/                         # Next.js App Router
 │   │   ├── (auth)/                  # Auth route group (no layout)
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx         # Login page
-│   │   │   └── register/
-│   │   │       └── page.tsx         # Registration page
+│   │   │   ├── login/page.tsx
+│   │   │   ├── register/page.tsx
+│   │   │   ├── forgot-password/page.tsx
+│   │   │   └── reset-password/page.tsx
 │   │   │
 │   │   ├── (dashboard)/             # Dashboard route group (with layout)
-│   │   │   ├── dashboard/
-│   │   │   │   └── page.tsx         # Main dashboard
-│   │   │   ├── profile/
-│   │   │   │   ├── page.tsx         # Profile view/edit
-│   │   │   │   ├── income/
-│   │   │   │   │   └── page.tsx     # Income management
-│   │   │   │   ├── assets/
-│   │   │   │   │   └── page.tsx     # Assets management
-│   │   │   │   ├── expenses/
-│   │   │   │   │   └── page.tsx     # Expenses tracking
-│   │   │   │   └── debts/
-│   │   │   │       └── page.tsx     # Debt tracking
-│   │   │   ├── benefits/
-│   │   │   │   ├── page.tsx         # Benefits overview
-│   │   │   │   ├── cpp/
-│   │   │   │   │   └── page.tsx     # CPP calculator
-│   │   │   │   ├── oas/
-│   │   │   │   │   └── page.tsx     # OAS calculator
-│   │   │   │   └── gis/
-│   │   │   │       └── page.tsx     # GIS calculator
-│   │   │   ├── projection/
-│   │   │   │   └── page.tsx         # Retirement projection
-│   │   │   ├── scenarios/
-│   │   │   │   └── page.tsx         # Scenario comparison
-│   │   │   └── layout.tsx           # Dashboard layout (sidebar)
+│   │   │   ├── dashboard/page.tsx   # Main dashboard
+│   │   │   ├── simulation/page.tsx  # Run simulations
+│   │   │   ├── scenarios/page.tsx   # Scenario comparison
+│   │   │   ├── profile/             # Profile management
+│   │   │   │   ├── assets/page.tsx
+│   │   │   │   ├── income/page.tsx
+│   │   │   │   ├── expenses/page.tsx
+│   │   │   │   ├── debts/page.tsx
+│   │   │   │   └── real-estate/page.tsx
+│   │   │   ├── benefits/            # Benefits calculators
+│   │   │   │   ├── cpp/page.tsx
+│   │   │   │   ├── oas/page.tsx
+│   │   │   │   └── gis/page.tsx
+│   │   │   ├── early-retirement/page.tsx
+│   │   │   ├── onboarding/wizard/   # Onboarding flow
+│   │   │   └── layout.tsx           # Dashboard layout
 │   │   │
-│   │   ├── api/                     # API Routes
-│   │   │   ├── auth/
-│   │   │   │   ├── login/route.ts   # POST /api/auth/login
-│   │   │   │   ├── register/route.ts# POST /api/auth/register
-│   │   │   │   └── logout/route.ts  # POST /api/auth/logout
-│   │   │   ├── profile/
-│   │   │   │   ├── route.ts         # GET/PUT /api/profile
-│   │   │   │   ├── income/route.ts  # CRUD income
-│   │   │   │   ├── assets/route.ts  # CRUD assets
-│   │   │   │   ├── expenses/route.ts# CRUD expenses
-│   │   │   │   └── debts/route.ts   # CRUD debts
-│   │   │   └── scenarios/
-│   │   │       ├── route.ts         # GET/POST scenarios
-│   │   │       └── [id]/route.ts    # GET/PUT/DELETE scenario
+│   │   ├── api/                     # Next.js API Routes (gateway to Python)
+│   │   │   ├── auth/                # Authentication endpoints
+│   │   │   ├── profile/             # Profile CRUD
+│   │   │   ├── simulation/          # Proxies to Python API
+│   │   │   │   ├── run/route.ts     # → /api/run-simulation
+│   │   │   │   └── analyze/route.ts # → /api/analyze-composition
+│   │   │   ├── scenarios/           # Scenario management
+│   │   │   ├── health/              # Health checks (DB + Python API)
+│   │   │   └── subscription/        # Stripe integration
 │   │   │
 │   │   ├── layout.tsx               # Root layout
-│   │   ├── page.tsx                 # Landing page
-│   │   └── globals.css              # Global styles
+│   │   └── page.tsx                 # Landing page
 │   │
 │   ├── components/                  # React Components
-│   │   ├── layout/
-│   │   │   ├── header.tsx           # Top navigation
-│   │   │   ├── sidebar.tsx          # Sidebar navigation
-│   │   │   └── footer.tsx           # Footer
+│   │   ├── simulation/              # Simulation UI components
+│   │   │   ├── HouseholdForm.tsx
+│   │   │   ├── ResultsDashboard.tsx
+│   │   │   └── charts/              # Visualization components
 │   │   ├── reports/
 │   │   │   └── RetirementReport.tsx # PDF report template
-│   │   └── ui/                      # shadcn/ui components
-│   │       ├── button.tsx
-│   │       ├── card.tsx
-│   │       └── ...
+│   │   └── ui/                      # Radix UI components
 │   │
-│   ├── lib/                         # Utility Libraries
-│   │   ├── auth.ts                  # JWT authentication utilities
-│   │   ├── db.ts                    # Prisma client singleton
+│   ├── lib/                         # TypeScript Utilities
+│   │   ├── auth.ts                  # JWT authentication
 │   │   ├── prisma.ts                # Prisma instance
-│   │   ├── calculations/            # Calculation Engines
-│   │   │   ├── cpp.ts               # CPP calculations (233 lines)
-│   │   │   ├── oas.ts               # OAS calculations (268 lines)
-│   │   │   ├── gis.ts               # GIS calculations (320 lines)
-│   │   │   ├── tax.ts               # Tax calculations (372 lines)
-│   │   │   └── projection.ts        # Retirement projection (396 lines)
-│   │   └── reports/
-│   │       └── generatePDF.ts       # PDF generation utilities
+│   │   ├── api/
+│   │   │   └── simulation-client.ts # Python API client
+│   │   ├── calculations/            # TypeScript calculators (UI helpers)
+│   │   │   ├── cpp.ts
+│   │   │   ├── oas.ts
+│   │   │   ├── gis.ts
+│   │   │   └── tax.ts
+│   │   └── types/
+│   │       └── simulation.ts        # Simulation type definitions
 │   │
 │   ├── prisma/
 │   │   ├── schema.prisma            # Database schema
-│   │   ├── migrations/              # Database migrations
-│   │   └── dev.db                   # SQLite database file
+│   │   └── migrations/              # Database migrations
 │   │
-│   ├── public/                      # Static assets
-│   ├── .env.local                   # Environment variables
-│   ├── next.config.ts               # Next.js configuration
-│   ├── tailwind.config.ts           # Tailwind configuration
-│   ├── tsconfig.json                # TypeScript configuration
-│   └── package.json                 # Dependencies
+│   ├── e2e/                         # Playwright E2E tests
+│   │
+│   ├── requirements-api.txt         # Python dependencies (API only)
+│   ├── requirements.txt             # Python dependencies (full)
+│   ├── tax_config_canada_2025.json  # Canadian tax configuration
+│   ├── Procfile                     # Process management
+│   ├── render.yaml                  # Render deployment
+│   ├── package.json                 # Node.js dependencies
+│   └── consolidation.md             # Consolidation documentation
 │
-├── Dockerfile                       # Docker container configuration
 ├── docker-compose.yml               # Docker orchestration
-├── docker-entrypoint.sh             # Container startup script
-├── .dockerignore                    # Docker build exclusions
-├── README-DOCKER.md                 # Docker deployment guide
-│
-└── Documentation/
-    ├── MVP-COMPLETION-TASKS.md      # Task list for MVP completion
-    ├── CODEBASE-INTRODUCTION.md     # This file
-    └── mvp-development-plan.md      # Original development plan
+├── Dockerfile.backup                # Docker configuration
+├── CODEBASE-INTRODUCTION.md         # This file
+└── README.md                        # Project overview
 ```
 
 ---
@@ -782,6 +824,102 @@ Age 95+: 20.00%
 
 ---
 
+## Python FastAPI Backend
+
+The Python backend provides the advanced simulation engine that powers the main retirement projections.
+
+### Location
+```
+webapp/python-api/
+├── api/                    # FastAPI application
+│   ├── main.py             # Entry point, CORS, health endpoint
+│   ├── models/             # Pydantic schemas
+│   └── routes/             # API endpoints
+├── modules/                # Core simulation engine (18 modules)
+└── utils/                  # Helper utilities
+```
+
+### Key Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/run-simulation` | Run full retirement simulation |
+| POST | `/api/analyze-composition` | Analyze asset composition |
+| GET | `/api/health` | Health check |
+
+### How Next.js Connects to Python
+
+The Next.js API routes act as a **gateway** to the Python backend:
+
+```
+Browser → Next.js API Route → Python FastAPI → Response
+         /api/simulation/run → http://localhost:8000/api/run-simulation
+```
+
+**Key file:** `lib/api/simulation-client.ts`
+```typescript
+// Calls Next.js route which proxies to Python
+const response = await fetch('/api/simulation/run', {
+  method: 'POST',
+  body: JSON.stringify(householdInput),
+});
+```
+
+**Environment Variable:**
+```bash
+PYTHON_API_URL=http://localhost:8000  # Default
+```
+
+### Python Modules Overview
+
+| Module | Purpose |
+|--------|---------|
+| `simulation.py` | Main simulation engine (158KB, ~4000 lines) |
+| `tax_engine.py` | Canadian federal + provincial tax calculations |
+| `benefits.py` | CPP, OAS, GIS government benefit calculations |
+| `withdrawal_strategies.py` | RRIF-first, TFSA-first, balanced strategies |
+| `tax_optimizer.py` | Tax-efficient withdrawal optimization |
+| `estate_tax_calculator.py` | Estate and deemed disposition calculations |
+| `real_estate.py` | Real estate valuation and analysis |
+| `gic_calculator.py` | GIC ladder calculations |
+| `config.py` | Loads tax_config_canada_2025.json |
+
+### Tax Configuration
+
+The file `tax_config_canada_2025.json` contains all Canadian tax parameters:
+- Federal tax brackets and rates
+- Provincial tax brackets (AB, BC, ON, QC)
+- Tax credits (BPA, Age Amount, Pension Credit)
+- OAS clawback thresholds
+- GIS parameters
+- Capital gains inclusion rates
+- Dividend gross-up and credit rates
+
+### Running the Python API
+
+```bash
+# From webapp directory
+cd python-api
+python -m uvicorn api.main:app --port 8000 --reload
+
+# Or using the Procfile command
+cd python-api && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
+```
+
+### Health Check Integration
+
+The Next.js health endpoint (`/api/health`) checks both:
+1. **Database** - Prisma connection to SQLite
+2. **Python API** - Connection to FastAPI backend
+
+```typescript
+// webapp/app/api/health/route.ts
+const response = await fetch(`${PYTHON_API_URL}/api/health`);
+// Returns: { status: 'healthy' | 'degraded' | 'unhealthy' }
+```
+
+---
+
 ## Pages & Routes
 
 ### Public Routes
@@ -1134,31 +1272,55 @@ const chartData = projection.projections.map(p => ({
 # Clone repository
 cd C:/Projects/retirement-app/webapp
 
-# Install dependencies
+# Install Node.js dependencies
 npm install
+
+# Install Python dependencies
+pip install -r requirements-api.txt
 
 # Set up environment variables
 cp .env.example .env.local
 # Edit .env.local with your values:
 # DATABASE_URL="file:./dev.db"
 # JWT_SECRET="your-secret-key"
+# PYTHON_API_URL="http://localhost:8000"
 
 # Initialize database
 npx prisma generate
 npx prisma migrate dev
 
-# Run development server
-npm run dev
+# Start both servers (see Daily Development below)
 ```
 
 ### Daily Development
 
+**Option 1: Two Terminals (Recommended)**
 ```bash
-# Start dev server (runs on localhost:3002)
+# Terminal 1: Next.js frontend (localhost:3002)
+cd webapp
 npm run dev
 
-# In another terminal, watch for changes
-# (Next.js handles hot-reload automatically)
+# Terminal 2: Python API (localhost:8000)
+cd webapp/python-api
+python -m uvicorn api.main:app --port 8000 --reload
+```
+
+**Option 2: Using npm scripts (if configured)**
+```bash
+# Add to package.json scripts:
+# "dev:api": "cd python-api && uvicorn api.main:app --port 8000 --reload"
+# "dev:all": "concurrently \"npm run dev\" \"npm run dev:api\""
+
+npm run dev:all
+```
+
+**Verify both are running:**
+```bash
+# Check Next.js
+curl http://localhost:3002/api/health
+
+# Check Python API
+curl http://localhost:8000/api/health
 ```
 
 ### Database Operations
@@ -1741,13 +1903,16 @@ cat .env.local | grep JWT_SECRET
 **JWT:** JSON Web Token - Authentication token format
 **Prisma:** TypeScript ORM for database operations
 **ORM:** Object-Relational Mapping - Database abstraction layer
+**FastAPI:** Python web framework for building APIs with automatic OpenAPI docs
+**Pydantic:** Python data validation using type annotations
+**Uvicorn:** ASGI server for running FastAPI applications
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** November 15, 2025
+**Document Version:** 2.0
+**Last Updated:** February 11, 2026
 **Maintained By:** Development Team
-**Next Review:** After MVP completion
+**Architecture:** Consolidated monorepo (Next.js + Python FastAPI)
 
 ---
 
@@ -1755,52 +1920,67 @@ cat .env.local | grep JWT_SECRET
 
 ```
 PROJECT: Canadian Retirement Planning App
-TECH: Next.js 15 + TypeScript + Prisma + SQLite + Docker
-STATUS: 100% MVP Complete (Docker Ready)
+TECH: Next.js 15 + TypeScript + Python FastAPI + Prisma + SQLite + Docker
+STATUS: 100% MVP Complete + Python API Consolidated
 DEPLOYMENT: Containerized with Docker
 
-🐳 DOCKER COMMANDS (RECOMMENDED):
+🐍 PYTHON API COMMANDS:
+cd webapp/python-api && python -m uvicorn api.main:app --port 8000 --reload
+curl http://localhost:8000/api/health  → Check Python API
+
+📦 NEXT.JS COMMANDS:
+cd webapp && npm run dev       → Start Next.js (localhost:3002)
+cd webapp && npx prisma studio → Database GUI (localhost:5555)
+cd webapp && npx prisma migrate dev → Create migration
+cd webapp && npm run build     → Production build
+
+🚀 FULL STACK DEVELOPMENT (Two Terminals):
+# Terminal 1: Next.js
+cd webapp && npm run dev
+
+# Terminal 2: Python API
+cd webapp/python-api && python -m uvicorn api.main:app --port 8000 --reload
+
+🐳 DOCKER COMMANDS:
 docker-compose up -d           → Start app (http://localhost:3100)
 docker-compose logs -f         → View logs
 docker-compose down            → Stop app
 docker-compose up -d --build   → Rebuild and start
-docker-compose exec retirement-app sh → Shell access
-docker-compose exec retirement-app npx prisma studio → Database GUI
-
-TRADITIONAL COMMANDS (Non-Docker):
-cd webapp && npm run dev       → Start dev server (localhost:3002)
-cd webapp && npx prisma studio → Open database GUI (localhost:5555)
-cd webapp && npx prisma migrate dev → Create database migration
-cd webapp && npm run build     → Production build
 
 KEY DIRECTORIES:
-webapp/app/(dashboard)/ → All main pages
-webapp/app/api/        → Backend API routes
-webapp/lib/calculations/ → CPP/OAS/GIS/Tax engines
-webapp/prisma/         → Database schema and migrations
+webapp/python-api/api/      → Python FastAPI routes
+webapp/python-api/modules/  → Core simulation engine (18 modules)
+webapp/app/(dashboard)/     → Next.js pages
+webapp/app/api/             → Next.js API routes (gateway to Python)
+webapp/lib/                 → TypeScript utilities
+webapp/prisma/              → Database schema
 
-KEY FILES (Application):
-lib/auth.ts                      → JWT authentication
-lib/calculations/projection.ts   → Retirement projection engine
-components/reports/RetirementReport.tsx → PDF template
-prisma/schema.prisma            → Database schema
+KEY FILES:
+python-api/api/main.py            → FastAPI entry point
+python-api/modules/simulation.py  → Main simulation engine
+lib/api/simulation-client.ts      → Python API client
+app/api/simulation/run/route.ts   → Simulation proxy route
+tax_config_canada_2025.json       → Tax configuration
+lib/auth.ts                       → JWT authentication
+prisma/schema.prisma              → Database schema
 
-KEY FILES (Docker):
-Dockerfile              → Multi-stage container build
-docker-compose.yml      → Orchestration config
-docker-entrypoint.sh    → Startup script
-README-DOCKER.md        → Complete Docker guide
+ENVIRONMENT VARIABLES:
+DATABASE_URL=file:./dev.db
+JWT_SECRET=your-secret-key
+PYTHON_API_URL=http://localhost:8000
 
-DEPLOYMENT OPTIONS:
-1. Docker (Recommended)    → docker-compose up -d
-2. Vercel                  → Push to GitHub, deploy from webapp/
-3. Manual Server           → npm run build && npm start
+API FLOW:
+Browser → Next.js /api/simulation/run → Python /api/run-simulation → Response
 
-CURRENT TASKS:
+HEALTH CHECK:
+curl http://localhost:3002/api/health  → Shows DB + Python API status
+
+CURRENT STATUS:
 ✅ Profile editing
 ✅ PDF reports
 ✅ Docker containerization
+✅ Python API consolidated
+✅ Streamlit removed
 ⏳ Help tooltips
 ❌ Unit tests
-❌ Enhanced validation
 ```

@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description: "Free Canadian retirement planning tool. Calculate CPP, OAS, and GIS benefits. Project your retirement income with accurate tax calculations. Built for Canadian seniors.",
   keywords: ["retirement planning Canada", "CPP calculator", "OAS calculator", "retirement income", "Canadian seniors", "RRSP calculator", "retirement projection"],
   authors: [{ name: "Retire Zest" }],
+  icons: {
+    icon: "/retire-zest-favicon.png",
+    apple: "/retire-zest-favicon.png",
+  },
   openGraph: {
     title: "Retire Zest - Plan Your Canadian Retirement",
     description: "Calculate your CPP, OAS, and project your retirement income with Canada's easiest retirement planning tool.",
