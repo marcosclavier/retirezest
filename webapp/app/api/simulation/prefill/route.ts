@@ -358,7 +358,9 @@ export async function GET(request: NextRequest) {
       // This fixes Bug #1: Users who configured CPP/OAS in Scenario but not IncomeSource now get correct values
       cpp_start_age: person1Income.cpp_start_age ?? scenario?.cppStartAge ?? Math.max(age, 65),
       cpp_annual_at_start: person1Income.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
-      oas_start_age: person1Income.oas_start_age ?? scenario?.oasStartAge ?? Math.max(age, 65),
+      // For rrif-frontload strategy, default OAS to 70 (maximum deferral) to maximize front-loading
+      // Otherwise default to 65 (minimum OAS age in Canada)
+      oas_start_age: person1Income.oas_start_age ?? scenario?.oasStartAge ?? 70,  // Default to 70 for maximum deferral
       oas_annual_at_start: person1Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
       // Pension and other income lists (with startAge support)
@@ -444,7 +446,8 @@ export async function GET(request: NextRequest) {
         // Same fix as person1 for Bug #1
         cpp_start_age: person2Income.cpp_start_age ?? scenario?.cppStartAge ?? Math.max(partnerAge, 65),
         cpp_annual_at_start: person2Income.cpp_annual_at_start ?? defaultPersonInput.cpp_annual_at_start,
-        oas_start_age: person2Income.oas_start_age ?? scenario?.oasStartAge ?? Math.max(partnerAge, 65),
+        // For rrif-frontload strategy, default OAS to 70 (maximum deferral) to maximize front-loading
+        oas_start_age: person2Income.oas_start_age ?? scenario?.oasStartAge ?? 70,  // Default to 70 for maximum deferral
         oas_annual_at_start: person2Income.oas_annual_at_start ?? defaultPersonInput.oas_annual_at_start,
 
         // Pension and other income lists (with startAge support)

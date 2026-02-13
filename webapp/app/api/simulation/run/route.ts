@@ -195,6 +195,19 @@ export async function POST(request: NextRequest) {
     console.log('  - Start Year:', pythonPayload.start_year);
     console.log('  - P1 Start Age:', pythonPayload.p1.start_age);
     console.log('  - TFSA Contribution Each:', pythonPayload.tfsa_contribution_each);
+    console.log('  - TFSA Contribution Rate:', pythonPayload.tfsa_contribution_rate);
+    console.log('  - TFSA Contribution Phase Start:', pythonPayload.tfsa_contribution_phase_start_year);
+    console.log('  - TFSA Contribution Phase End:', pythonPayload.tfsa_contribution_phase_end_year);
+
+    // CRITICAL: Log full payload being sent to Python
+    console.log('🚀 FULL PAYLOAD TO PYTHON:', JSON.stringify({
+      strategy: pythonPayload.strategy,
+      tfsa_contribution_each: pythonPayload.tfsa_contribution_each,
+      tfsa_contribution_rate: pythonPayload.tfsa_contribution_rate,
+      p1_rrsp: pythonPayload.p1.rrsp_balance,
+      p1_tfsa: pythonPayload.p1.tfsa_balance,
+      spending_go_go: pythonPayload.spending_go_go
+    }, null, 2));
 
     // Forward request to Python API
     const pythonResponse = await fetch(`${PYTHON_API_URL}/api/run-simulation`, {
@@ -215,9 +228,22 @@ export async function POST(request: NextRequest) {
       console.log('  - RRSP/RRIF withdrawal:', firstYear.rrsp_rrif_withdrawal_p1);
       console.log('  - RRSP end balance:', firstYear.rrsp_end_p1);
       console.log('  - RRIF end balance:', firstYear.rrif_end_p1);
+      console.log('  - TFSA contribution:', firstYear.tfsa_contribution_p1);
+      console.log('  - TFSA end balance:', firstYear.tfsa_end_p1);
+      console.log('  - NonReg end balance:', firstYear.nonreg_end_p1);
       console.log('  - Total withdrawals:', firstYear.total_withdrawals);
+      console.log('  - Spending target:', firstYear.spending_target);
+      console.log('  - Gross cash inflows:', firstYear.gross_cash_inflows);
+      console.log('  - Total outflows:', firstYear.total_outflows);
+      console.log('  - Net cash flow:', firstYear.net_cash_flow);
+      console.log('  - Gap/Surplus:', firstYear.gap_surplus);
       console.log('  - Net worth:', firstYear.net_worth);
     }
+
+    // Log what Python actually returned for TFSA settings
+    console.log('🔍 PYTHON RESPONSE - TFSA SETTINGS:');
+    console.log('  - TFSA Contribution Each (returned):', responseData.household_input?.tfsa_contribution_each);
+    console.log('  - TFSA Contribution Rate (returned):', responseData.household_input?.tfsa_contribution_rate);
 
     // Calculate processing time
     const duration = Date.now() - startTime;

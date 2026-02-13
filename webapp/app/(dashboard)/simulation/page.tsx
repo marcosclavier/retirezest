@@ -928,8 +928,9 @@ export default function SimulationPage() {
                 const strategyMap: Record<string, string> = {
                   'minimize-income': 'Minimize Income',
                   'balanced': 'Balanced',
+                  'Balanced': 'Balanced (Minimum Only)',
                   'rrif-splitting': 'RRIF Splitting',
-                  'rrif-frontload': 'Early RRIF Withdrawals (Income Splitting)',
+                  'rrif-frontload': 'RRSP/RRIF Focused',
                   'corporate-optimized': 'Corporate Optimized',
                   'capital-gains-optimized': 'Capital Gains Optimized',
                   'tfsa-first': 'TFSA First',

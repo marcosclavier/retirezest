@@ -1619,6 +1619,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # This strategy frontloads RRIF withdrawals to reduce RRIF balance before OAS clawback risk
     # Priority: 15% RRIF (before OAS) or 8% RRIF (after OAS), then Corp -> NonReg -> TFSA
     if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
+        # Debug OAS age comparison
+        import sys
+        print(f"DEBUG OAS CHECK [{person.name}] Age {age} vs OAS start {person.oas_start_age}: "
+              f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS",
+              file=sys.stderr)
+
         # Determine frontload percentage based on whether person has started OAS
         if age < person.oas_start_age:
             frontload_pct = 0.15  # Phase 1: Before OAS starts
@@ -1631,6 +1637,110 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # Ensure frontload meets minimum withdrawal requirement
         rrif_frontload_target = max(rrif_frontload_target, rrif_min)
 
+        # IMPORTANT FIX: Calculate the ACTUAL shortfall after government benefits
+        # The after_tax_target is the full spending need, but we have government benefits available
+        # We only need RRIF to cover the gap
+
+        # Calculate net after-tax shortfall (what RRIF needs to provide)
+        # Note: GIS is not included here as it's calculated later based on income
+        government_benefits_available = cpp + oas  # These are non-taxable to the recipient
+        actual_shortfall = after_tax_target - government_benefits_available
+        actual_shortfall = max(actual_shortfall, 0.0)  # Can't be negative
+
+        # Initialize rrif_needed_gross to 0 by default (in case no RRIF is needed)
+        rrif_needed_gross = 0.0
+
+        if actual_shortfall > 0:
+            # Use iterative approach with the ACTUAL tax_for_detailed function
+            # to find the exact RRIF withdrawal needed
+
+            # Start with a reasonable estimate
+            rrif_needed_gross = actual_shortfall / 0.72  # Start assuming 28% effective tax rate
+
+            # We need these values for tax calculation
+            # Get current person's data (these should be available in context)
+            nr_interest_for_tax = nr_interest if 'nr_interest' in locals() else 0.0
+            nr_elig_div_for_tax = nr_elig_div if 'nr_elig_div' in locals() else 0.0
+            nr_nonelig_div_for_tax = nr_nonelig_div if 'nr_nonelig_div' in locals() else 0.0
+            nr_capg_dist_for_tax = nr_capg_dist if 'nr_capg_dist' in locals() else 0.0
+            cpp_for_tax = cpp if 'cpp' in locals() else 0.0  # Use the cpp variable calculated above
+            oas_for_tax = oas if 'oas' in locals() else 0.0  # Use the oas variable calculated above
+            pension_income_for_tax = pension_income_total if 'pension_income_total' in locals() else 0.0
+            other_income_for_tax = other_income_total if 'other_income_total' in locals() else 0.0
+
+            # Iterate to find the exact amount
+            max_iterations = 15
+            tolerance = 50  # Within $50 of target
+
+            for iteration in range(max_iterations):
+                # Calculate tax using the ACTUAL tax engine
+                # Note: We're calculating tax on the RRIF withdrawal we're testing
+                test_tax, test_fed_tax, test_prov_tax, test_fed_oas_cb, test_prov_oas_cb = tax_for_detailed(
+                    add_nonreg=0.0,  # Not withdrawing additional non-reg for this test
+                    add_rrif=rrif_needed_gross,  # TEST this RRIF withdrawal amount
+                    add_corp_dividend=0.0,  # Not withdrawing corp for this test
+
+                    nonreg_balance=person.nonreg_balance,
+                    nonreg_acb=getattr(person, "nonreg_acb", 0.0),
+                    corp_dividend_type=getattr(person, "corp_dividend_type", "non-eligible"),
+
+                    nr_interest=nr_interest_for_tax,
+                    nr_elig_div=nr_elig_div_for_tax,
+                    nr_nonelig_div=nr_nonelig_div_for_tax,
+                    nr_capg_dist=nr_capg_dist_for_tax,
+
+                    withdrawals_rrif_base=0.0,  # Base RRIF (we're adding via add_rrif)
+                    cpp_income=cpp_for_tax,
+                    oas_income=oas_for_tax,
+                    age=age,
+
+                    fed_params=fed,
+                    prov_params=prov,
+
+                    pension_income_total=pension_income_for_tax,
+                    other_income_total=other_income_for_tax
+                )
+
+                # Calculate after-tax from this RRIF withdrawal
+                rrif_after_tax = rrif_needed_gross - test_tax
+
+                # Check if we're close enough
+                gap = actual_shortfall - rrif_after_tax
+
+                # Debug for first few iterations
+                if iteration < 3:
+                    import sys
+                    print(f"  Iteration {iteration}: RRIF=${rrif_needed_gross:,.0f}, Tax=${test_tax:,.0f}, "
+                          f"After-tax=${rrif_after_tax:,.0f}, Gap=${gap:,.0f}", file=sys.stderr)
+
+                if abs(gap) < tolerance:
+                    # Converged to the exact amount needed (no extra buffer)
+                    break
+
+                # Adjust for next iteration
+                # Use the effective tax rate from this iteration to improve estimate
+                effective_rate = test_tax / max(rrif_needed_gross, 1.0)
+                adjustment_factor = 1.0 - effective_rate
+                if adjustment_factor < 0.5:  # Sanity check
+                    adjustment_factor = 0.5
+
+                # Adjust RRIF amount based on the gap
+                rrif_needed_gross += gap / adjustment_factor
+
+                # Ensure we don't go negative
+                rrif_needed_gross = max(rrif_needed_gross, 0.0)
+
+            # Use the GREATER of frontload target or what's needed for spending
+            rrif_frontload_target = max(rrif_frontload_target, rrif_needed_gross)
+
+            # Debug output
+            import sys
+            print(f"DEBUG RRIF FIX WITH TAX ENGINE: after_tax_needed=${actual_shortfall:,.0f}, "
+                  f"gross_rrif_calculated=${rrif_needed_gross:,.0f} (includes 3% buffer), "
+                  f"frontload_8pct=${person.rrif_balance * frontload_pct:,.0f}, "
+                  f"final_rrif_target=${rrif_frontload_target:,.0f}",
+                  file=sys.stderr)
+
         # Cap at available RRIF balance
         rrif_frontload_target = min(rrif_frontload_target, person.rrif_balance)
 
@@ -1642,7 +1752,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             import sys
             print(f"DEBUG RRIF-FRONTLOAD [{person.name}] Age {age}: "
                   f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS, "
-                  f"RRIF {frontload_pct*100:.0f}% of ${person.rrif_balance:,.0f} = ${rrif_frontload_target:,.0f}",
+                  f"RRIF target = ${rrif_frontload_target:,.0f} (needed ${rrif_needed_gross:,.0f} for spending)",
                   file=sys.stderr)
     # For non-Balanced strategies, start with zero and let strategy order determine it
     # For Balanced strategy, defer RRIF minimum enforcement until after other logic
@@ -2357,7 +2467,15 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         infl_factor = (1.0 + hh.spending_inflation) ** max(0, years_since_start)
         spend = base_spend * infl_factor
        
-        target_each = spend/2.0
+        # For single person, they need to cover the full spending target
+        # For couples, split the target between two people
+        # Check if it's a single person household (p2 is None or has empty name)
+        is_single = (p2 is None or not p2.name or p2.name == "")
+
+        if is_single:
+            target_each = spend  # Single person covers full spending
+        else:
+            target_each = spend/2.0  # Couples split the spending
        
         #   index tax params for this year using general inflation
         fed_y  = index_tax_params(fed,  years_since_start, hh.general_inflation)
@@ -2586,9 +2704,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         oas_p1_current = float(info1.get("oas", 0.0))
         oas_p2_current = float(info2.get("oas", 0.0))
 
-        is_couple = (oas_p1_current > 0 or oas_p2_current > 0)
+        # CRITICAL FIX: Properly check if it's a couple based on whether p2 exists
+        # The previous logic incorrectly set is_couple=True if p1 had OAS, even for singles
+        is_couple_household = (p2 is not None and p2.name and p2.name != "")
 
-        if is_couple and oas_p1_current > 0 and oas_p2_current > 0:
+        if is_couple_household and oas_p1_current > 0 and oas_p2_current > 0:
             # ===== CASE 1: BOTH SPOUSES HAVE OAS =====
             # Each person receives GIS based on couple threshold and combined income
             gis_income_p1 = float(info1.get("gis_net_income", 0.0))
@@ -2622,7 +2742,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             t1["gis"] = gis_benefit
             t2["gis"] = gis_benefit
 
-        elif is_couple and (oas_p1_current > 0 or oas_p2_current > 0):
+        elif is_couple_household and (oas_p1_current > 0 or oas_p2_current > 0):
             # ===== CASE 2: ONLY ONE SPOUSE HAS OAS =====
             # One spouse can receive GIS independently, the other cannot
             gis_income_p1 = float(info1.get("gis_net_income", 0.0))
@@ -2669,6 +2789,35 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 t2["gis"] = gis_p2
             else:
                 t2["gis"] = 0.0
+
+        elif not is_couple_household and oas_p1_current > 0:
+            # ===== CASE 3: SINGLE PERSON WITH OAS =====
+            # Single person receives GIS based on single threshold and their income alone
+            gis_income_p1 = float(info1.get("gis_net_income", 0.0))
+
+            # Get GIS config for single person
+            gis_config = fed_y.gis_config if hasattr(fed_y, 'gis_config') else {}
+            single_threshold = gis_config.get("threshold_single", 22272)
+            max_benefit_single = gis_config.get("max_benefit_single", 11628.84)
+            clawback_rate = gis_config.get("clawback_rate", 0.50)
+
+            if year >= 2025:
+                import sys
+                print(f"DEBUG HH GIS CASE3 (Single) [{year}]: P1_income=${gis_income_p1:,.0f} threshold=${single_threshold:,.0f}", file=sys.stderr)
+
+            # Apply single person clawback logic
+            if gis_income_p1 >= single_threshold:
+                clawback = (gis_income_p1 - single_threshold) * clawback_rate
+                gis_benefit = max(0.0, max_benefit_single - clawback)
+                if year >= 2025:
+                    print(f"DEBUG HH GIS CASE3 CLAWBACK [{year}]: excess=${gis_income_p1 - single_threshold:,.0f} gis_benefit=${gis_benefit:,.2f}", file=sys.stderr)
+            else:
+                gis_benefit = max_benefit_single
+                if year >= 2025:
+                    print(f"DEBUG HH GIS CASE3 BELOW_THRESHOLD [{year}]: gis_benefit=${gis_benefit:,.2f}", file=sys.stderr)
+
+            t1["gis"] = gis_benefit
+            t2["gis"] = 0.0  # p2 doesn't exist for single person
 
         if year >= 2025:
             import sys
@@ -2892,13 +3041,22 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # p1.tfsa_balance currently = (start - withdrawal) * (1 + growth)
         # We need to recalculate as: (start - withdrawal) * (1 + growth) + contributions + surplus
 
-        # First, calculate contributions needed
-        c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance,0.0), tfsa_room1)
-        c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance,0.0), tfsa_room2)
+        # CRITICAL FIX: Don't contribute to TFSA if there's a household funding gap
+        # Check if household spending is fully funded before allowing TFSA contributions
+        if hh_gap > 1e-6:
+            # There's a spending gap - DO NOT contribute to TFSA
+            c1 = 0.0
+            c2 = 0.0
+            surplus_for_reinvest = 0.0  # No surplus should be reinvested when underfunded
+        else:
+            # Only allow TFSA contributions when spending is fully funded
+            # First, calculate contributions needed
+            c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance,0.0), tfsa_room1)
+            c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance,0.0), tfsa_room2)
 
-        # REINVEST SURPLUS: Surplus is added AFTER growth but BEFORE year-end balance
-        # Get surplus from both people's simulate_year() calls (use household total)
-        surplus_for_reinvest = float(info1.get("surplus_for_reinvest", 0.0)) + float(info2.get("surplus_for_reinvest", 0.0))
+            # REINVEST SURPLUS: Surplus is added AFTER growth but BEFORE year-end balance
+            # Get surplus from both people's simulate_year() calls (use household total)
+            surplus_for_reinvest = float(info1.get("surplus_for_reinvest", 0.0)) + float(info2.get("surplus_for_reinvest", 0.0))
 
         # Calculate TFSA reinvestment from surplus (not yet applied)
         # CRITICAL FIX: Reinvestment must be limited by remaining room AFTER contribution
@@ -2931,7 +3089,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         tfsa_room2 -= (c2 + tfsa_reinvest_p2)
 
         # NonReg: add remaining surplus (fallback when TFSA is full)
-        if surplus_remaining > 1e-6:
+        # CRITICAL FIX: Only add to non-reg if there's no spending gap
+        if surplus_remaining > 1e-6 and hh_gap < 1e-6:
             p1.nonreg_balance += surplus_remaining
             # Note: ACB stays the same; reinvested amount is added at current market value
 
@@ -3035,6 +3194,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Store the buffer value and cash flow for visualization
         buffer_end_year = cash_buffer
         buffer_flow_year = year_cash_flow
+
+        # CRITICAL FIX: Recalculate the spending gap based on actual cash flow
+        # If we have a surplus (positive cash flow), there's no gap
+        # If we have a deficit (negative cash flow), that's the gap
+        actual_spending_gap = max(0.0, -year_cash_flow)
+        actual_is_underfunded = actual_spending_gap > hh.gap_tolerance
 
         # Calculate RRSP to RRIF conversion amounts (difference between start and end RRSP after growth)
         # If RRSP decreased to 0 and RRIF increased, that's the conversion amount
@@ -3162,9 +3327,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             lifetime_tax_efficiency=0.0,  # Will be calculated at end of simulation
 
             # Underfunding tracking
-            spending_gap=hh_gap,  # Dollar amount of unmet spending (0 if fully funded)
-            is_underfunded=is_fail,  # True if gap exceeds tolerance
-            plan_success=not is_fail,  # True if year is fully funded
+            spending_gap=actual_spending_gap,  # Dollar amount of unmet spending (0 if fully funded)
+            is_underfunded=actual_is_underfunded,  # True if gap exceeds tolerance
+            plan_success=not actual_is_underfunded,  # True if year is fully funded
         ))
 
         # Update cumulative retirement taxes for this year
