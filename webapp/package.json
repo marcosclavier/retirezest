@@ -22,8 +22,7 @@
     "test:e2e:edge-cases": "playwright test e2e/simulation-edge-cases.spec.ts",
     "test:e2e:report": "playwright show-report",
     "test:e2e:codegen": "playwright codegen http://localhost:3000",
-    "analytics": "npx tsx scripts/user-analytics.ts",
-    "postinstall": "prisma generate"
+    "analytics": "npx tsx scripts/user-analytics.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
