@@ -1,9 +1,4 @@
 import type { NextConfig } from "next";
-import bundleAnalyzer from '@next/bundle-analyzer';
-
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-});
 
 const nextConfig: NextConfig = {
   // Output configuration for Docker/Railway deployment
@@ -62,8 +57,21 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Export configuration with bundle analyzer
-// Note: Sentry integration requires @sentry/nextjs to be installed
-// If you want to enable Sentry monitoring, install it with: npm install @sentry/nextjs
-// To run bundle analysis: ANALYZE=true npm run build
-export default withBundleAnalyzer(nextConfig);
+// Export configuration with optional bundle analyzer
+// Note: Bundle analyzer is only loaded when ANALYZE=true to avoid production build issues
+// To run bundle analysis locally: ANALYZE=true npm run build
+let config = nextConfig;
+
+if (process.env.ANALYZE === 'true') {
+  try {
+    const bundleAnalyzer = require('@next/bundle-analyzer');
+    const withBundleAnalyzer = bundleAnalyzer({
+      enabled: true,
+    });
+    config = withBundleAnalyzer(nextConfig);
+  } catch (e) {
+    console.warn('Bundle analyzer not available. Install @next/bundle-analyzer to use it.');
+  }
+}
+
+export default config;
