@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_build_placeholder');
 
 export async function POST(req: NextRequest) {
   try {

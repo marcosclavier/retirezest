@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger';
 import * as Sentry from '@sentry/nextjs';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_build_placeholder');
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
