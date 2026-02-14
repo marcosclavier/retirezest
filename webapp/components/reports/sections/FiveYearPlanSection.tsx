@@ -20,7 +20,7 @@ export function FiveYearPlanSection({
   }
 
   // Format currency with no decimals for cleaner display
-  const fmt = (val: number) => `$${(val || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const fmt = (val: number | undefined) => `$${(val || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
   // Single person columns
   const singlePersonColumns = [
@@ -247,7 +247,7 @@ export function FiveYearPlanSection({
               <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-100'}>
                 {columns.map((column, colIndex) => {
                   const value = row[column.accessor as keyof typeof row];
-                  const formattedValue = column.format ? column.format(value) : value;
+                  const formattedValue = column.format ? column.format(value as number | undefined) : value;
 
                   return (
                     <td
