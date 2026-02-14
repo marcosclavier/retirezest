@@ -116,9 +116,7 @@ export async function runSimulation(
       console.error('❌ Error:', data.error);
       console.error('❌ Error Details:', data.error_details);
       console.error('❌ Message:', data.message);
-      if (data.validation_errors && Array.isArray(data.validation_errors)) {
-        console.error('❌ Validation Errors:', data.validation_errors);
-      }
+      // Note: validation_errors is handled via the errors field
       if (data.errors && Array.isArray(data.errors)) {
         console.error('❌ Errors:', data.errors);
       }
