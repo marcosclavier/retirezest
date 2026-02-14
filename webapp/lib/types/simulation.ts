@@ -344,6 +344,8 @@ export interface FiveYearPlanYear {
   cpp_p2: number;
   oas_p1: number;
   oas_p2: number;
+  gis_p1?: number;
+  gis_p2?: number;
   employer_pension_p1: number;
   employer_pension_p2: number;
   rental_income_p1: number;
