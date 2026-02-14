@@ -443,6 +443,7 @@ async function generateQuickStartDefaults(userId: string): Promise<HouseholdInpu
   const household: HouseholdInput = {
     p1: person1,
     p2: person2,
+    include_partner: user.includePartner || false,
     province: (user.province as Province) || 'ON',
     start_year: new Date().getFullYear(),
     end_age: lifeExpectancy,
