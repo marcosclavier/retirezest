@@ -15,16 +15,33 @@ import {
 
 interface TaxChartProps {
   yearByYear: YearResult[];
+  isSinglePerson?: boolean;
+  personOneName?: string;
+  personTwoName?: string;
 }
 
-export function TaxChart({ yearByYear }: TaxChartProps) {
+export function TaxChart({
+  yearByYear,
+  isSinglePerson = false,
+  personOneName = 'Person 1',
+  personTwoName = 'Person 2'
+}: TaxChartProps) {
   // Prepare data for chart
-  const chartData = yearByYear.map((year) => ({
-    year: year.year,
-    'Person 1': year.total_tax_p1,
-    'Person 2': year.total_tax_p2,
-    'Total Tax': year.total_tax,
-  }));
+  const p1Name = personOneName.split(' ')[0] || 'P1';
+  const p2Name = personTwoName?.split(' ')[0] || 'P2';
+
+  const chartData = yearByYear.map((year) =>
+    isSinglePerson ? {
+      year: year.year,
+      [p1Name]: year.total_tax_p1,
+      'Total Tax': year.total_tax,
+    } : {
+      year: year.year,
+      [p1Name]: year.total_tax_p1,
+      [p2Name]: year.total_tax_p2,
+      'Total Tax': year.total_tax,
+    }
+  );
 
   // Custom tooltip formatter
   const formatCurrency = (value: number): string => {
@@ -83,8 +100,8 @@ export function TaxChart({ yearByYear }: TaxChartProps) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Bar dataKey="Person 1" fill="#3b82f6" />
-            <Bar dataKey="Person 2" fill="#10b981" />
+            <Bar dataKey={p1Name} fill="#3b82f6" />
+            {!isSinglePerson && <Bar dataKey={p2Name} fill="#10b981" />}
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

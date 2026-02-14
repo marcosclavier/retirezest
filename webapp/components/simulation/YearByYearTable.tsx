@@ -27,9 +27,12 @@ interface YearByYearTableProps {
   reinvestNonregDist?: boolean;
   isPremium?: boolean;
   onUpgradeClick?: () => void;
+  isSinglePerson?: boolean;
+  personOneName?: string;
+  personTwoName?: string;
 }
 
-export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true, isPremium = false, onUpgradeClick }: YearByYearTableProps) {
+export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true, isPremium = false, onUpgradeClick, isSinglePerson = false, personOneName = 'Person 1', personTwoName = 'Person 2' }: YearByYearTableProps) {
   const [showAll, setShowAll] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof YearResult>('year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -96,40 +99,67 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       return;
     }
 
-    const headers = [
+    const p1Name = personOneName.split(' ')[0] || 'P1';
+    const p2Name = personTwoName?.split(' ')[0] || 'P2';
+
+    const headers = isSinglePerson ? [
       'Year',
-      'Age P1',
-      'Age P2',
-      'CPP P1',
-      'CPP P2',
-      'OAS P1',
-      'OAS P2',
-      'GIS P1',
-      'GIS P2',
-      'RRSP/RRIF WD P1',
-      'RRSP/RRIF WD P2',
-      'NonReg WD P1',
-      'NonReg WD P2',
-      'TFSA WD P1',
-      'TFSA WD P2',
-      'TFSA Contrib P1',
-      'TFSA Contrib P2',
-      'Corp WD P1',
-      'Corp WD P2',
+      `Age ${p1Name}`,
+      `CPP ${p1Name}`,
+      `OAS ${p1Name}`,
+      `GIS ${p1Name}`,
+      `RRSP/RRIF WD ${p1Name}`,
+      `NonReg WD ${p1Name}`,
+      `TFSA WD ${p1Name}`,
+      `TFSA Contrib ${p1Name}`,
+      `Corp WD ${p1Name}`,
       'NonReg Dist',
-      'RRSP/RRIF Bal P1',
-      'RRSP/RRIF Bal P2',
-      'TFSA Bal P1',
-      'TFSA Bal P2',
-      'NonReg Bal P1',
-      'NonReg Bal P2',
-      'Corp Bal P1',
-      'Corp Bal P2',
+      `RRSP/RRIF Bal ${p1Name}`,
+      `TFSA Bal ${p1Name}`,
+      `NonReg Bal ${p1Name}`,
+      `Corp Bal ${p1Name}`,
       'Total Value',
-      'Taxable Inc P1',
-      'Taxable Inc P2',
-      'Tax P1',
-      'Tax P2',
+      `Taxable Inc ${p1Name}`,
+      `Tax ${p1Name}`,
+      'Total Tax',
+      'Spending Need',
+      'Spending Met',
+      'Gap',
+      'Success',
+    ] : [
+      'Year',
+      `Age ${p1Name}`,
+      `Age ${p2Name}`,
+      `CPP ${p1Name}`,
+      `CPP ${p2Name}`,
+      `OAS ${p1Name}`,
+      `OAS ${p2Name}`,
+      `GIS ${p1Name}`,
+      `GIS ${p2Name}`,
+      `RRSP/RRIF WD ${p1Name}`,
+      `RRSP/RRIF WD ${p2Name}`,
+      `NonReg WD ${p1Name}`,
+      `NonReg WD ${p2Name}`,
+      `TFSA WD ${p1Name}`,
+      `TFSA WD ${p2Name}`,
+      `TFSA Contrib ${p1Name}`,
+      `TFSA Contrib ${p2Name}`,
+      `Corp WD ${p1Name}`,
+      `Corp WD ${p2Name}`,
+      'NonReg Dist',
+      `RRSP/RRIF Bal ${p1Name}`,
+      `RRSP/RRIF Bal ${p2Name}`,
+      `TFSA Bal ${p1Name}`,
+      `TFSA Bal ${p2Name}`,
+      `NonReg Bal ${p1Name}`,
+      `NonReg Bal ${p2Name}`,
+      `Corp Bal ${p1Name}`,
+      `Corp Bal ${p2Name}`,
+      'Total Value',
+      `Taxable Inc ${p1Name}`,
+      `Taxable Inc ${p2Name}`,
+      `Tax ${p1Name}`,
+      `Tax ${p2Name}`,
       'Total Tax',
       'Spending Need',
       'Spending Met',
@@ -137,46 +167,72 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       'Success',
     ];
 
-    const rows = yearByYear.map((year) => [
-      year.year,
-      year.age_p1,
-      year.age_p2,
-      year.cpp_p1,
-      year.cpp_p2,
-      year.oas_p1,
-      year.oas_p2,
-      year.gis_p1 || 0,
-      year.gis_p2 || 0,
-      year.rrif_withdrawal_p1,
-      year.rrif_withdrawal_p2,
-      year.nonreg_withdrawal_p1,
-      year.nonreg_withdrawal_p2,
-      year.tfsa_withdrawal_p1,
-      year.tfsa_withdrawal_p2,
-      year.tfsa_contribution_p1 || 0,
-      year.tfsa_contribution_p2 || 0,
-      year.corporate_withdrawal_p1,
-      year.corporate_withdrawal_p2,
-      year.nonreg_distributions || 0,
-      year.rrif_balance_p1,
-      year.rrif_balance_p2,
-      year.tfsa_balance_p1,
-      year.tfsa_balance_p2,
-      year.nonreg_balance_p1,
-      year.nonreg_balance_p2,
-      year.corporate_balance_p1,
-      year.corporate_balance_p2,
-      year.total_value,
-      year.taxable_income_p1,
-      year.taxable_income_p2,
-      year.total_tax_p1,
-      year.total_tax_p2,
-      year.total_tax,
-      year.spending_need,
-      year.spending_met,
-      year.spending_gap,
-      year.plan_success ? 'Yes' : 'No',
-    ]);
+    const rows = yearByYear.map((year) =>
+      isSinglePerson ? [
+        year.year,
+        year.age_p1,
+        year.cpp_p1,
+        year.oas_p1,
+        year.gis_p1 || 0,
+        year.rrif_withdrawal_p1,
+        year.nonreg_withdrawal_p1,
+        year.tfsa_withdrawal_p1,
+        year.tfsa_contribution_p1 || 0,
+        year.corporate_withdrawal_p1,
+        year.nonreg_distributions || 0,
+        year.rrif_balance_p1,
+        year.tfsa_balance_p1,
+        year.nonreg_balance_p1,
+        year.corporate_balance_p1,
+        year.total_value,
+        year.taxable_income_p1,
+        year.total_tax_p1,
+        year.total_tax,
+        year.spending_need,
+        year.spending_met,
+        year.spending_gap,
+        year.plan_success ? 'Yes' : 'No',
+      ] : [
+        year.year,
+        year.age_p1,
+        year.age_p2,
+        year.cpp_p1,
+        year.cpp_p2,
+        year.oas_p1,
+        year.oas_p2,
+        year.gis_p1 || 0,
+        year.gis_p2 || 0,
+        year.rrif_withdrawal_p1,
+        year.rrif_withdrawal_p2,
+        year.nonreg_withdrawal_p1,
+        year.nonreg_withdrawal_p2,
+        year.tfsa_withdrawal_p1,
+        year.tfsa_withdrawal_p2,
+        year.tfsa_contribution_p1 || 0,
+        year.tfsa_contribution_p2 || 0,
+        year.corporate_withdrawal_p1,
+        year.corporate_withdrawal_p2,
+        year.nonreg_distributions || 0,
+        year.rrif_balance_p1,
+        year.rrif_balance_p2,
+        year.tfsa_balance_p1,
+        year.tfsa_balance_p2,
+        year.nonreg_balance_p1,
+        year.nonreg_balance_p2,
+        year.corporate_balance_p1,
+        year.corporate_balance_p2,
+        year.total_value,
+        year.taxable_income_p1,
+        year.taxable_income_p2,
+        year.total_tax_p1,
+        year.total_tax_p2,
+        year.total_tax,
+        year.spending_need,
+        year.spending_met,
+        year.spending_gap,
+        year.plan_success ? 'Yes' : 'No',
+      ]
+    );
 
     const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 
@@ -258,7 +314,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
             <TableBody>
               {displayedData.map((year) => {
                 const isExpanded = expandedRows.has(year.year);
-                const totalBenefits = year.cpp_p1 + year.cpp_p2 + year.oas_p1 + year.oas_p2;
+                const totalBenefits = year.cpp_p1 + year.cpp_p2 + year.oas_p1 + year.oas_p2 + (year.gis_p1 || 0) + (year.gis_p2 || 0);
                 const totalWithdrawals =
                   year.rrif_withdrawal_p1 + year.rrif_withdrawal_p2 +
                   year.tfsa_withdrawal_p1 + year.tfsa_withdrawal_p2 +
@@ -288,7 +344,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                         {year.year}
                       </TableCell>
                       <TableCell style={{ color: '#111827' }}>
-                        {year.age_p1}/{year.age_p2}
+                        {isSinglePerson ? String(year.age_p1) : `${year.age_p1}/${year.age_p2}`}
                       </TableCell>
                       <TableCell className="text-right" style={{ color: '#111827' }}>
                         {formatCurrency(year.spending_need)}
@@ -364,34 +420,38 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                   </div>
                                 )}
 
-                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>CPP</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.cpp_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>OAS</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.oas_p2)}
-                                  </span>
-                                </div>
-                                {(year.oas_clawback_p2 ?? 0) > 0 && (
-                                  <div className="flex justify-between items-center gap-1 min-w-0">
-                                    <span className="truncate" style={{ color: '#DC2626' }}>OAS Clawback</span>
-                                    <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#DC2626' }}>
-                                      -{formatCurrency(year.oas_clawback_p2 ?? 0)}
-                                    </span>
-                                  </div>
-                                )}
-                                {(year.gis_p2 ?? 0) > 0 && (
-                                  <div className="flex justify-between items-center gap-1 min-w-0">
-                                    <span className="truncate" style={{ color: '#111827' }}>GIS</span>
-                                    <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#10B981' }}>
-                                      {formatCurrency(year.gis_p2 ?? 0)}
-                                    </span>
-                                  </div>
+                                {!isSinglePerson && (
+                                  <>
+                                    <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>CPP</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.cpp_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>OAS</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.oas_p2)}
+                                      </span>
+                                    </div>
+                                    {(year.oas_clawback_p2 ?? 0) > 0 && (
+                                      <div className="flex justify-between items-center gap-1 min-w-0">
+                                        <span className="truncate" style={{ color: '#DC2626' }}>OAS Clawback</span>
+                                        <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#DC2626' }}>
+                                          -{formatCurrency(year.oas_clawback_p2 ?? 0)}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {(year.gis_p2 ?? 0) > 0 && (
+                                      <div className="flex justify-between items-center gap-1 min-w-0">
+                                        <span className="truncate" style={{ color: '#111827' }}>GIS</span>
+                                        <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#10B981' }}>
+                                          {formatCurrency(year.gis_p2 ?? 0)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </>
                                 )}
 
                                 <div className="flex justify-between items-center gap-2 pt-2 border-t">
@@ -454,41 +514,45 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                 <div className="flex justify-between items-center gap-1 min-w-0">
                                   <span className="truncate" style={{ color: '#111827' }}>NonReg Passive</span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(nonregDistributions / 2)}
+                                    {formatCurrency(isSinglePerson ? nonregDistributions : nonregDistributions / 2)}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>RRSP/RRIF</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.rrif_withdrawal_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.corporate_withdrawal_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.tfsa_withdrawal_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.nonreg_withdrawal_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>NonReg Passive</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(nonregDistributions / 2)}
-                                  </span>
-                                </div>
+                                {!isSinglePerson && (
+                                  <>
+                                    <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>RRSP/RRIF</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.rrif_withdrawal_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.corporate_withdrawal_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.tfsa_withdrawal_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.nonreg_withdrawal_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>NonReg Passive</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(nonregDistributions / 2)}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
 
                                 <div className="flex justify-between items-center gap-2 pt-2 border-t">
                                   <span className="font-semibold truncate" style={{ color: '#111827' }}>
@@ -614,31 +678,35 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>RRSP/RRIF</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.rrif_balance_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.tfsa_balance_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.nonreg_balance_p2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
-                                  <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
-                                    {formatCurrency(year.corporate_balance_p2)}
-                                  </span>
-                                </div>
+                                {!isSinglePerson && (
+                                  <>
+                                    <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>RRSP/RRIF</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.rrif_balance_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>TFSA</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.tfsa_balance_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>Non-Reg</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.nonreg_balance_p2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-1 min-w-0">
+                                      <span className="truncate" style={{ color: '#111827' }}>Corporate</span>
+                                      <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
+                                        {formatCurrency(year.corporate_balance_p2)}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
 
                                 <div className="flex justify-between items-center gap-2 pt-2 border-t">
                                   <span className="font-semibold truncate" style={{ color: '#111827' }}>

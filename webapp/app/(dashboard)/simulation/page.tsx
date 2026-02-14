@@ -353,7 +353,7 @@ export default function SimulationPage() {
             // Update household input with the values used
             if (data.household_input) {
               setHousehold(data.household_input);
-              setIncludePartner(!!data.household_input.p2?.name);
+              setIncludePartner(data.household_input.include_partner ?? !!data.household_input.p2?.name);
             }
           } else {
             console.error('❌ Quick simulation failed:', data);
@@ -496,6 +496,7 @@ export default function SimulationPage() {
           ...spendingUpdate, // Always update spending from fresh expense data
           p1: mergedP1,
           p2: partnerData,
+          include_partner: shouldIncludePartner,
         }));
 
         setIncludePartner(shouldIncludePartner);
@@ -589,6 +590,7 @@ export default function SimulationPage() {
               ...prev.p2,
               ...partnerData,
             },
+            include_partner: shouldIncludePartner,
           }));
 
           setIncludePartner(shouldIncludePartner);
@@ -633,6 +635,7 @@ export default function SimulationPage() {
     setIncludePartner(true);
     setHousehold((prev) => ({
       ...prev,
+      include_partner: true,
       p2: { ...defaultPersonInput, name: 'Partner' },
     }));
   };
@@ -641,6 +644,7 @@ export default function SimulationPage() {
     setIncludePartner(false);
     setHousehold((prev) => ({
       ...prev,
+      include_partner: false,
       p2: emptyPersonInput, // Use empty input with zero CPP/OAS
     }));
   };
@@ -820,9 +824,10 @@ export default function SimulationPage() {
 
     // If no partner, use emptyPersonInput which has all zeros for CPP/OAS
     const simulationData: HouseholdInput = includePartner
-      ? household
+      ? { ...household, include_partner: true }
       : {
           ...household,
+          include_partner: false,
           p2: emptyPersonInput, // Use empty input with zero CPP/OAS for single person
         };
 
@@ -1681,12 +1686,27 @@ export default function SimulationPage() {
                   <h2 className="text-2xl font-bold" style={{ color: '#111827' }}>Visualizations</h2>
 
                   {/* Portfolio Chart - Full width, optimized for all screens */}
-                  <PortfolioChart yearByYear={result.year_by_year} />
+                  <PortfolioChart
+                    yearByYear={result.year_by_year}
+                    isSinglePerson={!result.household_input?.include_partner}
+                    personOneName={result.household_input?.p1?.name || 'Person 1'}
+                    personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                  />
 
                   {/* Tax and Spending Charts - Stack on mobile, side-by-side on desktop */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                    <TaxChart yearByYear={result.year_by_year} />
-                    <SpendingChart yearByYear={result.year_by_year} />
+                    <TaxChart
+                      yearByYear={result.year_by_year}
+                      isSinglePerson={!result.household_input?.include_partner}
+                      personOneName={result.household_input?.p1?.name || 'Person 1'}
+                      personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                    />
+                    <SpendingChart
+                      yearByYear={result.year_by_year}
+                      isSinglePerson={!result.household_input?.include_partner}
+                      personOneName={result.household_input?.p1?.name || 'Person 1'}
+                      personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                    />
                   </div>
 
                   {/* Additional Charts from chart_data */}
@@ -1697,11 +1717,24 @@ export default function SimulationPage() {
                         <GovernmentBenefitsChart
                           chartData={result.chart_data.data_points}
                           reinvestNonregDist={result.household_input?.reinvest_nonreg_dist ?? true}
+                          isSinglePerson={!result.household_input?.include_partner}
+                          personOneName={result.household_input?.p1?.name || 'Person 1'}
+                          personTwoName={result.household_input?.p2?.name || 'Person 2'}
                         />
-                        <WithdrawalsBySourceChart chartData={result.chart_data.data_points} />
+                        <WithdrawalsBySourceChart
+                          chartData={result.chart_data.data_points}
+                          isSinglePerson={!result.household_input?.include_partner}
+                          personOneName={result.household_input?.p1?.name || 'Person 1'}
+                          personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                        />
                       </div>
                       {/* Income Composition - Full width */}
-                      <IncomeCompositionChart chartData={result.chart_data.data_points} />
+                      <IncomeCompositionChart
+                        chartData={result.chart_data.data_points}
+                        isSinglePerson={!result.household_input?.include_partner}
+                        personOneName={result.household_input?.p1?.name || 'Person 1'}
+                        personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                      />
                     </>
                   )}
 
@@ -1711,6 +1744,9 @@ export default function SimulationPage() {
                     reinvestNonregDist={result.household_input?.reinvest_nonreg_dist ?? true}
                     isPremium={isPremium}
                     onUpgradeClick={() => handleUpgradeClick('csv')}
+                    isSinglePerson={!result.household_input?.include_partner}
+                    personOneName={result.household_input?.p1?.name || 'Person 1'}
+                    personTwoName={result.household_input?.p2?.name || 'Person 2'}
                   />
                 </div>
               )}

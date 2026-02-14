@@ -38,7 +38,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
   // Extract person names and household info
   const personOneName = household_input.p1.name || 'Person 1';
   const personTwoName = household_input.p2.name || 'Person 2';
-  const isSinglePerson = household_input.p1.start_age > 0 && household_input.p2.start_age === 0;
+  const isSinglePerson = !household_input.include_partner;
   const userName = isSinglePerson ? personOneName : `${personOneName} & ${personTwoName}`;
 
   // Calculate total assets
@@ -310,7 +310,12 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
       {/* Portfolio Balance Chart */}
       <section className="mb-12" style={{ pageBreakInside: 'avoid', marginTop: '48px' }}>
         <div style={{ pageBreakInside: 'avoid' }}>
-          <PortfolioChart yearByYear={year_by_year} />
+          <PortfolioChart
+            yearByYear={year_by_year}
+            isSinglePerson={isSinglePerson}
+            personOneName={personOneName}
+            personTwoName={personTwoName}
+          />
         </div>
       </section>
 
@@ -322,7 +327,12 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
       {/* Tax Chart */}
       <section className="mb-12" style={{ pageBreakInside: 'avoid', marginTop: '48px' }}>
         <div style={{ pageBreakInside: 'avoid' }}>
-          <TaxChart yearByYear={year_by_year} />
+          <TaxChart
+            yearByYear={year_by_year}
+            isSinglePerson={isSinglePerson}
+            personOneName={personOneName}
+            personTwoName={personTwoName}
+          />
         </div>
       </section>
 
@@ -335,7 +345,12 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
       {result.chart_data?.data_points && result.chart_data.data_points.length > 0 && (
         <section className="mb-12" style={{ pageBreakInside: 'avoid', marginTop: '48px' }}>
           <div style={{ pageBreakInside: 'avoid' }}>
-            <WithdrawalsBySourceChart chartData={result.chart_data.data_points} />
+            <WithdrawalsBySourceChart
+              chartData={result.chart_data.data_points}
+              isSinglePerson={isSinglePerson}
+              personOneName={personOneName}
+              personTwoName={personTwoName}
+            />
           </div>
         </section>
       )}

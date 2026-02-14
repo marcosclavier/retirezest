@@ -18,9 +18,9 @@ export default function LoginPage() {
   const isE2ETestMode = process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true';
 
   useEffect(() => {
-    // In E2E test mode, automatically set a fake token to allow login
-    if (isE2ETestMode) {
-      setTurnstileToken('e2e-test-token');
+    // In E2E test mode or development without Turnstile key, automatically set a fake token to allow login
+    if (isE2ETestMode || (process.env.NODE_ENV === 'development' && !turnstileSiteKey)) {
+      setTurnstileToken('dev-test-token');
       return;
     }
 
@@ -128,8 +128,8 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Hide Turnstile in E2E test mode */}
-          {!isE2ETestMode && (
+          {/* Hide Turnstile in E2E test mode or development without key */}
+          {!isE2ETestMode && !(process.env.NODE_ENV === 'development' && !turnstileSiteKey) && (
             <div className="flex justify-center my-4">
               {turnstileSiteKey ? (
                 <Turnstile

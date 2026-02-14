@@ -141,12 +141,12 @@ def index_tax_params(
     indexed_gis_config = {}
     if base.gis_config:
         indexed_gis_config = {
-            "threshold_single": base.gis_config.get("threshold_single", 22272) * inflation_factor,
-            "threshold_couple": base.gis_config.get("threshold_couple", 29424) * inflation_factor,
-            "threshold_couple_one_oas": base.gis_config.get("threshold_couple_one_oas", 53808) * inflation_factor,
-            "threshold_couple_no_oas": base.gis_config.get("threshold_couple_no_oas", 53808) * inflation_factor,
-            "max_benefit_single": base.gis_config.get("max_benefit_single", 11628.84) * inflation_factor,
-            "max_benefit_couple": base.gis_config.get("max_benefit_couple", 6814.20) * inflation_factor,
+            "threshold_single": base.gis_config.get("threshold_single", 21768) * inflation_factor,  # 2026
+            "threshold_couple": base.gis_config.get("threshold_couple", 28752) * inflation_factor,  # 2026
+            "threshold_couple_one_oas": base.gis_config.get("threshold_couple_one_oas", 52080) * inflation_factor,  # 2026
+            "threshold_couple_no_oas": base.gis_config.get("threshold_couple_no_oas", 52080) * inflation_factor,  # 2026
+            "max_benefit_single": base.gis_config.get("max_benefit_single", 13265.16) * inflation_factor,  # 2026
+            "max_benefit_couple": base.gis_config.get("max_benefit_couple", 7956.00) * inflation_factor,  # 2026
             "clawback_rate": base.gis_config.get("clawback_rate", 0.50),
             "employment_exemption_1": base.gis_config.get("employment_exemption_1", 5000.0),  # Not indexed
             "employment_exemption_2_rate": base.gis_config.get("employment_exemption_2_rate", 0.50),  # Not indexed

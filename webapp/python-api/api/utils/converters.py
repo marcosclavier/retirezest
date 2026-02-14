@@ -134,9 +134,18 @@ def api_household_to_internal(
         Household dataclass for simulation engine
     """
 
+    # Convert p2 only if include_partner is True
+    # For single person mode, p2 should be None
+    p2_internal = None
+    if api_household.include_partner:
+        p2_internal = api_person_to_internal(api_household.p2)
+
     return Household(
         p1=api_person_to_internal(api_household.p1),
-        p2=api_person_to_internal(api_household.p2),
+        p2=p2_internal,
+
+        # Single or couple indicator
+        include_partner=api_household.include_partner,
 
         province=api_household.province,
         start_year=api_household.start_year,
@@ -180,7 +189,7 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
             results.append(YearResult(
                 year=int(row.get('year', 0)),
                 age_p1=int(row.get('age_p1', 0)),
-                age_p2=int(row.get('age_p2', 0)),
+                age_p2=int(row.get('age_p2', 0)) if row.get('age_p2') is not None else 0,
 
                 # Government benefits - Inflows
                 cpp_p1=float(row.get('cpp_p1', 0)),
@@ -266,7 +275,9 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 failure_reason=row.get('failure_reason', None),
             ))
         except Exception as e:
+            import traceback
             logger.warning(f"Error converting row {row.get('year', '?')}: {e}")
+            logger.warning(f"Traceback: {traceback.format_exc()}")
             continue
 
     return results
@@ -860,7 +871,7 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         plan.append(FiveYearPlanYear(
             year=int(row.get('year', 0)),
             age_p1=int(row.get('age_p1', 0)),
-            age_p2=int(row.get('age_p2', 0)),
+            age_p2=int(row.get('age_p2', 0)) if row.get('age_p2') is not None else 0,
             spending_target=spending_target,
             spending_target_p1=spending_target / 2,  # Split evenly for now
             spending_target_p2=spending_target / 2,
@@ -1084,7 +1095,7 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         data_points.append(ChartDataPoint(
             year=int(row.get('year', 0)),
             age_p1=int(row.get('age_p1', 0)),
-            age_p2=int(row.get('age_p2', 0)),
+            age_p2=int(row.get('age_p2', 0)) if row.get('age_p2') is not None else 0,
             spending_target=spending_target,
             spending_met=spending_met,
             spending_coverage_pct=spending_coverage_pct,

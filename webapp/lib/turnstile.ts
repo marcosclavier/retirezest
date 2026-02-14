@@ -28,8 +28,9 @@ export async function verifyTurnstile(
   token: string,
   remoteIp?: string
 ): Promise<TurnstileVerificationResult> {
-  // Bypass Turnstile in E2E test mode
-  if (process.env.E2E_TEST_MODE === 'true') {
+  // Bypass Turnstile in E2E test mode or development mode
+  if (process.env.E2E_TEST_MODE === 'true' ||
+      (process.env.NODE_ENV === 'development' && token === 'dev-test-token')) {
     return {
       success: true,
       challengeTimestamp: new Date().toISOString(),

@@ -60,7 +60,7 @@ def calculate_gis_feasibility(
 
         cpp_p2 = 0
         oas_p2 = 0
-        if is_couple:
+        if is_couple and age_p2 is not None:
             cpp_p2 = p2.cpp_annual_at_start if age_p2 >= p2.cpp_start_age else 0
             oas_p2 = p2.oas_annual_at_start if age_p2 >= p2.oas_start_age else 0
 
@@ -75,7 +75,7 @@ def calculate_gis_feasibility(
             rrif_min_p1 = p1.rrif_balance * pct
 
         rrif_min_p2 = 0
-        if is_couple and age_p2 >= 71 and p2.rrif_balance > 0:
+        if is_couple and age_p2 is not None and age_p2 >= 71 and p2.rrif_balance > 0:
             pct = rrif_minimums.get(min(age_p2, 95), 0.20)
             rrif_min_p2 = p2.rrif_balance * pct
 
@@ -87,7 +87,11 @@ def calculate_gis_feasibility(
         # Determine GIS eligibility
         if is_couple:
             # Check if both have OAS
-            both_oas = (age_p1 >= p1.oas_start_age) and (age_p2 >= p2.oas_start_age)
+            if age_p2 is not None:
+                both_oas = (age_p1 >= p1.oas_start_age) and (age_p2 >= p2.oas_start_age)
+            else:
+                both_oas = False  # Single person mode
+
             if both_oas:
                 threshold = gis_threshold_couple
             else:
@@ -587,7 +591,7 @@ def _generate_recommendations(
 
         # Assess timing for income splitting
         current_age = household.p1.start_age
-        both_over_65 = current_age >= 65 and household.p2.start_age >= 65
+        both_over_65 = current_age >= 65 and (household.p2 is not None and household.p2.start_age >= 65)
 
         timing_split = {
             "appropriate": both_over_65,

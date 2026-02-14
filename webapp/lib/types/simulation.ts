@@ -110,6 +110,9 @@ export interface HouseholdInput {
   p1: PersonInput;
   p2: PersonInput;
 
+  // Single or couple indicator
+  include_partner: boolean;
+
   province: Province;
   start_year: number;
   end_age: number;
@@ -613,6 +616,9 @@ export const defaultPersonInput: PersonInput = {
 export const defaultHouseholdInput: HouseholdInput = {
   p1: { ...defaultPersonInput, name: 'Me' },
   p2: { ...defaultPersonInput, name: 'Partner' },
+
+  // Default to single person mode
+  include_partner: false,
 
   province: 'AB',
   start_year: 2026,

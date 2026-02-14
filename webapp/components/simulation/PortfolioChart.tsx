@@ -16,16 +16,25 @@ import {
 
 interface PortfolioChartProps {
   yearByYear: YearResult[];
+  isSinglePerson?: boolean;
+  personOneName?: string;
+  personTwoName?: string;
 }
 
-export const PortfolioChart = memo(function PortfolioChart({ yearByYear }: PortfolioChartProps) {
+export const PortfolioChart = memo(function PortfolioChart({
+  yearByYear,
+  isSinglePerson = false,
+  personOneName = 'Person 1',
+  personTwoName = 'Person 2'
+}: PortfolioChartProps) {
   // Prepare data for chart
+  const suffix = isSinglePerson ? '' : ' (P1+P2)';
   const chartData = yearByYear.map((year) => ({
     year: year.year,
-    'TFSA (P1+P2)': year.tfsa_balance_p1 + year.tfsa_balance_p2,
-    'RRIF (P1+P2)': year.rrif_balance_p1 + year.rrif_balance_p2,
-    'Non-Reg (P1+P2)': year.nonreg_balance_p1 + year.nonreg_balance_p2,
-    'Corporate (P1+P2)': year.corporate_balance_p1 + year.corporate_balance_p2,
+    [`TFSA${suffix}`]: year.tfsa_balance_p1 + year.tfsa_balance_p2,
+    [`RRIF${suffix}`]: year.rrif_balance_p1 + year.rrif_balance_p2,
+    [`Non-Reg${suffix}`]: year.nonreg_balance_p1 + year.nonreg_balance_p2,
+    [`Corporate${suffix}`]: year.corporate_balance_p1 + year.corporate_balance_p2,
     'Total': year.total_value,
   }));
 
@@ -88,28 +97,28 @@ export const PortfolioChart = memo(function PortfolioChart({ yearByYear }: Portf
             <Legend />
             <Line
               type="monotone"
-              dataKey="TFSA (P1+P2)"
+              dataKey={`TFSA${suffix}`}
               stroke="#10b981"
               strokeWidth={2}
               dot={false}
             />
             <Line
               type="monotone"
-              dataKey="RRIF (P1+P2)"
+              dataKey={`RRIF${suffix}`}
               stroke="#3b82f6"
               strokeWidth={2}
               dot={false}
             />
             <Line
               type="monotone"
-              dataKey="Non-Reg (P1+P2)"
+              dataKey={`Non-Reg${suffix}`}
               stroke="#f59e0b"
               strokeWidth={2}
               dot={false}
             />
             <Line
               type="monotone"
-              dataKey="Corporate (P1+P2)"
+              dataKey={`Corporate${suffix}`}
               stroke="#8b5cf6"
               strokeWidth={2}
               dot={false}

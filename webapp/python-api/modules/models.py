@@ -50,12 +50,13 @@ class TaxParams:
     dividend_credit_rate_eligible: float = 0.15
     dividend_credit_rate_noneligible: float = 0.1460  # Fixed: was 0.10 (WRONG), should be 0.0903 (fed) + 0.0557 (prov) = 0.1460
     gis_config: Dict[str, Any] = field(default_factory=lambda: {
-        # 2025 GIS Thresholds (indexed annually by CRA)
-        "threshold_single": 22272,          # Single person threshold 2025
-        "threshold_couple": 29424,          # Couple (both OAS) threshold 2025
-        "max_benefit_single": 11628.84,     # Single person max annual GIS 2025
-        "max_benefit_couple": 6814.20,      # Per-person max when both in couple 2025
-        "clawback_rate": 0.50,              # 50% clawback on non-employment income
+        # 2026 GIS Thresholds (Updated for 2026 rates)
+        "threshold_single": 21768,          # Single person threshold 2026 ($21,768)
+        "threshold_couple": 28752,          # Couple (both OAS) threshold 2026 ($28,752)
+        "threshold_couple_one_oas": 52080,  # Couple (one OAS) threshold 2026 ($52,080)
+        "max_benefit_single": 13265.16,     # Single person max annual GIS 2026 ($1,105.43/month)
+        "max_benefit_couple": 7956.00,      # Per-person max when both in couple 2026 ($663/month)
+        "clawback_rate": 0.50,              # 50% clawback on income (excluding OAS)
         "employment_exemption_1": 5000.0,   # First $5k employment income fully exempt
         "employment_exemption_2_rate": 0.50 # Next $10k employment income 50% exempt
     })
@@ -202,6 +203,9 @@ class Household:
     p2: Person
     province: str
     start_year: int
+
+    # Single or couple indicator
+    include_partner: bool = True  # True = couple, False = single
 
     # Spending phases (after-tax, household-level)
     end_age: int = 95

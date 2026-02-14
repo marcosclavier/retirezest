@@ -95,7 +95,9 @@ export async function runSimulation(
     const response = await fetch('/api/simulation/run', {
       method: 'POST',
       headers,
-      body: JSON.stringify(backendInput),
+      body: JSON.stringify({
+        household_input: backendInput
+      }),
     });
 
     console.log('✅ Fetch completed. Status:', response.status, response.statusText);

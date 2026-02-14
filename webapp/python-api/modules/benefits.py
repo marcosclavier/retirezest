@@ -268,10 +268,10 @@ def gis_benefit(
     is_single: bool = False,
     inflation_rate: float = 0.02,
     years_since_start: int = 0,
-    gis_max_single: float = 12785.64,
-    gis_max_couple: float = 7696.20,
-    gis_threshold_single: float = 21624.0,
-    gis_threshold_couple: float = 28560.0,
+    gis_max_single: float = 13265.16,  # 2026: $1,105.43/month * 12
+    gis_max_couple: float = 7956.00,   # 2026: $663/month * 12 (per person)
+    gis_threshold_single: float = 21768.0,  # 2026 threshold
+    gis_threshold_couple: float = 28752.0,  # 2026 combined threshold for couple
 ) -> float:
     """
     Calculate GIS (Guaranteed Income Supplement) benefit.
@@ -279,34 +279,41 @@ def gis_benefit(
     GIS is an income-tested benefit for low-income seniors in Canada.
     It's available to OAS recipients who have little or no other income.
 
+    IMPORTANT: Updated with 2026 thresholds and proper clawback calculation.
+    GIS is reduced by $0.50 for every $1 of income (excluding OAS).
+
     Args:
         current_age (int): Current age of the person
         net_income_excluding_oas (float): Net income excluding OAS payments
         is_single (bool): True if single, False if couple (both receiving OAS)
         inflation_rate (float): Annual inflation rate (default 2%)
         years_since_start (int): Years since start of simulation (for inflation)
-        gis_max_single (float): Maximum annual GIS for single person (~$12,785 in 2025)
-        gis_max_couple (float): Maximum annual GIS per person for couple (~$7,696 in 2025)
-        gis_threshold_single (float): Income threshold for full GIS clawback (single)
-        gis_threshold_couple (float): Combined income threshold for full clawback (couple)
+        gis_max_single (float): Maximum annual GIS for single person (2026: $13,265.16)
+        gis_max_couple (float): Maximum annual GIS per person for couple (2026: $7,956)
+        gis_threshold_single (float): Income threshold for zero GIS (2026: $21,768)
+        gis_threshold_couple (float): Combined income threshold for zero GIS (2026: $28,752)
 
     Returns:
         float: Annual GIS benefit amount (after income clawback)
 
     Examples:
         >>> gis_benefit(65, 0, is_single=True)  # No income, full GIS
-        12785.64
+        13265.16
 
-        >>> gis_benefit(65, 30000, is_single=True)  # High income, no GIS
+        >>> gis_benefit(65, 21768, is_single=True)  # At threshold, no GIS
         0.0
+
+        >>> gis_benefit(65, 10000, is_single=True)  # Partial GIS
+        8265.16
 
         >>> gis_benefit(64, 0, is_single=True)  # Under 65, no GIS
         0.0
 
     Notes:
         - GIS starts at age 65 (same as OAS)
-        - Income excludes OAS but includes CPP, RRIF withdrawals, etc.
-        - Clawback is approximately 50% of income (simplified)
+        - Income excludes OAS but includes CPP, RRIF withdrawals, employment, etc.
+        - Clawback is exactly 50% of income (50 cents per dollar)
+        - Maximum GIS occurs at $0 income, zero GIS at threshold
         - Amounts are indexed to inflation quarterly (simplified to annual here)
     """
     # GIS starts at 65 (same as OAS)
@@ -319,26 +326,28 @@ def gis_benefit(
     if is_single:
         gis_max = gis_max_single * inflation_factor
         threshold = gis_threshold_single * inflation_factor
-        # Clawback rate for singles is approximately 50% of income
-        clawback_rate = 0.50
     else:
+        # For couples, use per-person amounts
         gis_max = gis_max_couple * inflation_factor
-        threshold = gis_threshold_couple * inflation_factor
-        # Clawback rate for couples is different
-        clawback_rate = 0.50
+        # For couple, threshold is for combined income, but we need per-person test
+        threshold = gis_threshold_couple * inflation_factor / 2.0  # Per person share
 
-    # Calculate GIS after income clawback
-    if net_income_excluding_oas <= 0:
-        return gis_max
-
+    # CRITICAL FIX: Check if income exceeds threshold FIRST
+    # If income is at or above threshold, NO GIS is paid
     if net_income_excluding_oas >= threshold:
         return 0.0
 
-    # Linear clawback based on income
-    clawback_amount = net_income_excluding_oas * clawback_rate
-    gis_amount = max(0.0, gis_max - clawback_amount)
+    # Calculate GIS with proper 50% clawback rate
+    # GIS = Maximum - (Income * 0.50)
+    if net_income_excluding_oas <= 0:
+        return gis_max
 
-    return gis_amount
+    # Apply 50% clawback for every dollar of income
+    clawback_amount = net_income_excluding_oas * 0.50
+    gis_amount = gis_max - clawback_amount
+
+    # Ensure GIS doesn't go negative
+    return max(0.0, gis_amount)
 
 
 def combined_benefits_with_gis(

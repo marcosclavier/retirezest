@@ -166,6 +166,9 @@ class HouseholdInput(BaseModel):
     p1: PersonInput = Field(..., description="Person 1 data")
     p2: PersonInput = Field(..., description="Person 2 data")
 
+    # Single or couple indicator
+    include_partner: bool = Field(default=True, description="Whether to include partner in simulation (True=couple, False=single)")
+
     # Location and timeframe
     province: Literal["AB", "BC", "ON", "QC"] = Field(
         default="AB",

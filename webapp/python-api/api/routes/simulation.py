@@ -134,10 +134,13 @@ async def run_simulation(
         logger.debug(f"   household.p1.tfsa_balance: ${household.p1.tfsa_balance:,.2f}")
         logger.debug(f"   household.p1.rrif_balance: ${household.p1.rrif_balance:,.2f}")
         logger.debug(f"   household.p1.nonreg_balance: ${household.p1.nonreg_balance:,.2f}")
-        logger.debug(f"   household.p2.name: {household.p2.name}")
-        logger.debug(f"   household.p2.tfsa_balance: ${household.p2.tfsa_balance:,.2f}")
-        logger.debug(f"   household.p2.rrif_balance: ${household.p2.rrif_balance:,.2f}")
-        logger.debug(f"   household.p2.nonreg_balance: ${household.p2.nonreg_balance:,.2f}")
+        if household.p2:
+            logger.debug(f"   household.p2.name: {household.p2.name}")
+            logger.debug(f"   household.p2.tfsa_balance: ${household.p2.tfsa_balance:,.2f}")
+            logger.debug(f"   household.p2.rrif_balance: ${household.p2.rrif_balance:,.2f}")
+            logger.debug(f"   household.p2.nonreg_balance: ${household.p2.nonreg_balance:,.2f}")
+        else:
+            logger.debug(f"   household.p2: None (single person mode)")
 
         composition = AssetAnalyzer.analyze(household)
 
@@ -205,12 +208,18 @@ async def run_simulation(
         if summary.success_rate < 1.0 and summary.first_failure_year:
             # Calculate ages at failure year
             p1_age = household.p1.start_age + (summary.first_failure_year - household.start_year)
-            p2_age = household.p2.start_age + (summary.first_failure_year - household.start_year)
-            warnings.append(
-                f"⚠️ Plan fails in year {summary.first_failure_year} when {household.p1.name} is {p1_age} "
-                f"and {household.p2.name} is {p2_age} years old. "
-                f"Consider reducing spending or adjusting strategy."
-            )
+            if household.p2:
+                p2_age = household.p2.start_age + (summary.first_failure_year - household.start_year)
+                warnings.append(
+                    f"⚠️ Plan fails in year {summary.first_failure_year} when {household.p1.name} is {p1_age} "
+                    f"and {household.p2.name} is {p2_age} years old. "
+                    f"Consider reducing spending or adjusting strategy."
+                )
+            else:
+                warnings.append(
+                    f"⚠️ Plan fails in year {summary.first_failure_year} when {household.p1.name} is {p1_age} years old. "
+                    f"Consider reducing spending or adjusting strategy."
+                )
         if summary.total_underfunded_years > 0:
             warnings.append(
                 f"⚠️ Plan underfunded for {summary.total_underfunded_years} years. "
@@ -231,10 +240,12 @@ async def run_simulation(
 
         # Check if intelligent estate tax optimization is active
         if "rrif-frontload" in household.strategy.lower():
-            has_corporate = (household.p1.corporate_balance > 10000 or
-                           household.p2.corporate_balance > 10000)
-            has_oas = (household.p1.oas_start_age and household.p1.oas_start_age < household.end_age) or \
-                     (household.p2.oas_start_age and household.p2.oas_start_age < household.end_age)
+            has_corporate = household.p1.corporate_balance > 10000
+            has_oas = household.p1.oas_start_age and household.p1.oas_start_age < household.end_age
+
+            if household.p2:
+                has_corporate = has_corporate or household.p2.corporate_balance > 10000
+                has_oas = has_oas or (household.p2.oas_start_age and household.p2.oas_start_age < household.end_age)
 
             if has_corporate and has_oas:
                 total_clawback = summary.total_oas_clawback if hasattr(summary, 'total_oas_clawback') else 0

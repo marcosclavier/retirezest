@@ -16,9 +16,18 @@ import {
 interface GovernmentBenefitsChartProps {
   chartData: ChartDataPoint[];
   reinvestNonregDist?: boolean;
+  isSinglePerson?: boolean;
+  personOneName?: string;
+  personTwoName?: string;
 }
 
-export function GovernmentBenefitsChart({ chartData, reinvestNonregDist = true }: GovernmentBenefitsChartProps) {
+export function GovernmentBenefitsChart({
+  chartData,
+  reinvestNonregDist = true,
+  isSinglePerson = false,
+  personOneName = 'Person 1',
+  personTwoName = 'Person 2'
+}: GovernmentBenefitsChartProps) {
   // Prepare data for chart - only show government benefits (CPP, OAS, GIS)
   const data = chartData.map((point) => ({
     year: point.year,
@@ -38,13 +47,19 @@ export function GovernmentBenefitsChart({ chartData, reinvestNonregDist = true }
     }).format(value);
   };
 
+  const p1Name = personOneName.split(' ')[0] || 'P1';
+  const p2Name = personTwoName?.split(' ')[0] || 'P2';
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const dataPoint = chartData.find((p) => p.year === label);
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
           <p className="font-semibold mb-2">
-            Year {label} (Age {dataPoint?.age_p1})
+            Year {label} {isSinglePerson
+              ? `(Age ${dataPoint?.age_p1})`
+              : `(Ages ${dataPoint?.age_p1} / ${dataPoint?.age_p2})`
+            }
           </p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">

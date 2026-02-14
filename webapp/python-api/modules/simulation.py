@@ -19,6 +19,7 @@ from modules.tax_optimizer import TaxOptimizer
 from modules.estate_tax_calculator import EstateCalculator
 from modules import real_estate
 from modules.gic_calculator import process_gic_maturity_events, get_gic_balance_locked
+from modules.household_utils import is_couple, get_participants
 from utils.helpers import clamp
 
 
@@ -846,8 +847,8 @@ def calculate_gis(
         return max_benefit_per_person
     else:
         # Single person calculation
-        threshold = gis_config.get("threshold_single", 22272)
-        max_benefit = gis_config.get("max_benefit_single", 11628.84)
+        threshold = gis_config.get("threshold_single", 21768)  # 2026 threshold
+        max_benefit = gis_config.get("max_benefit_single", 13265.16)  # 2026 max benefit
         clawback_rate = gis_config.get("clawback_rate", 0.50)
 
         # Check eligibility: net income must be below threshold
@@ -2362,8 +2363,8 @@ def calculate_terminal_tax(
     ordinary_income_final = rrif_total + corp_total
     cap_gains_final = nonreg_gain_total  # progressive_tax will 50%-include this
 
-    # 5. Use the older spouse's age for credits
-    terminal_age_for_calc = max(age_p1, age_p2)
+    # 5. Use the older spouse's age for credits (or just p1's age if single)
+    terminal_age_for_calc = max(age_p1, age_p2) if age_p2 is not None else age_p1
 
     # 6. Calculate federal and provincial tax using indexed parameters
     fed_res = progressive_tax(
@@ -2416,11 +2417,15 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     cash_buffer = 0.0
 
     year = hh.start_year; age1 = hh.p1.start_age
-    age2 = hh.p2.start_age if hh.p2 else None
-    p1 = hh.p1; p2 = hh.p2
 
-    # Validate early RRIF withdrawal settings for both persons
-    persons_to_validate = [p1] if p2 is None else [p1, p2]
+    # Use household utilities to determine if this is a couple
+    household_is_couple = is_couple(hh)
+    age2 = hh.p2.start_age if household_is_couple else None
+    p1 = hh.p1
+    p2 = hh.p2 if household_is_couple else None
+
+    # Validate early RRIF withdrawal settings for active participants only
+    persons_to_validate = get_participants(hh)
     for person in persons_to_validate:
         validation_errors = validate_early_rrif_settings(person)
         if validation_errors:
@@ -2428,7 +2433,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             raise ValueError(error_msg)
 
     # US-074: Auto-calculate endAge for rental income linked to downsizing (one-time initialization)
-    for person in [p1, p2]:
+    for person in get_participants(hh):
         for other_income in getattr(person, 'other_incomes', []):
             income_type = other_income.get('type', '')
             if income_type == 'rental':
@@ -2453,8 +2458,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     while age1 <= hh.end_age or (p2 and age2 <= hh.end_age):
         # At start of year: Add annual room growth + last year's withdrawals
         tfsa_room1 += p1.tfsa_room_annual_growth + tfsa_withdraw_last_year1
-        tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
-        max_age = max(age1, age2)
+        if p2:
+            tfsa_room2 += p2.tfsa_room_annual_growth + tfsa_withdraw_last_year2
+        max_age = max(age1, age2) if age2 is not None else age1
 
         base_spend = (
             hh.spending_go_go if max_age <= hh.go_go_end_age else 
@@ -2469,10 +2475,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
        
         # For single person, they need to cover the full spending target
         # For couples, split the target between two people
-        # Check if it's a single person household (p2 is None or has empty name)
-        is_single = (p2 is None or not p2.name or p2.name == "")
-
-        if is_single:
+        if not household_is_couple:
             target_each = spend  # Single person covers full spending
         else:
             target_each = spend/2.0  # Couples split the spending
@@ -2514,18 +2517,20 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # RRSP growth then conversion at 71
         p1.rrsp_balance *= (1 + p1.yield_rrsp_growth)
-        p2.rrsp_balance *= (1 + p2.yield_rrsp_growth)
+        if p2:
+            p2.rrsp_balance *= (1 + p2.yield_rrsp_growth)
         rrsp_to_rrif1 = (age1 >= 71)
-        rrsp_to_rrif2 = (age2 >= 71)
+        rrsp_to_rrif2 = (age2 >= 71) if age2 is not None else False
 
         # ===== REAL ESTATE: Downsizing and Property Appreciation =====
         # Clear previous year's downsizing capital gains
         p1.downsizing_capital_gains_this_year = 0.0
-        p2.downsizing_capital_gains_this_year = 0.0
+        if household_is_couple:
+            p2.downsizing_capital_gains_this_year = 0.0
 
         # Handle property sales/downsizing first (before appreciation)
         downsize_p1 = real_estate.handle_downsizing(p1, year, hh)
-        downsize_p2 = real_estate.handle_downsizing(p2, year, hh)
+        downsize_p2 = real_estate.handle_downsizing(p2, year, hh) if household_is_couple else {"net_cash": 0, "taxable_gains": 0}
 
         # Add net proceeds from downsizing to non-registered accounts
         if downsize_p1["net_cash"] > 0:
@@ -2534,7 +2539,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             # Store taxable gains for tax calculation this year
             p1.downsizing_capital_gains_this_year = downsize_p1["taxable_gains"]
 
-        if downsize_p2["net_cash"] > 0:
+        if household_is_couple and downsize_p2["net_cash"] > 0:
             p2.nonreg_balance += downsize_p2["net_cash"]
             p2.nonreg_acb += downsize_p2["net_cash"]  # New cash injection increases ACB
             # Store taxable gains for tax calculation this year
@@ -2542,15 +2547,19 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Appreciate remaining property values with general inflation
         real_estate.appreciate_property(p1, hh.general_inflation)
-        real_estate.appreciate_property(p2, hh.general_inflation)
+        if household_is_couple:
+            real_estate.appreciate_property(p2, hh.general_inflation)
 
         #Capture starting balances for growth reporting and clamps
         rrsp_start1 = float(p1.rrsp_balance)
-        rrsp_start2 = float(p2.rrsp_balance)
+        rrsp_start2 = float(p2.rrsp_balance) if household_is_couple else 0.0
         corp_start1 = float(p1.corporate_balance)
-        corp_start2 = float(p2.corporate_balance)
+        corp_start2 = float(p2.corporate_balance) if household_is_couple else 0.0
         rrif_start1, tfsa_start1, nonreg_start1 = p1.rrif_balance, p1.tfsa_balance, p1.nonreg_balance
-        rrif_start2, tfsa_start2, nonreg_start2 = p2.rrif_balance, p2.tfsa_balance, p2.nonreg_balance
+        if household_is_couple:
+            rrif_start2, tfsa_start2, nonreg_start2 = p2.rrif_balance, p2.tfsa_balance, p2.nonreg_balance
+        else:
+            rrif_start2, tfsa_start2, nonreg_start2 = 0.0, 0.0, 0.0
 
         # ===== CASH BUFFER LOGIC: Track multi-year surplus/deficit =====
         # CRITICAL FIX: The buffer should TRACK surplus/deficit history but NOT adjust targets
@@ -2614,48 +2623,52 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Calculate Person 2 pension and other income
         p2_pension_income = 0.0
-        p2_pension_incomes = getattr(p2, 'pension_incomes', [])
-        for pension in p2_pension_incomes:
-            pension_start_age = pension.get('startAge', 65)
-            if age2 >= pension_start_age:
-                annual_amount = pension.get('amount', 0.0)
-                if pension.get('inflationIndexed', True):
-                    years_since_pension_start = age2 - pension_start_age
-                    annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
-                p2_pension_income += annual_amount
+        if p2 and age2 is not None:
+            p2_pension_incomes = getattr(p2, 'pension_incomes', [])
+            for pension in p2_pension_incomes:
+                pension_start_age = pension.get('startAge', 65)
+                if age2 >= pension_start_age:
+                    annual_amount = pension.get('amount', 0.0)
+                    if pension.get('inflationIndexed', True):
+                        years_since_pension_start = age2 - pension_start_age
+                        annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+                    p2_pension_income += annual_amount
 
         p2_other_income = 0.0
-        p2_other_incomes = getattr(p2, 'other_incomes', [])
-        for other_income in p2_other_incomes:
-            income_type = other_income.get('type', '')
-            income_start_age = other_income.get('startAge')
-            income_end_age = other_income.get('endAge')
+        if p2 and age2 is not None:
+            p2_other_incomes = getattr(p2, 'other_incomes', [])
+            for other_income in p2_other_incomes:
+                income_type = other_income.get('type', '')
+                income_start_age = other_income.get('startAge')
+                income_end_age = other_income.get('endAge')
 
-            if income_type == 'employment':
-                if income_start_age is None:
-                    income_start_age = p2.start_age
-                if income_end_age is None:
-                    income_end_age = p2.cpp_start_age
+                if income_type == 'employment':
+                    if income_start_age is None:
+                        income_start_age = p2.start_age
+                    if income_end_age is None:
+                        income_end_age = p2.cpp_start_age
 
-            is_active = True
-            if income_start_age is not None and age2 < income_start_age:
-                is_active = False
-            if income_end_age is not None and age2 >= income_end_age:
-                is_active = False
+                is_active = True
+                if income_start_age is not None and age2 < income_start_age:
+                    is_active = False
+                if income_end_age is not None and age2 >= income_end_age:
+                    is_active = False
 
-            if is_active:
-                annual_amount = other_income.get('amount', 0.0)
-                if other_income.get('inflationIndexed', True):
-                    if income_start_age:
-                        years_since_start = age2 - income_start_age
-                        annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
-                    else:
-                        annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
-                p2_other_income += annual_amount
+                if is_active:
+                    annual_amount = other_income.get('amount', 0.0)
+                    if other_income.get('inflationIndexed', True):
+                        if income_start_age:
+                            years_since_start = age2 - income_start_age
+                            annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                        else:
+                            annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
+                    p2_other_income += annual_amount
 
         # Add rental income for Person 2
-        p2_rental_income = real_estate.get_rental_income(p2)
-        p2_other_income += p2_rental_income
+        p2_rental_income = 0.0
+        if p2:
+            p2_rental_income = real_estate.get_rental_income(p2)
+            p2_other_income += p2_rental_income
 
         # Subtract pension and other income from withdrawal targets (after-tax income)
         # These income sources are already taxed, so we subtract them from after-tax target
@@ -2670,7 +2683,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Add mortgage payments to after-tax spending targets (not tax-deductible in Canada for principal residences)
         mortgage_p1 = real_estate.calculate_annual_mortgage_payment(p1)
-        mortgage_p2 = real_estate.calculate_annual_mortgage_payment(p2)
+        mortgage_p2 = real_estate.calculate_annual_mortgage_payment(p2) if p2 else 0.0
         target_p1_adjusted += mortgage_p1
         target_p2_adjusted += mortgage_p2
 
@@ -2682,14 +2695,43 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             p1, age1, target_p1_adjusted, fed_y, prov_y, rrsp_to_rrif1, cust["p1"],
             hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1, tax_optimizer
             )
-        w2, t2, info2 = simulate_year(
-            p2, age2, target_p2_adjusted, fed_y, prov_y, rrsp_to_rrif2, cust["p2"],
-            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2, tax_optimizer
+
+        # Only simulate person 2 if this is a couple
+        if household_is_couple:
+            w2, t2, info2 = simulate_year(
+                p2, age2, target_p2_adjusted, fed_y, prov_y, rrsp_to_rrif2, cust["p2"],
+                hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2, tax_optimizer
             )
+        else:
+            # For singles, create empty results for person 2
+            w2 = {"nonreg": 0.0, "rrif": 0.0, "tfsa": 0.0, "corp": 0.0}
+            t2 = {
+                "tax": 0.0,
+                "oas": 0.0,
+                "cpp": 0.0,
+                "gis": 0.0,
+                "oas_clawback": 0.0,
+                "breakdown": {
+                    "nr_interest": 0.0,
+                    "nr_elig_div": 0.0,
+                    "nr_nonelig_div": 0.0,
+                    "nr_capg_dist": 0.0,
+                    "cg_from_sale": 0.0
+                }
+            }
+            info2 = {
+                "tfsa_room_after": 0.0,
+                "realized_cg": 0.0,
+                "corp_refund": 0.0,
+                "nr_interest": 0.0,
+                "nr_elig_div": 0.0,
+                "nr_nonelig_div": 0.0,
+                "nr_capg_dist": 0.0
+            }
 
         # Update TFSA room after surplus reinvestment (from simulate_year)
         tfsa_room1 = float(info1.get("tfsa_room_after", tfsa_room1))
-        tfsa_room2 = float(info2.get("tfsa_room_after", tfsa_room2))
+        tfsa_room2 = float(info2.get("tfsa_room_after", tfsa_room2)) if household_is_couple else 0.0
 
         # ===== HOUSEHOLD-LEVEL GIS RECALCULATION FOR COUPLES =====
         # Inside simulate_year(), GIS is calculated as single (doesn't have access to other person).
@@ -2704,9 +2746,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         oas_p1_current = float(info1.get("oas", 0.0))
         oas_p2_current = float(info2.get("oas", 0.0))
 
-        # CRITICAL FIX: Properly check if it's a couple based on whether p2 exists
-        # The previous logic incorrectly set is_couple=True if p1 had OAS, even for singles
-        is_couple_household = (p2 is not None and p2.name and p2.name != "")
+        # Use household utilities to properly detect couple vs single
+        is_couple_household = household_is_couple
 
         if is_couple_household and oas_p1_current > 0 and oas_p2_current > 0:
             # ===== CASE 1: BOTH SPOUSES HAVE OAS =====
@@ -2719,8 +2760,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
             # Get GIS config
             gis_config = fed_y.gis_config if hasattr(fed_y, 'gis_config') else {}
-            couple_threshold = gis_config.get("threshold_couple", 29424)
-            max_benefit_per_person = gis_config.get("max_benefit_couple", 6814.20)
+            couple_threshold = gis_config.get("threshold_couple", 28752)  # 2026 threshold
+            max_benefit_per_person = gis_config.get("max_benefit_couple", 7956.00)  # 2026 max benefit
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
@@ -2751,8 +2792,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
             # Get GIS config
             gis_config = fed_y.gis_config if hasattr(fed_y, 'gis_config') else {}
-            one_oas_threshold = gis_config.get("threshold_couple_one_oas", 53808)
-            max_benefit_couple = gis_config.get("max_benefit_couple", 6814.20)
+            one_oas_threshold = gis_config.get("threshold_couple_one_oas", 52080)  # 2026 threshold
+            max_benefit_couple = gis_config.get("max_benefit_couple", 7956.00)  # 2026 max benefit
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
@@ -2793,17 +2834,48 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         elif not is_couple_household and oas_p1_current > 0:
             # ===== CASE 3: SINGLE PERSON WITH OAS =====
             # Single person receives GIS based on single threshold and their income alone
-            gis_income_p1 = float(info1.get("gis_net_income", 0.0))
+
+            # CRITICAL FIX: Recalculate GIS income using ACTUAL final withdrawal values
+            # The info1.get("gis_net_income") was calculated early in simulate_year and may not
+            # reflect final withdrawals, especially for GIS-optimized strategies
+
+            # Get actual income components from t1 (the final year result)
+            # GIS income = CPP + RRIF withdrawals + corporate withdrawals + investment income
+            # Note: OAS is explicitly excluded per CRA rules
+            cpp_p1 = float(t1.get("cpp", 0.0))
+            rrif_withdrawal_p1 = float(t1.get("rrif_withdrawal", 0.0))
+            corp_withdrawal_p1 = float(t1.get("corp_withdrawal", 0.0))
+
+            # Get investment income components from breakdown if available
+            bd1 = t1.get("breakdown", {})
+            nr_interest_p1 = float(bd1.get("nr_interest", 0.0))
+            nr_elig_div_p1 = float(bd1.get("nr_elig_div", 0.0))
+            nr_nonelig_div_p1 = float(bd1.get("nr_nonelig_div", 0.0))
+            nr_capg_dist_p1 = float(bd1.get("nr_capg_dist", 0.0))
+
+            # Calculate actual GIS income (excluding OAS as per CRA rules)
+            # Capital gains use 50% inclusion rate
+            gis_income_p1_actual = (cpp_p1 + rrif_withdrawal_p1 + corp_withdrawal_p1 +
+                                    nr_interest_p1 + nr_elig_div_p1 + nr_nonelig_div_p1 +
+                                    nr_capg_dist_p1 * 0.5)
+
+            # Use the higher of the original calculation and the actual income
+            # This ensures we don't understate income for GIS purposes
+            gis_income_p1_original = float(info1.get("gis_net_income", 0.0))
+            gis_income_p1 = max(gis_income_p1_actual, gis_income_p1_original)
 
             # Get GIS config for single person
             gis_config = fed_y.gis_config if hasattr(fed_y, 'gis_config') else {}
-            single_threshold = gis_config.get("threshold_single", 22272)
-            max_benefit_single = gis_config.get("max_benefit_single", 11628.84)
+            single_threshold = gis_config.get("threshold_single", 21768)  # 2026 threshold
+            max_benefit_single = gis_config.get("max_benefit_single", 13265.16)  # 2026 max benefit
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
                 import sys
                 print(f"DEBUG HH GIS CASE3 (Single) [{year}]: P1_income=${gis_income_p1:,.0f} threshold=${single_threshold:,.0f}", file=sys.stderr)
+                if abs(gis_income_p1_actual - gis_income_p1_original) > 1:
+                    print(f"  GIS income recalculation: Original=${gis_income_p1_original:,.0f}, Actual=${gis_income_p1_actual:,.0f}, Using=${gis_income_p1:,.0f}", file=sys.stderr)
+                    print(f"    Components: CPP=${cpp_p1:,.0f}, RRIF=${rrif_withdrawal_p1:,.0f}, Corp=${corp_withdrawal_p1:,.0f}", file=sys.stderr)
 
             # Apply single person clawback logic
             if gis_income_p1 >= single_threshold:
@@ -2853,13 +2925,18 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # RRIF income splitting (up to 50% if age >=65)
         split = clamp(hh.income_split_rrif_fraction, 0.0, 0.5)
         transfer12 = split * w1["rrif"] if age1 >= 65 else 0.0
-        transfer21 = split * w2["rrif"] if age2 >= 65 else 0.0
+        transfer21 = split * w2["rrif"] if (age2 is not None and age2 >= 65) else 0.0
       
         # == After calling recompute_tax for each person ==
         # FIX: Pass info1/info2 dicts so recompute_tax can include pension_income and other_income
         # US-083, US-084: Capture BPA and age credits from recompute_tax
         tax1_after, tax1_fed, tax1_prov, bpa_credit1, age_credit1 = recompute_tax(age1, w1["rrif"], -transfer12 + transfer21, t1, p1, w1, fed_y, prov_y, info1)
-        tax2_after, tax2_fed, tax2_prov, bpa_credit2, age_credit2 = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, info2)
+
+        if household_is_couple:
+            tax2_after, tax2_fed, tax2_prov, bpa_credit2, age_credit2 = recompute_tax(age2, w2["rrif"], -transfer21 + transfer12, t2, p2, w2, fed_y, prov_y, info2)
+        else:
+            # For single person, no tax recalculation needed for p2
+            tax2_after = tax2_fed = tax2_prov = bpa_credit2 = age_credit2 = 0.0
 
 
         # Rebuild per-person and household totals ONLY from recompute outputs
@@ -2893,9 +2970,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Update balances: subtract withdrawals, then grow  
         p1.rrif_balance = max(p1.rrif_balance - w1["rrif"], 0.0) * (1 + p1.yield_rrif_growth)
-        p2.rrif_balance = max(p2.rrif_balance - w2["rrif"], 0.0) * (1 + p2.yield_rrif_growth)
+        if p2:
+            p2.rrif_balance = max(p2.rrif_balance - w2["rrif"], 0.0) * (1 + p2.yield_rrif_growth)
         p1.tfsa_balance = max(p1.tfsa_balance - w1["tfsa"], 0.0) * (1 + p1.yield_tfsa_growth)
-        p2.tfsa_balance = max(p2.tfsa_balance - w2["tfsa"], 0.0) * (1 + p2.yield_tfsa_growth)
+        if p2:
+            p2.tfsa_balance = max(p2.tfsa_balance - w2["tfsa"], 0.0) * (1 + p2.yield_tfsa_growth)
 
         # Calculate reinvested distributions (if enabled) or paid-out distributions (if disabled) before applying growth
         # NOTE: Distributions count as available cash for meeting spending needs, regardless of reinvestment mode.
@@ -2913,7 +2992,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             nr_reinvest_p2 = nr_distributions_p2
             # Update ACB with reinvested amounts
             p1.nonreg_acb += nr_reinvest_p1
-            p2.nonreg_acb += nr_reinvest_p2
+            if p2:
+                p2.nonreg_acb += nr_reinvest_p2
         else:
             # Non-reinvestment mode: distributions are paid out as cash (already counted in spending)
             # Must subtract them from the account balance to avoid double-counting
@@ -2968,47 +3048,48 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p1.nonreg_balance = max(0.0, p1_nr_cash_new + p1_nr_gic_new + p1_nr_invest_new)
 
         # Person 2 non-registered bucket growth
-        if (p2.nr_cash + p2.nr_gic + p2.nr_invest) > 1e-9:
-            withdrawal_ratio_p2 = min(w2["nonreg"] / (p2.nr_cash + p2.nr_gic + p2.nr_invest), 1.0)
-        else:
-            withdrawal_ratio_p2 = 0.0
+        if p2:
+            if (p2.nr_cash + p2.nr_gic + p2.nr_invest) > 1e-9:
+                withdrawal_ratio_p2 = min(w2["nonreg"] / (p2.nr_cash + p2.nr_gic + p2.nr_invest), 1.0)
+            else:
+                withdrawal_ratio_p2 = 0.0
 
-        # Apply withdrawal proportionally to each bucket
-        p2_nr_cash_after_wd = p2.nr_cash * (1 - withdrawal_ratio_p2)
-        p2_nr_gic_after_wd = p2.nr_gic * (1 - withdrawal_ratio_p2)
-        p2_nr_invest_after_wd = p2.nr_invest * (1 - withdrawal_ratio_p2)
+            # Apply withdrawal proportionally to each bucket
+            p2_nr_cash_after_wd = p2.nr_cash * (1 - withdrawal_ratio_p2)
+            p2_nr_gic_after_wd = p2.nr_gic * (1 - withdrawal_ratio_p2)
+            p2_nr_invest_after_wd = p2.nr_invest * (1 - withdrawal_ratio_p2)
 
-        # Apply bucket-specific yields from person fields
-        # CRITICAL FIX (US-077): yields may be stored as percentages (6 = 6%) or decimals (0.06 = 6%)
-        # If value > 1.0, it's a percentage and needs to be divided by 100
-        p2_yr_cash_raw = float(getattr(p2, "y_nr_cash_interest", 0.0))
-        p2_yr_gic_raw = float(getattr(p2, "y_nr_gic_interest", 0.0))
-        p2_yr_invest_raw = float(getattr(p2, "y_nr_inv_total_return", 0.04))
+            # Apply bucket-specific yields from person fields
+            # CRITICAL FIX (US-077): yields may be stored as percentages (6 = 6%) or decimals (0.06 = 6%)
+            # If value > 1.0, it's a percentage and needs to be divided by 100
+            p2_yr_cash_raw = float(getattr(p2, "y_nr_cash_interest", 0.0))
+            p2_yr_gic_raw = float(getattr(p2, "y_nr_gic_interest", 0.0))
+            p2_yr_invest_raw = float(getattr(p2, "y_nr_inv_total_return", 0.04))
 
-        # Convert from percentage to decimal if needed
-        p2_yr_cash = p2_yr_cash_raw / 100.0 if p2_yr_cash_raw > 1.0 else p2_yr_cash_raw
-        p2_yr_gic = p2_yr_gic_raw / 100.0 if p2_yr_gic_raw > 1.0 else p2_yr_gic_raw
-        p2_yr_invest = p2_yr_invest_raw / 100.0 if p2_yr_invest_raw > 1.0 else p2_yr_invest_raw
+            # Convert from percentage to decimal if needed
+            p2_yr_cash = p2_yr_cash_raw / 100.0 if p2_yr_cash_raw > 1.0 else p2_yr_cash_raw
+            p2_yr_gic = p2_yr_gic_raw / 100.0 if p2_yr_gic_raw > 1.0 else p2_yr_gic_raw
+            p2_yr_invest = p2_yr_invest_raw / 100.0 if p2_yr_invest_raw > 1.0 else p2_yr_invest_raw
 
-        p2_nr_cash_new = p2_nr_cash_after_wd * (1 + p2_yr_cash)
-        p2_nr_gic_new = p2_nr_gic_after_wd * (1 + p2_yr_gic)
-        # Investment balance grows at the total return rate
-        p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest)
+            p2_nr_cash_new = p2_nr_cash_after_wd * (1 + p2_yr_cash)
+            p2_nr_gic_new = p2_nr_gic_after_wd * (1 + p2_yr_gic)
+            # Investment balance grows at the total return rate
+            p2_nr_invest_new = p2_nr_invest_after_wd * (1 + p2_yr_invest)
 
-        # Update buckets and total balance
-        # CRITICAL FIX (US-077): DO NOT add nr_reinvest_p2 to balance (same fix as Person 1)
-        # See Person 1 comment above for detailed explanation
-        p2.nr_cash = p2_nr_cash_new
-        p2.nr_gic = p2_nr_gic_new
-        p2.nr_invest = p2_nr_invest_new
-        p2.nonreg_balance = max(0.0, p2_nr_cash_new + p2_nr_gic_new + p2_nr_invest_new)
+            # Update buckets and total balance
+            # CRITICAL FIX (US-077): DO NOT add nr_reinvest_p2 to balance (same fix as Person 1)
+            # See Person 1 comment above for detailed explanation
+            p2.nr_cash = p2_nr_cash_new
+            p2.nr_gic = p2_nr_gic_new
+            p2.nr_invest = p2_nr_invest_new
+            p2.nonreg_balance = max(0.0, p2_nr_cash_new + p2_nr_gic_new + p2_nr_invest_new)
 
         # --- Account growths this year (household by account; use same yields you configured) ---
         g_rrif_p1 = max(rrif_start1 - w1["rrif"], 0.0) * p1.yield_rrif_growth
-        g_rrif_p2 = max(rrif_start2 - w2["rrif"], 0.0) * p2.yield_rrif_growth
+        g_rrif_p2 = max(rrif_start2 - w2["rrif"], 0.0) * (p2.yield_rrif_growth if p2 else 0)
 
         g_tfsa_p1 = max(tfsa_start1 - w1["tfsa"], 0.0) * p1.yield_tfsa_growth
-        g_tfsa_p2 = max(tfsa_start2 - w2["tfsa"], 0.0) * p2.yield_tfsa_growth
+        g_tfsa_p2 = max(tfsa_start2 - w2["tfsa"], 0.0) * (p2.yield_tfsa_growth if p2 else 0)
 
         # For Non-Registered, calculate the AVERAGE yield (not sum)
         # The component yields (interest, elig_div, nonelig_div, capg) represent the COMPOSITION
@@ -3017,8 +3098,11 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         components_p1 = [p1.yield_nonreg_interest, p1.yield_nonreg_elig_div, p1.yield_nonreg_nonelig_div, p1.yield_nonreg_capg]
         nr_yld_avg_p1 = sum(components_p1) / len(components_p1) if any(components_p1) else 0.0
 
-        components_p2 = [p2.yield_nonreg_interest, p2.yield_nonreg_elig_div, p2.yield_nonreg_nonelig_div, p2.yield_nonreg_capg]
-        nr_yld_avg_p2 = sum(components_p2) / len(components_p2) if any(components_p2) else 0.0
+        if p2:
+            components_p2 = [p2.yield_nonreg_interest, p2.yield_nonreg_elig_div, p2.yield_nonreg_nonelig_div, p2.yield_nonreg_capg]
+            nr_yld_avg_p2 = sum(components_p2) / len(components_p2) if any(components_p2) else 0.0
+        else:
+            nr_yld_avg_p2 = 0.0
 
         g_nonreg_p1 = max(nonreg_start1 - w1["nonreg"], 0.0) * nr_yld_avg_p1
         g_nonreg_p2 = max(nonreg_start2 - w2["nonreg"], 0.0) * nr_yld_avg_p2
@@ -3030,7 +3114,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Corporate: subtract dividends paid, add RDTOH refund received in year,
         # then add retained passive income for the year (from corp_info)
         p1.corporate_balance = max(p1.corporate_balance - w1["corp"] + info1["corp_refund"] + info1.get("corp_retained", 0.0), 0.0)
-        p2.corporate_balance = max(p2.corporate_balance - w2["corp"] + info2["corp_refund"] + info2.get("corp_retained", 0.0), 0.0)
+        if p2:
+            p2.corporate_balance = max(p2.corporate_balance - w2["corp"] + info2["corp_refund"] + info2.get("corp_retained", 0.0), 0.0)
 
         # IMPORTANT: Contributions and surplus should NOT be subject to growth this year
         # They are added at year-end, after all growth calculations
@@ -3052,7 +3137,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             # Only allow TFSA contributions when spending is fully funded
             # First, calculate contributions needed
             c1 = min(hh.tfsa_contribution_each, max(p1.nonreg_balance,0.0), tfsa_room1)
-            c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance,0.0), tfsa_room2)
+            c2 = min(hh.tfsa_contribution_each, max(p2.nonreg_balance if p2 else 0, 0.0), tfsa_room2)
 
             # REINVEST SURPLUS: Surplus is added AFTER growth but BEFORE year-end balance
             # Get surplus from both people's simulate_year() calls (use household total)
@@ -3084,8 +3169,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p1.tfsa_balance += c1 + tfsa_reinvest_p1  # Contributions and TFSA surplus
         tfsa_room1 -= (c1 + tfsa_reinvest_p1)
 
-        p2.nonreg_balance = max(0.0, p2.nonreg_balance - c2)  # Prevent negative balance
-        p2.tfsa_balance += c2 + tfsa_reinvest_p2  # Contributions and TFSA surplus
+        if p2:
+            p2.nonreg_balance = max(0.0, p2.nonreg_balance - c2)  # Prevent negative balance
+            p2.tfsa_balance += c2 + tfsa_reinvest_p2  # Contributions and TFSA surplus
         tfsa_room2 -= (c2 + tfsa_reinvest_p2)
 
         # NonReg: add remaining surplus (fallback when TFSA is full)
@@ -3102,8 +3188,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Calculate net worth AFTER contributions/surplus are added
         # (to properly reflect what's been invested for next year's growth)
         net_worth_end = sum([
-            p1.rrif_balance, p2.rrif_balance, p1.tfsa_balance, p2.tfsa_balance,
-            p1.nonreg_balance, p2.nonreg_balance, p1.corporate_balance, p2.corporate_balance
+            p1.rrif_balance, p2.rrif_balance if p2 else 0, p1.tfsa_balance, p2.tfsa_balance if p2 else 0,
+            p1.nonreg_balance, p2.nonreg_balance if p2 else 0, p1.corporate_balance, p2.corporate_balance if p2 else 0
         ])
 
 
@@ -3124,8 +3210,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # infer ROC % used this year (bucketed if present, else legacy)
         def _roc_rate(person):
+            if person is None:
+                return 0.0
             inv = getattr(person, "nr_invest", 0.0)
-            return getattr(person, "y_nr_inv_roc_pct", person.yield_nonreg_roc_pct) if inv > 0 else person.yield_nonreg_roc_pct 
+            return getattr(person, "y_nr_inv_roc_pct", person.yield_nonreg_roc_pct) if inv > 0 else person.yield_nonreg_roc_pct
         nr_roc_cash_p1 = max(0.0, (nr_elig_div_p1 + nr_nonelig_div_p1 + nr_capg_dist_p1) * _roc_rate(p1))
         nr_roc_cash_p2 = max(0.0, (nr_elig_div_p2 + nr_nonelig_div_p2 + nr_capg_dist_p2) * _roc_rate(p2))
 
@@ -3141,7 +3229,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # --- NEW: corporate components for YearResult ---
         corp_rdtoh_p1_val        = float(p1.corp_rdtoh)  # ending RDTOH balance for P1 this year
-        corp_rdtoh_p2_val        = float(p2.corp_rdtoh)  # ending RDTOH balance for P2 this year
+        corp_rdtoh_p2_val        = float(p2.corp_rdtoh) if p2 else 0.0  # ending RDTOH balance for P2 this year
         corp_interest_gen_p1     = float(info1.get("corp_interest_gen", 0.0))
         corp_interest_gen_p2     = float(info2.get("corp_interest_gen", 0.0))
         corp_elig_div_gen_p1_val = float(info1.get("corp_elig_div_gen", 0.0))
@@ -3213,7 +3301,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             # The conversion amount is the grown RRSP balance
             rrsp_to_rrif1_amt = rrsp_start1
 
-        if rrsp_to_rrif2 and rrsp_start2 > 0 and p2.rrsp_balance == 0:
+        if rrsp_to_rrif2 and rrsp_start2 > 0 and p2 and p2.rrsp_balance == 0:
             rrsp_to_rrif2_amt = rrsp_start2
 
         rows.append(YearResult(
@@ -3239,7 +3327,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
             # RRSP balances and tracking
             start_rrsp_p1=rrsp_start1, start_rrsp_p2=rrsp_start2,
-            end_rrsp_p1=p1.rrsp_balance, end_rrsp_p2=p2.rrsp_balance,
+            end_rrsp_p1=p1.rrsp_balance, end_rrsp_p2=p2.rrsp_balance if p2 else 0,
             withdraw_rrsp_p1=0.0,  # RRSP withdrawals not tracked separately (converted to RRIF first)
             withdraw_rrsp_p2=0.0,
             rrsp_to_rrif_p1=rrsp_to_rrif1_amt, rrsp_to_rrif_p2=rrsp_to_rrif2_amt,
@@ -3260,18 +3348,18 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             start_corp_p1=corp_start1, start_corp_p2=corp_start2,
 
             #ending balances
-            end_rrif_p1=p1.rrif_balance, end_rrif_p2=p2.rrif_balance,
-            end_tfsa_p1=p1.tfsa_balance, end_tfsa_p2=p2.tfsa_balance,
-            end_nonreg_p1=p1.nonreg_balance, end_nonreg_p2=p2.nonreg_balance,
+            end_rrif_p1=p1.rrif_balance, end_rrif_p2=p2.rrif_balance if p2 else 0,
+            end_tfsa_p1=p1.tfsa_balance, end_tfsa_p2=p2.tfsa_balance if p2 else 0,
+            end_nonreg_p1=p1.nonreg_balance, end_nonreg_p2=p2.nonreg_balance if p2 else 0,
 
-            end_corp_p1=p1.corporate_balance, end_corp_p2=p2.corporate_balance,
+            end_corp_p1=p1.corporate_balance, end_corp_p2=p2.corporate_balance if p2 else 0,
 
             net_worth_end=(
-                            p1.rrsp_balance + p2.rrsp_balance +
-                            p1.rrif_balance + p2.rrif_balance +
-                            p1.tfsa_balance + p2.tfsa_balance +
-                            p1.nonreg_balance + p2.nonreg_balance +
-                            p1.corporate_balance + p2.corporate_balance
+                            p1.rrsp_balance + (p2.rrsp_balance if p2 else 0) +
+                            p1.rrif_balance + (p2.rrif_balance if p2 else 0) +
+                            p1.tfsa_balance + (p2.tfsa_balance if p2 else 0) +
+                            p1.nonreg_balance + (p2.nonreg_balance if p2 else 0) +
+                            p1.corporate_balance + (p2.corporate_balance if p2 else 0)
                           ),
             
             #TFSA room, contributions, and ACB
@@ -3279,7 +3367,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             contrib_tfsa_p1=c1, contrib_tfsa_p2=c2,
             reinvest_tfsa_p1=tfsa_reinvest_p1, reinvest_tfsa_p2=tfsa_reinvest_p2,
             reinvest_nonreg_p1=0.0, reinvest_nonreg_p2=0.0,  # TODO: Track nonreg reinvestment
-            nonreg_acb_p1=p1.nonreg_acb, nonreg_acb_p2=p2.nonreg_acb,
+            nonreg_acb_p1=p1.nonreg_acb, nonreg_acb_p2=p2.nonreg_acb if p2 else 0,
 
             #Non registered details
             #P1
@@ -3341,9 +3429,18 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         if hh.stop_on_fail and is_fail:
             break
          
-        year += 1; age1 += 1; age2 += 1
-        if age1 > hh.end_age and age2 > hh.end_age:
-            break
+        year += 1
+        age1 += 1
+        if age2 is not None:
+            age2 += 1
+
+        # Check end condition
+        if age2 is not None:
+            if age1 > hh.end_age and age2 > hh.end_age:
+                break
+        else:
+            if age1 > hh.end_age:
+                break
 
     # ===== NEW: Calculate terminal tax at death =====
     if len(rows) > 0:

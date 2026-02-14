@@ -15,12 +15,22 @@ import {
 
 interface SpendingChartProps {
   yearByYear: YearResult[];
+  isSinglePerson?: boolean;
+  personOneName?: string;
+  personTwoName?: string;
 }
 
-export function SpendingChart({ yearByYear }: SpendingChartProps) {
+export function SpendingChart({
+  yearByYear,
+  isSinglePerson = false,
+  personOneName = 'Person 1',
+  personTwoName = 'Person 2'
+}: SpendingChartProps) {
   // Prepare data for chart
   const chartData = yearByYear.map((year) => ({
     year: year.year,
+    age_p1: year.age_p1,
+    age_p2: year.age_p2,
     'Spending Need': year.spending_need,
     'Spending Met': year.spending_met,
     'Gap': year.spending_gap,
@@ -35,11 +45,20 @@ export function SpendingChart({ yearByYear }: SpendingChartProps) {
     }).format(value);
   };
 
+  const p1Name = personOneName.split(' ')[0] || 'P1';
+  const p2Name = personTwoName?.split(' ')[0] || 'P2';
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const dataPoint = chartData.find((p) => p.year === label);
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-          <p className="font-semibold mb-2">Year {label}</p>
+          <p className="font-semibold mb-2">
+            Year {label} {isSinglePerson
+              ? `(Age ${dataPoint?.age_p1})`
+              : `(Ages ${dataPoint?.age_p1} / ${dataPoint?.age_p2})`
+            }
+          </p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
               {entry.name}: {formatCurrency(entry.value)}

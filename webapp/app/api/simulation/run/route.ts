@@ -158,6 +158,8 @@ export async function POST(request: NextRequest) {
       // CRITICAL: Set TFSA contributions to 0 unless explicitly provided
       // Python backend defaults to 7000 which causes spending gaps
       tfsa_contribution_each: body.household_input.tfsa_contribution_each ?? 0,
+      // Pass includePartner flag explicitly
+      include_partner: body.household_input.include_partner ?? (body.household_input.p2 && body.household_input.p2.name ? true : false),
       // Ensure p2 has valid default values when no partner
       p2: body.household_input.p2 && body.household_input.p2.name ? body.household_input.p2 : {
         name: "",

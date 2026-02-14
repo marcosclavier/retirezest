@@ -736,6 +736,7 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '75px' }}>Target</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>CPP</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>OAS</TableHead>
+                    <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>GIS</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '70px' }}>Pension</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>Rental</TableHead>
                     <TableHead className="text-right px-1 py-2 text-[11px]" style={{ color: '#111827', minWidth: '60px' }}>Other</TableHead>
@@ -750,13 +751,18 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
                   {result.five_year_plan.map((year) => (
                     <TableRow key={year.year}>
                       <TableCell className="font-medium text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>{year.year}</TableCell>
-                      <TableCell className="text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>{year.age_p1}/{year.age_p2}</TableCell>
+                      <TableCell className="text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {result.household_input?.include_partner ? `${year.age_p1}/${year.age_p2}` : String(year.age_p1)}
+                      </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>{formatCurrency(year.spending_target)}</TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.cpp_p1 + year.cpp_p2)}
                       </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency(year.oas_p1 + year.oas_p2)}
+                      </TableCell>
+                      <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
+                        {formatCurrency((year.gis_p1 || 0) + (year.gis_p2 || 0))}
                       </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency((year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0))}
@@ -787,6 +793,7 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
                         {formatCurrency(
                           year.cpp_p1 + year.cpp_p2 +
                           year.oas_p1 + year.oas_p2 +
+                          (year.gis_p1 || 0) + (year.gis_p2 || 0) +
                           (year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0) +
                           (year.rental_income_p1 || 0) + (year.rental_income_p2 || 0) +
                           (year.other_income_p1 || 0) + (year.other_income_p2 || 0) +
@@ -818,8 +825,10 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
                 <TableHeader>
                   <TableRow>
                     <TableHead style={{ color: '#111827' }}>Year</TableHead>
-                    <TableHead style={{ color: '#111827' }}>Age P1</TableHead>
-                    <TableHead style={{ color: '#111827' }}>Age P2</TableHead>
+                    <TableHead style={{ color: '#111827' }}>{result.household_input?.include_partner ? 'Age P1' : 'Age'}</TableHead>
+                    {result.household_input?.include_partner && (
+                      <TableHead style={{ color: '#111827' }}>Age P2</TableHead>
+                    )}
                     <TableHead className="text-right" style={{ color: '#111827' }}>Spending Need</TableHead>
                     <TableHead className="text-right" style={{ color: '#111827' }}>Spending Met</TableHead>
                     <TableHead className="text-right" style={{ color: '#111827' }}>Total Tax</TableHead>
@@ -832,7 +841,9 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
                     <TableRow key={year.year}>
                       <TableCell className="font-medium" style={{ color: '#111827' }}>{year.year}</TableCell>
                       <TableCell style={{ color: '#111827' }}>{year.age_p1}</TableCell>
-                      <TableCell style={{ color: '#111827' }}>{year.age_p2}</TableCell>
+                      {result.household_input?.include_partner && (
+                        <TableCell style={{ color: '#111827' }}>{year.age_p2}</TableCell>
+                      )}
                       <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_need)}</TableCell>
                       <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.spending_met)}</TableCell>
                       <TableCell className="text-right" style={{ color: '#111827' }}>{formatCurrency(year.total_tax)}</TableCell>
