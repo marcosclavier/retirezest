@@ -175,7 +175,7 @@ class HouseholdInput(BaseModel):
         description="Province (affects tax rates)"
     )
     start_year: int = Field(default=2025, ge=2024, le=2070, description="Year to start simulation")
-    end_age: int = Field(default=95, ge=85, le=100, description="Age to end simulation")
+    end_age: int = Field(default=95, ge=70, le=100, description="Age to end simulation - flexible based on user preference (minimum 70)")
 
     # Withdrawal strategy
     strategy: Literal[

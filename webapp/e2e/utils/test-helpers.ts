@@ -62,8 +62,7 @@ export async function selectStrategy(page: Page, strategy: WithdrawalStrategy) {
     'rrif-splitting': 'RRIF Splitting',
     'capital-gains-optimized': 'Capital Gains Optimized',
     'tfsa-first': 'TFSA First',
-    'balanced': 'Balanced',
-    'Balanced': 'Balanced (Minimum Only)',  // Capital B version
+    'balanced': 'Balanced (Minimum Only)',
     'rrif-frontload': 'RRIF Front-Load (Tax Smoothing + OAS Protection)',
   };
 

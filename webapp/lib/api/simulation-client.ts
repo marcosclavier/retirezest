@@ -73,6 +73,9 @@ export async function runSimulation(
     // Convert to backend-compatible format
     const backendInput = convertToBackendFormat(householdInput);
 
+    // CRITICAL DEBUG - Log full input being sent
+    console.log('🔍 FULL INPUT DATA:', JSON.stringify(householdInput, null, 2));
+
     // Debug logging
     console.log('🚀 Sending simulation request:', {
       p1_balances: {
@@ -88,7 +91,9 @@ export async function runSimulation(
         rrsp: householdInput.p2.rrsp_balance,
         nonreg: householdInput.p2.nonreg_balance,
         corporate: householdInput.p2.corporate_balance
-      }
+      },
+      include_partner: householdInput.include_partner,
+      strategy: householdInput.strategy
     });
 
     console.log('🌐 Sending fetch request to /api/simulation/run...');
@@ -104,6 +109,20 @@ export async function runSimulation(
     console.log('📦 Parsing JSON response...');
     const data: SimulationResponse = await response.json();
     console.log('✅ JSON parsed successfully:', data.success ? 'SUCCESS' : 'FAILED');
+
+    // CRITICAL DEBUG: Log full response when failure occurs
+    if (!data.success) {
+      console.error('❌ SIMULATION FAILED - Full response:', JSON.stringify(data, null, 2));
+      console.error('❌ Error:', data.error);
+      console.error('❌ Error Details:', data.error_details);
+      console.error('❌ Message:', data.message);
+      if (data.validation_errors && Array.isArray(data.validation_errors)) {
+        console.error('❌ Validation Errors:', data.validation_errors);
+      }
+      if (data.errors && Array.isArray(data.errors)) {
+        console.error('❌ Errors:', data.errors);
+      }
+    }
 
     // Even if HTTP status is not ok, the response body may contain useful error info
     if (!response.ok) {

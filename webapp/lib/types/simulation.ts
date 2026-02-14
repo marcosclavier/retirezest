@@ -103,7 +103,6 @@ export type WithdrawalStrategy =
   | 'capital-gains-optimized'
   | 'tfsa-first'
   | 'balanced'
-  | 'Balanced'  // Capital B for Python backend compatibility
   | 'rrif-frontload';
 
 export interface HouseholdInput {
@@ -679,7 +678,7 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
     description: '✓ BEST for significant RRSP/RRIF balances. Withdraws 15% before OAS/CPP, 8% after. Ensures retirement spending is funded',
   },
   {
-    value: 'Balanced',
+    value: 'balanced',
     label: 'Balanced (Minimum Only)',
     description: '⚠️ WARNING: Only withdraws RRIF minimum. May create spending gaps if RRIF is your main retirement source',
   },

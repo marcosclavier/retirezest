@@ -125,10 +125,13 @@ export function validateHouseholdInput(input: HouseholdInput): ValidationResult 
     });
   }
 
-  if (input.end_age < 85 || input.end_age > 100) {
+  // Allow flexible life expectancy based on user preference
+  // Minimum of 70 or 5 years from start age, whichever is higher
+  const minEndAge = Math.max(70, input.p1.start_age + 5);
+  if (input.end_age < minEndAge || input.end_age > 100) {
     errors.push({
       field: 'end_age',
-      message: 'End age must be between 85 and 100'
+      message: `End age must be between ${minEndAge} and 100 (at least 5 years of simulation)`
     });
   }
 

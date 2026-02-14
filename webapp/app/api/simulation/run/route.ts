@@ -144,6 +144,15 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.json();
 
+    // CRITICAL DEBUG: Log received body structure
+    console.log('📥 RECEIVED BODY STRUCTURE:', {
+      has_household_input: !!body.household_input,
+      has_strategy: !!body.household_input?.strategy,
+      has_p1: !!body.household_input?.p1,
+      has_p2: !!body.household_input?.p2,
+      include_partner: body.household_input?.include_partner
+    });
+
     // Log request (sensitive data excluded for production)
     logger.info('Simulation request started', {
       user: session.email,
@@ -267,7 +276,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: 'Simulation failed',
           error: responseData.error || 'Python API returned an error',
-          error_details: responseData.error_details || `HTTP ${pythonResponse.status}`,
+          error_details: responseData.error_details || responseData.message || `HTTP ${pythonResponse.status}`,
+          validation_errors: responseData.errors || [],
           warnings: [],
         },
         { status: pythonResponse.status }

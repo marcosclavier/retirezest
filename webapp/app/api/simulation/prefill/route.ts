@@ -670,7 +670,9 @@ export async function GET(request: NextRequest) {
       hasPartnerAssets,
       totalNetWorth, // Total including real estate equity
       totalLiquidNetWorth, // Investment accounts only (excludes real estate)
-      lifeExpectancy: user?.lifeExpectancy || 95, // Planning horizon from profile
+      // Use user's life expectancy preference, or default to 95
+      // Allow range from 75-100 to accommodate different planning horizons
+      lifeExpectancy: user?.lifeExpectancy || 95,
       totalAnnualSpending, // Total annual spending from expenses
       hasExpenses: expenses.length > 0,
       recommendedStrategy, // Smart default strategy based on user's profile
