@@ -1,0 +1,81 @@
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { LogoutButton } from '@/components/LogoutButton';
+import { MobileNav } from '@/components/MobileNav';
+import { DesktopNav } from '@/components/DesktopNav';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { VerificationBanner } from '@/components/VerificationBanner';
+import { prisma } from '@/lib/prisma';
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await getSession();
+
+  if (!session) {
+    redirect('/login');
+  }
+
+  // Fetch user to check email verification status
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { email: true, emailVerified: true },
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Email Verification Banner */}
+      {user && !user.emailVerified && (
+        <VerificationBanner userEmail={user.email} />
+      )}
+
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 md:h-[74px]">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Link href="/dashboard" className="flex items-center">
+                <Image
+                  src="/retire-zest-logo.png"
+                  alt="Retire Zest"
+                  width={329}
+                  height={99}
+                  className="h-10 md:h-[66px] w-auto"
+                  priority
+                />
+              </Link>
+              {/* Beta Badge */}
+              <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                BETA
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <span className="hidden sm:inline text-xs md:text-sm text-gray-600 truncate max-w-[120px] md:max-w-none">
+                {session.email}
+              </span>
+              <LogoutButton />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation - Desktop */}
+      <DesktopNav />
+
+      {/* Navigation - Mobile */}
+      <div className="md:hidden relative">
+        <MobileNav />
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumbs />
+        {children}
+      </main>
+    </div>
+  );
+}

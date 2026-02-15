@@ -1,0 +1,554 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  dateOfBirth   DateTime? // Required for simulations: needed to calculate age for tax credits, CPP/OAS eligibility
+  province      String?   // Required for simulations: needed for provincial tax calculations
+  maritalStatus String?
+
+  // Couples planning
+  includePartner     Boolean   @default(false)
+  partnerFirstName   String?
+  partnerLastName    String?
+  partnerDateOfBirth DateTime?
+
+  // Password reset
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
+  // Email verification
+  emailVerified           Boolean   @default(false)
+  emailVerificationToken  String?   @unique
+  emailVerificationExpiry DateTime?
+  verificationEmailSentAt DateTime?
+
+  // Retirement planning
+  targetRetirementAge Int?
+  lifeExpectancy      Int? @default(95)
+
+  // Benefits calculator usage tracking
+  cppCalculatorUsedAt DateTime?
+  oasCalculatorUsedAt DateTime?
+
+  // Simulation feature engagement
+  simulationReadyEmailSentAt DateTime? // When we sent "you're ready" email
+
+  // Onboarding and user journey
+  hasSeenWelcome      Boolean   @default(false)
+  userPath            String? // 'guided' or 'experienced'
+  onboardingCompleted Boolean   @default(false)
+  onboardingStep      Int? // Current step in guided wizard (1-7)
+  completedGuideAt    DateTime? // When they finished the guided setup
+
+  // Report settings (for PDF generation)
+  companyName String? // Optional company name for report branding
+  companyLogo String? // Optional company logo URL for report branding
+
+  // Admin access
+  role String @default("user") // "user" | "admin"
+
+  // Premium subscription fields
+  subscriptionTier      String    @default("free") // "free" | "premium"
+  subscriptionStatus    String    @default("active") // "active" | "cancelled" | "expired"
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripePriceId         String? // Track which price/plan they're on
+
+  // Usage tracking for rate limiting (free tier)
+  earlyRetirementCalcsToday Int       @default(0)
+  earlyRetirementCalcsDate  DateTime?
+
+  // Main simulation daily tracking (free tier: 10/day, premium: unlimited)
+  simulationRunsToday Int       @default(0)
+  simulationRunsDate  DateTime?
+
+  // Free simulation tracking (for unverified users - 3 lifetime before email verification)
+  freeSimulationsUsed Int @default(0) // Simulations run before email verification
+
+  // Email preferences and unsubscribe tracking
+  marketingEmailsEnabled Boolean   @default(true) // Product updates, tips, surveys
+  feedbackEmailsEnabled  Boolean   @default(true) // Feedback requests, user research
+  unsubscribedAt         DateTime? // When user unsubscribed from all emails
+  unsubscribeToken       String?   @unique // Token for one-click unsubscribe
+
+  // Account deletion (soft delete with 30-day grace period)
+  deletedAt           DateTime? // When account was marked for deletion
+  scheduledDeletionAt DateTime? // When permanent deletion will occur (deletedAt + 30 days)
+  deletionReason      String? // Optional reason provided by user
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incomeSources            Income[]
+  assets                   Asset[]
+  expenses                 Expense[]
+  debts                    Debt[]
+  scenarios                Scenario[]
+  projections              Projection[]
+  simulationRuns           SimulationRun[]
+  auditLogs                AuditLog[]
+  userFeedback             UserFeedback[]
+  savedSimulationScenarios SavedSimulationScenario[]
+  realEstateAssets         RealEstateAsset[]
+
+  @@index([email])
+  @@index([createdAt])
+  @@index([resetToken])
+  @@index([emailVerificationToken])
+  @@index([unsubscribeToken])
+  @@index([deletedAt])
+  @@index([scheduledDeletionAt])
+  @@index([role])
+  @@index([subscriptionTier])
+  @@index([subscriptionStatus])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+model Income {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             String // employment, cpp, oas, pension, rental, business, investment, other
+  description      String?
+  amount           Float
+  frequency        String // monthly, annual, biweekly, weekly
+  startAge         Int? // Age when income starts (for CPP, OAS, pension)
+  endAge           Int? // Age when income ends (for employment or temporary income streams)
+  owner            String?  @default("person1") // person1, person2, joint - for couples planning
+  notes            String?
+  isTaxable        Boolean  @default(true)
+  inflationIndexed Boolean  @default(true) // Whether income adjusts for inflation annually (most pensions, CPP, OAS are indexed)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, owner])
+  @@index([createdAt])
+}
+
+model Asset {
+  id               String  @id @default(uuid())
+  userId           String
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             String // rrsp, rrif, tfsa, lira, nonreg, corporate, savings, gic, property, other
+  name             String // Account name
+  description      String?
+  balance          Float // Current balance/value
+  currentValue     Float? // Legacy field, use balance instead
+  contributionRoom Float? // For RRSP/TFSA
+  returnRate       Float? // Expected annual return rate percentage
+  owner            String? @default("person1") // person1, person2, joint - for couples planning
+  notes            String?
+
+  // Early RRIF/RRSP withdrawal customization (applies to RRSP/RRIF types)
+  enableEarlyRrifWithdrawal Boolean? @default(false)
+  earlyRrifStartAge         Int? // Age to start early withdrawals
+  earlyRrifEndAge           Int? // Age to end early withdrawals (must be < 71)
+  earlyRrifAnnualAmount     Float? // Fixed annual withdrawal amount
+  earlyRrifPercentage       Float? // Or percentage of balance (0-100)
+  earlyRrifMode             String? // 'fixed' or 'percentage'
+
+  // GIC-specific fields (only populated when type="gic")
+  gicMaturityDate         DateTime? // When GIC matures
+  gicTermMonths           Int? // Original term (12, 24, 36, 60, etc.)
+  gicInterestRate         Float? // Fixed interest rate (e.g., 4.5 for 4.5%)
+  gicCompoundingFrequency String? // "annual", "semi-annual", "monthly", "at-maturity"
+  gicReinvestStrategy     String? // "auto-renew", "cash-out", "transfer-to-tfsa", "transfer-to-nonreg"
+  gicIssuer               String? // Bank/institution name (e.g., "TD Bank", "Tangerine")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, owner])
+  @@index([createdAt])
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String // housing, utilities, food, transportation, healthcare, insurance, entertainment, travel, shopping, subscriptions, gifts, other
+  description String?
+  amount      Float
+  frequency   String // monthly, annual, quarterly, weekly, one-time
+  essential   Boolean  @default(true) // Cannot be reduced
+  isEssential Boolean? // Legacy field, use essential instead
+  notes       String?
+
+  // New fields for one-time/major planned expenses
+  isRecurring Boolean @default(true) // false for one-time expenses
+  plannedYear Int? // Specific year for one-time expense (e.g., 2027)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, category])
+  @@index([userId, essential])
+  @@index([userId, isRecurring])
+  @@index([userId, plannedYear])
+  @@index([createdAt])
+}
+
+model Debt {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             String // mortgage, car_loan, student_loan, credit_card, line_of_credit, personal_loan, other
+  creditor         String // Lender name
+  description      String?
+  balance          Float // Outstanding balance
+  currentBalance   Float? // Legacy field, use balance instead
+  interestRate     Float // Annual interest rate percentage
+  minimumPayment   Float // Minimum payment amount
+  monthlyPayment   Float? // Legacy field, use minimumPayment instead
+  paymentFrequency String   @default("monthly") // monthly, biweekly, weekly
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, type])
+  @@index([createdAt])
+}
+
+model Scenario {
+  id          String  @id @default(uuid())
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+
+  // Personal info
+  currentAge     Int
+  retirementAge  Int
+  lifeExpectancy Int    @default(95)
+  province       String @default("ON")
+
+  // Current assets
+  rrspBalance     Float @default(0)
+  tfsaBalance     Float @default(0)
+  nonRegBalance   Float @default(0)
+  liraBalance     Float @default(0)
+  realEstateValue Float @default(0)
+
+  // Income
+  employmentIncome Float @default(0)
+  pensionIncome    Float @default(0)
+  rentalIncome     Float @default(0)
+  otherIncome      Float @default(0)
+
+  // CPP/OAS
+  cppStartAge             Int   @default(65)
+  oasStartAge             Int   @default(65)
+  averageCareerIncome     Float @default(0)
+  yearsOfCPPContributions Int   @default(40)
+  yearsInCanada           Int   @default(40)
+
+  // Expenses
+  annualExpenses       Float
+  expenseInflationRate Float @default(2.0)
+
+  // Investment assumptions
+  investmentReturnRate Float @default(5.0)
+  inflationRate        Float @default(2.0)
+
+  // RRIF rules
+  rrspToRrifAge Int @default(71)
+
+  // Withdrawal strategy
+  withdrawalStrategy String @default("RRIF->Corp->NonReg->TFSA") // NonReg->RRIF->Corp->TFSA, RRIF->Corp->NonReg->TFSA, Corp->RRIF->NonReg->TFSA, Hybrid
+
+  // Projection results (JSON)
+  projectionResults String? // Cached projection results
+
+  isBaseline Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  projections Projection[]
+
+  @@index([userId])
+  @@index([userId, isBaseline])
+  @@index([createdAt])
+}
+
+model Projection {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenarioId          String
+  scenario            Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  retirementAge       Int
+  calculationDate     DateTime @default(now())
+  results             String // JSON string of yearly projections
+  successProbability  Float?
+  totalLifetimeIncome Float?
+  estateValue         Float?
+  createdAt           DateTime @default(now())
+
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([userId, scenarioId])
+  @@index([createdAt])
+  @@index([calculationDate])
+}
+
+model SimulationRun {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Input parameters snapshot
+  strategy        String // Withdrawal strategy used
+  province        String // Province for tax calculations
+  startAge        Int // Starting age of person 1
+  endAge          Int // Life expectancy used
+  includePartner  Boolean @default(false)
+  partnerStartAge Int? // Starting age of person 2 (if applicable)
+
+  // Spending parameters
+  spendingGoGo   Float? // Annual spending in go-go phase
+  spendingSlowGo Float? // Annual spending in slow-go phase
+  spendingNoGo   Float? // Annual spending in no-go phase
+
+  // Key output metrics
+  healthScore    Float? // Overall health score (0-100)
+  healthRating   String? // Rating: Excellent, Good, Fair, Poor
+  successRate    Float? // Percentage of years fully funded
+  yearsFunded    Int? // Number of years fully funded
+  yearsSimulated Int? // Total years in simulation
+
+  // Financial outcomes
+  totalTaxPaid     Float? // Total tax paid over lifetime
+  avgTaxRate       Float? // Average effective tax rate
+  finalEstate      Float? // Final estate value (after tax)
+  finalEstateGross Float? // Final estate value (before tax)
+
+  // Government benefits
+  totalCPP      Float? // Total CPP received
+  totalOAS      Float? // Total OAS received
+  totalGIS      Float? // Total GIS received
+  totalBenefits Float? // Total government benefits
+
+  // Withdrawals by source
+  totalRRIFWithdrawn   Float?
+  totalNonRegWithdrawn Float?
+  totalTFSAWithdrawn   Float?
+  totalCorpWithdrawn   Float?
+
+  // Asset balances (initial)
+  initialTFSA     Float?
+  initialRRSP     Float?
+  initialRRIF     Float?
+  initialNonReg   Float?
+  initialCorp     Float?
+  initialNetWorth Float?
+
+  // Full results (optional - for "view last simulation" feature)
+  inputData   String? // JSON of complete HouseholdInput
+  fullResults String? // JSON of complete SimulationResponse (can be large)
+
+  // Quick-start tracking
+  isQuickStart Boolean @default(false) // Whether this was a quick-start simulation
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([strategy])
+  @@index([healthScore])
+}
+
+// Audit log for tracking important user actions (GDPR compliance)
+model AuditLog {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Action details
+  action      String // DATA_EXPORT, ACCOUNT_DELETE, ACCOUNT_DELETE_CANCEL, LOGIN, LOGOUT, etc.
+  description String? // Optional human-readable description
+  metadata    String? // JSON string for additional context (e.g., export format, deletion reason)
+
+  // Request context
+  ipAddress String? // IP address of the request
+  userAgent String? // Browser/device information
+
+  // Result
+  success      Boolean @default(true)
+  errorMessage String? // If success=false, what went wrong
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// User feedback for product improvement and satisfaction tracking
+model UserFeedback {
+  id     String  @id @default(uuid())
+  userId String? // Nullable to allow anonymous feedback
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Feedback type and context
+  feedbackType   String // "post_simulation", "dashboard", "improvement_suggestion", "feature_request", "general"
+  triggerContext String? // What triggered the feedback (e.g., "after_first_simulation", "dashboard_panel")
+
+  // Satisfaction metrics
+  satisfactionScore Int? // 1-5 scale: Is RetireZest suitable for your needs?
+  npsScore          Int? // 0-10 scale: Would you recommend RetireZest?
+  helpfulnessScore  Int? // 1-5 scale: Did the simulation help you?
+
+  // Structured feedback
+  didSimulationHelp String? // "yes", "somewhat", "no" (for post-simulation)
+  missingFeatures   String? // JSON array of feature checkboxes selected
+  improvementAreas  String? // JSON array of improvement areas
+
+  // Open-ended responses
+  whatWouldMakeUseful   String? // Open text: What would make this more useful?
+  whatIsConfusing       String? // Open text: What's confusing?
+  improvementSuggestion String? // Open text: General improvement suggestions
+  additionalComments    String? // Open text: Any other comments
+
+  // Context data (auto-captured)
+  pageUrl     String? // Page where feedback was given
+  referrerUrl String? // Previous page
+  userAgent   String? // Browser/device info
+  sessionId   String? // Session identifier
+
+  // User segment data (for analysis)
+  userAge          Int? // User's age at time of feedback
+  userProvince     String? // Province
+  includesPartner  Boolean? // Couples planning?
+  subscriptionTier String? // "free" or "premium"
+  simulationCount  Int? // How many simulations had they run?
+  daysSinceSignup  Int? // Days since account creation
+
+  // Response tracking
+  responded     Boolean   @default(false)
+  respondedAt   DateTime?
+  respondedBy   String? // Admin user who responded
+  responseNotes String? // Internal notes about response
+
+  // Priority and status
+  priority Int     @default(3) // 1-5 scale (auto-calculated)
+  status   String  @default("new") // "new", "reviewed", "actioned", "closed"
+  tags     String? // JSON array of tags for categorization
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([feedbackType])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([satisfactionScore])
+  @@index([npsScore])
+  @@map("user_feedback")
+}
+
+// Saved simulation scenarios for what-if analysis
+model SavedSimulationScenario {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Scenario metadata
+  name         String // e.g., "Delay CPP to 70", "Reduce Spending 20%"
+  description  String? // Optional detailed description
+  scenarioType String  @default("custom") // "baseline", "quick_what_if", "custom"
+
+  // Complete simulation inputs snapshot (JSON)
+  inputData String // HouseholdInput as JSON
+
+  // Simulation results snapshot (JSON) - only if scenario has been run
+  results    String? // SimulationResponse as JSON
+  hasResults Boolean @default(false)
+
+  // Metadata
+  isFavorite Boolean @default(false)
+  tags       String? // JSON array of tags for categorization
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, scenarioType])
+  @@index([userId, isFavorite])
+  @@index([createdAt])
+  @@map("saved_simulation_scenarios")
+}
+
+model RealEstateAsset {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Property identification
+  propertyType String // "principal_residence", "rental", "vacation", "commercial"
+  address      String?
+  city         String?
+  province     String?
+
+  // Financial details
+  purchasePrice   Float
+  purchaseDate    DateTime
+  currentValue    Float
+  mortgageBalance Float    @default(0)
+
+  // Rental property specifics
+  monthlyRentalIncome Float @default(0)
+  monthlyExpenses     Float @default(0)
+
+  // Ownership
+  owner            String @default("person1") // "person1" | "person2" | "joint"
+  ownershipPercent Float  @default(100)
+
+  // Principal residence designation
+  isPrincipalResidence    Boolean @default(false)
+  principalResidenceYears Float   @default(0)
+
+  // Retirement strategy
+  planToSell       Boolean @default(false)
+  plannedSaleYear  Int?
+  plannedSalePrice Float?
+  downsizeTo       Float? // Amount to purchase smaller property
+
+  // Metadata
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([propertyType])
+  @@index([isPrincipalResidence])
+  @@map("real_estate_assets")
+}

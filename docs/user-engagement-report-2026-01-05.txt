@@ -1,0 +1,902 @@
+🔍 Analyzing user engagement and data completeness...
+
+📊 USER ENGAGEMENT REPORT
+========================================================================================================================
+
+SUMMARY STATISTICS
+------------------------------------------------------------------------------------------------------------------------
+Total Users:              36
+Email Verified:           13 (36%)
+Onboarding Completed:     3 (8%)
+Ready to Simulate:        15 (42%)
+Active Simulators:        5 (14%)
+Avg Profile Completeness: 73%
+
+DATA COMPLETENESS BREAKDOWN
+------------------------------------------------------------------------------------------------------------------------
+Personal Info:       26 (72%)
+Assets:              23 (64%)
+Income:              23 (64%)
+Expenses:            20 (56%)
+Retirement Goals:    36 (100%)
+
+SIMULATION ACTIVITY
+------------------------------------------------------------------------------------------------------------------------
+0 simulations:       31 (86%)
+1 simulation:        1 (3%)
+2-5 simulations:     2 (6%)
+6+ simulations:      2 (6%)
+
+DETAILED USER LIST
+------------------------------------------------------------------------------------------------------------------------
+Email                              Name                     Verified  Complete  Ready   Sims  Registered
+------------------------------------------------------------------------------------------------------------------------
+floriankoud@hotmail.com            Florian Koudjonou        ✓         30%       ✗       0     1d ago
+etienne.lesage@gmail.com           Etienne LeSage           ✓         100%      ✓       4     1d ago
+rjweston77@gmail.com               r w                      ✓         100%      ✓       5     1d ago
+darrenchadwick@shaw.ca             Darren Chadwick          ✗         80%       ✗       0     1d ago
+fresh.ship4097@mailforce.link      Testy McTesterson        ✓         95%       ✗       0     3d ago
+dull.line9747@mailforce.link       Testy McTesterson        ✓         80%       ✗       0     3d ago
+jecifah635@cameltok.com            John Smith               ✗         35%       ✗       0     3d ago
+dogpolisher@gmail.com              Dog Polisher             ✓         100%      ✓       0     3d ago
+uriah@mccann.one                   Uriah McCann             ✓         100%      ✓       0     4d ago
+dholaney@gmail.com                 Denise O'Laney           ✗         95%       ✗       0     4d ago
+lmcolty@hotmail.com                Oliver Tyson             ✓         100%      ✓       0     5d ago
+anoopat393@gmail.com               Anoop Tharian            ✓         100%      ✓       0     5d ago
+melanerivard@yahoo.ca              Mélanie Rivard           ✗         95%       ✗       0     5d ago
+mclavier@peakgroup.com             Marcos Clavier           ✗         30%       ✗       0     6d ago
+pcollinshome001@gmail.com          Paul Collins             ✗         40%       ✗       0     6d ago
+test-resend@example.com            Test Resend              ✗         30%       ✗       0     6d ago
+test-verify3@example.com           Test User                ✓         50%       ✗       0     6d ago
+louise_delorme@outlook.com         Louise Delorme           ✓         100%      ✓       1     6d ago
+staceyward@shaw.ca                 Stacey Ward              ✗         40%       ✗       0     7d ago
+kgriffin2256@gmail.com             Kevin Griffin            ✗         80%       ✗       0     7d ago
+nickbrow120003@gmail.com           Nicholas Brown           ✗         30%       ✗       0     7d ago
+sergauthier.sg@gmail.com           Serge Gauthier           ✗         30%       ✗       0     8d ago
+leannelabercane@hotmail.com        Leanne Labercane         ✗         65%       ✓       0     8d ago
+bartonchan29@gmail.com             Barton Chan              ✗         100%      ✓       0     9d ago
+turkishahorros@gmail.com           Turkish Ahorros          ✗         30%       ✗       0     10d ago
+erin.fedak@gmail.com               Erin Fedak               ✗         100%      ✓       0     11d ago
+helenmacsanchez@yahoo.ca           Helen Sanchez            ✗         30%       ✗       0     12d ago
+chuckcollins1@hotmail.com          Chuck Collins            ✗         100%      ✓       0     13d ago
+jaswinderspandher@gmail.com        Jas Pandher              ✗         100%      ✓       0     14d ago
+elaineclarke@shaw.ca               Elaine Clarke            ✗         100%      ✓       0     15d ago
+peter.duggan999@gmail.com          P D                      ✗         92%       ✗       0     17d ago
+markharrison@rogers.com            Mark Harrison            ✗         90%       ✗       0     18d ago
+juanclavierb@gmail.com             Rafael Canelon           ✓         100%      ✓       95    20d ago
+highflier88@gmail.com              Marcos Clavier           ✗         40%       ✗       0     49d ago
+jrcb@hotmail.com                   Juan Clavier             ✓         100%      ✓       23    50d ago
+marcos.clavier33@gmail.com         Marcosq Clavier          ✗         45%       ✗       0     50d ago
+
+DETAILED USER DATA (JSON)
+------------------------------------------------------------------------------------------------------------------------
+[
+  {
+    "email": "floriankoud@hotmail.com",
+    "name": "Florian Koudjonou",
+    "registeredAt": "2026-01-04T15:01:44.449Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "etienne.lesage@gmail.com",
+    "name": "Etienne LeSage",
+    "registeredAt": "2026-01-04T04:30:22.101Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 4,
+      "lastSimulationAt": "2026-01-04T15:16:32.001Z"
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "rjweston77@gmail.com",
+    "name": "r w",
+    "registeredAt": "2026-01-03T21:00:24.300Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 5,
+      "lastSimulationAt": "2026-01-03T21:36:33.109Z"
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "darrenchadwick@shaw.ca",
+    "name": "Darren Chadwick",
+    "registeredAt": "2026-01-03T18:21:21.397Z",
+    "emailVerified": false,
+    "onboardingCompleted": true,
+    "profileCompleteness": 80,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "fresh.ship4097@mailforce.link",
+    "name": "Testy McTesterson",
+    "registeredAt": "2026-01-01T19:56:43.202Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 95,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "dull.line9747@mailforce.link",
+    "name": "Testy McTesterson",
+    "registeredAt": "2026-01-01T19:42:55.713Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 80,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "jecifah635@cameltok.com",
+    "name": "John Smith",
+    "registeredAt": "2026-01-01T18:59:10.180Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 35,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "dogpolisher@gmail.com",
+    "name": "Dog Polisher",
+    "registeredAt": "2026-01-01T18:38:52.896Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "uriah@mccann.one",
+    "name": "Uriah McCann",
+    "registeredAt": "2026-01-01T14:47:29.478Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "dholaney@gmail.com",
+    "name": "Denise O'Laney",
+    "registeredAt": "2025-12-31T23:22:41.479Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 95,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "lmcolty@hotmail.com",
+    "name": "Oliver Tyson",
+    "registeredAt": "2025-12-31T14:36:19.073Z",
+    "emailVerified": true,
+    "onboardingCompleted": true,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "anoopat393@gmail.com",
+    "name": "Anoop Tharian",
+    "registeredAt": "2025-12-31T05:35:59.857Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "melanerivard@yahoo.ca",
+    "name": "Mélanie Rivard",
+    "registeredAt": "2025-12-30T18:39:14.844Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 95,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "mclavier@peakgroup.com",
+    "name": "Marcos Clavier",
+    "registeredAt": "2025-12-30T15:28:01.556Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "pcollinshome001@gmail.com",
+    "name": "Paul Collins",
+    "registeredAt": "2025-12-29T18:16:00.261Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 40,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "test-resend@example.com",
+    "name": "Test Resend",
+    "registeredAt": "2025-12-29T17:38:34.603Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "test-verify3@example.com",
+    "name": "Test User",
+    "registeredAt": "2025-12-29T17:33:15.100Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 50,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": true,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "louise_delorme@outlook.com",
+    "name": "Louise Delorme",
+    "registeredAt": "2025-12-29T16:32:41.942Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 1,
+      "lastSimulationAt": "2026-01-04T13:36:04.077Z"
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "staceyward@shaw.ca",
+    "name": "Stacey Ward",
+    "registeredAt": "2025-12-29T06:14:13.203Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 40,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "kgriffin2256@gmail.com",
+    "name": "Kevin Griffin",
+    "registeredAt": "2025-12-28T23:45:28.554Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 80,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "nickbrow120003@gmail.com",
+    "name": "Nicholas Brown",
+    "registeredAt": "2025-12-28T21:10:22.585Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "sergauthier.sg@gmail.com",
+    "name": "Serge Gauthier",
+    "registeredAt": "2025-12-28T15:51:31.804Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "leannelabercane@hotmail.com",
+    "name": "Leanne Labercane",
+    "registeredAt": "2025-12-28T02:12:33.003Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 65,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "bartonchan29@gmail.com",
+    "name": "Barton Chan",
+    "registeredAt": "2025-12-27T03:24:26.664Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "turkishahorros@gmail.com",
+    "name": "Turkish Ahorros",
+    "registeredAt": "2025-12-26T14:50:40.961Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "erin.fedak@gmail.com",
+    "name": "Erin Fedak",
+    "registeredAt": "2025-12-25T14:54:23.353Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "helenmacsanchez@yahoo.ca",
+    "name": "Helen Sanchez",
+    "registeredAt": "2025-12-23T18:54:43.883Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 30,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "chuckcollins1@hotmail.com",
+    "name": "Chuck Collins",
+    "registeredAt": "2025-12-22T16:40:34.014Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "jaswinderspandher@gmail.com",
+    "name": "Jas Pandher",
+    "registeredAt": "2025-12-21T21:29:11.113Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "elaineclarke@shaw.ca",
+    "name": "Elaine Clarke",
+    "registeredAt": "2025-12-21T01:15:53.780Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "peter.duggan999@gmail.com",
+    "name": "P D",
+    "registeredAt": "2025-12-19T06:02:02.537Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 92,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "markharrison@rogers.com",
+    "name": "Mark Harrison",
+    "registeredAt": "2025-12-17T19:32:55.885Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 90,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "juanclavierb@gmail.com",
+    "name": "Rafael Canelon",
+    "registeredAt": "2025-12-15T16:36:22.474Z",
+    "emailVerified": true,
+    "onboardingCompleted": false,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 95,
+      "lastSimulationAt": "2026-01-02T21:33:29.710Z"
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "highflier88@gmail.com",
+    "name": "Marcos Clavier",
+    "registeredAt": "2025-11-16T16:28:16.461Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 40,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": false,
+      "income": false,
+      "expenses": false,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  },
+  {
+    "email": "jrcb@hotmail.com",
+    "name": "Juan Clavier",
+    "registeredAt": "2025-11-16T15:59:00.285Z",
+    "emailVerified": true,
+    "onboardingCompleted": true,
+    "profileCompleteness": 100,
+    "dataBreakdown": {
+      "personalInfo": true,
+      "assets": true,
+      "income": true,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 23,
+      "lastSimulationAt": "2026-01-05T15:12:42.640Z"
+    },
+    "status": {
+      "hasMinimalData": true,
+      "readyToSimulate": true
+    }
+  },
+  {
+    "email": "marcos.clavier33@gmail.com",
+    "name": "Marcosq Clavier",
+    "registeredAt": "2025-11-15T17:52:20.870Z",
+    "emailVerified": false,
+    "onboardingCompleted": false,
+    "profileCompleteness": 45,
+    "dataBreakdown": {
+      "personalInfo": false,
+      "assets": false,
+      "income": false,
+      "expenses": true,
+      "retirementGoals": true
+    },
+    "activity": {
+      "totalSimulations": 0,
+      "lastSimulationAt": null
+    },
+    "status": {
+      "hasMinimalData": false,
+      "readyToSimulate": false
+    }
+  }
+]

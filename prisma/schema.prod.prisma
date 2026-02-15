@@ -1,0 +1,418 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-prod"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://neondb_owner:npg_KEgfJlvIM27u@ep-muddy-band-adte7s70.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
+}
+
+model User {
+  id                         String                       @id @default(uuid())
+  email                      String                       @unique
+  passwordHash               String
+  firstName                  String?
+  lastName                   String?
+  dateOfBirth                DateTime?
+  province                   String?
+  maritalStatus              String?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  includePartner             Boolean                      @default(false)
+  partnerDateOfBirth         DateTime?
+  partnerFirstName           String?
+  partnerLastName            String?
+  resetToken                 String?                      @unique
+  resetTokenExpiry           DateTime?
+  cppCalculatorUsedAt        DateTime?
+  lifeExpectancy             Int?                         @default(95)
+  oasCalculatorUsedAt        DateTime?
+  targetRetirementAge        Int?
+  completedGuideAt           DateTime?
+  hasSeenWelcome             Boolean                      @default(false)
+  onboardingCompleted        Boolean                      @default(false)
+  onboardingStep             Int?
+  userPath                   String?
+  companyLogo                String?
+  companyName                String?
+  emailVerificationExpiry    DateTime?
+  emailVerificationToken     String?                      @unique
+  emailVerified              Boolean                      @default(false)
+  verificationEmailSentAt    DateTime?
+  deletedAt                  DateTime?
+  deletionReason             String?
+  scheduledDeletionAt        DateTime?
+  simulationReadyEmailSentAt DateTime?
+  earlyRetirementCalcsDate   DateTime?
+  earlyRetirementCalcsToday  Int                          @default(0)
+  stripeCustomerId           String?                      @unique
+  stripePriceId              String?
+  stripeSubscriptionId       String?                      @unique
+  subscriptionEndDate        DateTime?
+  subscriptionStartDate      DateTime?
+  subscriptionStatus         String                       @default("active")
+  subscriptionTier           String                       @default("free")
+  role                       String                       @default("user")
+  freeSimulationsUsed        Int                          @default(0)
+  simulationRunsToday        Int                          @default(0)
+  simulationRunsDate         DateTime?
+  marketingEmailsEnabled     Boolean                      @default(true)
+  feedbackEmailsEnabled      Boolean                      @default(true)
+  unsubscribedAt             DateTime?
+  unsubscribeToken           String?                      @unique
+  assets                     Asset[]
+  debts                      Debt[]
+  expenses                   Expense[]
+  incomes                    Income[]
+  projections                Projection[]
+  scenarios                  Scenario[]
+  simulationRuns             SimulationRun[]
+  audit_logs                 audit_logs[]
+  real_estate_assets         real_estate_assets[]
+  saved_simulation_scenarios saved_simulation_scenarios[]
+  user_feedback              user_feedback[]
+
+  @@index([email])
+  @@index([stripeCustomerId])
+  @@index([resetToken])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([emailVerificationToken])
+  @@index([role])
+  @@index([scheduledDeletionAt])
+  @@index([stripeSubscriptionId])
+  @@index([subscriptionStatus])
+  @@index([subscriptionTier])
+  @@index([unsubscribeToken])
+}
+
+model Income {
+  id               String   @id @default(uuid())
+  userId           String
+  type             String
+  description      String?
+  amount           Float
+  frequency        String
+  isTaxable        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  notes            String?
+  startAge         Int?
+  owner            String?  @default("person1")
+  inflationIndexed Boolean  @default(true)
+  endAge           Int?
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, owner])
+  @@index([userId, type])
+}
+
+model Asset {
+  id                        String    @id @default(uuid())
+  userId                    String
+  type                      String
+  description               String?
+  currentValue              Float?
+  contributionRoom          Float?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  balance                   Float
+  name                      String
+  notes                     String?
+  returnRate                Float?
+  owner                     String?   @default("person1")
+  earlyRrifAnnualAmount     Float?
+  earlyRrifEndAge           Int?
+  earlyRrifMode             String?
+  earlyRrifPercentage       Float?
+  earlyRrifStartAge         Int?
+  enableEarlyRrifWithdrawal Boolean?  @default(false)
+  gicCompoundingFrequency   String?
+  gicInterestRate           Float?
+  gicIssuer                 String?
+  gicMaturityDate           DateTime?
+  gicReinvestStrategy       String?
+  gicTermMonths             Int?
+  user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, owner])
+  @@index([userId, type])
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  userId      String
+  category    String
+  description String?
+  amount      Float
+  frequency   String
+  isEssential Boolean?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  essential   Boolean  @default(true)
+  notes       String?
+  isRecurring Boolean  @default(true)
+  plannedYear Int?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, category])
+  @@index([userId, essential])
+  @@index([userId, isRecurring])
+  @@index([userId, plannedYear])
+}
+
+model Debt {
+  id               String   @id @default(uuid())
+  userId           String
+  type             String
+  description      String?
+  currentBalance   Float?
+  interestRate     Float
+  monthlyPayment   Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  balance          Float
+  creditor         String
+  minimumPayment   Float
+  notes            String?
+  paymentFrequency String   @default("monthly")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, type])
+}
+
+model Scenario {
+  id                      String       @id @default(uuid())
+  userId                  String
+  name                    String
+  description             String?
+  currentAge              Int
+  retirementAge           Int
+  lifeExpectancy          Int          @default(95)
+  province                String       @default("ON")
+  rrspBalance             Float        @default(0)
+  tfsaBalance             Float        @default(0)
+  nonRegBalance           Float        @default(0)
+  realEstateValue         Float        @default(0)
+  employmentIncome        Float        @default(0)
+  pensionIncome           Float        @default(0)
+  rentalIncome            Float        @default(0)
+  otherIncome             Float        @default(0)
+  cppStartAge             Int          @default(65)
+  oasStartAge             Int          @default(65)
+  averageCareerIncome     Float        @default(0)
+  yearsOfCPPContributions Int          @default(40)
+  yearsInCanada           Int          @default(40)
+  annualExpenses          Float
+  expenseInflationRate    Float        @default(2.0)
+  investmentReturnRate    Float        @default(5.0)
+  inflationRate           Float        @default(2.0)
+  rrspToRrifAge           Int          @default(71)
+  projectionResults       String?
+  isBaseline              Boolean      @default(false)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  withdrawalStrategy      String       @default("RRIF->Corp->NonReg->TFSA")
+  liraBalance             Float        @default(0)
+  projections             Projection[]
+  user                    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, isBaseline])
+}
+
+model Projection {
+  id                  String   @id @default(uuid())
+  userId              String
+  scenarioId          String
+  retirementAge       Int
+  calculationDate     DateTime @default(now())
+  results             String
+  successProbability  Float?
+  totalLifetimeIncome Float?
+  estateValue         Float?
+  createdAt           DateTime @default(now())
+  scenario            Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([calculationDate])
+  @@index([createdAt])
+  @@index([userId, scenarioId])
+}
+
+model SimulationRun {
+  id                   String   @id @default(uuid())
+  userId               String
+  strategy             String
+  province             String
+  startAge             Int
+  endAge               Int
+  includePartner       Boolean  @default(false)
+  partnerStartAge      Int?
+  spendingGoGo         Float?
+  spendingSlowGo       Float?
+  spendingNoGo         Float?
+  healthScore          Float?
+  healthRating         String?
+  successRate          Float?
+  yearsFunded          Int?
+  yearsSimulated       Int?
+  totalTaxPaid         Float?
+  avgTaxRate           Float?
+  finalEstate          Float?
+  finalEstateGross     Float?
+  totalCPP             Float?
+  totalOAS             Float?
+  totalGIS             Float?
+  totalBenefits        Float?
+  totalRRIFWithdrawn   Float?
+  totalNonRegWithdrawn Float?
+  totalTFSAWithdrawn   Float?
+  totalCorpWithdrawn   Float?
+  initialTFSA          Float?
+  initialRRSP          Float?
+  initialRRIF          Float?
+  initialNonReg        Float?
+  initialCorp          Float?
+  initialNetWorth      Float?
+  inputData            String?
+  fullResults          String?
+  createdAt            DateTime @default(now())
+  isQuickStart         Boolean  @default(false)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([healthScore])
+  @@index([strategy])
+  @@index([userId, createdAt])
+}
+
+model audit_logs {
+  id           String   @id
+  userId       String
+  action       String
+  description  String?
+  metadata     String?
+  ipAddress    String?
+  userAgent    String?
+  success      Boolean  @default(true)
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([userId])
+}
+
+model real_estate_assets {
+  id                      String   @id
+  userId                  String
+  propertyType            String
+  address                 String?
+  city                    String?
+  province                String?
+  purchasePrice           Float
+  purchaseDate            DateTime
+  currentValue            Float
+  mortgageBalance         Float    @default(0)
+  monthlyRentalIncome     Float    @default(0)
+  monthlyExpenses         Float    @default(0)
+  owner                   String   @default("person1")
+  ownershipPercent        Float    @default(100)
+  isPrincipalResidence    Boolean  @default(false)
+  principalResidenceYears Float    @default(0)
+  planToSell              Boolean  @default(false)
+  plannedSaleYear         Int?
+  plannedSalePrice        Float?
+  downsizeTo              Float?
+  notes                   String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime
+  User                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isPrincipalResidence])
+  @@index([propertyType])
+  @@index([userId])
+}
+
+model saved_simulation_scenarios {
+  id           String   @id
+  userId       String
+  name         String
+  description  String?
+  scenarioType String   @default("custom")
+  inputData    String
+  results      String?
+  hasResults   Boolean  @default(false)
+  isFavorite   Boolean  @default(false)
+  tags         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([userId])
+  @@index([userId, isFavorite])
+  @@index([userId, scenarioType])
+}
+
+model user_feedback {
+  id                    String    @id
+  userId                String?
+  feedbackType          String
+  triggerContext        String?
+  satisfactionScore     Int?
+  npsScore              Int?
+  helpfulnessScore      Int?
+  didSimulationHelp     String?
+  missingFeatures       String?
+  improvementAreas      String?
+  whatWouldMakeUseful   String?
+  whatIsConfusing       String?
+  improvementSuggestion String?
+  additionalComments    String?
+  pageUrl               String?
+  referrerUrl           String?
+  userAgent             String?
+  sessionId             String?
+  userAge               Int?
+  userProvince          String?
+  includesPartner       Boolean?
+  subscriptionTier      String?
+  simulationCount       Int?
+  daysSinceSignup       Int?
+  responded             Boolean   @default(false)
+  respondedAt           DateTime?
+  respondedBy           String?
+  responseNotes         String?
+  priority              Int       @default(3)
+  status                String    @default("new")
+  tags                  String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime
+  User                  User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([feedbackType])
+  @@index([npsScore])
+  @@index([priority])
+  @@index([satisfactionScore])
+  @@index([status])
+  @@index([userId])
+}

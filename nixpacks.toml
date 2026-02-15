@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ['nodejs_20', 'openssl']
+
+[phases.install]
+cmds = [
+  'npm ci --legacy-peer-deps && npx prisma generate && npx prisma db push --accept-data-loss'
+]
+
+[phases.build]
+cmds = [
+  'npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/'
+]
+
+[start]
+cmd = 'bash start-server.sh'
