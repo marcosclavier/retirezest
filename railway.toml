@@ -2,9 +2,11 @@
 # This tells Railway to deploy the Python API backend
 # The Next.js frontend should be deployed on Vercel
 
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
 [deploy]
-# Run the Python app directly from root
-startCommand = "python main.py"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/api/health"
