@@ -61,24 +61,34 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS configuration
-ALLOWED_ORIGINS = [
-    "https://www.retirezest.com",               # Production domain
-    "https://retirezest.com",                   # Production domain (no www)
-]
+# Environment detection
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
+logger.info(f"🌍 Running in {ENVIRONMENT} mode")
 
-# Regex pattern to allow localhost on any port and Vercel preview deployments
-ALLOW_ORIGIN_REGEX = r"(http://localhost:\d+|http://127\.0\.0\.1:\d+|https://.*\.vercel\.app)"
+# CORS configuration based on environment
+if ENVIRONMENT == "production":
+    # PRODUCTION: Strict CORS - only allow production domains
+    ALLOWED_ORIGINS = [
+        "https://www.retirezest.com",
+        "https://retirezest.com",
+    ]
+    ALLOW_ORIGIN_REGEX = None  # No regex patterns in production
+else:
+    # DEVELOPMENT: Allow localhost and Vercel previews
+    ALLOWED_ORIGINS = []
+    ALLOW_ORIGIN_REGEX = r"(http://localhost:\d+|http://127\.0\.0\.1:\d+|https://.*\.vercel\.app)"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=ALLOW_ORIGIN_REGEX,
+    allow_origin_regex=ALLOW_ORIGIN_REGEX if ALLOW_ORIGIN_REGEX else None,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
     max_age=3600,  # Cache preflight requests for 1 hour
 )
+
+logger.info(f"✅ CORS configured for {ENVIRONMENT}: origins={ALLOWED_ORIGINS}, regex={ALLOW_ORIGIN_REGEX}")
 
 # Validation error handler
 @app.exception_handler(RequestValidationError)
@@ -160,6 +170,7 @@ async def root():
         "service": "Retirement Simulation API",
         "status": "healthy",
         "version": "1.0.0",
+        "environment": ENVIRONMENT,
         "documentation": "/docs",
         "endpoints": {
             "health": "/api/health",
@@ -187,6 +198,7 @@ async def health_check(request: Request):
         "status": "ok",
         "service": "Retirement Simulation API",
         "version": "1.0.0",
+        "environment": ENVIRONMENT,
         "tax_config_loaded": tax_cfg_loaded,
         "ready": tax_cfg_loaded
     }
