@@ -348,6 +348,13 @@ export async function GET(request: NextRequest) {
     // Get income data for person1 (use database values if available, otherwise defaults)
     const person1Income = incomeByOwner.person1 || {};
 
+    // DEBUG: Log pension income data to verify it's being fetched
+    if (person1Income.pension_incomes && person1Income.pension_incomes.length > 0) {
+      console.log('🎯 DEBUG: Person1 pension_incomes found:', person1Income.pension_incomes);
+    } else {
+      console.log('⚠️ DEBUG: No pension_incomes for person1');
+    }
+
     // Build person 1 input with profile and asset data
     const person1Input: PersonInput = {
       ...defaultPersonInput,
@@ -612,12 +619,14 @@ export async function GET(request: NextRequest) {
 
       // Get total other income (pension, rental, employment, etc.)
       // Sum up all pension and other income (regardless of startAge - for current planning context)
-      const person1PensionIncome = (person1Income?.pension_incomes || []).reduce((sum, p) => sum + p.amount, 0);
-      const person1OtherIncomeTotal = (person1Income?.other_incomes || []).reduce((sum, i) => sum + i.amount, 0);
+      const p1Income = incomeByOwner.person1 || { pension_incomes: [], other_incomes: [] };
+      const person1PensionIncome = (p1Income.pension_incomes || []).reduce((sum, p) => sum + p.amount, 0);
+      const person1OtherIncomeTotal = (p1Income.other_incomes || []).reduce((sum, i) => sum + i.amount, 0);
       const person1OtherIncome = person1PensionIncome + person1OtherIncomeTotal;
 
-      const person2PensionIncome = (incomeByOwner.person2?.pension_incomes || []).reduce((sum, p) => sum + p.amount, 0);
-      const person2OtherIncomeTotal = (incomeByOwner.person2?.other_incomes || []).reduce((sum, i) => sum + i.amount, 0);
+      const person2Income = incomeByOwner.person2 || { pension_incomes: [], other_incomes: [] };
+      const person2PensionIncome = (person2Income.pension_incomes || []).reduce((sum, p) => sum + p.amount, 0);
+      const person2OtherIncomeTotal = (person2Income.other_incomes || []).reduce((sum, i) => sum + i.amount, 0);
       const person2OtherIncome = person2PensionIncome + person2OtherIncomeTotal;
 
       const totalOtherIncome = person1OtherIncome + person2OtherIncome;
@@ -659,6 +668,13 @@ export async function GET(request: NextRequest) {
         recommendedStrategy,
       });
     }
+
+    // DEBUG: Log pension data in response
+    console.log('📊 DEBUG: Prefill Response pension data:', {
+      person1_pensions: person1Input?.pension_incomes?.length || 0,
+      person1_pension_details: person1Input?.pension_incomes,
+      person2_pensions: person2Input?.pension_incomes?.length || 0,
+    });
 
     return NextResponse.json({
       person1Input,
