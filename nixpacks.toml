@@ -11,7 +11,7 @@ NIXPACKS_PYTHON_VERSION = "3.11"
 nixPkgs = ["python311", "gcc"]
 
 [phases.install]
-cmds = ["pip install fastapi uvicorn pandas numpy pydantic python-multipart"]
+cmds = ["pip3 install fastapi uvicorn pandas numpy pydantic python-multipart"]
 
 [start]
-cmd = "python app.py"
+cmd = "python3 app.py"
