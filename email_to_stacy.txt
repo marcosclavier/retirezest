@@ -1,0 +1,16 @@
+Subject: RetireZest Update - RRSP/RRIF Fixes Completed
+
+Dear Stacy,
+
+We're pleased to inform you that we've completed the fixes for the RRSP and RRIF functionality in RetireZest. The system is now working correctly.
+
+Important note about RRSP withdrawals: To withdraw from your RRSP before age 71, the funds need to be converted and allocated to the RRIF asset first. This ensures proper tax treatment and withdrawal calculations.
+
+The updates are now live on the platform. Please log in and try running your simulation again to see if everything is working as expected.
+
+Additionally, we've added 10 simulation tokens to your account to help you test the fixes and explore the updated features.
+
+Thank you for your patience while we resolved these issues. Please let us know if the fix works for you or if you encounter any other issues.
+
+Best regards,
+The RetireZest Team

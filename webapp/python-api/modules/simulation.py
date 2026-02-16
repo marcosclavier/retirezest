@@ -1506,18 +1506,31 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Process pension incomes (check startAge)
     pension_income_total = 0.0
     pension_incomes = getattr(person, 'pension_incomes', [])
+
+    # DEBUG: Check if pension_incomes is reaching simulation
+    if not pension_incomes:
+        print(f"DEBUG: No pension_incomes found for {person.name} at age {age}")
+
+    # DEBUG: Log pension data
+    if pension_incomes:
+        print(f"DEBUG: Found {len(pension_incomes)} pension(s) for {person.name}")
+        for pension in pension_incomes:
+            print(f"  - Pension: {pension}")
     for pension in pension_incomes:
         pension_start_age = pension.get('startAge', 65)
         if age >= pension_start_age:
             # Pension has started
             annual_amount = pension.get('amount', 0.0)
+            print(f"  DEBUG: Pension starting - amount=${annual_amount}")
 
             # Apply inflation indexing if enabled
             if pension.get('inflationIndexed', True):
                 years_since_pension_start = age - pension_start_age
                 annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+                print(f"  DEBUG: After inflation adjustment (years={years_since_pension_start}): ${annual_amount}")
 
             pension_income_total += annual_amount
+            print(f"  DEBUG: Total pension income so far: ${pension_income_total}")
 
     # Process other income sources (employment, business, rental from Income table, investment, other)
     other_income_total = 0.0
@@ -1644,8 +1657,22 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # Calculate net after-tax shortfall (what RRIF needs to provide)
         # Note: GIS is not included here as it's calculated later based on income
+        # CRITICAL FIX: Include pension and other income in available income
         government_benefits_available = cpp + oas  # These are non-taxable to the recipient
-        actual_shortfall = after_tax_target - government_benefits_available
+        total_income_available = government_benefits_available + pension_income_total + other_income_total
+
+        # DEBUG: Log the pension fix impact
+        import sys
+        print(f"DEBUG RRIF-FRONTLOAD FIX [{person.name}] Age {age}:", file=sys.stderr)
+        print(f"  Pension income: ${pension_income_total:,.0f}", file=sys.stderr)
+        print(f"  Other income: ${other_income_total:,.0f}", file=sys.stderr)
+        print(f"  Government benefits: ${government_benefits_available:,.0f} (CPP=${cpp:,.0f}, OAS=${oas:,.0f})", file=sys.stderr)
+        print(f"  Total available income: ${total_income_available:,.0f}", file=sys.stderr)
+        print(f"  After-tax target: ${after_tax_target:,.0f}", file=sys.stderr)
+        print(f"  Actual shortfall BEFORE pension fix: ${after_tax_target - government_benefits_available:,.0f}", file=sys.stderr)
+        print(f"  Actual shortfall AFTER pension fix: ${after_tax_target - total_income_available:,.0f}", file=sys.stderr)
+
+        actual_shortfall = after_tax_target - total_income_available
         actual_shortfall = max(actual_shortfall, 0.0)  # Can't be negative
 
         # Initialize rrif_needed_gross to 0 by default (in case no RRIF is needed)
@@ -1802,7 +1829,9 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # Normal mode: distributions are available for spending
         dist_for_cash = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
-    pre_tax_cash = (cpp + oas + dist_for_cash + withdrawals["rrif"])
+    # CRITICAL FIX: Include pension and other income in pre-tax cash calculations
+    # This ensures pension income reduces the need for portfolio withdrawals
+    pre_tax_cash = (cpp + oas + dist_for_cash + withdrawals["rrif"] + pension_income_total + other_income_total)
 
     # Compute that person's tax bill on the *base* withdrawal mix
     # NOTE: Distributions are ALWAYS passed to tax_for() for taxation,
@@ -1839,6 +1868,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     base_after_tax = pre_tax_cash + withdrawals["nonreg"] + withdrawals["corp"] + withdrawals["tfsa"] - base_tax
     shortfall = max(after_tax_target - base_after_tax, 0.0)
+
+    # DEBUG: Log pension impact on withdrawals
+    if pension_income_total > 0:
+        print(f"  DEBUG PENSION IMPACT [{person.name}] Age {age}:", file=sys.stderr)
+        print(f"    Pension income: ${pension_income_total:,.0f}", file=sys.stderr)
+        print(f"    Other income: ${other_income_total:,.0f}", file=sys.stderr)
+        print(f"    Pre-tax cash (with pension): ${pre_tax_cash:,.0f}", file=sys.stderr)
+        print(f"    After-tax target: ${after_tax_target:,.0f}", file=sys.stderr)
+        print(f"    Base after-tax: ${base_after_tax:,.0f}", file=sys.stderr)
+        print(f"    Shortfall: ${shortfall:,.0f} (should be reduced by pension)", file=sys.stderr)
 
     # ===== GIS-OPTIMIZED STRATEGY: Use special withdrawal calculation =====
     gis_opt_effective_rate = 0.0
@@ -2579,6 +2618,14 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Calculate Person 1 pension and other income
         p1_pension_income = 0.0
         p1_pension_incomes = getattr(p1, 'pension_incomes', [])
+
+        # DEBUG: Log pension data
+        import sys
+        if year == 2033 and p1_pension_incomes:
+            print(f"DEBUG PENSION: Year {year}, Age {age1}, Found {len(p1_pension_incomes)} pensions", file=sys.stderr)
+            for i, pension in enumerate(p1_pension_incomes):
+                print(f"  Pension {i}: {pension}", file=sys.stderr)
+
         for pension in p1_pension_incomes:
             pension_start_age = pension.get('startAge', 65)
             if age1 >= pension_start_age:
@@ -2587,6 +2634,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                     years_since_pension_start = age1 - pension_start_age
                     annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
                 p1_pension_income += annual_amount
+
+                # DEBUG: Log calculation
+                if year == 2033:
+                    print(f"  -> Age {age1} >= Start {pension_start_age}, Amount: ${annual_amount:,.0f}, Total: ${p1_pension_income:,.0f}", file=sys.stderr)
 
         p1_other_income = 0.0
         p1_other_incomes = getattr(p1, 'other_incomes', [])
@@ -2695,6 +2746,15 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             p1, age1, target_p1_adjusted, fed_y, prov_y, rrsp_to_rrif1, cust["p1"],
             hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1, tax_optimizer
             )
+        # FIX: Add pension and other income to info1 with correct column names
+        info1["pension_income_p1"] = p1_pension_income
+        info1["other_income_p1"] = p1_other_income
+
+        # DEBUG: Log pension income being added to info1
+        if year == 2033:
+            import sys
+            print(f"🎯 DEBUG info1 assignment: p1_pension_income=${p1_pension_income:,.0f} -> info1['pension_income_p1']", file=sys.stderr)
+            print(f"   Verifying: info1['pension_income_p1'] = {info1.get('pension_income_p1', 'NOT SET')}", file=sys.stderr)
 
         # Only simulate person 2 if this is a couple
         if household_is_couple:
@@ -2702,6 +2762,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 p2, age2, target_p2_adjusted, fed_y, prov_y, rrsp_to_rrif2, cust["p2"],
                 hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2, tax_optimizer
             )
+            # FIX: Add pension and other income to info2 with correct column names
+            info2["pension_income_p2"] = p2_pension_income
+            info2["other_income_p2"] = p2_other_income
         else:
             # For singles, create empty results for person 2
             w2 = {"nonreg": 0.0, "rrif": 0.0, "tfsa": 0.0, "corp": 0.0}
@@ -2726,7 +2789,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 "nr_interest": 0.0,
                 "nr_elig_div": 0.0,
                 "nr_nonelig_div": 0.0,
-                "nr_capg_dist": 0.0
+                "nr_capg_dist": 0.0,
+                "pension_income_p2": 0.0,
+                "other_income_p2": 0.0
             }
 
         # Update TFSA room after surplus reinvestment (from simulate_year)
@@ -3238,10 +3303,16 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         corp_capg_gen_p2_val     = float(info2.get("corp_capg_gen", 0.0))
 
         # --- Pension and other income from pension_incomes and other_incomes lists ---
-        pension_income_p1 = float(info1.get("pension_income", 0.0))
-        pension_income_p2 = float(info2.get("pension_income", 0.0))
-        other_income_p1 = float(info1.get("other_income", 0.0))
-        other_income_p2 = float(info2.get("other_income", 0.0))
+        pension_income_p1 = float(info1.get("pension_income_p1", 0.0))
+        pension_income_p2 = float(info2.get("pension_income_p2", 0.0))
+        other_income_p1 = float(info1.get("other_income_p1", 0.0))
+        other_income_p2 = float(info2.get("other_income_p2", 0.0))
+
+        # DEBUG: Log extraction from info1
+        if year == 2033:
+            import sys
+            print(f"📊 DEBUG YearResult extraction: info1.get('pension_income_p1') = ${pension_income_p1:,.0f}", file=sys.stderr)
+            print(f"   Will be passed to YearResult as pension_income_p1=${pension_income_p1:,.0f}", file=sys.stderr)
 
         _calc_total = (tax1_fed + tax1_prov) + (tax2_fed + tax2_prov)
         # Use relative tolerance check for final validation (accounts for floating-point precision at any scale)
@@ -3264,9 +3335,15 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Non-registered distributions (automatic yield distributions)
         nr_distributions_total = nr_tot_house
 
+        # Calculate household pension and other income totals
+        pension_income_total = p1_pension_income + p2_pension_income
+        other_income_total = p1_other_income + p2_other_income
+
         # Total cash available for spending (after-tax inflows)
+        # CRITICAL FIX: Include pension and other income in total available cash
         total_available_after_tax = (
             cpp_total + oas_total + gis_total +
+            pension_income_total + other_income_total +  # FIX: Include pension and other income
             total_account_withdrawals + nr_distributions_total - total_tax_after_split
         )
 
@@ -3504,6 +3581,19 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
     # Convert to DataFrame
     df = pd.DataFrame([r.__dict__ for r in rows])
+
+    # DEBUG: Check if pension_income_p1 is in DataFrame
+    import sys
+    if 'pension_income_p1' in df.columns:
+        print(f"✅ DEBUG: pension_income_p1 IS in DataFrame columns", file=sys.stderr)
+        if len(df) > 0:
+            print(f"   First year pension_income_p1: ${df.iloc[0]['pension_income_p1']:,.0f}", file=sys.stderr)
+            # Check if any year has pension > 0
+            pension_years = df[df['pension_income_p1'] > 0]
+            print(f"   Years with pension > 0: {len(pension_years)}/{len(df)}", file=sys.stderr)
+    else:
+        print(f"❌ DEBUG: pension_income_p1 NOT FOUND in DataFrame columns!", file=sys.stderr)
+        print(f"   Available columns: {list(df.columns)[:10]}...", file=sys.stderr)
 
     # Generate AI-powered insights for minimize-income strategy
     # Do this check using the strategy stored in the original household object

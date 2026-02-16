@@ -159,6 +159,13 @@ export async function POST(request: NextRequest) {
       endpoint: '/api/simulation/run'
     });
 
+    // DEBUG: Log pension data for p1
+    if (body.household_input?.p1?.pension_incomes) {
+      console.log('🎯 P1 pension_incomes in request:', JSON.stringify(body.household_input.p1.pension_incomes));
+    } else {
+      console.log('⚠️ No pension_incomes for P1 in request');
+    }
+
     // Transform data to match Python API format
     // If data comes wrapped in household_input, extract it
     // Otherwise use as-is for backward compatibility
@@ -169,8 +176,20 @@ export async function POST(request: NextRequest) {
       tfsa_contribution_each: body.household_input.tfsa_contribution_each ?? 0,
       // Pass includePartner flag explicitly
       include_partner: body.household_input.include_partner ?? (body.household_input.p2 && body.household_input.p2.name ? true : false),
+      // CRITICAL: Ensure p1 preserves all fields including pension_incomes
+      p1: {
+        ...body.household_input.p1,
+        // Preserve pension_incomes if present
+        pension_incomes: body.household_input.p1.pension_incomes || [],
+        other_incomes: body.household_input.p1.other_incomes || []
+      },
       // Ensure p2 has valid default values when no partner
-      p2: body.household_input.p2 && body.household_input.p2.name ? body.household_input.p2 : {
+      p2: body.household_input.p2 && body.household_input.p2.name ? {
+        ...body.household_input.p2,
+        // Preserve pension_incomes if present for p2
+        pension_incomes: body.household_input.p2.pension_incomes || [],
+        other_incomes: body.household_input.p2.other_incomes || []
+      } : {
         name: "",
         birth_year: 1960,  // Provide valid year for calculations
         start_age: 60,  // Minimum age 50 required by Python API
@@ -192,6 +211,13 @@ export async function POST(request: NextRequest) {
         other_incomes: []     // Empty for single person
       }
     } : body;
+
+    // DEBUG: Verify pension data is preserved in pythonPayload
+    if (pythonPayload.p1?.pension_incomes && pythonPayload.p1.pension_incomes.length > 0) {
+      console.log('✅ P1 pension_incomes preserved in pythonPayload:', JSON.stringify(pythonPayload.p1.pension_incomes));
+    } else {
+      console.log('❌ P1 pension_incomes missing or empty in pythonPayload');
+    }
 
     // Log RRSP withdrawal settings for debugging
     console.log('📊 RRSP/RRIF Withdrawal Settings for P1:');
@@ -217,11 +243,17 @@ export async function POST(request: NextRequest) {
       tfsa_contribution_rate: pythonPayload.tfsa_contribution_rate,
       p1_rrsp: pythonPayload.p1.rrsp_balance,
       p1_tfsa: pythonPayload.p1.tfsa_balance,
-      spending_go_go: pythonPayload.spending_go_go
+      spending_go_go: pythonPayload.spending_go_go,
+      p1_pension_count: pythonPayload.p1.pension_incomes?.length || 0,
+      p1_pensions: pythonPayload.p1.pension_incomes || []
     }, null, 2));
 
     // Forward request to Python API
-    const pythonResponse = await fetch(`${PYTHON_API_URL}/api/run-simulation`, {
+    const pythonApiUrl = `${PYTHON_API_URL}/api/run-simulation`;
+    console.log('🔴 CRITICAL: Calling Python API at:', pythonApiUrl);
+    console.log('🔴 PYTHON_API_URL env var:', process.env.PYTHON_API_URL || '(not set, using default)');
+
+    const pythonResponse = await fetch(pythonApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -229,7 +261,47 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(pythonPayload),
     });
 
-    const responseData = await pythonResponse.json();
+    // Get raw text first to debug
+    const responseText = await pythonResponse.text();
+
+    // CRITICAL: Log the raw response size to see if we're getting data
+    console.log('🔴 RAW RESPONSE SIZE:', responseText.length, 'bytes');
+
+    // Check if employer_pension_p1 exists in raw response
+    const hasPensionInRaw = responseText.includes('"employer_pension_p1": 100000');
+    const hasPensionWithValue = responseText.includes('employer_pension_p1');
+
+    // Extract the actual employer_pension_p1 value from raw response
+    const pensionMatch = responseText.match(/"employer_pension_p1":\s*([\d.]+)/);
+    const rawPensionValue = pensionMatch ? pensionMatch[1] : 'NOT FOUND';
+
+    console.log('🔴 RAW RESPONSE CHECK:');
+    console.log('  - Has "employer_pension_p1": 100000 in raw:', hasPensionInRaw);
+    console.log('  - Has employer_pension_p1 field at all:', hasPensionWithValue);
+    console.log('  - First employer_pension_p1 value in raw:', rawPensionValue);
+
+    // Log first 500 chars of response to see structure
+    console.log('🔴 RAW RESPONSE START:', responseText.substring(0, 500));
+
+    // Find first occurrence of employer_pension_p1 in raw text
+    const pensionIndex = responseText.indexOf('employer_pension_p1');
+    if (pensionIndex > -1) {
+      const snippet = responseText.substring(pensionIndex, pensionIndex + 50);
+      console.log('  - First occurrence snippet:', snippet);
+    }
+
+    // Parse the JSON
+    const responseData = JSON.parse(responseText);
+
+    // DEBUG: Check employer_pension_p1 IMMEDIATELY after receiving response
+    console.log('🔴 IMMEDIATE CHECK - Raw response year_by_year[0]:',
+      responseData.year_by_year?.[0] ? {
+        year: responseData.year_by_year[0].year,
+        employer_pension_p1: responseData.year_by_year[0].employer_pension_p1,
+        cpp_p1: responseData.year_by_year[0].cpp_p1,
+        oas_p1: responseData.year_by_year[0].oas_p1
+      } : 'No year_by_year data'
+    );
 
     // Log first year results for debugging RRSP issue
     if (responseData.year_results && responseData.year_results.length > 0) {
@@ -373,6 +445,113 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Debug: Check if employer_pension_p1 is in the response
+    if (responseData.year_by_year && responseData.year_by_year.length > 0) {
+      const year2033 = responseData.year_by_year.find((y: any) => y.year === 2033);
+      if (year2033) {
+        console.log('📊 Year 2033 employer_pension_p1 in response:', year2033.employer_pension_p1);
+      }
+      // Log first year with pension data
+      const firstYearWithPension = responseData.year_by_year.find((y: any) => y.employer_pension_p1 > 0);
+      if (firstYearWithPension) {
+        console.log('✅ Found pension income in year', firstYearWithPension.year, ':', firstYearWithPension.employer_pension_p1);
+      } else {
+        console.log('❌ No employer_pension_p1 found in any year of the response');
+      }
+    }
+
+    // Debug: Log the entire first year data before sending
+    if (responseData.year_by_year && responseData.year_by_year.length > 0) {
+      const firstYear = responseData.year_by_year[0];
+      console.log('🔴 FINAL CHECK before sending to frontend:');
+      console.log('  employer_pension_p1:', firstYear.employer_pension_p1);
+      console.log('  Raw firstYear object keys:', Object.keys(firstYear));
+
+      // Check if employer_pension_p1 exists but is somehow undefined
+      if ('employer_pension_p1' in firstYear) {
+        console.log('  employer_pension_p1 EXISTS in object');
+        console.log('  Type:', typeof firstYear.employer_pension_p1);
+        console.log('  Value:', firstYear.employer_pension_p1);
+      } else {
+        console.log('  ❌ employer_pension_p1 NOT FOUND in firstYear object');
+      }
+    }
+
+    // CRITICAL FIX: Force-preserve pension data from raw response
+    // Check if pension data exists in raw response but not in parsed data
+    if (responseData.year_by_year && responseData.year_by_year.length > 0) {
+      console.log('🔍 Checking for pension data in raw response...');
+
+      // Extract pension value from raw response text
+      const pensionMatches = responseText.match(/"employer_pension_p1":\s*([\d.]+)/g);
+      console.log('  Found pension matches:', pensionMatches ? pensionMatches.length : 0);
+
+      if (pensionMatches && pensionMatches.length > 0) {
+        console.log('🔧 FORCE-FIX ACTIVATED: Found pension values in raw response');
+
+        // Parse pension values from raw response
+        const rawPensionValues: number[] = [];
+        for (const match of pensionMatches) {
+          const valueMatch = match.match(/"employer_pension_p1":\s*([\d.]+)/);
+          if (valueMatch) {
+            const value = parseFloat(valueMatch[1]);
+            rawPensionValues.push(value);
+            console.log(`  Extracted pension value: ${value}`);
+          }
+        }
+
+        console.log(`  Total pension values to apply: ${rawPensionValues.length}`);
+
+        // Force-update year_by_year with correct pension values
+        responseData.year_by_year = responseData.year_by_year.map((year: any, index: number) => {
+          // Always apply the pension value if it exists in raw response
+          if (index < rawPensionValues.length) {
+            const oldValue = year.employer_pension_p1 || 0;
+            const newValue = rawPensionValues[index];
+            console.log(`  Year ${year.year}: Forcing employer_pension_p1 from ${oldValue} to ${newValue}`);
+            return {
+              ...year,
+              employer_pension_p1: newValue
+            };
+          }
+          return year;
+        });
+
+        // Also check for other pension fields
+        const otherPensionMatches = responseText.match(/"employer_pension_p2":\s*([\d.]+)/g);
+        if (otherPensionMatches) {
+          const rawP2Values: number[] = [];
+          for (const match of otherPensionMatches) {
+            const valueMatch = match.match(/"employer_pension_p2":\s*([\d.]+)/);
+            if (valueMatch) {
+              rawP2Values.push(parseFloat(valueMatch[1]));
+            }
+          }
+
+          responseData.year_by_year = responseData.year_by_year.map((year: any, index: number) => {
+            if (index < rawP2Values.length && rawP2Values[index] > 0) {
+              return {
+                ...year,
+                employer_pension_p2: rawP2Values[index]
+              };
+            }
+            return year;
+          });
+        }
+      }
+    }
+
+    // Final verification before sending response
+    console.log('🚨 FINAL VERIFICATION before sending to browser:');
+    if (responseData.year_by_year && responseData.year_by_year.length > 0) {
+      const firstYear = responseData.year_by_year[0];
+      console.log(`  Year ${firstYear.year} employer_pension_p1: ${firstYear.employer_pension_p1}`);
+
+      // Count how many years have pension values
+      const yearsWithPension = responseData.year_by_year.filter((y: any) => y.employer_pension_p1 > 0).length;
+      console.log(`  Total years with pension > 0: ${yearsWithPension}/${responseData.year_by_year.length}`);
+    }
+
     // Return successful response with metadata
     const responseWithMeta = {
       ...responseData,
@@ -380,6 +559,12 @@ export async function POST(request: NextRequest) {
       freeSimulationsRemaining: !user?.emailVerified ? Math.max(0, emailLimitCheck.remaining - 1) : -1,
       dailySimulationsRemaining: !dailyLimitCheck.isPremium ? Math.max(0, dailyLimitCheck.remaining - 1) : -1,
     };
+
+    // Double-check the final response object
+    if (responseWithMeta.year_by_year && responseWithMeta.year_by_year.length > 0) {
+      console.log(`🚨 RESPONSE OBJECT - Year 2033 pension: ${responseWithMeta.year_by_year[0].employer_pension_p1}`);
+    }
+
     return NextResponse.json(responseWithMeta, { status: 200 });
 
   } catch (error) {

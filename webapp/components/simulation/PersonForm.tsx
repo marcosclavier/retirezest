@@ -308,14 +308,77 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
           defaultOpen={false}
           isComplete={isOtherIncomeComplete()}
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-md bg-blue-50 p-4 border border-blue-200">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> Pension and other income sources (employment, rental, business, investment)
-                are now managed through your Profile → Income page, where you can set specific start ages
-                for each income source.
-              </p>
-            </div>
+          <div className="space-y-4">
+            {/* Display loaded pension and other income sources */}
+            {(person.pension_incomes?.length ?? 0) > 0 || (person.other_incomes?.length ?? 0) > 0 ? (
+              <>
+                {/* Pension Incomes */}
+                {person.pension_incomes && person.pension_incomes.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-gray-700">Private Pensions</h4>
+                    <div className="space-y-2">
+                      {person.pension_incomes.map((pension, index) => (
+                        <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{pension.name || `Pension ${index + 1}`}</p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                ${pension.amount.toLocaleString()}/year starting at age {pension.startAge}
+                                {pension.inflationIndexed && ' • Inflation indexed'}
+                              </p>
+                            </div>
+                            <span className="text-xs text-green-600 font-medium">✓ From profile</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Other Income Sources */}
+                {person.other_incomes && person.other_incomes.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-gray-700">Other Income</h4>
+                    <div className="space-y-2">
+                      {person.other_incomes.map((income, index) => (
+                        <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{income.name || `${income.type} Income`}</p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                ${income.amount.toLocaleString()}/year
+                                {income.startAge && ` starting at age ${income.startAge}`}
+                                {income.inflationIndexed && ' • Inflation indexed'}
+                              </p>
+                            </div>
+                            <span className="text-xs text-green-600 font-medium">✓ From profile</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Info about managing income */}
+                <div className="rounded-md bg-blue-50 p-3 border border-blue-200 mt-4">
+                  <p className="text-xs text-blue-800">
+                    To add or edit income sources, go to{' '}
+                    <a href="/profile/income" className="underline font-semibold hover:text-blue-700">
+                      Profile → Income
+                    </a>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-md bg-gray-50 p-4 border border-gray-200">
+                <p className="text-sm text-gray-700">
+                  No additional income sources found. To add pension, rental, or other income, go to{' '}
+                  <a href="/profile/income" className="underline font-semibold hover:text-gray-900">
+                    Profile → Income
+                  </a>
+                </p>
+              </div>
+            )}
           </div>
         </Collapsible>
 

@@ -506,6 +506,13 @@ export default function SimulationPage() {
         if (data.recommendedStrategy) {
           console.log('✨ Using smart recommended strategy:', data.recommendedStrategy);
         }
+
+        // DEBUG: Log pension data after merge to verify it's in state
+        console.log('🔍 DEBUG - After merge, P1 pension_incomes:', mergedP1.pension_incomes);
+        console.log('🔍 DEBUG - After merge, P1 other_incomes:', mergedP1.other_incomes);
+        if (shouldIncludePartner && partnerData.pension_incomes) {
+          console.log('🔍 DEBUG - After merge, P2 pension_incomes:', partnerData.pension_incomes);
+        }
       }
     } catch (error) {
       console.error('Failed to load and merge prefill data:', error);
@@ -599,6 +606,13 @@ export default function SimulationPage() {
           console.log('🔍 Prefill data applied successfully');
           if (data.recommendedStrategy) {
             console.log('✨ Using smart recommended strategy:', data.recommendedStrategy);
+          }
+
+          // DEBUG: Log pension data to verify it's in state
+          console.log('🔍 DEBUG - P1 pension_incomes:', data.person1Input.pension_incomes);
+          console.log('🔍 DEBUG - P1 other_incomes:', data.person1Input.other_incomes);
+          if (shouldIncludePartner && data.person2Input?.pension_incomes) {
+            console.log('🔍 DEBUG - P2 pension_incomes:', data.person2Input.pension_incomes);
           }
         } else {
           console.log('⚠️ Prefill data NOT applied - condition failed (hasAssets=false AND start_age=65 AND hasExpenses=false)');

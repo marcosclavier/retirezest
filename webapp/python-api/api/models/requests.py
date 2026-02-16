@@ -4,7 +4,7 @@ Maps JSON input to Python types with validation.
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Literal
+from typing import Literal, List, Optional, Dict, Any
 
 class PersonInput(BaseModel):
     """
@@ -101,6 +101,16 @@ class PersonInput(BaseModel):
     early_rrif_withdrawal_annual: float = Field(default=20000, ge=0, le=200000, description="Fixed annual withdrawal amount")
     early_rrif_withdrawal_percentage: float = Field(default=5.0, ge=0, le=100, description="Withdrawal as % of RRIF/RRSP balance")
     early_rrif_withdrawal_mode: Literal["fixed", "percentage"] = Field(default="fixed", description="Withdrawal mode: fixed amount or percentage")
+
+    # Pension and other income sources
+    pension_incomes: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Private pension income sources with name, amount, startAge, and inflationIndexed"
+    )
+    other_incomes: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Other income sources like part-time work, rental income not from properties"
+    )
 
     @field_validator('nr_invest_pct')
     @classmethod
@@ -335,3 +345,4 @@ class MonteCarloRequest(BaseModel):
         default=None,
         description="Random seed for reproducibility"
     )
+# Reloading API to pick up pension changes Sat Feb 14 18:53:25 MST 2026

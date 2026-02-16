@@ -99,9 +99,24 @@ async def run_simulation(
         logger.debug(f"   p1.name={household_input.p1.name}, p1.tfsa_balance=${household_input.p1.tfsa_balance:,.0f}")
         logger.debug(f"   p2.name={household_input.p2.name}, p2.tfsa_balance=${household_input.p2.tfsa_balance:,.0f}")
 
+        # DEBUG: Check pension incomes
+        if household_input.p1.pension_incomes:
+            logger.info(f"📊 P1 has {len(household_input.p1.pension_incomes)} pension(s): {household_input.p1.pension_incomes}")
+            # Print complete pension details
+            for i, pension in enumerate(household_input.p1.pension_incomes):
+                logger.info(f"  Pension {i+1}: amount=${pension.get('amount', 0)}, startAge={pension.get('startAge', 0)}, inflationIndexed={pension.get('inflationIndexed', False)}")
+        else:
+            logger.info(f"⚠️ P1 has NO pension_incomes")
+
         # Convert API model to internal Household
         logger.debug("Converting API input to internal models")
         household = api_household_to_internal(household_input, tax_cfg)
+
+        # DEBUG: Check pension_incomes in internal Person object
+        if hasattr(household.p1, 'pension_incomes'):
+            logger.info(f"🔍 After conversion - P1 internal Person has pension_incomes: {household.p1.pension_incomes}")
+        else:
+            logger.error(f"❌ After conversion - P1 internal Person MISSING pension_incomes attribute!")
 
         # Validate portfolio has some value
         total_portfolio = (
@@ -238,6 +253,12 @@ async def run_simulation(
         estate_summary = calculate_estate_summary(df, household)
         five_year_plan = extract_five_year_plan(df)
 
+        # Debug: Log pension values in 5-year plan
+        print("\n===== DEBUG: 5-YEAR PLAN PENSION VALUES =====")
+        for year_plan in five_year_plan[:5]:
+            print(f"Year {year_plan.year} (Age P1={year_plan.age_p1}): employer_pension_p1=${year_plan.employer_pension_p1:,.2f}")
+        print("=============================================\n")
+
         # Check if intelligent estate tax optimization is active
         if "rrif-frontload" in household.strategy.lower():
             has_corporate = household.p1.corporate_balance > 10000
@@ -336,6 +357,18 @@ async def run_simulation(
             f"total_tax=${summary.total_tax_paid:,.0f}, "
             f"health_score={summary.health_score}/100 ({summary.health_rating})"
         )
+
+        # DEBUG: Check pension values right before returning response
+        import json
+        import time
+        timestamp = time.strftime("%H:%M:%S")
+        if year_by_year and len(year_by_year) > 0:
+            first_year = year_by_year[0]
+            print(f"\n🔴 [{timestamp}] DEBUG BEFORE RESPONSE: Year {first_year.year} employer_pension_p1 = {first_year.employer_pension_p1}")
+            # Also check what JSON serialization produces
+            first_year_dict = first_year.model_dump() if hasattr(first_year, 'model_dump') else first_year.__dict__
+            print(f"🔴 DEBUG SERIALIZED: employer_pension_p1 in dict = {first_year_dict.get('employer_pension_p1', 'NOT FOUND')}")
+            print(f"🔴 DEBUG JSON: {json.dumps({'employer_pension_p1': first_year_dict.get('employer_pension_p1', 0)})}")
 
         return SimulationResponse(
             success=True,

@@ -38,6 +38,12 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
     Returns:
         Person dataclass for simulation engine
     """
+    # DEBUG: Log pension data coming in
+    import sys
+    if api_person.pension_incomes:
+        print(f"🔍 CONVERTER DEBUG: Received {len(api_person.pension_incomes)} pension_incomes", file=sys.stderr)
+        for i, pension in enumerate(api_person.pension_incomes):
+            print(f"   Pension {i}: {pension}", file=sys.stderr)
 
     return Person(
         name=api_person.name,
@@ -116,6 +122,10 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         early_rrif_withdrawal_annual=api_person.early_rrif_withdrawal_annual,
         early_rrif_withdrawal_percentage=api_person.early_rrif_withdrawal_percentage,
         early_rrif_withdrawal_mode=api_person.early_rrif_withdrawal_mode,
+
+        # Private pension and other income sources
+        pension_incomes=api_person.pension_incomes,
+        other_incomes=api_person.other_incomes,
     )
 
 
@@ -133,6 +143,11 @@ def api_household_to_internal(
     Returns:
         Household dataclass for simulation engine
     """
+
+    # DEBUG: Log incoming pension data at converter level
+    logger.info(f"🔍 CONVERTER: P1 pension_incomes = {api_household.p1.pension_incomes}")
+    if api_household.p2:
+        logger.info(f"🔍 CONVERTER: P2 pension_incomes = {api_household.p2.pension_incomes}")
 
     # Convert p2 only if include_partner is True
     # For single person mode, p2 should be None
@@ -182,10 +197,46 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
         List of YearResult Pydantic models for API response
     """
 
+    # Debug: Check if pension_income_p1 column exists in DataFrame
+    if 'pension_income_p1' in df.columns:
+        pension_values = df['pension_income_p1'].unique()
+        print(f"DEBUG: Found pension_income_p1 column with unique values: {pension_values}")
+        # Check first 5 years specifically
+        for year in df['year'].head(5):
+            year_row = df[df['year'] == year].iloc[0]
+            pension_val = year_row.get('pension_income_p1', 0)
+            print(f"DEBUG: Year {year} - pension_income_p1 = {pension_val}")
+        # Check year 2033 specifically for Rafael (age 67)
+        year_2033 = df[df['year'] == 2033]
+        if not year_2033.empty:
+            print(f"DEBUG: Year 2033 pension_income_p1 = {year_2033['pension_income_p1'].values[0]}")
+    else:
+        print("DEBUG: pension_income_p1 column NOT found in DataFrame")
+        print(f"DEBUG: Available columns: {df.columns.tolist()}")
+
     results = []
 
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
         try:
+            # CRITICAL FIX: Convert row to dict and ensure pension columns are included
+            # iterrows() returns a Series, convert to dict for manipulation
+            row_dict = row.to_dict() if hasattr(row, 'to_dict') else dict(row)
+
+            # Force-add pension columns from DataFrame if they exist but are missing from row
+            if 'pension_income_p1' in df.columns:
+                row_dict['pension_income_p1'] = float(df.loc[idx, 'pension_income_p1'])
+            if 'pension_income_p2' in df.columns:
+                row_dict['pension_income_p2'] = float(df.loc[idx, 'pension_income_p2'])
+
+            # Use row_dict instead of row for the rest of the processing
+            row = row_dict
+
+            # DEBUG: Check what's in the row for pension_income_p1
+            if idx == 0:  # First year only
+                print(f"DEBUG CONVERTER ROW: Year {row.get('year', 'N/A')}")
+                print(f"  pension_income_p1 in row: {row.get('pension_income_p1', 'NOT FOUND')}")
+                print(f"  Will map to employer_pension_p1: {float(row.get('pension_income_p1', 0))}")
+
             results.append(YearResult(
                 year=int(row.get('year', 0)),
                 age_p1=int(row.get('age_p1', 0)),
@@ -200,8 +251,12 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 gis_p2=float(row.get('gis_p2', 0)),
                 oas_clawback_p1=float(row.get('oas_clawback_p1', 0)),
                 oas_clawback_p2=float(row.get('oas_clawback_p2', 0)),
+                # DEBUG: Detailed pension mapping
                 employer_pension_p1=float(row.get('pension_income_p1', 0)),
                 employer_pension_p2=float(row.get('pension_income_p2', 0)),
+
+                # DEBUG: Log pension values for first year
+                # Additional debug for pension mapping
 
                 # Withdrawals (handle various column naming conventions)
                 tfsa_withdrawal_p1=float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))),
@@ -827,6 +882,13 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
     plan = []
     years_to_extract = min(5, len(df))
 
+    # Debug: Check pension columns in DataFrame for 5-year plan
+    print(f"DEBUG extract_five_year_plan: DataFrame has {len(df)} rows")
+    if 'pension_income_p1' in df.columns:
+        print(f"DEBUG: pension_income_p1 column exists in DataFrame for 5-year plan")
+    else:
+        print(f"DEBUG: pension_income_p1 column NOT found in DataFrame for 5-year plan")
+
     for i in range(years_to_extract):
         row = df.iloc[i]
 
@@ -837,6 +899,11 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         oas_p2 = float(row.get('oas_p2', 0))
         pension_p1 = float(row.get('pension_income_p1', 0))
         pension_p2 = float(row.get('pension_income_p2', 0))
+
+        # Debug logging for pension values
+        year = int(row.get('year', 0))
+        age_p1 = int(row.get('age_p1', 0))
+        print(f"DEBUG 5-year: Year {year} (age {age_p1}) - pension_income_p1 raw value = {row.get('pension_income_p1', 'NOT_FOUND')}, converted = {pension_p1}")
         rental_p1 = float(row.get('rental_income_p1', 0))
         rental_p2 = float(row.get('rental_income_p2', 0))
         other_p1 = float(row.get('other_income_p1', 0))
@@ -1066,7 +1133,14 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
         rrsp_withdrawal = rrsp_withdrawal_p1 + rrsp_withdrawal_p2
 
         # Get pension and other income (private pensions, employment, business, rental, investment)
-        pension_income_total = float(row.get('pension_income_p1', 0)) + float(row.get('pension_income_p2', 0))
+        pension_p1 = float(row.get('pension_income_p1', 0))
+        pension_p2 = float(row.get('pension_income_p2', 0))
+        pension_income_total = pension_p1 + pension_p2
+
+        # Debug logging for pension in taxable income
+        if int(row.get('year', 0)) == 2033:
+            print(f"DEBUG TAXABLE: Year 2033 - pension_income_p1={pension_p1}, pension_income_p2={pension_p2}, total={pension_income_total}")
+
         other_income_total = float(row.get('other_income_p1', 0)) + float(row.get('other_income_p2', 0))
 
         # Calculate NonReg distributions (passive income: interest, dividends, capital gains)

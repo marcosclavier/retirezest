@@ -765,7 +765,10 @@ export function ResultsDashboard({ result, isPremium = false, onUpgradeClick }: 
                         {formatCurrency((year.gis_p1 || 0) + (year.gis_p2 || 0))}
                       </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
-                        {formatCurrency((year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0))}
+                        {(() => {
+                          console.log(`Year ${year.year} employer_pension_p1:`, year.employer_pension_p1);
+                          return formatCurrency((year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0));
+                        })()}
                       </TableCell>
                       <TableCell className="text-right text-[11px] px-1 py-1.5" style={{ color: '#111827' }}>
                         {formatCurrency((year.rental_income_p1 || 0) + (year.rental_income_p2 || 0))}
