@@ -1,6 +1,36 @@
+# Ignore everything except Python API
 Dockerfile
 docker-compose.yml
-webapp/
-retirezest/
-*.md
 .git/
+*.md
+
+# Ignore all of webapp EXCEPT python-api
+webapp/node_modules/
+webapp/.next/
+webapp/app/
+webapp/components/
+webapp/hooks/
+webapp/lib/
+webapp/prisma/
+webapp/public/
+webapp/scripts/
+webapp/types/
+webapp/e2e/
+webapp/docs/
+webapp/package.json
+webapp/package-lock.json
+webapp/tsconfig.json
+webapp/next.config.ts
+webapp/tailwind.config.ts
+webapp/postcss.config.js
+webapp/*.tsx
+webapp/*.ts
+webapp/*.js
+webapp/middleware.ts
+webapp/instrumentation.ts
+
+# Keep Python API and requirements
+!webapp/python-api/
+!webapp/requirements.txt
+!webapp/requirements-api.txt
+!webapp/tax_config_canada_2025.json

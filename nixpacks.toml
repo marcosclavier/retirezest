@@ -1,11 +1,16 @@
 # Nixpacks Configuration for Railway
-# Simple Python deployment
+# Force Python deployment (not Node.js)
+
+[providers]
+# Explicitly set to Python only
+providers = ["python"]
 
 [variables]
 PYTHONPATH = "/app/webapp/python-api"
+NIXPACKS_PYTHON_VERSION = "3.11"
 
 [phases.setup]
-nixPkgs = ["python311"]
+nixPkgs = ["python311", "gcc"]
 
 [phases.install]
 cmds = ["pip install fastapi uvicorn pandas numpy pydantic python-multipart"]
