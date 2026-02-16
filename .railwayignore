@@ -1,0 +1,8 @@
+# Ignore frontend files for Railway
+node_modules/
+.next/
+*.tsx
+*.ts
+*.jsx
+*.js
+!python-api/**
