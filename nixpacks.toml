@@ -1,8 +1,6 @@
 # Nixpacks Configuration for Railway
 # Force Python deployment (not Node.js)
 
-[providers]
-# Explicitly set to Python only
 providers = ["python"]
 
 [variables]
