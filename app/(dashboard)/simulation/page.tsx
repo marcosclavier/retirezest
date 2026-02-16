@@ -69,6 +69,11 @@ const WithdrawalsBySourceChart = dynamic(() => import('@/components/simulation/W
   ssr: false
 });
 
+const TotalIncomeSourcesChart = dynamic(() => import('@/components/simulation/TotalIncomeSourcesChart').then(mod => ({ default: mod.TotalIncomeSourcesChart })), {
+  loading: () => <div className="h-96 flex items-center justify-center text-gray-500">Loading chart...</div>,
+  ssr: false
+});
+
 export default function SimulationPage() {
   const searchParams = useSearchParams();
   const [household, setHousehold] = useState<HouseholdInput>({
@@ -1725,7 +1730,15 @@ export default function SimulationPage() {
                   {/* Additional Charts from chart_data */}
                   {result.chart_data?.data_points && result.chart_data.data_points.length > 0 && (
                     <>
-                      {/* Government Benefits and Withdrawals - Stack on mobile */}
+                      {/* Total Income Sources - Full width chart showing pension + withdrawals */}
+                      <TotalIncomeSourcesChart
+                        chartData={result.chart_data.data_points}
+                        isSinglePerson={!result.household_input?.include_partner}
+                        personOneName={result.household_input?.p1?.name || 'Person 1'}
+                        personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                      />
+
+                      {/* Detailed Government Benefits and Withdrawals - Stack on mobile */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                         <GovernmentBenefitsChart
                           chartData={result.chart_data.data_points}

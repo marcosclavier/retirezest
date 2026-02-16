@@ -18,6 +18,7 @@ export { SpendingChart } from './SpendingChart';
 export { GovernmentBenefitsChart } from './GovernmentBenefitsChart';
 export { IncomeCompositionChart } from './IncomeCompositionChart';
 export { WithdrawalsBySourceChart } from './WithdrawalsBySourceChart';
+export { TotalIncomeSourcesChart } from './TotalIncomeSourcesChart';
 
 // Cards & Tables
 export { HealthScoreCard } from './HealthScoreCard';
