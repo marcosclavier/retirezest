@@ -289,7 +289,7 @@ export default function IncomePage() {
           <h1 className="text-3xl font-bold text-gray-900">Income Sources</h1>
           <p className="text-gray-600 mt-2">
             Add your expected income sources including employment, pensions, CPP, OAS, and other sources.
-            For CPP and OAS, use estimates from the CRA for your planned retirement year.
+            For CPP and OAS, use RetireZest's calculators or CRA estimates for your planned retirement year.
           </p>
         </div>
 
@@ -508,12 +508,12 @@ export default function IncomePage() {
                 />
                 {(formData.type === 'cpp' || formData.type === 'oas') && (
                   <p className="text-xs text-gray-600 mt-2 bg-blue-50 p-2 rounded border border-blue-200">
-                    <strong>Important:</strong> The CRA provides the most accurate {formData.type === 'cpp' ? 'CPP' : 'OAS'} estimates.
-                    Please enter the annual amount you expect to receive in your first year of retirement.
-                    Visit <a href={formData.type === 'cpp' ? 'https://www.canada.ca/en/services/benefits/publicpensions/cpp/retirement-income-calculator.html' : 'https://www.canada.ca/en/services/benefits/publicpensions/oas/oas-benefit-estimator.html'}
+                    <strong>Tip:</strong> Enter the annual {formData.type === 'cpp' ? 'CPP' : 'OAS'} amount you expect to receive in your first year of retirement.
+                    RetireZest provides {formData.type === 'cpp' ? 'CPP' : 'OAS'} calculators in the Tools section, or for the most accurate estimates,
+                    visit <a href={formData.type === 'cpp' ? 'https://www.canada.ca/en/services/benefits/publicpensions/cpp/retirement-income-calculator.html' : 'https://www.canada.ca/en/services/benefits/publicpensions/oas/oas-benefit-estimator.html'}
                     target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                      CRA's {formData.type === 'cpp' ? 'CPP' : 'OAS'} estimator
-                    </a> for personalized calculations.
+                      CRA's official {formData.type === 'cpp' ? 'CPP' : 'OAS'} estimator
+                    </a>.
                   </p>
                 )}
               </div>
