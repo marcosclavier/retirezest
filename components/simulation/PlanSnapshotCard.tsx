@@ -8,9 +8,11 @@ import { HouseholdInput } from '@/lib/types/simulation';
 interface PlanSnapshotCardProps {
   household: HouseholdInput;
   includePartner: boolean;
+  currentAge?: number;  // User's actual current age (optional, will calculate if not provided)
+  partnerCurrentAge?: number;  // Partner's actual current age (optional)
 }
 
-export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCardProps) {
+export function PlanSnapshotCard({ household, includePartner, currentAge: currentAgeProp, partnerCurrentAge }: PlanSnapshotCardProps) {
   // Calculate total assets
   const getTotalAssets = (): number => {
     const p1Total = (household.p1.tfsa_balance || 0) +
@@ -85,9 +87,10 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
   const retirementAge = getRetirementAge();
   const planningHorizon = household.end_age;
 
-  // Calculate years to retirement - since retirement age is the start age, this should be 0
-  const currentAge = household.p1.start_age;
-  const yearsToRetirement = 0; // Simulation starts at retirement age
+  // Use provided current age, or fall back to retirement age (start_age)
+  // If currentAgeProp is not provided, assume user is at retirement age
+  const currentAge = currentAgeProp || household.p1.start_age;
+  const yearsToRetirement = retirementAge - currentAge;
 
   return (
     <Card className="shadow-md border-blue-100 sticky top-6">
@@ -108,8 +111,8 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Current Age</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">{currentAge}</p>
-            {includePartner && household.p2.start_age && household.p2.start_age !== currentAge && (
-              <p className="text-xs text-gray-500 mt-0.5">Partner: {household.p2.start_age}</p>
+            {includePartner && household.p2.start_age && (
+              <p className="text-xs text-gray-500 mt-0.5">Partner: {partnerCurrentAge || household.p2.start_age}</p>
             )}
           </div>
         </div>

@@ -23,6 +23,7 @@ export async function GET() {
         partnerFirstName: true,
         partnerLastName: true,
         partnerDateOfBirth: true,
+        dateOfBirth: true,  // Add user's own date of birth
         targetRetirementAge: true,
         lifeExpectancy: true,
         companyName: true,

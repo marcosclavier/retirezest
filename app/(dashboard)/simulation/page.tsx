@@ -112,6 +112,8 @@ export default function SimulationPage() {
   const [failureAnalysis, setFailureAnalysis] = useState<FailureAnalysis | null>(null);
   const [showLowSuccessWarning, setShowLowSuccessWarning] = useState(false);
   const [showOptimizationSuggestion, setShowOptimizationSuggestion] = useState(true);
+  const [userCurrentAge, setUserCurrentAge] = useState<number | undefined>(undefined);
+  const [partnerCurrentAge, setPartnerCurrentAge] = useState<number | undefined>(undefined);
 
   // Initialize component - localStorage will be merged with database data in the prefill logic below
   // DO NOT load localStorage here - it should not override fresh database data
@@ -249,6 +251,27 @@ export default function SimulationPage() {
             if (settingsData?.includePartner !== undefined) {
               console.log('🔧 Using includePartner from database:', settingsData.includePartner);
               setIncludePartner(settingsData.includePartner);
+            }
+
+            // Calculate current ages from date of birth
+            if (settingsData?.dateOfBirth) {
+              const today = new Date();
+              const birthDate = new Date(settingsData.dateOfBirth);
+              const age = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              const currentAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+              setUserCurrentAge(currentAge);
+              console.log('👤 User current age:', currentAge);
+            }
+
+            if (settingsData?.partnerDateOfBirth) {
+              const today = new Date();
+              const birthDate = new Date(settingsData.partnerDateOfBirth);
+              const age = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              const currentAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) ? age - 1 : age;
+              setPartnerCurrentAge(currentAge);
+              console.log('👥 Partner current age:', currentAge);
             }
             // Check email verification status
             if (settingsData?.emailVerified !== undefined) {
@@ -1592,6 +1615,8 @@ export default function SimulationPage() {
               <PlanSnapshotCard
                 household={household}
                 includePartner={includePartner}
+                currentAge={userCurrentAge}
+                partnerCurrentAge={partnerCurrentAge}
               />
             </div>
           </div>
