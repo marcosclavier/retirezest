@@ -3,8 +3,16 @@
 
 [build]
 builder = "NIXPACKS"
-# Skip the Node.js build - we only want Python
-buildCommand = "pip install -r requirements.txt"
+# IMPORTANT: Skip ALL Node.js operations - Python backend only!
+nixpacksPlan = """
+[phases.setup]
+nixPkgs = ["python311", "gcc"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+"""
+# Override any auto-detected build commands
+buildCommand = "echo 'Skipping build - Python backend only'"
 
 [deploy]
 # Run the Python API
