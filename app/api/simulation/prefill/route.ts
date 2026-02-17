@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { handleApiError, AuthenticationError } from '@/lib/errors';
 import { defaultPersonInput, type PersonInput } from '@/lib/types/simulation';
+import { calculateVirginTFSARoom } from '@/lib/utils/tfsa-calculator';
 
 /**
  * GET /api/simulation/prefill
@@ -382,7 +383,11 @@ export async function GET(request: NextRequest) {
       corporate_balance: person1Totals.corporate_balance,
 
       // Contribution room from assets
-      tfsa_room_start: person1Totals.tfsa_room,
+      // If no TFSA room is stored, calculate based on CRA guidelines for someone who never contributed
+      tfsa_room_start: person1Totals.tfsa_room || calculateVirginTFSARoom(
+        new Date(user?.dateOfBirth || '1960-01-01').getFullYear(),
+        new Date().getFullYear()
+      ),
 
       // For non-registered, distribute balance across cash/gic/invest based on allocation percentages
       nr_cash: person1Totals.nonreg_balance * 0.10,
@@ -469,7 +474,11 @@ export async function GET(request: NextRequest) {
         corporate_balance: person2Totals.corporate_balance,
 
         // Contribution room from assets
-        tfsa_room_start: person2Totals.tfsa_room,
+        // If no TFSA room is stored, calculate based on CRA guidelines for someone who never contributed
+        tfsa_room_start: person2Totals.tfsa_room || calculateVirginTFSARoom(
+          new Date(user?.partnerDateOfBirth || '1960-01-01').getFullYear(),
+          new Date().getFullYear()
+        ),
 
         // For non-registered, distribute balance
         nr_cash: person2Totals.nonreg_balance * 0.10,

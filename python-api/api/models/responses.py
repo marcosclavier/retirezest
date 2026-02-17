@@ -43,6 +43,12 @@ class YearResult(BaseModel):
     tfsa_contribution_p1: float = Field(default=0.0, description="TFSA contribution for person 1")
     tfsa_contribution_p2: float = Field(default=0.0, description="TFSA contribution for person 2")
 
+    # Surplus reinvestments (internal allocations, NOT outflows)
+    tfsa_reinvest_p1: float = Field(default=0.0, description="TFSA surplus reinvestment for person 1")
+    tfsa_reinvest_p2: float = Field(default=0.0, description="TFSA surplus reinvestment for person 2")
+    reinvest_nonreg_p1: float = Field(default=0.0, description="Non-reg surplus reinvestment for person 1")
+    reinvest_nonreg_p2: float = Field(default=0.0, description="Non-reg surplus reinvestment for person 2")
+
     # Starting balances (RRSP/RRIF/TFSA/NonReg/Corporate)
     rrsp_start_p1: float = Field(default=0.0, description="RRSP starting balance P1")
     rrsp_start_p2: float = Field(default=0.0, description="RRSP starting balance P2")

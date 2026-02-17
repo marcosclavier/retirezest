@@ -276,9 +276,16 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                     row.get('nr_capg_dist_p1', 0) + row.get('nr_capg_dist_p2', 0)
                 ),
 
-                # TFSA contributions (includes both contributions and surplus reinvestment)
-                tfsa_contribution_p1=float(row.get('contrib_tfsa_p1', 0) + row.get('reinvest_tfsa_p1', 0)),
-                tfsa_contribution_p2=float(row.get('contrib_tfsa_p2', 0) + row.get('reinvest_tfsa_p2', 0)),
+                # TFSA contributions (ONLY regular contributions from Non-Reg, NOT surplus reinvestments)
+                # Surplus reinvestments are internal allocations, not outflows
+                tfsa_contribution_p1=float(row.get('contrib_tfsa_p1', 0)),
+                tfsa_contribution_p2=float(row.get('contrib_tfsa_p2', 0)),
+
+                # Surplus reinvestments (these are NOT outflows, just internal allocations)
+                tfsa_reinvest_p1=float(row.get('reinvest_tfsa_p1', 0)),
+                tfsa_reinvest_p2=float(row.get('reinvest_tfsa_p2', 0)),
+                reinvest_nonreg_p1=float(row.get('reinvest_nonreg_p1', 0)),
+                reinvest_nonreg_p2=float(row.get('reinvest_nonreg_p2', 0)),
 
                 # Starting balances - NEW FIELDS
                 rrsp_start_p1=float(row.get('start_rrsp_p1', 0)),

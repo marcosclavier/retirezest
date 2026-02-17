@@ -1380,7 +1380,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                   fed: TaxParams, prov: TaxParams,
                   rrsp_to_rrif: bool, custom_withdraws: Dict[str, float],
                   strategy_name: str, hybrid_topup_amt: float, hh: Household, year: int = None,
-                  tfsa_room: float = 0.0, tax_optimizer: "TaxOptimizer" = None) -> Tuple[Dict[str, float], Dict[str, float],Dict[str, float]]:
+                  tfsa_room: float = 0.0, tax_optimizer: "TaxOptimizer" = None,
+                  pension_income: float = 0.0, other_income: float = 0.0) -> Tuple[Dict[str, float], Dict[str, float],Dict[str, float]]:
                   
     
     """
@@ -1866,6 +1867,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Store base OAS clawback amounts for later use
     base_oas_clawback = base_fed_oas_clawback + base_prov_oas_clawback
 
+    # Note: pre_tax_cash already includes pension_income_total and other_income_total (see line 1835)
     base_after_tax = pre_tax_cash + withdrawals["nonreg"] + withdrawals["corp"] + withdrawals["tfsa"] - base_tax
     shortfall = max(after_tax_target - base_after_tax, 0.0)
 
@@ -2241,7 +2243,8 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # CRITICAL: GIS requires receiving OAS (oas > 0) but OAS is EXCLUDED from income test
     # This fix complies with official CRA guidelines
     gis_net_income = (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist * 0.5 +  # Capital gains 50% inclusion
-                      withdrawals["rrif"] + withdrawals["corp"] + cpp)  # NOTE: OAS is EXCLUDED per CRA
+                      withdrawals["rrif"] + withdrawals["corp"] + cpp +  # Account withdrawals and CPP
+                      pension_income + other_income)  # CRITICAL FIX: Include employer pension and other income!
 
     # IMPORTANT: Inside simulate_year(), we don't have access to the other person's data.
     # For couples, GIS will be recalculated at the household level (in simulate() function)
@@ -2278,8 +2281,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         # When not reinvesting: distributions are paid out and available for spending
         total_available_distributions = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
 
+    # FIX: Include pension and other income in total cash calculation
+    # These are pre-tax amounts but tax has already been calculated on them in base_tax
     total_after_tax_cash = (cpp + oas + gis_benefit +  # Government benefits (all calculated by now)
-                           total_withdrawals + total_available_distributions - base_tax)  # Account withdrawals + distributions (if not reinvested) minus taxes
+                           pension_income_total + other_income_total +  # Employer pension and other income (pre-tax)
+                           total_withdrawals + total_available_distributions - base_tax)  # Account withdrawals + distributions - all taxes
 
     # Calculate surplus: how much exceeds the spending target
     surplus = max(total_after_tax_cash - after_tax_target, 0.0)
@@ -2721,16 +2727,19 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             p2_rental_income = real_estate.get_rental_income(p2)
             p2_other_income += p2_rental_income
 
-        # Subtract pension and other income from withdrawal targets (after-tax income)
-        # These income sources are already taxed, so we subtract them from after-tax target
-        target_p1_adjusted -= p1_pension_income
-        target_p1_adjusted -= p1_other_income
-        target_p2_adjusted -= p2_pension_income
-        target_p2_adjusted -= p2_other_income
-
-        # Ensure targets don't go negative (pension/other income may exceed spending need)
-        target_p1_adjusted = max(target_p1_adjusted, 0.0)
-        target_p2_adjusted = max(target_p2_adjusted, 0.0)
+        # IMPORTANT: DO NOT subtract pension and other income from withdrawal targets here!
+        # These are PRE-TAX income sources that will be:
+        # 1. Included in the tax calculation within simulate_year
+        # 2. Added to total_after_tax_cash (after taxes are deducted)
+        # 3. Used to meet the spending target
+        #
+        # The spending target represents the after-tax amount needed for lifestyle.
+        # Pension/other income helps meet this target but doesn't reduce it.
+        # Any excess after meeting the target becomes surplus for reinvestment.
+        #
+        # Previous incorrect logic was subtracting pre-tax pension from after-tax target,
+        # causing the target to go to $0 when pension exceeded spending, which made
+        # ALL after-tax cash appear as surplus (e.g., $103k surplus instead of $43k)
 
         # Add mortgage payments to after-tax spending targets (not tax-deductible in Canada for principal residences)
         mortgage_p1 = real_estate.calculate_annual_mortgage_payment(p1)
@@ -2744,7 +2753,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Then call simulate_year with fed_y/prov_y (not the base fed/prov):
         w1, t1, info1 = simulate_year(
             p1, age1, target_p1_adjusted, fed_y, prov_y, rrsp_to_rrif1, cust["p1"],
-            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1, tax_optimizer
+            hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room1, tax_optimizer,
+            p1_pension_income, p1_other_income
             )
         # FIX: Add pension and other income to info1 with correct column names
         info1["pension_income_p1"] = p1_pension_income
@@ -2760,7 +2770,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         if household_is_couple:
             w2, t2, info2 = simulate_year(
                 p2, age2, target_p2_adjusted, fed_y, prov_y, rrsp_to_rrif2, cust["p2"],
-                hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2, tax_optimizer
+                hh.strategy, hh.hybrid_rrif_topup_per_person, hh, year, tfsa_room2, tax_optimizer,
+                p2_pension_income, p2_other_income
             )
             # FIX: Add pension and other income to info2 with correct column names
             info2["pension_income_p2"] = p2_pension_income
@@ -3214,6 +3225,13 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         tfsa_reinvest_p2 = 0.0
         surplus_remaining = surplus_for_reinvest
 
+        # Debug logging for surplus allocation
+        if year >= 2033 and year <= 2034 and surplus_for_reinvest > 0:
+            import sys
+            print(f"\nDEBUG SURPLUS ALLOCATION [{year}]:", file=sys.stderr)
+            print(f"  Total surplus for reinvest: ${surplus_for_reinvest:,.0f}", file=sys.stderr)
+            print(f"  TFSA room1: ${tfsa_room1:,.0f}, c1: ${c1:,.0f}", file=sys.stderr)
+
         # Calculate remaining room after contributions (c1 and c2 use up room)
         remaining_room1 = max(0.0, tfsa_room1 - c1)
         remaining_room2 = max(0.0, tfsa_room2 - c2)
@@ -3241,9 +3259,17 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # NonReg: add remaining surplus (fallback when TFSA is full)
         # CRITICAL FIX: Only add to non-reg if there's no spending gap
-        if surplus_remaining > 1e-6 and hh_gap < 1e-6:
-            p1.nonreg_balance += surplus_remaining
-            # Note: ACB stays the same; reinvested amount is added at current market value
+        if surplus_remaining > 1e-6:
+            if hh_gap < 1e-6:
+                p1.nonreg_balance += surplus_remaining
+                # Note: ACB stays the same; reinvested amount is added at current market value
+                if year >= 2033 and year <= 2034:
+                    import sys
+                    print(f"DEBUG NONREG SURPLUS [{year}]: Added ${surplus_remaining:,.0f} to non-reg, new balance=${p1.nonreg_balance:,.0f}", file=sys.stderr)
+            else:
+                if year >= 2033 and year <= 2034:
+                    import sys
+                    print(f"DEBUG NONREG SURPLUS [{year}]: NOT adding ${surplus_remaining:,.0f} to non-reg because hh_gap=${hh_gap:,.2f} > 0", file=sys.stderr)
 
         # Store this year's TFSA withdrawals for next year's room calculation
         tfsa_withdraw_last_year1 = w1["tfsa"]
@@ -3443,7 +3469,8 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             tfsa_room_p1=tfsa_room1, tfsa_room_p2=tfsa_room2,
             contrib_tfsa_p1=c1, contrib_tfsa_p2=c2,
             reinvest_tfsa_p1=tfsa_reinvest_p1, reinvest_tfsa_p2=tfsa_reinvest_p2,
-            reinvest_nonreg_p1=0.0, reinvest_nonreg_p2=0.0,  # TODO: Track nonreg reinvestment
+            reinvest_nonreg_p1=surplus_remaining if surplus_remaining > 1e-6 and hh_gap < 1e-6 else 0.0,
+            reinvest_nonreg_p2=0.0,  # P2 doesn't get non-reg reinvestment in current logic
             nonreg_acb_p1=p1.nonreg_acb, nonreg_acb_p2=p2.nonreg_acb if p2 else 0,
 
             #Non registered details

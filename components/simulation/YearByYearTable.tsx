@@ -315,6 +315,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
               {displayedData.map((year) => {
                 const isExpanded = expandedRows.has(year.year);
                 const totalBenefits = year.cpp_p1 + year.cpp_p2 + year.oas_p1 + year.oas_p2 + (year.gis_p1 || 0) + (year.gis_p2 || 0);
+                const totalEmployerPension = (year.employer_pension_p1 || 0) + (year.employer_pension_p2 || 0);
                 const totalWithdrawals =
                   year.rrif_withdrawal_p1 + year.rrif_withdrawal_p2 +
                   year.tfsa_withdrawal_p1 + year.tfsa_withdrawal_p2 +
@@ -322,7 +323,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                   year.corporate_withdrawal_p1 + year.corporate_withdrawal_p2;
                 const nonregDistributions = year.nonreg_distributions || 0;
                 const tfsaContributions = (year.tfsa_contribution_p1 || 0) + (year.tfsa_contribution_p2 || 0);
-                const totalInflows = totalBenefits + totalWithdrawals + nonregDistributions;
+                const totalInflows = totalBenefits + totalEmployerPension + totalWithdrawals + nonregDistributions;
                 const hasGap = year.spending_gap > 0;
 
                 return (
@@ -384,10 +385,10 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                         <TableCell colSpan={11} className="bg-muted/20 p-2 sm:p-6">
                           <div className="max-w-full overflow-hidden">
                             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 text-[10px] sm:text-sm">
-                            {/* COLUMN 1: GOV BENEFITS (per person) */}
+                            {/* COLUMN 1: INCOME SOURCES (per person) */}
                             <div className="space-y-2 sm:space-y-3">
                               <h4 className="font-semibold text-[10px] sm:text-sm uppercase text-green-700 dark:text-green-400 mb-1 sm:mb-3">
-                                💰 Gov Benefits
+                                💰 Income Sources
                               </h4>
                               <div className="space-y-0.5 sm:space-y-2 text-[10px] sm:text-sm">
                                 <div className="font-semibold text-[9px] sm:text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
@@ -416,6 +417,14 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     <span className="truncate" style={{ color: '#111827' }}>GIS</span>
                                     <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#10B981' }}>
                                       {formatCurrency(year.gis_p1 ?? 0)}
+                                    </span>
+                                  </div>
+                                )}
+                                {(year.employer_pension_p1 ?? 0) > 0 && (
+                                  <div className="flex justify-between items-center gap-1 min-w-0">
+                                    <span className="truncate" style={{ color: '#111827' }}>Employer Pension</span>
+                                    <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#059669' }}>
+                                      {formatCurrency(year.employer_pension_p1 ?? 0)}
                                     </span>
                                   </div>
                                 )}
@@ -451,15 +460,23 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                         </span>
                                       </div>
                                     )}
+                                    {(year.employer_pension_p2 ?? 0) > 0 && (
+                                      <div className="flex justify-between items-center gap-1 min-w-0">
+                                        <span className="truncate" style={{ color: '#111827' }}>Employer Pension</span>
+                                        <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#059669' }}>
+                                          {formatCurrency(year.employer_pension_p2 ?? 0)}
+                                        </span>
+                                      </div>
+                                    )}
                                   </>
                                 )}
 
                                 <div className="flex justify-between items-center gap-2 pt-2 border-t">
                                   <span className="font-semibold truncate" style={{ color: '#111827' }}>
-                                    Total Gov Benefits
+                                    Total Income Sources
                                   </span>
                                   <span className="font-semibold whitespace-nowrap" style={{ color: '#10B981' }}>
-                                    {formatCurrency(totalBenefits)}
+                                    {formatCurrency(totalBenefits + totalEmployerPension)}
                                   </span>
                                 </div>
                               </div>
@@ -576,7 +593,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     Gross Cash Inflows
                                   </span>
                                   <span className="font-bold whitespace-nowrap" style={{ color: '#059669' }}>
-                                    {formatCurrency(totalBenefits + nonregDistributions + totalWithdrawals)}
+                                    {formatCurrency(totalBenefits + totalEmployerPension + nonregDistributions + totalWithdrawals)}
                                   </span>
                                 </div>
 
@@ -592,7 +609,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                 <div className="flex justify-between items-center gap-1 min-w-0">
                                   <span className="truncate" style={{ color: '#111827' }}>TFSA Contrib</span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#8B5CF6' }}>
-                                    {formatCurrency(tfsaContributions)}
+                                    {formatCurrency(tfsaContributions + ((year as any).tfsa_reinvest_p1 || 0) + ((year as any).tfsa_reinvest_p2 || 0))}
                                   </span>
                                 </div>
 
@@ -608,24 +625,66 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                     Total Outflows
                                   </span>
                                   <span className="font-semibold whitespace-nowrap" style={{ color: '#EA580C' }}>
-                                    {formatCurrency(year.spending_need + tfsaContributions + year.total_tax)}
+                                    {formatCurrency(year.spending_need + ((year.tfsa_contribution_p1 || 0) + (year.tfsa_contribution_p2 || 0)) + year.total_tax)}
                                   </span>
                                 </div>
 
                                 {(() => {
-                                  const grossCashInflows = totalBenefits + nonregDistributions + totalWithdrawals;
-                                  const totalOutflows = year.spending_need + tfsaContributions + year.total_tax;
+                                  const grossCashInflows = totalBenefits + totalEmployerPension + nonregDistributions + totalWithdrawals;
+                                  // Only include regular TFSA contributions in outflows, NOT reinvestments (which are internal allocations)
+                                  const regularTfsaContributions = (year.tfsa_contribution_p1 || 0) + (year.tfsa_contribution_p2 || 0);
+                                  const totalOutflows = year.spending_need + regularTfsaContributions + year.total_tax;
                                   const netCashFlow = grossCashInflows - totalOutflows;
                                   const isBalanced = Math.abs(netCashFlow) < 1.0;
+                                  const hasSurplus = netCashFlow > 1.0;
+
                                   return (
-                                    <div className={`flex justify-between items-center gap-2 pt-2 border-t-2 ${isBalanced ? 'border-green-600' : 'border-amber-600'}`}>
-                                      <span className="font-bold truncate" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
-                                        Net Cash Flow
-                                      </span>
-                                      <span className="font-bold whitespace-nowrap" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
-                                        {netCashFlow >= 0 ? '' : '-'}{formatCurrency(Math.abs(netCashFlow))}
-                                      </span>
-                                    </div>
+                                    <>
+                                      <div className={`flex justify-between items-center gap-2 pt-2 border-t-2 ${isBalanced ? 'border-green-600' : 'border-amber-600'}`}>
+                                        <span className="font-bold truncate" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
+                                          Net Cash Flow
+                                        </span>
+                                        <span className="font-bold whitespace-nowrap" style={{ color: isBalanced ? '#059669' : '#D97706' }}>
+                                          {netCashFlow >= 0 ? '' : '-'}{formatCurrency(Math.abs(netCashFlow))}
+                                        </span>
+                                      </div>
+
+                                      {/* Show surplus allocation when there's positive cash flow */}
+                                      {hasSurplus && (
+                                        <div className="mt-2 p-2 bg-green-50 rounded-md border border-green-200">
+                                          <div className="text-xs font-semibold text-green-700 mb-1">Surplus Allocation:</div>
+                                          <div className="text-xs space-y-0.5">
+                                            {/* Use actual TFSA reinvestment amount from simulation */}
+                                            {((year as any).tfsa_reinvest_p1 || 0) > 0 && (
+                                              <div className="flex justify-between">
+                                                <span className="text-green-600">→ TFSA</span>
+                                                <span className="font-medium text-green-700">
+                                                  {formatCurrency((year as any).tfsa_reinvest_p1 || 0)}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {/* Use actual Non-Reg reinvestment amount from simulation */}
+                                            {((year as any).reinvest_nonreg_p1 || 0) > 0 && (
+                                              <div className="flex justify-between">
+                                                <span className="text-green-600">→ Non-Reg</span>
+                                                <span className="font-medium text-green-700">
+                                                  {formatCurrency((year as any).reinvest_nonreg_p1 || 0)}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {/* Show unallocated surplus if any */}
+                                            {netCashFlow > ((year as any).tfsa_reinvest_p1 || 0) + ((year as any).reinvest_nonreg_p1 || 0) + 100 && (
+                                              <div className="flex justify-between">
+                                                <span className="text-yellow-600">⚠️ Unallocated</span>
+                                                <span className="font-medium text-yellow-700">
+                                                  {formatCurrency(netCashFlow - ((year as any).tfsa_reinvest_p1 || 0) - ((year as any).reinvest_nonreg_p1 || 0))}
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </>
                                   );
                                 })()}
                               </div>

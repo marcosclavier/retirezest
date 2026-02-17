@@ -26,24 +26,56 @@ export function TotalIncomeSourcesChart({
   personOneName = 'Person 1',
   personTwoName = 'Person 2'
 }: TotalIncomeSourcesChartProps) {
+  // Debug: Log first data point to check if pension data exists
+  if (chartData.length > 0) {
+    console.log('TotalIncomeSourcesChart - First data point:', {
+      year: chartData[0].year,
+      cpp_total: chartData[0].cpp_total,
+      oas_total: chartData[0].oas_total,
+      gis_total: chartData[0].gis_total,
+      employer_pension_total: chartData[0].employer_pension_total,
+      government_benefits_total: chartData[0].government_benefits_total,
+      rrif_withdrawal: chartData[0].rrif_withdrawal
+    });
+  }
+
   // Prepare data for chart - combine pension income and withdrawals
-  const data = chartData.map((point) => ({
-    year: point.year,
-    age: point.age_p1,
-    // Government benefits (pension income)
-    CPP: point.cpp_total || 0,
-    OAS: point.oas_total || 0,
-    GIS: point.gis_total || 0,
-    // Account withdrawals
-    RRIF: point.rrif_withdrawal || 0,
-    'Non-Registered': point.nonreg_withdrawal || 0,
-    TFSA: point.tfsa_withdrawal || 0,
-    Corporate: point.corporate_withdrawal || 0,
-    // Total for tooltip
-    totalIncome: (point.cpp_total || 0) + (point.oas_total || 0) + (point.gis_total || 0) +
-                 (point.rrif_withdrawal || 0) + (point.nonreg_withdrawal || 0) +
-                 (point.tfsa_withdrawal || 0) + (point.corporate_withdrawal || 0)
-  }));
+  const data = chartData.map((point, index) => {
+    const dataPoint = {
+      year: point.year,
+      age: point.age_p1,
+      // Government benefits (pension income) - ensure we're getting the values
+      CPP: point.cpp_total || 0,
+      OAS: point.oas_total || 0,
+      GIS: point.gis_total || 0,
+      // Employer pension
+      'Employer Pension': point.employer_pension_total || 0,
+      // Account withdrawals
+      RRIF: point.rrif_withdrawal || 0,
+      'Non-Registered': point.nonreg_withdrawal || 0,
+      TFSA: point.tfsa_withdrawal || 0,
+      Corporate: point.corporate_withdrawal || 0,
+      // Total for tooltip
+      totalIncome: (point.cpp_total || 0) + (point.oas_total || 0) + (point.gis_total || 0) +
+                   (point.employer_pension_total || 0) +
+                   (point.rrif_withdrawal || 0) + (point.nonreg_withdrawal || 0) +
+                   (point.tfsa_withdrawal || 0) + (point.corporate_withdrawal || 0)
+    };
+
+    // Log the first few data points to debug
+    if (index < 3) {
+      console.log(`Year ${dataPoint.year} income breakdown:`, {
+        CPP: dataPoint.CPP,
+        OAS: dataPoint.OAS,
+        GIS: dataPoint.GIS,
+        EmployerPension: dataPoint['Employer Pension'],
+        RRIF: dataPoint.RRIF,
+        Total: dataPoint.totalIncome
+      });
+    }
+
+    return dataPoint;
+  });
 
   // Custom tooltip formatter
   const formatCurrency = (value: number): string => {
@@ -61,10 +93,10 @@ export function TotalIncomeSourcesChart({
 
       // Separate pension and withdrawal items
       const pensionItems = payload.filter((item: any) =>
-        ['CPP', 'OAS', 'GIS'].includes(item.name)
+        ['CPP', 'OAS', 'GIS', 'Employer Pension'].includes(item.name)
       );
       const withdrawalItems = payload.filter((item: any) =>
-        !['CPP', 'OAS', 'GIS'].includes(item.name)
+        !['CPP', 'OAS', 'GIS', 'Employer Pension'].includes(item.name)
       );
 
       const totalPension = pensionItems.reduce((sum: number, entry: any) => sum + entry.value, 0);
@@ -82,7 +114,7 @@ export function TotalIncomeSourcesChart({
           {/* Pension Income Section */}
           {totalPension > 0 && (
             <>
-              <p className="text-sm font-medium mt-2 text-green-600">Government Benefits</p>
+              <p className="text-sm font-medium mt-2 text-green-600">Pension Income</p>
               {pensionItems.map((entry: any, index: number) => (
                 entry.value > 0 && (
                   <p key={index} style={{ color: entry.color }} className="text-sm pl-2">
@@ -162,6 +194,7 @@ export function TotalIncomeSourcesChart({
                 if (value === 'CPP') return '🍁 CPP';
                 if (value === 'OAS') return '🍁 OAS';
                 if (value === 'GIS') return '🍁 GIS';
+                if (value === 'Employer Pension') return '💼 Employer Pension';
                 return value;
               }}
             />
@@ -189,6 +222,16 @@ export function TotalIncomeSourcesChart({
               stackId="1"
               stroke="#86efac"
               fill="#86efac"
+              fillOpacity={0.9}
+            />
+
+            {/* Employer Pension - Middle of stack (darker green) */}
+            <Area
+              type="monotone"
+              dataKey="Employer Pension"
+              stackId="1"
+              stroke="#059669"
+              fill="#059669"
               fillOpacity={0.9}
             />
 
@@ -231,8 +274,8 @@ export function TotalIncomeSourcesChart({
         {/* Income Summary Legend */}
         <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium text-green-600 mb-1">🍁 Government Benefits</p>
-            <p className="text-xs text-gray-600">CPP, OAS, and GIS pension income</p>
+            <p className="text-sm font-medium text-green-600 mb-1">🍁💼 Pension Income</p>
+            <p className="text-xs text-gray-600">Government benefits (CPP, OAS, GIS) and employer pension</p>
           </div>
           <div>
             <p className="text-sm font-medium text-blue-600 mb-1">💰 Account Withdrawals</p>

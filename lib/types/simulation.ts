@@ -168,6 +168,12 @@ export interface YearResult {
   tfsa_contribution_p1?: number;
   tfsa_contribution_p2?: number;
 
+  // Surplus reinvestments
+  tfsa_reinvest_p1?: number;
+  tfsa_reinvest_p2?: number;
+  reinvest_nonreg_p1?: number;
+  reinvest_nonreg_p2?: number;
+
   // Withdrawals by source
   tfsa_withdrawal_p1: number;
   tfsa_withdrawal_p2: number;
