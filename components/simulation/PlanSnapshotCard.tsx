@@ -38,19 +38,29 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
     return p1Total + p2Total;
   };
 
-  // Calculate estimated annual retirement income (very basic calculation)
+  // Calculate estimated annual retirement income from all sources
   const getEstimatedAnnualIncome = (): number => {
     const totalAssets = getTotalAssets();
     const yearsInRetirement = household.end_age - household.p1.start_age;
 
-    // Simple calculation: assets / years + government benefits
+    // Simple calculation: assets / years + all income sources
     const assetIncome = yearsInRetirement > 0 ? totalAssets / yearsInRetirement : 0;
-    const govBenefits = (household.p1.cpp_annual_at_start || 0) + (household.p1.oas_annual_at_start || 0);
-    const p2GovBenefits = includePartner
-      ? (household.p2.cpp_annual_at_start || 0) + (household.p2.oas_annual_at_start || 0)
+
+    // P1 income sources
+    const p1Income = (household.p1.cpp_annual_at_start || 0) +
+                     (household.p1.oas_annual_at_start || 0) +
+                     (household.p1.pension_income || 0) +
+                     (household.p1.other_income || 0);
+
+    // P2 income sources (if applicable)
+    const p2Income = includePartner
+      ? (household.p2.cpp_annual_at_start || 0) +
+        (household.p2.oas_annual_at_start || 0) +
+        (household.p2.pension_income || 0) +
+        (household.p2.other_income || 0)
       : 0;
 
-    return Math.round(assetIncome + govBenefits + p2GovBenefits);
+    return Math.round(assetIncome + p1Income + p2Income);
   };
 
   // Determine retirement age (current age, since simulation starts from now)
@@ -82,6 +92,20 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Current Age */}
+        <div className="flex items-start gap-3">
+          <div className="bg-indigo-100 p-2 rounded-lg">
+            <Calendar className="h-5 w-5 text-indigo-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Current Age</p>
+            <p className="text-xl font-bold text-gray-900 mt-0.5">{currentAge}</p>
+            {includePartner && household.p2.start_age && household.p2.start_age !== currentAge && (
+              <p className="text-xs text-gray-500 mt-0.5">Partner: {household.p2.start_age}</p>
+            )}
+          </div>
+        </div>
+
         {/* Retirement Age */}
         <div className="flex items-start gap-3">
           <div className="bg-blue-100 p-2 rounded-lg">
@@ -90,7 +114,9 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Retirement Age</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">{retirementAge}</p>
-            {yearsToRetirement > 0 && (
+            {retirementAge === currentAge ? (
+              <p className="text-xs text-gray-500 mt-0.5">Already retired</p>
+            ) : yearsToRetirement > 0 && (
               <p className="text-xs text-gray-500 mt-0.5">{yearsToRetirement} years away</p>
             )}
           </div>
@@ -112,32 +138,32 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
           </div>
         </div>
 
-        {/* Estimated Annual Income */}
-        {estimatedIncome > 0 && (
-          <div className="flex items-start gap-3">
-            <div className="bg-purple-100 p-2 rounded-lg">
-              <DollarSign className="h-5 w-5 text-purple-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Est. Annual Income</p>
-              <p className="text-xl font-bold text-gray-900 mt-0.5">
-                ${estimatedIncome.toLocaleString('en-CA')}
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">In retirement</p>
-            </div>
+        {/* Total Retirement Income */}
+        <div className="flex items-start gap-3">
+          <div className="bg-purple-100 p-2 rounded-lg">
+            <DollarSign className="h-5 w-5 text-purple-600" />
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Total Retirement Income</p>
+            <p className="text-xl font-bold text-gray-900 mt-0.5">
+              ${estimatedIncome.toLocaleString('en-CA')}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Annual (includes CPP, OAS, pensions, withdrawals)
+            </p>
+          </div>
+        </div>
 
-        {/* Planning Horizon */}
+        {/* Life Expectancy */}
         <div className="flex items-start gap-3">
           <div className="bg-orange-100 p-2 rounded-lg">
             <TrendingUp className="h-5 w-5 text-orange-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Planning To Age</p>
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Life Expectancy</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">{planningHorizon}</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {planningHorizon - currentAge} years total
+              {planningHorizon - currentAge} years of planning
             </p>
           </div>
         </div>
