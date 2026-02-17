@@ -493,7 +493,7 @@ export default function IncomePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Annual Amount (CAD) *
+                  Estimated Amount (CAD) *
                 </label>
                 <input
                   type="number"
