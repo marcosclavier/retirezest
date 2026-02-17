@@ -37,10 +37,17 @@ async def lifespan(app: FastAPI):
     try:
         # Load tax config
         from modules.config import load_tax_config
-        tax_config_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-            "tax_config_canada_2025.json"
-        )
+        # In production (Railway), root is python-api directory
+        # In dev, this file is at webapp/python-api/api/main.py
+        if os.path.exists("tax_config_canada_2025.json"):
+            # Production: file in current directory
+            tax_config_path = "tax_config_canada_2025.json"
+        else:
+            # Development: file in parent directory
+            tax_config_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                "tax_config_canada_2025.json"
+            )
         app.state.tax_cfg = load_tax_config(tax_config_path)
         logger.info("✅ Tax configuration loaded successfully")
     except Exception as e:
