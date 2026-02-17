@@ -46,19 +46,27 @@ export function PlanSnapshotCard({ household, includePartner }: PlanSnapshotCard
     // Simple calculation: assets / years + all income sources
     const assetIncome = yearsInRetirement > 0 ? totalAssets / yearsInRetirement : 0;
 
+    // P1 pension incomes (sum all pension sources)
+    const p1Pensions = household.p1.pension_incomes?.reduce((sum, pension) => sum + pension.amount, 0) || 0;
+    const p1OtherIncomes = household.p1.other_incomes?.reduce((sum, income) => sum + income.amount, 0) || 0;
+
     // P1 income sources
     const p1Income = (household.p1.cpp_annual_at_start || 0) +
                      (household.p1.oas_annual_at_start || 0) +
-                     (household.p1.pension_income || 0) +
-                     (household.p1.other_income || 0);
+                     p1Pensions +
+                     p1OtherIncomes;
 
     // P2 income sources (if applicable)
-    const p2Income = includePartner
-      ? (household.p2.cpp_annual_at_start || 0) +
-        (household.p2.oas_annual_at_start || 0) +
-        (household.p2.pension_income || 0) +
-        (household.p2.other_income || 0)
-      : 0;
+    let p2Income = 0;
+    if (includePartner) {
+      const p2Pensions = household.p2.pension_incomes?.reduce((sum, pension) => sum + pension.amount, 0) || 0;
+      const p2OtherIncomes = household.p2.other_incomes?.reduce((sum, income) => sum + income.amount, 0) || 0;
+
+      p2Income = (household.p2.cpp_annual_at_start || 0) +
+                 (household.p2.oas_annual_at_start || 0) +
+                 p2Pensions +
+                 p2OtherIncomes;
+    }
 
     return Math.round(assetIncome + p1Income + p2Income);
   };
