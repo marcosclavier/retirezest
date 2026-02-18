@@ -184,6 +184,12 @@ export interface YearResult {
   corporate_withdrawal_p1: number;
   corporate_withdrawal_p2: number;
 
+  // RRIF frontload tracking (for RRIF-Frontload strategy)
+  rrif_frontload_exceeded_p1?: boolean;
+  rrif_frontload_exceeded_p2?: boolean;
+  rrif_frontload_pct_p1?: number;
+  rrif_frontload_pct_p2?: number;
+
   // Balances
   tfsa_balance_p1: number;
   tfsa_balance_p2: number;

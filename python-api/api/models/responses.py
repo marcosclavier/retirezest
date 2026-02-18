@@ -98,6 +98,12 @@ class YearResult(BaseModel):
     plan_success: bool
     failure_reason: str | None = None
 
+    # RRIF frontload tracking (for RRIF-Frontload strategy)
+    rrif_frontload_exceeded_p1: bool = Field(default=False, description="RRIF withdrawal exceeded standard frontload for person 1")
+    rrif_frontload_exceeded_p2: bool = Field(default=False, description="RRIF withdrawal exceeded standard frontload for person 2")
+    rrif_frontload_pct_p1: float = Field(default=0.0, description="Actual RRIF withdrawal percentage for person 1")
+    rrif_frontload_pct_p2: float = Field(default=0.0, description="Actual RRIF withdrawal percentage for person 2")
+
 
 class SimulationSummary(BaseModel):
     """Summary statistics for simulation."""

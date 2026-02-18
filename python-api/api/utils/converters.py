@@ -316,6 +316,12 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 rrsp_to_rrif_p1=float(row.get('rrsp_to_rrif_p1', 0)),
                 rrsp_to_rrif_p2=float(row.get('rrsp_to_rrif_p2', 0)),
 
+                # RRIF frontload tracking for RRIF-Frontload strategy - NEW FIELDS
+                rrif_frontload_exceeded_p1=bool(row.get('rrif_frontload_exceeded_p1', False)),
+                rrif_frontload_exceeded_p2=bool(row.get('rrif_frontload_exceeded_p2', False)),
+                rrif_frontload_pct_p1=float(row.get('rrif_frontload_pct_p1', 0)),
+                rrif_frontload_pct_p2=float(row.get('rrif_frontload_pct_p2', 0)),
+
                 # RRSP ending balances - NEW FIELDS
                 rrsp_end_p1=float(row.get('end_rrsp_p1', 0)),
                 rrsp_end_p2=float(row.get('end_rrsp_p2', 0)),

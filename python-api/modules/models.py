@@ -281,6 +281,12 @@ class YearResult:
     end_rrif_p1: float = 0.0
     end_rrif_p2: float = 0.0
 
+    # RRIF frontload tracking (for RRIF-Frontload strategy)
+    rrif_frontload_exceeded_p1: bool = False  # True if withdrawal exceeded standard frontload %
+    rrif_frontload_exceeded_p2: bool = False  # True if withdrawal exceeded standard frontload %
+    rrif_frontload_pct_p1: float = 0.0  # Actual withdrawal percentage
+    rrif_frontload_pct_p2: float = 0.0  # Actual withdrawal percentage
+
     # TFSA starting balances
     start_tfsa_p1: float = 0.0
     start_tfsa_p2: float = 0.0
