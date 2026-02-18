@@ -4,7 +4,7 @@
 RetireZest is a comprehensive Canadian retirement planning platform that helps seniors optimize their retirement income, calculate government benefits (CPP, OAS, GIS), and project retirement scenarios with advanced tax-optimized withdrawal strategies.
 
 **Production Status:** Live with 67+ active users
-**Latest Update:** February 17, 2026
+**Latest Update:** February 18, 2026
 
 ## Architecture
 
@@ -65,6 +65,39 @@ webapp/
 ```
 
 ## Key Features & Recent Updates
+
+### February 18, 2026 Updates
+
+#### ✅ Fixed: Corporate Withdrawal Issue for RRIF-Frontload Strategy
+- **Problem:** Juan and Daniela's simulation showed $0 Corporate withdrawals despite having $2.5M+ in Corporate accounts
+- **Root Cause:** TaxOptimizer was overriding the rrif-frontload strategy's specific withdrawal order
+- **Solution:** Added condition to preserve rrif-frontload strategy order in simulation.py
+- **Impact:** Corporate accounts now correctly used before Non-Registered for rrif-frontload strategy
+- **Files Changed:**
+  - `/python-api/modules/simulation.py` (lines 1950-1957: preserve strategy-specific order)
+  - Added `import sys` statement at line 13 to fix UnboundLocalError
+
+#### ✅ Fixed: CPP/OAS Age Validation
+- **Problem:** CPP and OAS benefits starting at age 65 instead of user-configured age 70
+- **Root Cause:** Age validation logic was using incorrect comparison
+- **Solution:** Updated age validation to properly respect user's chosen start ages
+- **Files Changed:**
+  - `/python-api/modules/simulation.py` (CPP/OAS age validation logic)
+
+#### ✅ Fixed: CPP/OAS Warning Display
+- **Problem:** Warning about default CPP/OAS values showing even when users entered real CRA values
+- **Root Cause:** Warning was always displayed regardless of actual values
+- **Solution:** Made warning conditional - only shows when using default values ($15,000 and $8,500)
+- **Files Changed:**
+  - `/app/(dashboard)/simulation/page.tsx` (lines 1471-1482: conditional warning display)
+
+#### ✅ Fixed: Prefill Data Race Condition
+- **Problem:** Simulation running before profile data finished loading, causing "Please enter your account balances" error
+- **Root Cause:** handleRunSimulation could be called programmatically while prefill was still loading
+- **Solution:** Added guard check in handleRunSimulation to prevent execution while prefillLoading is true
+- **Impact:** Prevents frustrating errors when simulation runs with $0 balances
+- **Files Changed:**
+  - `/app/(dashboard)/simulation/page.tsx` (lines 865-892: prefill loading guard and validation)
 
 ### February 16-17, 2026 Critical Updates
 
@@ -268,6 +301,12 @@ if surplus > 0:
 
 ## Recent Bug Fixes Summary
 
+### February 18, 2026
+1. **Corporate Withdrawal Fix:** RRIF-frontload strategy now correctly uses Corporate before Non-Registered accounts
+2. **CPP/OAS Age Fix:** Benefits now start at user-configured ages (e.g., 70) instead of defaulting to 65
+3. **Warning Display Fix:** CPP/OAS default value warning only shows when actually using defaults
+4. **Prefill Race Condition Fix:** Simulation prevented from running before profile data loads
+
 ### February 16-17, 2026
 1. **GIS Eligibility Fix:** Added pension/other income to GIS calculation, preventing incorrect benefits
 2. **Surplus Calculation Fix:** Removed incorrect pension subtraction from spending target
@@ -335,7 +374,7 @@ if surplus > 0:
 
 ---
 
-*Last Updated: February 17, 2026*
-*Version: 1.1.0*
+*Last Updated: February 18, 2026*
+*Version: 1.1.1*
 *Active Users: 67+*
-*Recent Major Fixes: GIS eligibility, Surplus allocation, TFSA display*
+*Recent Major Fixes: Corporate withdrawals, CPP/OAS age validation, Prefill race condition, GIS eligibility*

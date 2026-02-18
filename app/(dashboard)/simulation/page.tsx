@@ -846,7 +846,8 @@ export default function SimulationPage() {
       }));
       // Hide the suggestion
       setShowOptimizationSuggestion(false);
-      // Auto-run simulation with new strategy
+      // Auto-run simulation with new strategy after a short delay
+      // The handleRunSimulation function will check if prefill is still loading
       setTimeout(() => {
         handleRunSimulation();
       }, 100);
@@ -861,6 +862,35 @@ export default function SimulationPage() {
   const handleRunSimulation = async () => {
     console.log('🎯 RUN SIMULATION BUTTON CLICKED');
     console.log('🔍 Button state - isLoading:', isLoading, 'prefillLoading:', prefillLoading, 'apiHealthy:', apiHealthy);
+
+    // Prevent simulation from running while prefill data is still loading
+    if (prefillLoading) {
+      console.log('⏳ Prefill data is still loading, aborting simulation');
+      alert('Please wait a moment for your profile data to finish loading, then try again.');
+      return;
+    }
+
+    // Additional validation: Check if we have any account balances
+    const hasAnyBalance =
+      household.p1.tfsa_balance > 0 ||
+      household.p1.rrif_balance > 0 ||
+      household.p1.rrsp_balance > 0 ||
+      household.p1.nonreg_balance > 0 ||
+      household.p1.corporate_balance > 0 ||
+      (includePartner && (
+        household.p2.tfsa_balance > 0 ||
+        household.p2.rrif_balance > 0 ||
+        household.p2.rrsp_balance > 0 ||
+        household.p2.nonreg_balance > 0 ||
+        household.p2.corporate_balance > 0
+      ));
+
+    if (!hasAnyBalance && prefillAvailable) {
+      console.log('⚠️ No account balances detected but prefill is available, data may not be loaded yet');
+      console.log('Current household data:', household);
+      // Don't block the simulation entirely, but log a warning
+    }
+
     setIsLoading(true);
     setResult(null);
 
@@ -1471,14 +1501,14 @@ export default function SimulationPage() {
             <ul className="list-disc list-inside mt-2 text-sm space-y-1">
               <li>Asset allocation (cash/GIC/investments) based on typical distributions</li>
               <li>Adjusted Cost Base (ACB) estimated at 80% of non-registered balance</li>
-              <li>
-                CPP and OAS amounts use default values ($15,000/year and $8,500/year)
-                {(household.p1.cpp_annual_at_start === 15000 || household.p1.oas_annual_at_start === 8500) && (
+              {(household.p1.cpp_annual_at_start === 15000 || household.p1.oas_annual_at_start === 8500) && (
+                <li>
+                  CPP and OAS amounts use default values ($15,000/year and $8,500/year)
                   <span className="ml-1">
                     — <a href="/benefits" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-orange-700">Calculate your actual benefits →</a>
                   </span>
-                )}
-              </li>
+                </li>
+              )}
             </ul>
             <p className="mt-2 text-sm font-medium">
               Please review and adjust these values in the expandable sections below for more accurate results.
