@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-02-18 - PRODUCTION DEPLOYMENT: RRIF-Frontload Visual Indicators
+
+### FEATURES ADDED:
+1. **Visual Warning Indicators**
+   - Added amber warning icons when RRIF withdrawals exceed standard frontload targets
+   - Tooltips show actual withdrawal percentage vs expected (15% before OAS, 8% after)
+   - Clear visual feedback for users about withdrawal strategy performance
+
+2. **Strategy Logic Improvements**
+   - RRIF-Frontload now always withdraws the frontload target minimum
+   - Strategy no longer reduces withdrawals when government benefits cover spending
+   - Maintains tax efficiency goals of the frontload strategy
+
+3. **Backend Enhancements**
+   - Added `rrif_frontload_exceeded` flags for both persons
+   - Added `rrif_frontload_pct` tracking for actual withdrawal percentages
+   - Improved debug logging for RRIF calculations
+
+### DEPLOYMENT STATUS:
+- **Railway API**: ✅ Live in production mode
+- **Vercel Frontend**: ✅ Successfully deployed
+- **CORS Security**: ✅ Properly configured (localhost blocked)
+- **Validation**: ✅ All checks passed
+
+### FILES CHANGED:
+- `components/simulation/YearByYearTable.tsx` - Added visual indicators
+- `lib/types/simulation.ts` - Added new TypeScript types
+- `python-api/modules/simulation.py` - Fixed strategy logic
+- `python-api/models/responses.py` - Added new response fields
+- Various test files added for RRIF validation
+
 ## 2026-02-12 - OAS START AGE FIX: Critical RRIF Withdrawal Issue Resolved
 
 ### ROOT CAUSE IDENTIFIED:
