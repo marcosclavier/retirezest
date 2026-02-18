@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Calendar, TrendingUp, Wallet } from 'lucide-react';
+import { DollarSign, Calendar, TrendingUp, Wallet, Receipt } from 'lucide-react';
 import { HouseholdInput } from '@/lib/types/simulation';
 
 interface PlanSnapshotCardProps {
@@ -155,13 +155,51 @@ export function PlanSnapshotCard({ household, includePartner, currentAge: curren
             <DollarSign className="h-5 w-5 text-purple-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Total Retirement Income</p>
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Gross Retirement Income</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">
               ${estimatedIncome.toLocaleString('en-CA')}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              Annual (includes CPP, OAS, pensions, withdrawals)
+              Annual (before taxes and expenses)
             </p>
+          </div>
+        </div>
+
+        {/* Annual Expenses */}
+        <div className="flex items-start gap-3">
+          <div className="bg-red-100 p-2 rounded-lg">
+            <Receipt className="h-5 w-5 text-red-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Annual Expenses</p>
+            {currentAge <= household.go_go_end_age ? (
+              <>
+                <p className="text-xl font-bold text-gray-900 mt-0.5">
+                  ${household.spending_go_go.toLocaleString('en-CA')}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Go-Go phase (until age {household.go_go_end_age})
+                </p>
+              </>
+            ) : currentAge <= household.slow_go_end_age ? (
+              <>
+                <p className="text-xl font-bold text-gray-900 mt-0.5">
+                  ${household.spending_slow_go.toLocaleString('en-CA')}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Slow-Go phase (until age {household.slow_go_end_age})
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xl font-bold text-gray-900 mt-0.5">
+                  ${household.spending_no_go.toLocaleString('en-CA')}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  No-Go phase
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -174,7 +212,7 @@ export function PlanSnapshotCard({ household, includePartner, currentAge: curren
             <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Life Expectancy</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">{planningHorizon}</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {planningHorizon - currentAge} years of planning
+              {planningHorizon - retirementAge} years of retirement
             </p>
           </div>
         </div>

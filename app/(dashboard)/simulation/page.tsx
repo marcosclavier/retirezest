@@ -654,41 +654,85 @@ export default function SimulationPage() {
   };
 
   const updatePerson = (person: 'p1' | 'p2', field: keyof PersonInput, value: any) => {
-    setHousehold((prev) => ({
-      ...prev,
-      [person]: {
-        ...prev[person],
-        [field]: value,
-      },
-    }));
+    setHousehold((prev) => {
+      const updated = {
+        ...prev,
+        [person]: {
+          ...prev[person],
+          [field]: value,
+        },
+      };
+
+      // Save to localStorage to persist the data, especially government benefits
+      try {
+        localStorage.setItem('simulation_household', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Failed to save to localStorage:', error);
+      }
+
+      return updated;
+    });
   };
 
   const updateHousehold = <K extends keyof HouseholdInput>(
     field: K,
     value: HouseholdInput[K]
   ) => {
-    setHousehold((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setHousehold((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Save to localStorage to persist the data
+      try {
+        localStorage.setItem('simulation_household', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Failed to save to localStorage:', error);
+      }
+
+      return updated;
+    });
   };
 
   const handleAddPartner = () => {
     setIncludePartner(true);
-    setHousehold((prev) => ({
-      ...prev,
-      include_partner: true,
-      p2: { ...defaultPersonInput, name: 'Partner' },
-    }));
+    setHousehold((prev) => {
+      const updated = {
+        ...prev,
+        include_partner: true,
+        p2: { ...defaultPersonInput, name: 'Partner' },
+      };
+
+      // Save to localStorage
+      try {
+        localStorage.setItem('simulation_household', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Failed to save to localStorage:', error);
+      }
+
+      return updated;
+    });
   };
 
   const handleRemovePartner = () => {
     setIncludePartner(false);
-    setHousehold((prev) => ({
-      ...prev,
-      include_partner: false,
-      p2: emptyPersonInput, // Use empty input with zero CPP/OAS
-    }));
+    setHousehold((prev) => {
+      const updated = {
+        ...prev,
+        include_partner: false,
+        p2: emptyPersonInput, // Use empty input with zero CPP/OAS
+      };
+
+      // Save to localStorage
+      try {
+        localStorage.setItem('simulation_household', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Failed to save to localStorage:', error);
+      }
+
+      return updated;
+    });
   };
 
   const handleReloadFromProfile = async () => {

@@ -118,13 +118,16 @@ class AssetAnalyzer:
         )
 
         # Recommend strategy
+        # Check if household has a partner for strategies that require two people
+        has_partner = household.p2 is not None
         strategy, rationale = AssetAnalyzer._recommend_strategy(
             is_corporate_heavy,
             is_rrif_heavy,
             is_nonreg_heavy,
             is_tfsa_significant,
             corporate_pct,
-            rrif_pct
+            rrif_pct,
+            has_partner
         )
 
         return AssetComposition(
@@ -177,7 +180,8 @@ class AssetAnalyzer:
         is_nonreg_heavy: bool,
         is_tfsa_significant: bool,
         corporate_pct: float,
-        rrif_pct: float
+        rrif_pct: float,
+        has_partner: bool
     ) -> tuple:
         """
         Recommend withdrawal strategy based on composition.
@@ -189,6 +193,7 @@ class AssetAnalyzer:
             is_tfsa_significant: TFSA > 15%
             corporate_pct: Corporate percentage (for detailed assessment)
             rrif_pct: RRIF percentage (for detailed assessment)
+            has_partner: Whether household has a partner (for strategies requiring two people)
 
         Returns:
             Tuple of (WithdrawalStrategy, rationale_string)
@@ -227,12 +232,22 @@ class AssetAnalyzer:
 
         # Priority 2: RRIF-heavy (>25%)
         if is_rrif_heavy:
-            rationale = (
-                "RRIF-heavy portfolio (>25%). "
-                "Use income splitting to spouse (ages 65+). "
-                "Spreads ordinary income across two people."
-            )
-            return WithdrawalStrategy.RRIF_SPLITTING, rationale
+            # RRIF splitting requires a partner - only recommend for couples
+            if has_partner:
+                rationale = (
+                    "RRIF-heavy portfolio (>25%). "
+                    "Use income splitting to spouse (ages 65+). "
+                    "Spreads ordinary income across two people."
+                )
+                return WithdrawalStrategy.RRIF_SPLITTING, rationale
+            else:
+                # For single people with RRIF-heavy portfolio, use RRIF-Frontload strategy
+                rationale = (
+                    f"RRIF-heavy portfolio ({rrif_pct*100:.1f}%) - single person. "
+                    "RRIF-Frontload strategy depletes RRIF early to minimize lifetime taxes. "
+                    "Income splitting not available without a spouse."
+                )
+                return WithdrawalStrategy.RRIF_FRONTLOAD, rationale
 
         # Priority 3: NonReg-heavy (>25%)
         if is_nonreg_heavy:
