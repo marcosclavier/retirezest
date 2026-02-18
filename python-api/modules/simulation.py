@@ -1363,9 +1363,9 @@ def _get_strategy_order(strategy_name: str) -> List[str]:
         return ["corp", "rrif", "nonreg", "tfsa"]
     elif "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
         # RRIF-Frontload: RRIF is pre-withdrawn at frontload amount (15% before OAS, 8% after)
-        # Then fill remaining shortfall with Corp -> NonReg -> TFSA
-        # Priority: Corp first (capital gains treatment), then NonReg (distributions + withdrawals), then TFSA last
-        return ["corp", "nonreg", "tfsa"]
+        # CRITICAL: Include "rrif" in the order so additional RRIF withdrawals can be made if frontload is insufficient
+        # Priority: RRIF first (to allow exceeding frontload if needed), then Corp, NonReg, TFSA
+        return ["rrif", "corp", "nonreg", "tfsa"]
     elif "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
         # For balanced strategy: prioritize Corp (tax-credited), then RRIF (100% taxable at death - deplete early!),
         # then NonReg (ACB-protected), then TFSA (preserve for last)
