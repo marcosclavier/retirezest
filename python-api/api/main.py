@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Retirement Simulation API",
     description="Tax-optimized retirement planning calculations for Canadian households",
-    version="1.0.0",
+    version="1.0.1",  # CPP/OAS age validation and Corporate withdrawal fixes
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
