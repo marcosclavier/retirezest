@@ -675,6 +675,15 @@ export default function IncomePage() {
                           <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                             {income.frequency}
                           </span>
+                          {income.type === 'pension' && (
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              income.inflationIndexed === false
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {income.inflationIndexed === false ? 'Fixed' : 'Inflation Indexed'}
+                            </span>
+                          )}
                           {includePartner && income.owner && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded capitalize">
                               {income.owner === 'person1' ? 'Person 1' :

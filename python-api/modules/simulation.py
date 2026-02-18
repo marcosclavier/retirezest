@@ -1523,13 +1523,16 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         if age >= pension_start_age:
             # Pension has started
             annual_amount = pension.get('amount', 0.0)
-            print(f"  DEBUG: Pension starting - amount=${annual_amount}")
+            is_indexed = pension.get('inflationIndexed', True)
+            print(f"  DEBUG: Pension starting - amount=${annual_amount}, inflationIndexed={is_indexed}")
 
             # Apply inflation indexing if enabled
-            if pension.get('inflationIndexed', True):
+            if is_indexed:
                 years_since_pension_start = age - pension_start_age
                 annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
                 print(f"  DEBUG: After inflation adjustment (years={years_since_pension_start}): ${annual_amount}")
+            else:
+                print(f"  DEBUG: Pension not indexed - keeping flat amount=${annual_amount}")
 
             pension_income_total += annual_amount
             print(f"  DEBUG: Total pension income so far: ${pension_income_total}")
@@ -2670,14 +2673,17 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             pension_start_age = pension.get('startAge', 65)
             if age1 >= pension_start_age:
                 annual_amount = pension.get('amount', 0.0)
-                if pension.get('inflationIndexed', True):
+                is_indexed = pension.get('inflationIndexed', True)
+
+                if is_indexed:
                     years_since_pension_start = age1 - pension_start_age
                     annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+
                 p1_pension_income += annual_amount
 
                 # DEBUG: Log calculation
                 if year == 2033:
-                    print(f"  -> Age {age1} >= Start {pension_start_age}, Amount: ${annual_amount:,.0f}, Total: ${p1_pension_income:,.0f}", file=sys.stderr)
+                    print(f"  -> Pension: Age {age1} >= Start {pension_start_age}, Indexed={is_indexed}, Amount: ${annual_amount:,.0f}, Total: ${p1_pension_income:,.0f}", file=sys.stderr)
 
         p1_other_income = 0.0
         p1_other_incomes = getattr(p1, 'other_incomes', [])
@@ -2720,9 +2726,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 pension_start_age = pension.get('startAge', 65)
                 if age2 >= pension_start_age:
                     annual_amount = pension.get('amount', 0.0)
-                    if pension.get('inflationIndexed', True):
+                    is_indexed = pension.get('inflationIndexed', True)
+
+                    if is_indexed:
                         years_since_pension_start = age2 - pension_start_age
                         annual_amount *= ((1 + hh.general_inflation) ** years_since_pension_start)
+
                     p2_pension_income += annual_amount
 
         p2_other_income = 0.0
