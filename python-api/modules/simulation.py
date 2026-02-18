@@ -1805,11 +1805,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # -----  Base withdrawals: Start with zero (strategy will fill) + any custom CSV. -----
     withdrawals = {"nonreg": 0.0, "rrif": rrif_min_initial, "tfsa": 0.0, "corp": 0.0}
-
-    # DEBUG: Log initial RRIF withdrawal
-    if "rrif-frontload" in strategy_name.lower() and withdrawals["rrif"] > 0:
-        import sys
+    for k in withdrawals.keys():
+        if custom_withdraws.get(k, 0.0) > 0:
             withdrawals[k] += custom_withdraws[k]
+
     # --- freeze start-of-year corporate balance (used for availability this year) ---
     corporate_balance_start = float(person.corporate_balance)
 
@@ -2228,9 +2227,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # If we still have a shortfall, that is unmet after-tax for this person this year
     unmet_after_tax = max(shortfall, 0.0)
 
-    # DEBUG: Log RRIF withdrawal before minimum enforcement
-    if "rrif-frontload" in strategy_name.lower():
-        import sys
     # CRITICAL: RRIF minimum is MANDATORY by Canadian tax law
     # It must be withdrawn regardless of withdrawal strategy
     # But it should be enforced AFTER the strategy order is applied,
@@ -2379,9 +2375,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         "oas": oas,  # OAS income
         "oas_clawback": base_oas_clawback,  # NEW: OAS clawback for this person
     }
-    # DEBUG: Log final RRIF withdrawal
-    if "rrif-frontload" in strategy_name.lower():
-        import sys
+    return withdrawals, tax_detail, info
 
 
 def calculate_terminal_tax(
@@ -2797,9 +2791,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             p1_pension_income, p1_other_income
             )
 
-        # DEBUG: Log w1 after simulate_year returns
-        if "rrif-frontload" in hh.strategy.lower():
-            import sys
         info1["pension_income_p1"] = p1_pension_income
         info1["other_income_p1"] = p1_other_income
 
