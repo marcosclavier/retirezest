@@ -149,14 +149,27 @@ def api_household_to_internal(
     if api_household.p2:
         logger.info(f"🔍 CONVERTER: P2 pension_incomes = {api_household.p2.pension_incomes}")
 
+    # DEBUG: Log corporate balances at converter level
+    logger.info(f"🏢 CONVERTER: P1 ({api_household.p1.name}) corporate_balance = ${api_household.p1.corporate_balance:,.0f}")
+    if api_household.p2 and api_household.include_partner:
+        logger.info(f"🏢 CONVERTER: P2 ({api_household.p2.name}) corporate_balance = ${api_household.p2.corporate_balance:,.0f}")
+
     # Convert p2 only if include_partner is True
     # For single person mode, p2 should be None
     p2_internal = None
     if api_household.include_partner:
         p2_internal = api_person_to_internal(api_household.p2)
 
+    # Convert p1
+    p1_internal = api_person_to_internal(api_household.p1)
+
+    # DEBUG: Log corporate balances after conversion
+    logger.info(f"🔄 AFTER CONVERSION: P1 ({p1_internal.name}) corporate_balance = ${p1_internal.corporate_balance:,.0f}")
+    if p2_internal:
+        logger.info(f"🔄 AFTER CONVERSION: P2 ({p2_internal.name}) corporate_balance = ${p2_internal.corporate_balance:,.0f}")
+
     return Household(
-        p1=api_person_to_internal(api_household.p1),
+        p1=p1_internal,
         p2=p2_internal,
 
         # Single or couple indicator
@@ -1198,7 +1211,7 @@ def extract_chart_data(df: pd.DataFrame) -> ChartData:
             tfsa_withdrawal=tfsa_withdrawal,
             corporate_withdrawal=corporate_withdrawal,
             nonreg_distributions=nonreg_distributions,
-            pension_income_total=pension_income_total,
+            employer_pension_total=pension_income_total,
             other_income_total=other_income_total,
         ))
 

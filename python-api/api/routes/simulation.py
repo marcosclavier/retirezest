@@ -97,7 +97,9 @@ async def run_simulation(
         # DEBUG: Check API input balances
         logger.debug(f"🔎 API Input Received:")
         logger.debug(f"   p1.name={household_input.p1.name}, p1.tfsa_balance=${household_input.p1.tfsa_balance:,.0f}")
+        logger.debug(f"   p1.corporate_balance=${household_input.p1.corporate_balance:,.0f}")
         logger.debug(f"   p2.name={household_input.p2.name}, p2.tfsa_balance=${household_input.p2.tfsa_balance:,.0f}")
+        logger.debug(f"   p2.corporate_balance=${household_input.p2.corporate_balance:,.0f}")
 
         # DEBUG: Check pension incomes
         if household_input.p1.pension_incomes:
@@ -148,6 +150,9 @@ async def run_simulation(
         logger.debug(f"   household.p1.name: {household.p1.name}")
         logger.debug(f"   household.p1.tfsa_balance: ${household.p1.tfsa_balance:,.2f}")
         logger.debug(f"   household.p1.rrif_balance: ${household.p1.rrif_balance:,.2f}")
+        logger.debug(f"   household.p1.corporate_balance: ${household.p1.corporate_balance:,.2f}")
+        if household.p2:
+            logger.debug(f"   household.p2.corporate_balance: ${household.p2.corporate_balance:,.2f}")
         logger.debug(f"   household.p1.nonreg_balance: ${household.p1.nonreg_balance:,.2f}")
         if household.p2:
             logger.debug(f"   household.p2.name: {household.p2.name}")

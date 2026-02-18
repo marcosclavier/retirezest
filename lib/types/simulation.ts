@@ -679,14 +679,14 @@ export const strategyOptions: { value: WithdrawalStrategy; label: string; descri
     description: 'Withdraws from tax-free accounts first for maximum flexibility',
   },
   {
-    value: 'rrif-frontload',
-    label: 'RRSP/RRIF Focused (RECOMMENDED for RRSP holders)',
-    description: '✓ BEST for significant RRSP/RRIF balances. Withdraws 15% before OAS/CPP, 8% after. Ensures retirement spending is funded',
+    value: 'balanced',
+    label: 'Balanced',
+    description: 'Withdraws RRIF minimum plus amounts needed for spending. Balances taxes across retirement',
   },
   {
-    value: 'balanced',
-    label: 'Balanced (Minimum Only)',
-    description: '⚠️ WARNING: Only withdraws RRIF minimum. May create spending gaps if RRIF is your main retirement source',
+    value: 'rrif-frontload',
+    label: 'RRIF Frontload (15%/8% Strategy)',
+    description: '✓ Strategic: Withdraws exactly 15% of RRIF before OAS/CPP, 8% after. Controls tax while reducing future OAS clawback',
   },
 ];
 

@@ -10,6 +10,7 @@ Core Functions:
 """
 
 from typing import Dict, List, Tuple, Optional, Any
+import sys
 import pandas as pd
 from modules.models import Person, Household, TaxParams, YearResult
 from modules.config import get_tax_params, index_tax_params
@@ -1946,7 +1947,14 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # (retirement + death), taking into account GIS/OAS clawback, TFSA strategic placement, etc.
     order = _get_strategy_order(strategy_name)  # Default fallback
 
-    if tax_optimizer is not None:
+    # For rrif-frontload strategy, preserve the specific order designed for tax efficiency
+    # The rrif-frontload strategy has a specific order: Corp first (eligible dividends),
+    # then NonReg, then TFSA. Don't let TaxOptimizer override this.
+    if "rrif-frontload" in strategy_name.lower():
+        # Keep the strategy-specific order for rrif-frontload
+        if shortfall > 1e-6:
+            print(f"  Using rrif-frontload specific order: {order}", file=sys.stderr)
+    elif tax_optimizer is not None:
         try:
             optimizer_plan = tax_optimizer.optimize_withdrawals(
                 person=person,

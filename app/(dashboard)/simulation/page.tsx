@@ -974,9 +974,9 @@ export default function SimulationPage() {
               {result?.household_input?.strategy && (() => {
                 const strategyMap: Record<string, string> = {
                   'minimize-income': 'Minimize Income',
-                  'balanced': 'Balanced (Minimum Only)',
+                  'balanced': 'Balanced',
                   'rrif-splitting': 'RRIF Splitting',
-                  'rrif-frontload': 'RRSP/RRIF Focused',
+                  'rrif-frontload': 'RRIF Frontload',
                   'corporate-optimized': 'Corporate Optimized',
                   'capital-gains-optimized': 'Capital Gains Optimized',
                   'tfsa-first': 'TFSA First',
