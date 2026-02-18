@@ -1761,15 +1761,21 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 rrif_needed_gross = max(rrif_needed_gross, 0.0)
 
             # Use the GREATER of frontload target or what's needed for spending
+            original_frontload = rrif_frontload_target
             rrif_frontload_target = max(rrif_frontload_target, rrif_needed_gross)
 
-            # Debug output
+            # Debug output - show when frontload is insufficient
             import sys
-            print(f"DEBUG RRIF FIX WITH TAX ENGINE: after_tax_needed=${actual_shortfall:,.0f}, "
-                  f"gross_rrif_calculated=${rrif_needed_gross:,.0f} (includes 3% buffer), "
-                  f"frontload_8pct=${person.rrif_balance * frontload_pct:,.0f}, "
-                  f"final_rrif_target=${rrif_frontload_target:,.0f}",
-                  file=sys.stderr)
+            if rrif_needed_gross > original_frontload:
+                print(f"⚠️  RRIF-FRONTLOAD INSUFFICIENT [{person.name}] Age {age}:", file=sys.stderr)
+                print(f"   Frontload {int(frontload_pct*100)}% = ${original_frontload:,.0f}", file=sys.stderr)
+                print(f"   Needed for spending = ${rrif_needed_gross:,.0f}", file=sys.stderr)
+                print(f"   INCREASING withdrawal to ${rrif_frontload_target:,.0f} to meet spending needs", file=sys.stderr)
+            else:
+                print(f"✅ RRIF-FRONTLOAD SUFFICIENT [{person.name}] Age {age}:", file=sys.stderr)
+                print(f"   Frontload {int(frontload_pct*100)}% = ${original_frontload:,.0f}", file=sys.stderr)
+                print(f"   Needed for spending = ${rrif_needed_gross:,.0f}", file=sys.stderr)
+                print(f"   Using frontload amount of ${rrif_frontload_target:,.0f}", file=sys.stderr)
 
         # Cap at available RRIF balance
         rrif_frontload_target = min(rrif_frontload_target, person.rrif_balance)
@@ -2017,7 +2023,21 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # Determine available balance from the current source
         if k == "rrif":
-            available = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
+            # CRITICAL FIX: For RRIF-Frontload strategy, if we still have shortfall after the initial
+            # frontload withdrawal, allow additional RRIF withdrawals to meet spending needs
+            # The original code prevented this by subtracting the initial withdrawal from available
+            if ("rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name) and shortfall > 1e-6:
+                # Allow full RRIF balance to be used if needed for spending
+                # We've already withdrawn withdrawals["rrif"], so available is what's left
+                available = max(person.rrif_balance - withdrawals["rrif"], 0.0)
+                if available > 1e-6:
+                    import sys
+                    print(f"  RRIF-FRONTLOAD FIX: Allowing additional RRIF withdrawal. "
+                          f"Already withdrawn=${withdrawals['rrif']:,.0f}, "
+                          f"Available for additional=${available:,.0f}, "
+                          f"Shortfall=${shortfall:,.0f}", file=sys.stderr)
+            else:
+                available = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
         elif k == "corp":
             # CDA-aware Corp withdrawal: prioritize CDA (zero-tax) before paid-up capital
             # For Balanced strategy specifically, we want to take CDA first as it's zero-tax
