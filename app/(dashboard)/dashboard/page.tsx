@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { DashboardFeedbackPanel } from '@/components/feedback/DashboardFeedbackPanel';
 import { GettingStartedChecklistWrapper } from '@/components/dashboard/GettingStartedChecklistWrapper';
 import { NoSimulationFeedbackTrigger } from '@/components/feedback/NoSimulationFeedbackTrigger';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -269,22 +270,70 @@ export default async function DashboardPage() {
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <p className="text-xs text-gray-600 mb-1">Health Score</p>
+                  <div className="flex items-center mb-1">
+                    <p className="text-xs text-gray-600">Health Score</p>
+                    <InfoTooltip
+                      title="Retirement Health Score"
+                      content="A comprehensive measure of your retirement plan's strength. It evaluates how well your savings, income, and spending align to meet your retirement goals throughout your lifetime."
+                      examples={[
+                        "80-100: Excellent - Strong likelihood of meeting all goals",
+                        "60-79: Good - Solid plan with room for improvement",
+                        "40-59: Fair - Consider adjustments to improve security",
+                        "Below 40: Needs attention - Significant changes recommended"
+                      ]}
+                    />
+                  </div>
                   <p className="text-2xl font-bold text-gray-900">{lastSimulation.healthScore?.toFixed(0) || 'N/A'}/100</p>
                   <p className="text-xs text-blue-600 font-medium">{lastSimulation.healthRating || 'N/A'}</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <p className="text-xs text-gray-600 mb-1">Success Rate</p>
+                  <div className="flex items-center mb-1">
+                    <p className="text-xs text-gray-600">Success Rate</p>
+                    <InfoTooltip
+                      title="Success Rate Explained"
+                      content="The percentage of years in your retirement where you can fully cover your planned spending without running out of money. This shows how many years your savings will last compared to your expected retirement duration."
+                      examples={[
+                        "100%: All retirement years fully funded",
+                        "75%: 3 out of 4 years covered (may need adjustments)",
+                        "42% (8/19 years): Only 8 of 19 planned years funded",
+                        "Consider: Reducing spending, working longer, or saving more"
+                      ]}
+                    />
+                  </div>
                   <p className="text-2xl font-bold text-gray-900">{typeof lastSimulation.successRate === 'number' ? (lastSimulation.successRate * 100).toFixed(0) : 'N/A'}%</p>
                   <p className="text-xs text-gray-600">{lastSimulation.yearsFunded || 0}/{lastSimulation.yearsSimulated || 0} years</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <p className="text-xs text-gray-600 mb-1">Est. Total Tax</p>
+                  <div className="flex items-center">
+                    <p className="text-xs text-gray-600 mb-1">Est. Total Tax</p>
+                    <InfoTooltip
+                      title="Estimated Total Tax"
+                      content="The total amount of taxes (federal and provincial) you're expected to pay throughout your retirement. This includes taxes on all income sources: withdrawals from registered accounts, pension income, investment gains, and other taxable income."
+                      examples={[
+                        "Includes taxes on RRSP/RRIF withdrawals",
+                        "Includes taxes on CPP and OAS benefits",
+                        "Includes capital gains taxes on non-registered investments",
+                        "Tax-efficient strategies can help reduce this amount"
+                      ]}
+                    />
+                  </div>
                   <p className="text-xl font-bold text-gray-900">${((lastSimulation.totalTaxPaid || 0) / 1000).toFixed(0)}K</p>
                   <p className="text-xs text-gray-600">{lastSimulation.avgTaxRate ? (lastSimulation.avgTaxRate * 100).toFixed(1) : 'N/A'}% avg rate</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <p className="text-xs text-gray-600 mb-1">Final Estate</p>
+                  <div className="flex items-center">
+                    <p className="text-xs text-gray-600 mb-1">Final Estate</p>
+                    <InfoTooltip
+                      title="Final Estate Value"
+                      content="The estimated value of assets remaining at the end of your retirement plan, after all taxes have been paid. This represents what could be passed on to beneficiaries or charities. The calculation assumes all registered accounts are liquidated and taxed."
+                      examples={[
+                        "Includes TFSA balances (tax-free to beneficiaries)",
+                        "RRSP/RRIF balances shown after final taxes",
+                        "Non-registered investments at fair market value",
+                        "Corporate assets may have additional tax implications"
+                      ]}
+                    />
+                  </div>
                   <p className="text-xl font-bold text-gray-900">${((lastSimulation.finalEstate || 0) / 1000).toFixed(0)}K</p>
                   <p className="text-xs text-gray-600">After-tax value</p>
                 </div>
