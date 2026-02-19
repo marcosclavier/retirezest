@@ -373,7 +373,6 @@ def corp_passive_income(person: Person) -> Dict[str, float]:
 
         # DEBUG: Log first time we see huge numbers
         if corp_total > 1e12:
-            import sys
             print(f"DEBUG: HUGE corp balance detected: {corp_total:.0f}", file=sys.stderr)
             print(f"  Buckets: cash={cash:.0f}, gic={gic:.0f}, invest={invest:.0f}", file=sys.stderr)
             print(f"  Percentages: cash={cash_pct:.4f}, gic={gic_pct:.4f}, invest={invest_pct:.4f}", file=sys.stderr)
@@ -1639,7 +1638,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Priority: 15% RRIF (before OAS) or 8% RRIF (after OAS), then Corp -> NonReg -> TFSA
     if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
         # Debug OAS age comparison
-        import sys
         print(f"DEBUG OAS CHECK [{person.name}] Age {age} vs OAS start {person.oas_start_age}: "
               f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS",
               file=sys.stderr)
@@ -1667,7 +1665,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         total_income_available = government_benefits_available + pension_income_total + other_income_total
 
         # DEBUG: Log the pension fix impact
-        import sys
         print(f"DEBUG RRIF-FRONTLOAD FIX [{person.name}] Age {age}:", file=sys.stderr)
         print(f"  Pension income: ${pension_income_total:,.0f}", file=sys.stderr)
         print(f"  Other income: ${other_income_total:,.0f}", file=sys.stderr)
@@ -1742,8 +1739,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
                 # Debug for first few iterations
                 if iteration < 3:
-                    import sys
-                    print(f"  Iteration {iteration}: RRIF=${rrif_needed_gross:,.0f}, Tax=${test_tax:,.0f}, "
+                            print(f"  Iteration {iteration}: RRIF=${rrif_needed_gross:,.0f}, Tax=${test_tax:,.0f}, "
                           f"After-tax=${rrif_after_tax:,.0f}, Gap=${gap:,.0f}", file=sys.stderr)
 
                 if abs(gap) < tolerance:
@@ -1772,7 +1768,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 rrif_frontload_target = rrif_needed_gross
 
             # Debug output - show when frontload is insufficient
-            import sys
             if rrif_needed_gross > original_frontload:
                 print(f"⚠️  RRIF-FRONTLOAD INSUFFICIENT [{person.name}] Age {age}:", file=sys.stderr)
                 print(f"   Frontload {int(frontload_pct*100)}% = ${original_frontload:,.0f}", file=sys.stderr)
@@ -1792,7 +1787,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         rrif_min_deferred = 0.0  # Don't enforce minimum again (already included in frontload)
 
         if rrif_frontload_target > 1e-6:
-            import sys
             print(f"DEBUG RRIF-FRONTLOAD [{person.name}] Age {age}: "
                   f"{'BEFORE' if age < person.oas_start_age else 'AFTER'} OAS, "
                   f"RRIF target = ${rrif_frontload_target:,.0f} (needed ${rrif_needed_gross:,.0f} for spending)",
@@ -1981,11 +1975,9 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             if optimizer_order and len(optimizer_order) > 0:
                 order = optimizer_order
                 if shortfall > 1e-6:
-                    import sys
-                    print(f"  TaxOptimizer selected order: {order}", file=sys.stderr)
+                            print(f"  TaxOptimizer selected order: {order}", file=sys.stderr)
         except Exception as e:
             # Fallback to strategy-based order on any optimizer error
-            import sys
             print(f"  WARNING: TaxOptimizer failed ({str(e)}), falling back to strategy order", file=sys.stderr)
 
     if "GIS-Optimized" in strategy_name or "minimize-income" in strategy_name.lower() or "minimize_income" in strategy_name.lower():
@@ -1996,7 +1988,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             order = []  # Skip the loop below only if target was met
         else:
             # GIS optimization didn't meet target - continue with strategy order to fill gap
-            import sys
             print(f"  WARNING: GIS optimization left ${shortfall:,.0f} shortfall, using fallback order", file=sys.stderr)
 
     if corporate_balance_start <= 1e-9:
@@ -2004,7 +1995,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log initial shortfall and available balances
     if shortfall > 1e-6:
-        import sys
         print(f"\nDEBUG WITHDRAWAL [{person.name}] Age {age} Year {year if year else '?'}:", file=sys.stderr)
         print(f"  Strategy: {strategy_name}", file=sys.stderr)
         print(f"  After-tax target: ${after_tax_target:,.0f}", file=sys.stderr)
@@ -2039,8 +2029,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
                 # We've already withdrawn withdrawals["rrif"], so available is what's left
                 available = max(person.rrif_balance - withdrawals["rrif"], 0.0)
                 if available > 1e-6:
-                    import sys
-                    print(f"  RRIF-FRONTLOAD FIX: Allowing additional RRIF withdrawal. "
+                            print(f"  RRIF-FRONTLOAD FIX: Allowing additional RRIF withdrawal. "
                           f"Already withdrawn=${withdrawals['rrif']:,.0f}, "
                           f"Available for additional=${available:,.0f}, "
                           f"Shortfall=${shortfall:,.0f}", file=sys.stderr)
@@ -2068,8 +2057,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
             # For Balanced strategy, provide DEBUG info about ACB timing
             if available > 1e-6 and ("Balanced" in strategy_name or "tax efficiency" in strategy_name.lower()):
-                import sys
-                print(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}", file=sys.stderr)
+                    print(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}", file=sys.stderr)
         elif k == "tfsa":
             # TFSA-last guard: only allow TFSA if all other sources are tapped
             # FIX: Use the ORIGINAL starting balance, not current balance minus what we already withdrew
@@ -2080,16 +2068,14 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
             # DEBUG: Log TFSA guard check
             if shortfall > 1e-6:
-                import sys
-                print(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}", file=sys.stderr)
+                    print(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}", file=sys.stderr)
 
             # CRITICAL FIX: TFSA should ONLY be used if ALL other sources in the withdrawal order
             # that come BEFORE TFSA have been fully depleted
             if (nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9):
                 # Skip TFSA for now; other sources still have funds
                 if shortfall > 1e-6:
-                    import sys
-                    print(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})", file=sys.stderr)
+                            print(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})", file=sys.stderr)
                 continue
             available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
         else:
@@ -2097,13 +2083,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         if available <= 0.0:
             if shortfall > 1e-6 and k != "tfsa":
-                import sys
-                print(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)", file=sys.stderr)
+                    print(f"  {k.upper()}: available=${available:,.0f} (skipping, no funds)", file=sys.stderr)
             continue
 
         # DEBUG: Log withdrawal source being processed
         if shortfall > 1e-6:
-            import sys
             print(f"  {k.upper()}: available=${available:,.0f}, shortfall=${shortfall:,.0f}", file=sys.stderr)
 
         # TFSA is tax-free: just take what you need and continue
@@ -2113,8 +2097,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             shortfall -= take
             # DEBUG: Log TFSA withdrawal
             if take > 1e-6:
-                import sys
-                print(f"  -> TFSA withdrawal: ${take:,.0f}", file=sys.stderr)
+                    print(f"  -> TFSA withdrawal: ${take:,.0f}", file=sys.stderr)
             continue
 
         # --- For taxable sources (nonreg / rrif / corp), compute tax-aware sizing ---
@@ -2180,8 +2163,7 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             extra[k] += take
             # DEBUG: Log withdrawal amount
             if shortfall > 1e-6:
-                import sys
-                print(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)", file=sys.stderr)
+                    print(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)", file=sys.stderr)
             # Recompute base_tax and total after-tax cash with the new withdrawal
             # CRITICAL FIX: Pass the TOTAL withdrawal amounts (base + extra), not just extra
             # This ensures tax calculation correctly computes marginal tax rates on total income
@@ -2265,7 +2247,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
         # DEBUG: Log CDA withdrawal
         if corp_cda_withdrawn > 1e-6:
-            import sys
             print(f"DEBUG CDA [{person.name}]: Withdrew ${corp_cda_withdrawn:,.0f} from CDA (zero-tax), ${corp_other_withdrawn:,.0f} from paid-up capital", file=sys.stderr)
     else:
         # Non-Balanced strategy: just deduct from paid-up capital
@@ -2291,7 +2272,6 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # DEBUG: Log GIS calculation when values are non-zero
     if gis_benefit > 0 or gis_net_income > 15000:
-        import sys
         print(f"DEBUG GIS [{person.name}] Age {age}:", file=sys.stderr)
         print(f"  nr_interest={nr_interest:.0f}, nr_elig_div={nr_elig_div:.0f}, nr_capg_dist={nr_capg_dist:.0f}", file=sys.stderr)
         print(f"  rrif_wd={withdrawals['rrif']:.0f}, corp_wd={withdrawals['corp']:.0f}", file=sys.stderr)
@@ -2663,7 +2643,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p1_pension_incomes = getattr(p1, 'pension_incomes', [])
 
         # DEBUG: Log pension data
-        import sys
         if year == 2033 and p1_pension_incomes:
             print(f"DEBUG PENSION: Year {year}, Age {age1}, Found {len(p1_pension_incomes)} pensions", file=sys.stderr)
             for i, pension in enumerate(p1_pension_incomes):
@@ -2805,7 +2784,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # DEBUG: Log pension income being added to info1
         if year == 2033:
-            import sys
             print(f"🎯 DEBUG info1 assignment: p1_pension_income=${p1_pension_income:,.0f} -> info1['pension_income_p1']", file=sys.stderr)
             print(f"   Verifying: info1['pension_income_p1'] = {info1.get('pension_income_p1', 'NOT SET')}", file=sys.stderr)
 
@@ -2884,8 +2862,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                import sys
-                print(f"DEBUG HH GIS CASE1 (Both OAS) [{year}]: P1_income=${gis_income_p1:,.0f} P2_income=${gis_income_p2:,.0f} Combined=${combined_gis_income:,.0f} threshold=${couple_threshold:,.0f}", file=sys.stderr)
+                    print(f"DEBUG HH GIS CASE1 (Both OAS) [{year}]: P1_income=${gis_income_p1:,.0f} P2_income=${gis_income_p2:,.0f} Combined=${combined_gis_income:,.0f} threshold=${couple_threshold:,.0f}", file=sys.stderr)
 
             # Apply couple clawback logic
             if combined_gis_income >= couple_threshold:
@@ -2916,8 +2893,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                import sys
-                print(f"DEBUG HH GIS CASE2 (One OAS) [{year}]: P1_income=${gis_income_p1:,.0f} (OAS=${oas_p1_current:,.0f}) P2_income=${gis_income_p2:,.0f} (OAS=${oas_p2_current:,.0f}) Combined=${combined_gis_income:,.0f} threshold=${one_oas_threshold:,.0f}", file=sys.stderr)
+                    print(f"DEBUG HH GIS CASE2 (One OAS) [{year}]: P1_income=${gis_income_p1:,.0f} (OAS=${oas_p1_current:,.0f}) P2_income=${gis_income_p2:,.0f} (OAS=${oas_p2_current:,.0f}) Combined=${combined_gis_income:,.0f} threshold=${one_oas_threshold:,.0f}", file=sys.stderr)
 
             # Person 1 (check if receiving OAS this year)
             if oas_p1_current > 0:
@@ -2990,7 +2966,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             clawback_rate = gis_config.get("clawback_rate", 0.50)
 
             if year >= 2025:
-                import sys
                 print(f"DEBUG HH GIS CASE3 (Single) [{year}]: P1_income=${gis_income_p1:,.0f} threshold=${single_threshold:,.0f}", file=sys.stderr)
                 if abs(gis_income_p1_actual - gis_income_p1_original) > 1:
                     print(f"  GIS income recalculation: Original=${gis_income_p1_original:,.0f}, Actual=${gis_income_p1_actual:,.0f}, Using=${gis_income_p1:,.0f}", file=sys.stderr)
@@ -3011,7 +2986,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             t2["gis"] = 0.0  # p2 doesn't exist for single person
 
         if year >= 2025:
-            import sys
             print(f"DEBUG HH GIS FINAL [{year}]: t1[gis]=${t1.get('gis', 0):,.2f} t2[gis]=${t2.get('gis', 0):,.2f}", file=sys.stderr)
 
         # Household-level funding gap in this year
@@ -3270,7 +3244,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Debug logging for surplus allocation
         if year >= 2033 and year <= 2034 and surplus_for_reinvest > 0:
-            import sys
             print(f"\nDEBUG SURPLUS ALLOCATION [{year}]:", file=sys.stderr)
             print(f"  Total surplus for reinvest: ${surplus_for_reinvest:,.0f}", file=sys.stderr)
             print(f"  TFSA room1: ${tfsa_room1:,.0f}, c1: ${c1:,.0f}", file=sys.stderr)
@@ -3307,12 +3280,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
                 p1.nonreg_balance += surplus_remaining
                 # Note: ACB stays the same; reinvested amount is added at current market value
                 if year >= 2033 and year <= 2034:
-                    import sys
-                    print(f"DEBUG NONREG SURPLUS [{year}]: Added ${surplus_remaining:,.0f} to non-reg, new balance=${p1.nonreg_balance:,.0f}", file=sys.stderr)
+                            print(f"DEBUG NONREG SURPLUS [{year}]: Added ${surplus_remaining:,.0f} to non-reg, new balance=${p1.nonreg_balance:,.0f}", file=sys.stderr)
             else:
                 if year >= 2033 and year <= 2034:
-                    import sys
-                    print(f"DEBUG NONREG SURPLUS [{year}]: NOT adding ${surplus_remaining:,.0f} to non-reg because hh_gap=${hh_gap:,.2f} > 0", file=sys.stderr)
+                            print(f"DEBUG NONREG SURPLUS [{year}]: NOT adding ${surplus_remaining:,.0f} to non-reg because hh_gap=${hh_gap:,.2f} > 0", file=sys.stderr)
 
         # Store this year's TFSA withdrawals for next year's room calculation
         tfsa_withdraw_last_year1 = w1["tfsa"]
@@ -3379,7 +3350,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # DEBUG: Log extraction from info1
         if year == 2033:
-            import sys
             print(f"📊 DEBUG YearResult extraction: info1.get('pension_income_p1') = ${pension_income_p1:,.0f}", file=sys.stderr)
             print(f"   Will be passed to YearResult as pension_income_p1=${pension_income_p1:,.0f}", file=sys.stderr)
 
@@ -3693,7 +3663,6 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     df = pd.DataFrame([r.__dict__ for r in rows])
 
     # DEBUG: Check if pension_income_p1 is in DataFrame
-    import sys
     if 'pension_income_p1' in df.columns:
         print(f"✅ DEBUG: pension_income_p1 IS in DataFrame columns", file=sys.stderr)
         if len(df) > 0:

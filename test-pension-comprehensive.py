@@ -1,201 +1,215 @@
 #!/usr/bin/env python3
 """
-Comprehensive test to identify why pension income is not being calculated
-Tests both direct Python API and through Next.js API
+Comprehensive test for pension indexing functionality
 """
+
 import requests
 import json
-import sys
 
-def test_direct_python_api():
-    """Test pension calculation by calling Python API directly"""
-    print("\n" + "="*60)
-    print("TEST 1: Direct Python API Call")
-    print("="*60)
+def test_pension(name, pension_configs, expected_results):
+    """Test a pension configuration and verify expected results"""
 
-    payload = {
+    test_payload = {
         "p1": {
-            "name": "Rafael",
+            "name": "Test User",
             "start_age": 67,
-            "cpp_start_age": 65,
-            "cpp_annual_at_start": 12492,
-            "oas_start_age": 65,
-            "oas_annual_at_start": 8904,
-            "pension_incomes": [
-                {
-                    "name": "Private Pension",
-                    "amount": 100000,
-                    "startAge": 67,
-                    "inflationIndexed": True
-                }
-            ],
-            "other_incomes": [],
-            "tfsa_balance": 0,
+            "cpp_start_age": 70,
+            "cpp_annual_at_start": 0,
+            "oas_start_age": 70,
+            "oas_annual_at_start": 0,
+            "tfsa_balance": 50000,
             "rrif_balance": 350000,
             "rrsp_balance": 0,
             "nonreg_balance": 0,
             "corporate_balance": 0,
+            "nonreg_acb": 0,
+            "tfsa_room_start": 108500,
+            "tfsa_contribution_annual": 7000,
+            "pension_incomes": pension_configs,
+            "other_incomes": []
         },
         "p2": {
             "name": "",
             "start_age": 60,
+            "cpp_start_age": 65,
+            "cpp_annual_at_start": 0,
+            "oas_start_age": 65,
+            "oas_annual_at_start": 0,
             "pension_incomes": [],
             "other_incomes": [],
+            "tfsa_balance": 0,
+            "rrif_balance": 0,
+            "rrsp_balance": 0,
+            "nonreg_balance": 0,
+            "corporate_balance": 0,
+            "nonreg_acb": 0,
+            "tfsa_room_start": 0,
+            "tfsa_contribution_annual": 0
         },
         "include_partner": False,
         "province": "AB",
         "start_year": 2033,
-        "end_age": 85,
+        "end_age": 75,
         "strategy": "rrif-frontload",
-        "spending_go_go": 60000,
+        "spending_go_go": 100000,
         "go_go_end_age": 75,
-        "spending_slow_go": 48000,
+        "spending_slow_go": 80000,
         "slow_go_end_age": 85,
-        "spending_no_go": 42000,
+        "spending_no_go": 70000,
         "spending_inflation": 2,
         "general_inflation": 2,
+        "tfsa_room_annual_growth": 7000,
+        "gap_tolerance": 1000,
+        "reinvest_nonreg_dist": False,
+        "income_split_rrif_fraction": 0,
+        "hybrid_rrif_topup_per_person": 0,
+        "stop_on_fail": False
     }
 
-    print(f"📤 Sending pension data: {json.dumps(payload['p1']['pension_incomes'], indent=2)}")
+    print(f"\nTest: {name}")
+    print("-" * 50)
+
+    url = "https://astonishing-learning-production.up.railway.app/api/run-simulation"
 
     try:
-        response = requests.post(
-            "http://localhost:8000/api/run-simulation",
-            json=payload,
-            headers={"Content-Type": "application/json"}
-        )
+        response = requests.post(url, json=test_payload, timeout=30)
 
         if response.status_code == 200:
             result = response.json()
-            print("✅ API call successful!")
 
-            # Check year 2033 (age 67 - pension start)
-            for year_data in result.get("year_by_year", []):
-                if year_data.get("year") == 2033:
-                    pension = year_data.get("employer_pension_p1", 0)
-                    if pension > 0:
-                        print(f"✅ PENSION FOUND: Year 2033 (Age 67): ${pension:,.2f}")
-                    else:
-                        print(f"❌ PENSION MISSING: Year 2033 shows $0")
-                    break
-        else:
-            print(f"❌ API Error: {response.status_code}")
-            print(response.text)
+            if result.get('success'):
+                year_by_year = result.get('year_by_year', [])
 
-    except Exception as e:
-        print(f"❌ Exception: {e}")
+                # Check specific years
+                passed = True
+                for year, expected in expected_results.items():
+                    year_data = next((y for y in year_by_year if y['year'] == year), None)
+                    if year_data:
+                        # Note: pension shows as employer_pension_p1 in the response
+                        actual = year_data.get('employer_pension_p1', 0)
 
-def test_through_nextjs():
-    """Test pension calculation through Next.js API route"""
-    print("\n" + "="*60)
-    print("TEST 2: Through Next.js API Route")
-    print("="*60)
-
-    # This mimics what the frontend sends
-    payload = {
-        "household_input": {
-            "p1": {
-                "name": "Rafael",
-                "start_age": 67,
-                "cpp_start_age": 65,
-                "cpp_annual_at_start": 12492,
-                "oas_start_age": 65,
-                "oas_annual_at_start": 8904,
-                "pension_incomes": [
-                    {
-                        "name": "Private Pension",
-                        "amount": 100000,
-                        "startAge": 67,
-                        "inflationIndexed": True
-                    }
-                ],
-                "other_incomes": [],
-                "tfsa_balance": 0,
-                "rrif_balance": 350000,
-                "rrsp_balance": 0,
-                "nonreg_balance": 0,
-                "corporate_balance": 0,
-            },
-            "p2": {
-                "name": "",
-                "start_age": 60,
-                "pension_incomes": [],
-                "other_incomes": [],
-            },
-            "include_partner": False,
-            "province": "AB",
-            "start_year": 2033,
-            "end_age": 85,
-            "strategy": "rrif-frontload",
-            "spending_go_go": 60000,
-            "go_go_end_age": 75,
-            "spending_slow_go": 48000,
-            "slow_go_end_age": 85,
-            "spending_no_go": 42000,
-            "spending_inflation": 2,
-            "general_inflation": 2,
-        }
-    }
-
-    print(f"📤 Sending pension data: {json.dumps(payload['household_input']['p1']['pension_incomes'], indent=2)}")
-
-    # Add fake auth headers to bypass auth check
-    headers = {
-        "Content-Type": "application/json",
-        "Cookie": "auth-token=test-token"
-    }
-
-    try:
-        response = requests.post(
-            "http://localhost:3001/api/simulation/run",
-            json=payload,
-            headers=headers
-        )
-
-        if response.status_code == 200:
-            result = response.json()
-            print("✅ API call successful!")
-
-            # Check if simulation ran successfully
-            if result.get("success"):
-                # Check year 2033 (age 67 - pension start)
-                for year_data in result.get("year_by_year", []):
-                    if year_data.get("year") == 2033:
-                        pension = year_data.get("employer_pension_p1", 0)
-                        if pension > 0:
-                            print(f"✅ PENSION FOUND: Year 2033 (Age 67): ${pension:,.2f}")
+                        # Allow small tolerance for floating point
+                        if abs(actual - expected) < 1:
+                            print(f"  ✅ Year {year}: ${actual:,.0f} (expected ${expected:,.0f})")
                         else:
-                            print(f"❌ PENSION MISSING: Year 2033 shows $0")
-                        break
+                            print(f"  ❌ Year {year}: ${actual:,.0f} (expected ${expected:,.0f})")
+                            passed = False
+                    else:
+                        print(f"  ❌ Year {year}: No data found")
+                        passed = False
+
+                return passed
             else:
-                print(f"❌ Simulation failed: {result.get('message')}")
+                print(f"  ❌ Simulation failed: {result.get('message', 'Unknown error')}")
+                return False
         else:
-            print(f"❌ API Error: {response.status_code}")
-            try:
-                error = response.json()
-                print(f"Error: {error}")
-            except:
-                print(response.text[:500])
+            print(f"  ❌ HTTP Error {response.status_code}")
+            return False
 
     except Exception as e:
-        print(f"❌ Exception: {e}")
+        print(f"  ❌ Error: {str(e)}")
+        return False
 
-def main():
-    print("\n" + "🔍 COMPREHENSIVE PENSION CALCULATION TEST 🔍")
-    print("Testing Rafael's $100,000 pension starting at age 67")
 
-    # Test 1: Direct Python API
-    test_direct_python_api()
+print("=" * 60)
+print("COMPREHENSIVE PENSION INDEXING TESTS")
+print("=" * 60)
 
-    # Test 2: Through Next.js
-    test_through_nextjs()
+# Test 1: Non-indexed pension should stay flat
+test1_passed = test_pension(
+    "Non-Indexed Pension (should stay at $50,000)",
+    [{
+        "name": "Fixed Pension",
+        "amount": 50000,
+        "startAge": 67,
+        "inflationIndexed": False
+    }],
+    {
+        2033: 50000,  # Year 1
+        2034: 50000,  # Year 2 - should be same
+        2035: 50000,  # Year 3 - should be same
+        2040: 50000,  # Year 8 - should still be same
+    }
+)
 
-    print("\n" + "="*60)
-    print("TEST SUMMARY")
-    print("="*60)
-    print("✓ If Test 1 passes but Test 2 fails: Issue is in Next.js route")
-    print("✓ If both tests fail: Issue is in Python API")
-    print("✓ If both tests pass: Issue is in frontend UI display")
+# Test 2: Indexed pension should grow with inflation (2% per year)
+test2_passed = test_pension(
+    "Indexed Pension (should grow at 2% per year)",
+    [{
+        "name": "Indexed Pension",
+        "amount": 50000,
+        "startAge": 67,
+        "inflationIndexed": True
+    }],
+    {
+        2033: 50000,      # Year 1
+        2034: 51000,      # Year 2: 50000 * 1.02
+        2035: 52020,      # Year 3: 50000 * 1.02^2
+        2040: 57434,      # Year 8: 50000 * 1.02^7
+    }
+)
 
-if __name__ == "__main__":
-    main()
+# Test 3: Mix of indexed and non-indexed
+test3_passed = test_pension(
+    "Mixed: $30K indexed + $20K non-indexed",
+    [
+        {
+            "name": "Indexed Pension",
+            "amount": 30000,
+            "startAge": 67,
+            "inflationIndexed": True
+        },
+        {
+            "name": "Fixed Pension",
+            "amount": 20000,
+            "startAge": 67,
+            "inflationIndexed": False
+        }
+    ],
+    {
+        2033: 50000,      # 30000 + 20000
+        2034: 50600,      # (30000 * 1.02) + 20000
+        2035: 51212,      # (30000 * 1.02^2) + 20000
+        2040: 54460,      # (30000 * 1.02^7) + 20000
+    }
+)
+
+# Test 4: Default behavior (omitting inflationIndexed should default to True)
+test4_passed = test_pension(
+    "Default behavior (no inflationIndexed field = True)",
+    [{
+        "name": "Default Pension",
+        "amount": 40000,
+        "startAge": 67
+        # inflationIndexed omitted - should default to True
+    }],
+    {
+        2033: 40000,      # Year 1
+        2034: 40800,      # Year 2: 40000 * 1.02
+        2035: 41616,      # Year 3: 40000 * 1.02^2
+    }
+)
+
+print("\n" + "=" * 60)
+print("TEST SUMMARY")
+print("=" * 60)
+all_tests = [
+    ("Non-indexed pension", test1_passed),
+    ("Indexed pension", test2_passed),
+    ("Mixed pensions", test3_passed),
+    ("Default behavior", test4_passed)
+]
+
+passed_count = sum(1 for _, passed in all_tests if passed)
+total_count = len(all_tests)
+
+for test_name, passed in all_tests:
+    status = "✅ PASS" if passed else "❌ FAIL"
+    print(f"  {status}: {test_name}")
+
+print(f"\nOverall: {passed_count}/{total_count} tests passed")
+
+if passed_count == total_count:
+    print("\n🎉 ALL TESTS PASSED! Pension indexing is working correctly.")
+else:
+    print(f"\n⚠️ {total_count - passed_count} test(s) failed. Please review the results above.")
