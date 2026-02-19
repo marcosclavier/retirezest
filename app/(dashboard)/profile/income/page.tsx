@@ -446,8 +446,8 @@ export default function IncomePage() {
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     required
                   >
-                    <option value="person1">{profile?.firstName || 'Person 1'}</option>
-                    <option value="person2">{profile?.partnerFirstName || 'Person 2'}</option>
+                    <option value="person1">Person 1 (You)</option>
+                    <option value="person2">Person 2 (Partner)</option>
                   </select>
                 </div>
               )}
