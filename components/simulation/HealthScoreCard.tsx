@@ -91,56 +91,171 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
     return labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
-  const getCriterionTooltipInfo = (key: string) => {
+  const getCriterionTooltipInfoDynamic = (key: string, criterion: HealthCriterion, summary: SimulationSummary) => {
+    const score = criterion.score;
+    const maxScore = criterion.max_score;
+    const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+
     const tooltips: Record<string, { title: string; content: string; examples: string[] }> = {
       funding_coverage: {
-        title: "Full Period Funded",
-        content: "Measures whether your retirement plan can cover your spending needs for all years of retirement. A fully funded plan ensures you won't run out of money.",
-        examples: [
-          "20/20 points: Plan funds 100% of retirement years",
-          "10/20 points: Plan funds about 50% of years",
-          "0/20 points: Plan funds less than 42% of years",
-          "Target: Fund at least 80% of retirement years"
+        title: percentage >= 80 ? "Full Period Funded ✅" : "Full Period Funded - Action Needed",
+        content: percentage >= 80
+          ? `Excellent! Your plan funds ${summary.years_funded}/${summary.years_simulated} years (${(summary.success_rate * 100).toFixed(0)}%). You have sufficient funds for your entire retirement.`
+          : `Your plan only funds ${summary.years_funded}/${summary.years_simulated} years (${(summary.success_rate * 100).toFixed(0)}%). You need to fund at least 80% of retirement years for a secure plan.`,
+        examples: percentage >= 80 ? [
+          "✅ Your spending is sustainable",
+          "✅ You have adequate savings",
+          "✅ Your withdrawal strategy works",
+          "💡 Consider increasing spending if desired",
+          "💡 Monitor annually for changes"
+        ] : [
+          "💡 Reduce spending by 10-20% to extend coverage",
+          "💡 Delay retirement by 1-2 years to save more",
+          "💡 Work part-time in early retirement",
+          "💡 Try 'rrif-miser' strategy to preserve capital",
+          "💡 Consider downsizing or relocating"
         ]
       },
       tax_efficiency: {
-        title: "Good Tax Efficiency",
-        content: "Evaluates how effectively your plan minimizes taxes through strategic withdrawals and income splitting. Lower effective tax rates mean more money stays in your pocket.",
-        examples: [
-          "20/20 points: Effective tax rate under 25%",
-          "10/20 points: Effective tax rate around 30%",
-          "0/20 points: Effective tax rate over 35%",
-          "Optimize with TFSA, income splitting, and timing"
+        title: percentage >= 80 ? "Tax Efficiency - Optimized! ✅" : "Tax Efficiency - Room to Improve",
+        content: percentage >= 80
+          ? `Great! Your effective tax rate of ${(summary.avg_effective_tax_rate * 100).toFixed(1)}% is well optimized. You're keeping more of your money.`
+          : `Your effective tax rate of ${(summary.avg_effective_tax_rate * 100).toFixed(1)}% could be lower with better planning.`,
+        examples: percentage >= 80 ? [
+          "✅ TFSA withdrawals are maximized",
+          "✅ RRIF withdrawals are tax-efficient",
+          "✅ Income splitting is working (if applicable)",
+          "💡 Monitor OAS clawback threshold ($86,912 in 2024)",
+          "💡 Review strategy annually"
+        ] : [
+          "💡 Prioritize TFSA withdrawals (tax-free)",
+          "💡 Smooth RRIF withdrawals to avoid high brackets",
+          "💡 Split pension income with spouse if eligible",
+          "💡 Time CPP/OAS to minimize taxes",
+          "💡 Consider RRSP to TFSA conversions"
         ]
       },
       estate_preservation: {
-        title: "Adequate Reserve",
-        content: "Assesses whether you'll have sufficient assets remaining as a buffer or estate. A good reserve provides security and legacy potential.",
-        examples: [
-          "20/20 points: Ending assets exceed 80% of starting",
-          "10/20 points: Ending assets around 40% of starting",
-          "0/20 points: Ending assets below 20% of starting",
-          "Consider both emergency fund and legacy goals"
+        title: percentage >= 80 ? "Adequate Reserve - Well Preserved ✅" : "Adequate Reserve - Below Target",
+        content: percentage >= 80
+          ? `Excellent! You'll have ${((summary.final_estate / summary.starting_assets) * 100).toFixed(0)}% of starting assets remaining. This provides both security and legacy.`
+          : `You'll only have ${((summary.final_estate / summary.starting_assets) * 100).toFixed(0)}% of starting assets remaining, below the 80% target for optimal security.`,
+        examples: percentage >= 80 ? [
+          "✅ Emergency buffer is maintained",
+          "✅ Legacy goals are achievable",
+          "✅ Longevity risk is covered",
+          "💡 Review beneficiary designations",
+          "💡 Consider estate planning strategies"
+        ] : [
+          `💡 Target: Preserve $${((summary.starting_assets * 0.8) / 1000).toFixed(0)}K by end`,
+          "💡 Reduce annual spending by 5-10%",
+          "💡 Delay CPP to age 70 for 42% more income",
+          "💡 Use more conservative withdrawal strategy",
+          "💡 Consider annuity for guaranteed income"
         ]
       },
       benefit_optimization: {
-        title: "Government Benefits",
-        content: "Measures how well you're maximizing government benefits like CPP, OAS, and GIS. Optimal timing and income management can significantly increase lifetime benefits.",
-        examples: [
-          "20/20 points: Receiving all available benefits",
-          "Benefits include CPP, OAS, and potentially GIS",
-          "Consider deferral strategies for higher payments",
-          "Income splitting can help avoid OAS clawback"
+        title: percentage >= 80 ? "Government Benefits - Maximized! ✅" : "Government Benefits - Optimization Needed",
+        content: percentage >= 80
+          ? "Perfect! You're receiving all available government benefits with optimal timing and no clawbacks."
+          : "You may be missing out on government benefits or facing unnecessary clawbacks.",
+        examples: percentage >= 80 ? [
+          "✅ CPP timing is optimized",
+          "✅ OAS is received without clawback",
+          "✅ GIS eligibility considered if applicable",
+          "💡 Review when tax rules change",
+          "💡 Consider survivor benefit planning"
+        ] : [
+          "💡 Review CPP timing (60-70 age range)",
+          "💡 Check OAS clawback threshold",
+          "💡 Explore GIS eligibility if low income",
+          "💡 Consider income splitting strategies",
+          "💡 Verify all benefits are claimed"
         ]
       },
       risk_management: {
-        title: "Growing Net Worth",
-        content: "Evaluates whether your net worth is maintained or growing during retirement. Positive trends indicate sustainable spending and good investment returns.",
+        title: percentage >= 80 ? "Net Worth Trend - Positive! ✅" : "Net Worth Trend - Concerning",
+        content: percentage >= 80
+          ? "Excellent! Your net worth remains stable or grows during retirement, providing excellent financial security."
+          : `Warning: Your net worth is declining rapidly. You'll deplete ${(100 - (summary.final_estate / summary.starting_assets) * 100).toFixed(0)}% of your assets.`,
+        examples: percentage >= 80 ? [
+          "✅ Sustainable withdrawal rate",
+          "✅ Investment returns cover inflation",
+          "✅ Longevity risk is managed",
+          "💡 Consider increasing spending if desired",
+          "💡 Review investment allocation"
+        ] : [
+          "💡 Reduce spending immediately by 10-15%",
+          "💡 Switch to 'rrif-miser' strategy",
+          "💡 Review and cut discretionary expenses",
+          "💡 Consider guaranteed income products",
+          "💡 Explore home equity options if applicable"
+        ]
+      }
+    };
+
+    return tooltips[key] || {
+      title: getCriterionLabel(key),
+      content: criterion.description || "This criterion evaluates an aspect of your retirement plan health.",
+      examples: [`Current score: ${score}/${maxScore}`]
+    };
+  };
+
+  const getCriterionTooltipInfo = (key: string) => {
+    const tooltips: Record<string, { title: string; content: string; examples: string[] }> = {
+      funding_coverage: {
+        title: "Full Period Funded - How to Improve",
+        content: "Your plan currently funds only 42% of retirement years (8 out of 19 years). This means you'll run out of money before the end of your planned retirement. To earn points here, you need to fund at least 80% of your retirement years.",
         examples: [
-          "20/20 points: Net worth growing or stable",
-          "10/20 points: Moderate decline in net worth",
-          "0/20 points: Significant net worth depletion",
-          "Balance spending with asset preservation"
+          "💡 Reduce spending: Lower your Go-Go phase spending from $90,000",
+          "💡 Work longer: Delay retirement by 1-2 years to save more",
+          "💡 Increase savings: Maximize RRSP/TFSA contributions now",
+          "💡 Adjust strategy: Try 'balanced' or 'rrif-miser' withdrawal strategies",
+          "💡 Consider part-time income in early retirement"
+        ]
+      },
+      tax_efficiency: {
+        title: "Good Tax Efficiency - You're Doing Great!",
+        content: "Excellent! Your effective tax rate is under 25%, earning you full points. This means your withdrawal strategy is tax-optimized. Keep using these strategies to maintain this score.",
+        examples: [
+          "✅ You're maximizing TFSA withdrawals (tax-free)",
+          "✅ Strategic RRIF withdrawals are minimizing tax brackets",
+          "✅ Income splitting with partner (if applicable) is working",
+          "✅ Timing of CPP/OAS is tax-efficient",
+          "💡 Continue monitoring for OAS clawback thresholds"
+        ]
+      },
+      estate_preservation: {
+        title: "Adequate Reserve - Needs Improvement",
+        content: "Your ending assets are only 42% of starting assets, below the 80% target for full points. This affects both your emergency buffer and legacy potential. You need to preserve more capital throughout retirement.",
+        examples: [
+          "💡 Reduce spending by $5,000-10,000 annually",
+          "💡 Consider downsizing home to free up capital",
+          "💡 Delay CPP/OAS to age 70 for 42% higher benefits",
+          "💡 Use more conservative withdrawal strategy",
+          "💡 Target: Keep at least $320,000 by end of retirement"
+        ]
+      },
+      benefit_optimization: {
+        title: "Government Benefits - Maximized!",
+        content: "Perfect score! You're receiving all available government benefits (CPP, OAS, and potentially GIS). Your benefit timing and income management are optimized for maximum lifetime benefits.",
+        examples: [
+          "✅ CPP timing is optimized for your situation",
+          "✅ OAS benefits are being received without clawback",
+          "✅ GIS eligibility is being considered if applicable",
+          "✅ Survivor benefits are factored in if relevant",
+          "💡 Review annually as rules and thresholds change"
+        ]
+      },
+      risk_management: {
+        title: "Growing Net Worth - Critical Issue",
+        content: "Your net worth is declining significantly during retirement. By the end, you'll have depleted most assets. This creates risk if you live longer than expected or face unexpected expenses.",
+        examples: [
+          "💡 Reduce annual spending by 10-15% immediately",
+          "💡 Adopt 'rrif-miser' strategy to preserve capital",
+          "💡 Consider annuity for guaranteed lifetime income",
+          "💡 Review and reduce discretionary expenses",
+          "💡 Explore reverse mortgage if you own your home"
         ]
       }
     };
@@ -153,7 +268,7 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
 
   const renderCriterion = (key: string, criterion: HealthCriterion) => {
     const percentage = criterion.max_score > 0 ? (criterion.score / criterion.max_score) * 100 : 0;
-    const tooltipInfo = getCriterionTooltipInfo(key);
+    const tooltipInfo = getCriterionTooltipInfoDynamic(key, criterion, summary);
 
     return (
       <div key={key} className="space-y-2">
