@@ -21,6 +21,13 @@ from modules.estate_tax_calculator import EstateCalculator
 from modules import real_estate
 from modules.gic_calculator import process_gic_maturity_events, get_gic_balance_locked
 from modules.household_utils import is_couple, get_participants
+
+# Import strategy_insights at module level to avoid UnboundLocalError with sys
+try:
+    from modules.strategy_insights import generate_minimize_income_insights
+except ImportError:
+    # Module may not exist in all environments
+    generate_minimize_income_insights = None
 from utils.helpers import clamp
 
 
@@ -3688,16 +3695,16 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
     strategy_check = hh.strategy if hasattr(hh, 'strategy') else ""
 
     if "minimize-income" in strategy_check.lower() or "minimize_income" in strategy_check.lower() or "GIS-Optimized" in strategy_check:
-        from modules.strategy_insights import generate_minimize_income_insights
+        # Use the module-level import to avoid UnboundLocalError
+        if generate_minimize_income_insights is not None:
+            # Note: We need to calculate feasibility BEFORE generating insights
+            # But the household p1/p2 balances have been modified during simulation
+            # So we pass None for feasibility and let it calculate based on simulation results
+            insights = generate_minimize_income_insights(hh, df, tax_cfg, gis_feasibility=None)
 
-        # Note: We need to calculate feasibility BEFORE generating insights
-        # But the household p1/p2 balances have been modified during simulation
-        # So we pass None for feasibility and let it calculate based on simulation results
-        insights = generate_minimize_income_insights(hh, df, tax_cfg, gis_feasibility=None)
-
-        # Add insights as metadata to DataFrame
-        df.attrs['strategy_insights'] = insights
-        if 'gis_feasibility' in insights:
-            df.attrs['gis_feasibility'] = insights.get('gis_feasibility')
+            # Add insights as metadata to DataFrame
+            df.attrs['strategy_insights'] = insights
+            if 'gis_feasibility' in insights:
+                df.attrs['gis_feasibility'] = insights.get('gis_feasibility')
 
     return df
