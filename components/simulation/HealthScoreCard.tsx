@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertCircle, AlertTriangle, XCircle, Activity } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 interface HealthScoreCardProps {
   summary: SimulationSummary;
@@ -90,8 +91,69 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
     return labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
+  const getCriterionTooltipInfo = (key: string) => {
+    const tooltips: Record<string, { title: string; content: string; examples: string[] }> = {
+      funding_coverage: {
+        title: "Full Period Funded",
+        content: "Measures whether your retirement plan can cover your spending needs for all years of retirement. A fully funded plan ensures you won't run out of money.",
+        examples: [
+          "20/20 points: Plan funds 100% of retirement years",
+          "10/20 points: Plan funds about 50% of years",
+          "0/20 points: Plan funds less than 42% of years",
+          "Target: Fund at least 80% of retirement years"
+        ]
+      },
+      tax_efficiency: {
+        title: "Good Tax Efficiency",
+        content: "Evaluates how effectively your plan minimizes taxes through strategic withdrawals and income splitting. Lower effective tax rates mean more money stays in your pocket.",
+        examples: [
+          "20/20 points: Effective tax rate under 25%",
+          "10/20 points: Effective tax rate around 30%",
+          "0/20 points: Effective tax rate over 35%",
+          "Optimize with TFSA, income splitting, and timing"
+        ]
+      },
+      estate_preservation: {
+        title: "Adequate Reserve",
+        content: "Assesses whether you'll have sufficient assets remaining as a buffer or estate. A good reserve provides security and legacy potential.",
+        examples: [
+          "20/20 points: Ending assets exceed 80% of starting",
+          "10/20 points: Ending assets around 40% of starting",
+          "0/20 points: Ending assets below 20% of starting",
+          "Consider both emergency fund and legacy goals"
+        ]
+      },
+      benefit_optimization: {
+        title: "Government Benefits",
+        content: "Measures how well you're maximizing government benefits like CPP, OAS, and GIS. Optimal timing and income management can significantly increase lifetime benefits.",
+        examples: [
+          "20/20 points: Receiving all available benefits",
+          "Benefits include CPP, OAS, and potentially GIS",
+          "Consider deferral strategies for higher payments",
+          "Income splitting can help avoid OAS clawback"
+        ]
+      },
+      risk_management: {
+        title: "Growing Net Worth",
+        content: "Evaluates whether your net worth is maintained or growing during retirement. Positive trends indicate sustainable spending and good investment returns.",
+        examples: [
+          "20/20 points: Net worth growing or stable",
+          "10/20 points: Moderate decline in net worth",
+          "0/20 points: Significant net worth depletion",
+          "Balance spending with asset preservation"
+        ]
+      }
+    };
+    return tooltips[key] || {
+      title: getCriterionLabel(key),
+      content: "This criterion evaluates an aspect of your retirement plan health.",
+      examples: []
+    };
+  };
+
   const renderCriterion = (key: string, criterion: HealthCriterion) => {
     const percentage = criterion.max_score > 0 ? (criterion.score / criterion.max_score) * 100 : 0;
+    const tooltipInfo = getCriterionTooltipInfo(key);
 
     return (
       <div key={key} className="space-y-2">
@@ -99,6 +161,11 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
           <div className="flex items-center gap-2">
             {getCriterionIcon(criterion.status)}
             <span className={`text-sm font-medium ${getTextColor(health_score)}`}>{getCriterionLabel(key)}</span>
+            <InfoTooltip
+              title={tooltipInfo.title}
+              content={tooltipInfo.content}
+              examples={tooltipInfo.examples}
+            />
           </div>
           <span className={`text-sm font-bold ${getTextColor(health_score)}`}>
             {criterion.score}/{criterion.max_score}
@@ -119,7 +186,19 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className={`h-5 w-5 ${getIconColor(health_score)}`} />
-            <CardTitle className={getTextColor(health_score)}>Plan Health Score</CardTitle>
+            <div className="flex items-center">
+              <CardTitle className={getTextColor(health_score)}>Plan Health Score</CardTitle>
+              <InfoTooltip
+                title="Plan Health Score"
+                content="A comprehensive 0-100 score that evaluates the overall strength of your retirement plan. It considers multiple factors including funding adequacy, tax efficiency, estate preservation, and benefit optimization. A higher score indicates a more robust and sustainable retirement plan."
+                examples={[
+                  "90-100: Excellent - Plan exceeds all targets with significant buffer",
+                  "70-89: Good - Plan meets most goals with reasonable safety margin",
+                  "50-69: Fair - Plan has some gaps but is generally workable",
+                  "Below 50: Needs Attention - Significant adjustments recommended"
+                ]}
+              />
+            </div>
           </div>
           <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold transition-colors ${getBadgeColor(health_score)}`}>
             {health_rating || 'Not Calculated'}
@@ -165,7 +244,20 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
         {/* Criteria Breakdown */}
         {hasHealthCriteria && (
           <div className={`space-y-4 pt-4 border-t ${getBorderColor(health_score)}`}>
-            <h4 className={`text-sm font-semibold ${getTextColor(health_score)}`}>Score Breakdown</h4>
+            <div className="flex items-center">
+              <h4 className={`text-sm font-semibold ${getTextColor(health_score)}`}>Score Breakdown</h4>
+              <InfoTooltip
+                title="Score Breakdown"
+                content="Your Plan Health Score is calculated based on five key criteria, each worth 20 points. Meeting or exceeding targets in each area contributes to your overall score."
+                examples={[
+                  "Full Period Funded: Can you cover all retirement years?",
+                  "Adequate Reserve: Do you have enough buffer?",
+                  "Tax Efficiency: Are you minimizing taxes?",
+                  "Government Benefits: Are you maximizing CPP/OAS/GIS?",
+                  "Growing Net Worth: Is your wealth preserved?"
+                ]}
+              />
+            </div>
             {Object.entries(health_criteria).map(([key, criterion]) =>
               renderCriterion(key, criterion as HealthCriterion)
             )}
