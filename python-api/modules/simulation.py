@@ -2066,24 +2066,29 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             if available > 1e-6 and ("Balanced" in strategy_name or "tax efficiency" in strategy_name.lower()):
                     print(f"DEBUG ACB [{person.name}]: ACB_ratio={acb_ratio:.1%}, gains_tax_rate~={gains_tax_rate:.1%}, available=${available:,.0f}", file=sys.stderr)
         elif k == "tfsa":
-            # TFSA-last guard: only allow TFSA if all other sources are tapped
-            # FIX: Use the ORIGINAL starting balance, not current balance minus what we already withdrew
-            # This ensures we respect the withdrawal strategy order even if other sources still have funds
-            rrif_left   = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
-            corp_left   = max(corporate_balance_start - (withdrawals["corp"] + extra["corp"]), 0.0)
-            nonreg_left = max(person.nonreg_balance - (withdrawals["nonreg"] + extra["nonreg"]), 0.0)
+            # TFSA guard: Check if TFSA should be used based on withdrawal order
+            # If TFSA is first in the order (e.g., for OAS optimization), allow it
+            # Otherwise, only use TFSA if other sources are depleted
 
-            # DEBUG: Log TFSA guard check
-            if shortfall > 1e-6:
-                    print(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}", file=sys.stderr)
+            # Check if TFSA is first in the withdrawal order
+            tfsa_is_first = (order.index("tfsa") == 0) if "tfsa" in order else False
 
-            # CRITICAL FIX: TFSA should ONLY be used if ALL other sources in the withdrawal order
-            # that come BEFORE TFSA have been fully depleted
-            if (nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9):
-                # Skip TFSA for now; other sources still have funds
+            if not tfsa_is_first:
+                # Traditional guard: only allow TFSA if all other sources are tapped
+                rrif_left   = max(person.rrif_balance - (withdrawals["rrif"] + extra["rrif"]), 0.0)
+                corp_left   = max(corporate_balance_start - (withdrawals["corp"] + extra["corp"]), 0.0)
+                nonreg_left = max(person.nonreg_balance - (withdrawals["nonreg"] + extra["nonreg"]), 0.0)
+
+                # DEBUG: Log TFSA guard check
                 if shortfall > 1e-6:
-                            print(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})", file=sys.stderr)
-                continue
+                        print(f"  TFSA guard check - rrif_left=${rrif_left:,.0f} corp_left=${corp_left:,.0f} nonreg_left=${nonreg_left:,.0f}", file=sys.stderr)
+
+                # Only use TFSA if ALL other sources that come before TFSA are depleted
+                if (nonreg_left > 1e-9) or (rrif_left > 1e-9) or (corp_left > 1e-9):
+                    # Skip TFSA for now; other sources still have funds
+                    if shortfall > 1e-6:
+                                print(f"  -> Skipping TFSA (other sources have funds: rrif_left=${rrif_left:,.0f}, nonreg_left=${nonreg_left:,.0f}, corp_left=${corp_left:,.0f})", file=sys.stderr)
+                    continue
             available = max(person.tfsa_balance - (withdrawals["tfsa"] + extra["tfsa"]), 0.0)
         else:
             available = 0.0
@@ -2494,9 +2499,9 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
     # Use household utilities to determine if this is a couple
     household_is_couple = is_couple(hh)
-    age2 = hh.p2.start_age if household_is_couple else None
     p1 = hh.p1
     p2 = hh.p2 if household_is_couple else None
+    age2 = p2.start_age if p2 else None
 
     # Validate early RRIF withdrawal settings for active participants only
     persons_to_validate = get_participants(hh)

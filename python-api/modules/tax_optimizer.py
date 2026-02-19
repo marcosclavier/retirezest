@@ -445,6 +445,7 @@ class TaxOptimizer:
         Simple estimate using:
         - CPP amount
         - OAS amount
+        - Pension income
         - Expected RRIF withdrawal (estimated at ~5% per year)
 
         Returns:
@@ -454,11 +455,30 @@ class TaxOptimizer:
         cpp = getattr(person, 'cpp_annual_at_start', 0) * 1.02  # Rough inflation
         oas = getattr(person, 'oas_annual_at_start', 0) * 1.02
 
+        # Pension income - CRITICAL: Must include this for accurate OAS clawback assessment
+        pension_income = 0.0
+        pension_incomes = getattr(person, 'pension_incomes', [])
+        start_age = getattr(person, 'start_age', 0)
+        start_year = getattr(household, 'start_year', year)
+        years_elapsed = year - start_year
+        current_age = start_age + years_elapsed
+
+        for pension in pension_incomes:
+            pension_start_age = pension.get('startAge', 65)
+            if current_age >= pension_start_age:
+                annual_amount = pension.get('amount', 0.0)
+                is_indexed = pension.get('inflationIndexed', True)
+                if is_indexed:
+                    # Apply inflation for years since pension started
+                    years_since_start = current_age - pension_start_age
+                    annual_amount *= ((1 + household.general_inflation) ** years_since_start)
+                pension_income += annual_amount
+
         # Estimate RRIF withdrawal (typically 5-10% of balance)
         rrif_balance = getattr(person, 'rrif_balance', 0)
         rrif_withdrawal = rrif_balance * 0.05
 
-        return cpp + oas + rrif_withdrawal
+        return cpp + oas + pension_income + rrif_withdrawal
 
     def _lookup_tax_bracket(self, income: float, province: str) -> float:
         """
@@ -544,9 +564,9 @@ class TaxOptimizer:
         # OAS clawback threshold (approximate 2025 value)
         oas_clawback_threshold = 90_997
 
-        # Consider it "at risk" if income is above 70% of threshold
-        # (room for growth, RRIF withdrawals, etc.)
-        return income > (oas_clawback_threshold * 0.7)
+        # ENHANCED: Consider it "at risk" if income is above 85% of threshold
+        # This provides more proactive management to avoid clawback
+        return income > (oas_clawback_threshold * 0.85)
 
     def _generate_rationale(self, order: List[str], split_amount: float) -> str:
         """
