@@ -1539,10 +1539,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Process other income sources (employment, business, rental from Income table, investment, other)
     other_income_total = 0.0
     other_incomes = getattr(person, 'other_incomes', [])
-    for other_income in other_incomes:
-        income_type = other_income.get('type', '')
-        income_start_age = other_income.get('startAge')
-        income_end_age = other_income.get('endAge')
+    for income_item in other_incomes:  # Changed to avoid shadowing the function parameter
+        income_type = income_item.get('type', '')
+        income_start_age = income_item.get('startAge')
+        income_end_age = income_item.get('endAge')
 
         # Special handling for employment income: defaults to current age → retirement age
         if income_type == 'employment':
@@ -1564,10 +1564,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             is_active = False
 
         if is_active:
-            annual_amount = other_income.get('amount', 0.0)
+            annual_amount = income_item.get('amount', 0.0)
 
             # Apply inflation indexing if enabled
-            if other_income.get('inflationIndexed', True):
+            if income_item.get('inflationIndexed', True):
                 if income_start_age:
                     years_since_start = age - income_start_age
                     annual_amount *= ((1 + hh.general_inflation) ** years_since_start)
@@ -2260,6 +2260,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # Per CRA/Service Canada rules: GIS income = Line 23600 EXCLUDING OAS
     # CRITICAL: GIS requires receiving OAS (oas > 0) but OAS is EXCLUDED from income test
     # This fix complies with official CRA guidelines
+
+    # Debug: Check types
+    print(f"DEBUG in simulate_year: pension_income type: {type(pension_income)}, value: {pension_income}", file=sys.stderr)
+    print(f"DEBUG in simulate_year: other_income type: {type(other_income)}, value: {other_income}", file=sys.stderr)
+
     gis_net_income = (nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist * 0.5 +  # Capital gains 50% inclusion
                       withdrawals["rrif"] + withdrawals["corp"] + cpp +  # Account withdrawals and CPP
                       pension_income + other_income)  # CRITICAL FIX: Include employer pension and other income!
@@ -2666,7 +2671,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         p1_other_income = 0.0
         p1_other_incomes = getattr(p1, 'other_incomes', [])
-        for other_income in p1_other_incomes:
+        for income_item in p1_other_incomes:  # Changed variable name to avoid shadowing
             income_type = other_income.get('type', '')
             income_start_age = other_income.get('startAge')
             income_end_age = other_income.get('endAge')
@@ -2716,7 +2721,7 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         p2_other_income = 0.0
         if p2 and age2 is not None:
             p2_other_incomes = getattr(p2, 'other_incomes', [])
-            for other_income in p2_other_incomes:
+            for income_item in p2_other_incomes:  # Changed variable name to avoid shadowing
                 income_type = other_income.get('type', '')
                 income_start_age = other_income.get('startAge')
                 income_end_age = other_income.get('endAge')
@@ -2771,6 +2776,10 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Track original targets for buffer update calculation later
         original_target_total = spend + mortgage_p1 + mortgage_p2  # Total household spending target including mortgage payments
+
+        # Debug: Check types before calling simulate_year
+        print(f"DEBUG: Type of p1_pension_income: {type(p1_pension_income)}, value: {p1_pension_income}", file=sys.stderr)
+        print(f"DEBUG: Type of p1_other_income: {type(p1_other_income)}, value: {p1_other_income}", file=sys.stderr)
 
         # Then call simulate_year with fed_y/prov_y (not the base fed/prov):
         w1, t1, info1 = simulate_year(
