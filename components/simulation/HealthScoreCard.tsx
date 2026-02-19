@@ -138,8 +138,8 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
       estate_preservation: {
         title: percentage >= 80 ? "Adequate Reserve - Well Preserved ✅" : "Adequate Reserve - Below Target",
         content: percentage >= 80
-          ? `Excellent! You'll have ${((summary.final_estate / summary.starting_assets) * 100).toFixed(0)}% of starting assets remaining. This provides both security and legacy.`
-          : `You'll only have ${((summary.final_estate / summary.starting_assets) * 100).toFixed(0)}% of starting assets remaining, below the 80% target for optimal security.`,
+          ? `Excellent! You'll have ${((summary.final_estate_gross / summary.initial_net_worth) * 100).toFixed(0)}% of starting assets remaining. This provides both security and legacy.`
+          : `You'll only have ${((summary.final_estate_gross / summary.initial_net_worth) * 100).toFixed(0)}% of starting assets remaining, below the 80% target for optimal security.`,
         examples: percentage >= 80 ? [
           "✅ Emergency buffer is maintained",
           "✅ Legacy goals are achievable",
@@ -147,7 +147,7 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
           "💡 Review beneficiary designations",
           "💡 Consider estate planning strategies"
         ] : [
-          `💡 Target: Preserve $${((summary.starting_assets * 0.8) / 1000).toFixed(0)}K by end`,
+          `💡 Target: Preserve $${((summary.initial_net_worth * 0.8) / 1000).toFixed(0)}K by end`,
           "💡 Reduce annual spending by 5-10%",
           "💡 Delay CPP to age 70 for 42% more income",
           "💡 Use more conservative withdrawal strategy",
@@ -177,7 +177,7 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
         title: percentage >= 80 ? "Net Worth Trend - Positive! ✅" : "Net Worth Trend - Concerning",
         content: percentage >= 80
           ? "Excellent! Your net worth remains stable or grows during retirement, providing excellent financial security."
-          : `Warning: Your net worth is declining rapidly. You'll deplete ${(100 - (summary.final_estate / summary.starting_assets) * 100).toFixed(0)}% of your assets.`,
+          : `Warning: Your net worth is declining rapidly. You'll deplete ${(100 - (summary.final_estate_gross / summary.initial_net_worth) * 100).toFixed(0)}% of your assets.`,
         examples: percentage >= 80 ? [
           "✅ Sustainable withdrawal rate",
           "✅ Investment returns cover inflation",

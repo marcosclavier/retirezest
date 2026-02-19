@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { createCheckoutSession, STRIPE_PRICE_IDS } from '@/lib/stripe';
+import { stripe, STRIPE_PRICE_IDS, isStripeConfigured, createCheckoutSession } from '@/lib/stripe';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,14 @@ export const runtime = 'nodejs';
  */
 export async function POST(req: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!isStripeConfigured()) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured' },
+        { status: 503 }
+      );
+    }
+
     // 1. Verify authentication
     const session = await getSession();
 

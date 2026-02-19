@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
-import { stripe } from '@/lib/stripe';
+import { stripe, isStripeConfigured } from '@/lib/stripe';
 import { updateSubscriptionTier, cancelSubscription as cancelUserSubscription, expireSubscription } from '@/lib/subscription';
 import { prisma } from '@/lib/prisma';
 
@@ -23,6 +23,12 @@ export const runtime = 'nodejs';
  */
 export async function POST(req: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!isStripeConfigured()) {
+      console.log('[STRIPE WEBHOOK] Stripe not configured, skipping webhook');
+      return NextResponse.json({ received: true });
+    }
+
     // 1. Get the raw body for signature verification
     const body = await req.text();
     const headersList = await headers();
