@@ -54,6 +54,11 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Amount must be greater than 0', 'amount');
     }
 
+    // Debug logging for pension inflationIndexed
+    if (type === 'pension') {
+      console.log('🎯 Creating pension with inflationIndexed:', inflationIndexed, '(type:', typeof inflationIndexed, ')');
+    }
+
     const income = await prisma.income.create({
       data: {
         userId: session.userId,
@@ -97,6 +102,11 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { id, type, description, amount, frequency, startAge, owner, notes, isTaxable, inflationIndexed } = body;
+
+    // Debug logging for pension inflationIndexed updates
+    if (type === 'pension') {
+      console.log('🎯 Updating pension with inflationIndexed:', inflationIndexed, '(type:', typeof inflationIndexed, ')');
+    }
 
     if (!id) {
       throw new ValidationError('Income ID is required', 'id');

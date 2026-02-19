@@ -84,6 +84,8 @@ export async function GET(request: NextRequest) {
         startAge: true,
         owner: true,
         frequency: true,
+        description: true,
+        inflationIndexed: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -199,29 +201,34 @@ export async function GET(request: NextRequest) {
         acc[owner].oas_annual_at_start = annualAmount;
       } else if (type === 'pension') {
         // Add pension to list (preserve startAge for Python backend)
+        console.log('🎯 Pension from DB:', {
+          description: income.description,
+          inflationIndexed_raw: income.inflationIndexed,
+          inflationIndexed_result: income.inflationIndexed
+        });
         acc[owner].pension_incomes.push({
-          name: (income as any).description || 'Pension',
+          name: income.description || 'Pension',
           amount: annualAmount,
           startAge: income.startAge || 65,
-          inflationIndexed: (income as any).inflationIndexed !== false,
+          inflationIndexed: income.inflationIndexed,
         });
       } else if (type === 'rental') {
         // Rental from Income table (not real estate properties)
         acc[owner].other_incomes.push({
           type: 'rental',
-          name: (income as any).description || 'Rental Income',
+          name: income.description || 'Rental Income',
           amount: annualAmount,
           startAge: income.startAge || undefined,
-          inflationIndexed: (income as any).inflationIndexed !== false,
+          inflationIndexed: income.inflationIndexed,
         });
       } else if (['employment', 'business', 'investment', 'other'].includes(type)) {
         // Add to other_incomes list (preserve startAge for Python backend)
         acc[owner].other_incomes.push({
           type,
-          name: (income as any).description || type.charAt(0).toUpperCase() + type.slice(1),
+          name: income.description || type.charAt(0).toUpperCase() + type.slice(1),
           amount: annualAmount,
           startAge: income.startAge || undefined,
-          inflationIndexed: (income as any).inflationIndexed !== false,
+          inflationIndexed: income.inflationIndexed,
         });
       }
 
