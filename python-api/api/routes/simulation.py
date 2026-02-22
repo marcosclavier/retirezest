@@ -189,12 +189,21 @@ async def run_simulation(
 
         # Check if we should attempt auto-optimization
         # Only optimize if there are funding gaps
+        # CRITICAL FIX: Don't auto-optimize Corporate-Optimized strategy as it has special logic
+        should_optimize = (
+            'plan_success' in df.columns and
+            not df['plan_success'].all() and
+            original_strategy.lower() != 'corporate-optimized'
+        )
+
         logger.info(f"🔍 Checking for optimization: plan_success in columns={('plan_success' in df.columns)}")
         if 'plan_success' in df.columns:
             has_gaps = not df['plan_success'].all()
             logger.info(f"🔍 Has funding gaps: {has_gaps} (success_rate={df['plan_success'].sum()}/{len(df)})")
+            if original_strategy.lower() == 'corporate-optimized' and has_gaps:
+                logger.info("📌 Skipping auto-optimization for Corporate-Optimized strategy")
 
-        if 'plan_success' in df.columns and not df['plan_success'].all():
+        if should_optimize:
             from modules.strategy_optimizer import find_best_alternative_strategy
 
             logger.info("🔍 Funding gaps detected - evaluating alternative strategies")

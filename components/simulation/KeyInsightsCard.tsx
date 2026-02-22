@@ -27,6 +27,15 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
   const summary = result.summary;
   const yearByYear = result.year_by_year;
 
+  // Debug logging to understand the data
+  console.log('KeyInsights Debug:', {
+    success_rate: summary.success_rate,
+    health_score: summary.health_score,
+    total_underfunded_years: summary.total_underfunded_years,
+    total_underfunding: summary.total_underfunding,
+    final_estate_after_tax: summary.final_estate_after_tax
+  });
+
   // Get end age from last year of simulation
   const endAge = yearByYear.length > 0 ? yearByYear[yearByYear.length - 1].age_p1 : 95;
 
@@ -51,7 +60,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
       description,
       impact: shortfall < 500 ? 'Minor adjustment may be needed' : 'Action needed to meet spending goals'
     });
-  } else if (summary.success_rate === 1.0) {
+  } else if (summary.success_rate >= 0.999) {  // Use >= 0.999 to handle floating point precision
     const finalEstate = summary.final_estate_after_tax;
     if (finalEstate > 500000) {
       insights.push({
@@ -76,13 +85,13 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
         description: `Your plan is funded, ending with $${(finalEstate / 1000).toFixed(0)}K at age ${endAge}. Consider building more buffer for unexpected expenses.`,
       });
     }
-  } else if (summary.success_rate > 0.8) {
+  } else if (summary.success_rate > 0.8 && summary.success_rate < 0.999) {
     insights.push({
       type: 'warning',
       icon: <AlertTriangle className="h-5 w-5" />,
       title: 'Plan at Risk',
       description: `Your plan runs out of funds ${summary.first_failure_year ? `at age ${summary.first_failure_year}` : 'before your target age'}. Consider reducing spending or delaying retirement.`,
-      impact: `Shortfall of approximately $${(Math.abs(summary.final_estate_after_tax) / 1000).toFixed(0)}K`
+      impact: summary.total_underfunding ? `Shortfall of approximately $${(summary.total_underfunding / 1000).toFixed(0)}K` : undefined
     });
   } else {
     insights.push({
@@ -90,7 +99,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
       icon: <AlertTriangle className="h-5 w-5" />,
       title: 'Significant Funding Gap',
       description: `Your current plan has substantial shortfalls. ${summary.first_failure_year ? `Funds depleted at age ${summary.first_failure_year}. ` : ''}Immediate adjustments recommended.`,
-      impact: 'High priority - plan needs revision'
+      impact: summary.total_underfunding ? `Shortfall of approximately $${(summary.total_underfunding / 1000).toFixed(0)}K` : 'High priority - plan needs revision'
     });
   }
 
@@ -155,7 +164,7 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
   // Only show this if we DON'T have underfunding insight (avoid duplication)
   if (summary.first_failure_year && summary.total_underfunded_years === 0) {
     const yearsShort = endAge - summary.first_failure_year;
-    const additionalNeeded = Math.abs(summary.final_estate_after_tax);
+    const additionalNeeded = summary.total_underfunding || Math.abs(summary.final_estate_after_tax);
 
     // Only show if yearsShort is positive (valid calculation)
     if (yearsShort > 0) {

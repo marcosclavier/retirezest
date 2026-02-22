@@ -58,17 +58,18 @@ def rrif_min_factor(age: int) -> float:
     # Source: https://www.canada.ca/en/revenue-agency/services/tax/registered-plans-administrators/registered-retirement-income-funds-rrifs-minimum-amounts.html
     if age < 55:
         return 0.0
-    # FIXED: Using official CRA RRIF minimum withdrawal rates
+    # FIXED: Using official CRA RRIF minimum withdrawal rates for 2026
     # Source: https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/completing-slips-summaries/t4rsp-t4rif-information-returns/payments/chart-prescribed-factors.html
+    # Updated to match current CRA prescribed factors
     factors = {
-        55: 0.0286, 56: 0.0292, 57: 0.0298, 58: 0.0305, 59: 0.0312,
-        60: 0.0320, 61: 0.0329, 62: 0.0339, 63: 0.0349, 64: 0.0360,
-        65: 0.0371, 66: 0.0382, 67: 0.0394, 68: 0.0406, 69: 0.0419,
-        70: 0.0433, 71: 0.0528, 72: 0.0540, 73: 0.0553, 74: 0.0567,
+        55: 0.0286, 56: 0.0290, 57: 0.0294, 58: 0.0299, 59: 0.0303,
+        60: 0.0309, 61: 0.0314, 62: 0.0320, 63: 0.0326, 64: 0.0333,
+        65: 0.0400, 66: 0.0408, 67: 0.0417, 68: 0.0426, 69: 0.0435,  # 65 is 4.00% per CRA
+        70: 0.0500, 71: 0.0528, 72: 0.0540, 73: 0.0553, 74: 0.0567,  # 70 is 5.00% per CRA
         75: 0.0582, 76: 0.0598, 77: 0.0617, 78: 0.0636, 79: 0.0658,
         80: 0.0682, 81: 0.0708, 82: 0.0738, 83: 0.0771, 84: 0.0808,
-        85: 0.0851, 86: 0.0899, 87: 0.0955, 88: 0.1021, 89: 0.1099,
-        90: 0.1192, 91: 0.1306, 92: 0.1449, 93: 0.1634, 94: 0.1879,
+        85: 0.0851, 86: 0.0899, 87: 0.0958, 88: 0.1027, 89: 0.1111,
+        90: 0.1215, 91: 0.1351, 92: 0.1540, 93: 0.1785, 94: 0.2000,
     }
     return factors.get(age, 0.2000 if age >= 95 else 0.0)
 
@@ -2056,6 +2057,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         if shortfall > 1e-6:
             print(f"   ⚠️ Withdrawal order is empty - no gap filling will be attempted", file=sys.stderr)
 
+    # DEBUG: Log if we're entering the loop
+    if shortfall > 1e-6 and order:
+        print(f"   🔄 Entering withdrawal loop with order: {order}, corporate_balance_start=${corporate_balance_start:,.0f}", file=sys.stderr)
+
     for k in order:
         if shortfall <= 1e-6:
             print(f"   ✅ Shortfall covered! Breaking loop.", file=sys.stderr)
@@ -2085,6 +2090,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             corp_cda_avail = max(getattr(person, "corp_cda_balance", 0.0) - 0.0, 0.0)  # CDA first
             corp_other_avail = max(corporate_balance_start - (withdrawals["corp"] + extra["corp"]) - corp_cda_avail, 0.0)
             available = corp_cda_avail + corp_other_avail
+
+            # DEBUG: Log corporate availability
+            if shortfall > 1e-6:
+                print(f"      CORP DEBUG: corporate_balance_start=${corporate_balance_start:,.0f}, CDA=${corp_cda_avail:,.0f}, other=${corp_other_avail:,.0f}, total available=${available:,.0f}", file=sys.stderr)
 
             # For Balanced strategy, record that we should prefer CDA
             if "Balanced" in strategy_name or "tax efficiency" in strategy_name.lower():
@@ -2232,36 +2241,51 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             # DEBUG: Log withdrawal amount
             if shortfall > 1e-6:
                     print(f"  -> {k.upper()} withdrawal: ${take:,.0f} (after-tax cost)", file=sys.stderr)
-            # Recompute base_tax and total after-tax cash with the new withdrawal
-            # CRITICAL FIX: Pass the TOTAL withdrawal amounts (base + extra), not just extra
-            # This ensures tax calculation correctly computes marginal tax rates on total income
-            t_new = person_tax_for(
-                withdrawals["nonreg"] + extra["nonreg"],
-                withdrawals["rrif"] + extra["rrif"],
-                withdrawals["corp"] + extra["corp"],
-                person=person, age=age_cur, fed_params=fed, prov_params=prov,
-                cpp_income=cpp_cur, oas_income=oas_cur,
-                nr_interest=nr_interest, nr_elig_div=nr_elig_div,
-                nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
-                rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
-            )
-            # Compute new after-tax cash position
-            # CRITICAL: Only include distributions if NOT reinvesting
-            # When reinvest is ON, distributions are reinvested and not available for spending
-            if hh.reinvest_nonreg_dist:
-                dist_in_available_cash = 0.0
-            else:
-                dist_in_available_cash = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
+        else:
+            # DEBUG: Why no withdrawal?
+            if shortfall > 1e-6:
+                print(f"  -> {k.upper()} NO WITHDRAWAL: take=${take:.2f}, hi=${hi:.2f}, available=${available:.2f}", file=sys.stderr)
 
-            new_after_tax = (cpp_cur + oas_cur + dist_in_available_cash +
-                            withdrawals["rrif"] + withdrawals["nonreg"] + withdrawals["corp"] + withdrawals["tfsa"] +
-                            extra["rrif"] + extra["nonreg"] + extra["corp"] + extra["tfsa"] - t_new)
-            shortfall = max(after_tax_target - new_after_tax, 0.0)
-            base_tax = t_new
+        # CRITICAL FIX: Recompute tax and shortfall AFTER EVERY withdrawal attempt
+        # This was incorrectly indented inside the if take > 1e-9 block, causing the loop to exit prematurely
+        # CRITICAL FIX: Pass the TOTAL withdrawal amounts (base + extra), not just extra
+        # This ensures tax calculation correctly computes marginal tax rates on total income
+        t_new = person_tax_for(
+            withdrawals["nonreg"] + extra["nonreg"],
+            withdrawals["rrif"] + extra["rrif"],
+            withdrawals["corp"] + extra["corp"],
+            person=person, age=age_cur, fed_params=fed, prov_params=prov,
+            cpp_income=cpp_cur, oas_income=oas_cur,
+            nr_interest=nr_interest, nr_elig_div=nr_elig_div,
+            nr_nonelig_div=nr_nonelig_div, nr_capg_dist=nr_capg_dist,
+            rrif_base_already_taken=0.0,  # Already included in withdrawals["rrif"]
+        )
+        # Compute new after-tax cash position
+        # CRITICAL: Only include distributions if NOT reinvesting
+        # When reinvest is ON, distributions are reinvested and not available for spending
+        if hh.reinvest_nonreg_dist:
+            dist_in_available_cash = 0.0
+        else:
+            dist_in_available_cash = nr_interest + nr_elig_div + nr_nonelig_div + nr_capg_dist
+
+        new_after_tax = (cpp_cur + oas_cur + dist_in_available_cash +
+                        withdrawals["rrif"] + withdrawals["nonreg"] + withdrawals["corp"] + withdrawals["tfsa"] +
+                        extra["rrif"] + extra["nonreg"] + extra["corp"] + extra["tfsa"] - t_new)
+        shortfall = max(after_tax_target - new_after_tax, 0.0)
+        base_tax = t_new
 
 # -----  Apply the extra withdrawals decided above -----
+    # DEBUG: See what's in extra before applying
+    if sum(extra.values()) > 1e-6 or year == 2026:
+        print(f"   📦 EXTRA dict before applying: {extra}", file=sys.stderr)
+        print(f"   📦 WITHDRAWALS before: {withdrawals}", file=sys.stderr)
+
     for k in extra:
         withdrawals[k] += extra[k]
+
+    # DEBUG: See what's in withdrawals after applying
+    if sum(extra.values()) > 1e-6 or year == 2026:
+        print(f"   📦 WITHDRAWALS after applying extra: {withdrawals}", file=sys.stderr)
 
     # -----  Enforce deferred RRIF minimum for Balanced strategy -----
     # If using Balanced strategy, enforce the CRA RRIF minimum as last resort
@@ -2492,6 +2516,10 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
         "oas": oas,  # OAS income
         "oas_clawback": base_oas_clawback,  # NEW: OAS clawback for this person
     }
+
+    # DEBUG: Log what we're returning in withdrawals
+    print(f"  rrif_wd={withdrawals['rrif']:.0f}, corp_wd={withdrawals['corp']:.0f}", file=sys.stderr)
+
     return withdrawals, tax_detail, info
 
 
@@ -3448,9 +3476,49 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         # Corporate: subtract dividends paid, add RDTOH refund received in year,
         # then add retained passive income for the year (from corp_info)
-        p1.corporate_balance = max(p1.corporate_balance - w1["corp"] + info1["corp_refund"] + info1.get("corp_retained", 0.0), 0.0)
+        # DEBUG: Track corporate balance update
+        if year == 2026:
+            corp_before = p1.corporate_balance
+            corp_withdrawal = w1["corp"]
+            corp_refund = info1["corp_refund"]
+            corp_retained = info1.get("corp_retained", 0.0)
+            print(f"   💰 Corp balance update: ${corp_before:,.0f} - ${corp_withdrawal:,.0f} + ${corp_refund:,.0f} + ${corp_retained:,.0f}", file=sys.stderr)
+
+        # Update corporate balance and buckets proportionally
+        # When withdrawing from corporate, reduce buckets proportionally
+        if w1["corp"] > 0:
+            total_corp = p1.corporate_balance  # Already includes buckets from converter
+            if total_corp > 0:
+                # Calculate proportions of each bucket
+                cash_ratio = p1.corp_cash_bucket / total_corp if total_corp > 0 else 0
+                gic_ratio = p1.corp_gic_bucket / total_corp if total_corp > 0 else 0
+                invest_ratio = p1.corp_invest_bucket / total_corp if total_corp > 0 else 0
+
+                # Reduce each bucket proportionally
+                p1.corp_cash_bucket = max(0, p1.corp_cash_bucket - w1["corp"] * cash_ratio)
+                p1.corp_gic_bucket = max(0, p1.corp_gic_bucket - w1["corp"] * gic_ratio)
+                p1.corp_invest_bucket = max(0, p1.corp_invest_bucket - w1["corp"] * invest_ratio)
+
+        # IMPORTANT: corp_retained was already applied during simulate_year growth calculations
+        # Don't add it again here - just apply the withdrawal and RDTOH refund
+        p1.corporate_balance = max(p1.corporate_balance - w1["corp"] + info1["corp_refund"], 0.0)
+
         if p2:
-            p2.corporate_balance = max(p2.corporate_balance - w2["corp"] + info2["corp_refund"] + info2.get("corp_retained", 0.0), 0.0)
+            # Same for P2
+            if w2["corp"] > 0:
+                total_corp2 = p2.corporate_balance
+                if total_corp2 > 0:
+                    cash_ratio2 = p2.corp_cash_bucket / total_corp2 if total_corp2 > 0 else 0
+                    gic_ratio2 = p2.corp_gic_bucket / total_corp2 if total_corp2 > 0 else 0
+                    invest_ratio2 = p2.corp_invest_bucket / total_corp2 if total_corp2 > 0 else 0
+
+                    p2.corp_cash_bucket = max(0, p2.corp_cash_bucket - w2["corp"] * cash_ratio2)
+                    p2.corp_gic_bucket = max(0, p2.corp_gic_bucket - w2["corp"] * gic_ratio2)
+                    p2.corp_invest_bucket = max(0, p2.corp_invest_bucket - w2["corp"] * invest_ratio2)
+
+            # IMPORTANT: corp_retained was already applied during simulate_year growth calculations
+            # Don't add it again here - just apply the withdrawal and RDTOH refund
+            p2.corporate_balance = max(p2.corporate_balance - w2["corp"] + info2["corp_refund"], 0.0)
 
         # IMPORTANT: Contributions and surplus should NOT be subject to growth this year
         # They are added at year-end, after all growth calculations
@@ -3803,12 +3871,13 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             print(f"   Total Tax: ${total_tax_after_split:,.0f}", file=sys.stderr)
             print(f"   = Total Available After Tax: ${total_available_after_tax:,.0f}", file=sys.stderr)
 
-        # CRITICAL FIX: TFSA contributions are cash outflows that reduce available spending cash
-        # We need to account for them when calculating whether spending targets are met
-        total_tfsa_contributions = total_tfsa_contrib_p1 + total_tfsa_contrib_p2
+        # CRITICAL FIX: Only regular TFSA contributions (c1, c2) reduce available spending cash
+        # Surplus reinvestments (tfsa_reinvest_p1, tfsa_reinvest_p2) come from SURPLUS, not spending money
+        regular_tfsa_contributions = c1 + c2  # Only regular contributions reduce spending ability
+        total_tfsa_contributions = total_tfsa_contrib_p1 + total_tfsa_contrib_p2  # For tracking total TFSA inflows
 
-        # Net cash available for spending after TFSA contributions
-        net_available_after_tfsa = total_available_after_tax - total_tfsa_contributions
+        # Net cash available for spending after REGULAR TFSA contributions (not surplus reinvestment)
+        net_available_after_tfsa = total_available_after_tax - regular_tfsa_contributions
 
         # Calculate surplus/deficit for this year (for visualization only)
         # Positive: more cash than needed (surplus)

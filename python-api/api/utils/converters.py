@@ -4,6 +4,7 @@ Convert between API models (Pydantic) and internal models (dataclasses).
 This module bridges the REST API layer with the existing simulation engine.
 """
 
+import sys
 from api.models.requests import PersonInput, HouseholdInput
 from api.models.responses import (
     YearResult,
@@ -45,6 +46,23 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         for i, pension in enumerate(api_person.pension_incomes):
             print(f"   Pension {i}: {pension}", file=sys.stderr)
 
+    # Calculate total corporate balance from both main balance and buckets
+    # This ensures corporate funds in buckets are included in withdrawal calculations
+    total_corporate = (
+        api_person.corporate_balance +
+        api_person.corp_cash_bucket +
+        api_person.corp_gic_bucket +
+        api_person.corp_invest_bucket
+    )
+
+    # Debug logging for corporate balance calculation
+    print(f"🏢 CONVERTER: {api_person.name} corporate balance calculation:", file=sys.stderr)
+    print(f"   Main balance: ${api_person.corporate_balance:,.0f}", file=sys.stderr)
+    print(f"   Cash bucket: ${api_person.corp_cash_bucket:,.0f}", file=sys.stderr)
+    print(f"   GIC bucket: ${api_person.corp_gic_bucket:,.0f}", file=sys.stderr)
+    print(f"   Invest bucket: ${api_person.corp_invest_bucket:,.0f}", file=sys.stderr)
+    print(f"   TOTAL: ${total_corporate:,.0f}", file=sys.stderr)
+
     return Person(
         name=api_person.name,
         start_age=api_person.start_age,
@@ -60,7 +78,7 @@ def api_person_to_internal(api_person: PersonInput) -> Person:
         rrif_balance=api_person.rrif_balance,
         rrsp_balance=api_person.rrsp_balance,
         nonreg_balance=api_person.nonreg_balance,
-        corporate_balance=api_person.corporate_balance,
+        corporate_balance=total_corporate,  # Use total including buckets
 
         # Non-registered details
         nonreg_acb=api_person.nonreg_acb,
@@ -967,6 +985,10 @@ def extract_five_year_plan(df: pd.DataFrame) -> list[FiveYearPlanYear]:
         tfsa_p2 = float(row.get('withdraw_tfsa_p2', 0))
         corp_p1 = float(row.get('withdraw_corp_p1', 0))
         corp_p2 = float(row.get('withdraw_corp_p2', 0))
+
+        # DEBUG: Log corporate withdrawal values
+        if i == 0:  # First year only
+            print(f"DEBUG CONVERTER: Year {year} - withdraw_corp_p1 raw = {row.get('withdraw_corp_p1', 'NOT_FOUND')}, converted = {corp_p1}", file=sys.stderr)
 
         # Get NonReg distributions (passive income)
         nonreg_dist_p1 = float(
