@@ -103,6 +103,11 @@ model Income {
   owner            String?  @default("person1")
   inflationIndexed Boolean  @default(true)
   endAge           Int?
+  // New month/year date fields
+  startMonth       Int?     // 1-12 for month
+  startYear        Int?     // Year when income starts
+  endMonth         Int?     // 1-12 for month
+  endYear          Int?     // Year when income ends
   // Quebec-specific fields for QPP
   qppContributions      Float?
   qppYearsContributed   Int?

@@ -1596,11 +1596,18 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             print(f"  - Pension: {pension}")
     for pension in pension_incomes:
         pension_start_age = pension.get('startAge', 65)
-        if age >= pension_start_age:
-            # Pension has started
+        pension_end_age = pension.get('endAge')  # Optional end age
+
+        # Check if pension is active based on age range
+        is_active = age >= pension_start_age
+        if pension_end_age is not None and age >= pension_end_age:
+            is_active = False
+
+        if is_active:
+            # Pension has started and is still active
             annual_amount = pension.get('amount', 0.0)
             is_indexed = pension.get('inflationIndexed', True)
-            print(f"  DEBUG: Pension starting - amount=${annual_amount}, inflationIndexed={is_indexed}")
+            print(f"  DEBUG: Pension active - amount=${annual_amount}, inflationIndexed={is_indexed}, age range={pension_start_age}-{pension_end_age or 'no end'}")
 
             # Apply inflation indexing if enabled
             if is_indexed:
@@ -2762,7 +2769,14 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
         for pension in p1_pension_incomes:
             pension_start_age = pension.get('startAge', 65)
-            if age1 >= pension_start_age:
+            pension_end_age = pension.get('endAge')  # Optional end age
+
+            # Check if pension is active based on age range
+            is_active = age1 >= pension_start_age
+            if pension_end_age is not None and age1 >= pension_end_age:
+                is_active = False
+
+            if is_active:
                 annual_amount = pension.get('amount', 0.0)
                 is_indexed = pension.get('inflationIndexed', True)
 
@@ -2815,7 +2829,14 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
             p2_pension_incomes = getattr(p2, 'pension_incomes', [])
             for pension in p2_pension_incomes:
                 pension_start_age = pension.get('startAge', 65)
-                if age2 >= pension_start_age:
+                pension_end_age = pension.get('endAge')  # Optional end age
+
+                # Check if pension is active based on age range
+                is_active = age2 >= pension_start_age
+                if pension_end_age is not None and age2 >= pension_end_age:
+                    is_active = False
+
+                if is_active:
                     annual_amount = pension.get('amount', 0.0)
                     is_indexed = pension.get('inflationIndexed', True)
 

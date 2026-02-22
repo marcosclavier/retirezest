@@ -82,6 +82,11 @@ export async function GET(request: NextRequest) {
         type: true,
         amount: true,
         startAge: true,
+        endAge: true,
+        startMonth: true,
+        startYear: true,
+        endMonth: true,
+        endYear: true,
         owner: true,
         frequency: true,
         description: true,
@@ -156,6 +161,24 @@ export async function GET(request: NextRequest) {
     const yearsUntilRetirement = Math.max(0, retirementAge - age);
     const calculatedStartYear = currentYear + yearsUntilRetirement;
 
+    // Helper function to convert month/year to age
+    const convertDateToAge = (month: number | null, year: number | null, birthDate: Date): number | null => {
+      if (!month || !year) return null;
+
+      const targetDate = new Date(year, month - 1, 1); // month is 1-indexed
+      const birthYear = birthDate.getFullYear();
+      const birthMonth = birthDate.getMonth() + 1; // getMonth() returns 0-11
+
+      let age = year - birthYear;
+
+      // Adjust age if the birthday hasn't happened yet in the target year
+      if (month < birthMonth) {
+        age--;
+      }
+
+      return age;
+    };
+
     // Extract all income data by owner
     const incomeByOwner = incomeSources.reduce((acc, income) => {
       const owner = income.owner || 'person1';
@@ -193,23 +216,43 @@ export async function GET(request: NextRequest) {
           annualAmount = income.amount;
       }
 
+      // Determine the birth date for this owner
+      const ownerBirthDate = owner === 'person2' && user?.partnerDateOfBirth
+        ? user.partnerDateOfBirth
+        : user?.dateOfBirth || new Date();
+
+      // Calculate start age from either startAge field or month/year fields
+      let effectiveStartAge = income.startAge;
+      if (!effectiveStartAge && income.startMonth && income.startYear) {
+        effectiveStartAge = convertDateToAge(income.startMonth, income.startYear, ownerBirthDate);
+      }
+
+      // Calculate end age from either endAge field or month/year fields
+      let effectiveEndAge = income.endAge;
+      if (!effectiveEndAge && income.endMonth && income.endYear) {
+        effectiveEndAge = convertDateToAge(income.endMonth, income.endYear, ownerBirthDate);
+      }
+
       if (type === 'cpp') {
-        acc[owner].cpp_start_age = income.startAge;
+        acc[owner].cpp_start_age = effectiveStartAge || income.startAge;
         acc[owner].cpp_annual_at_start = annualAmount;
       } else if (type === 'oas') {
-        acc[owner].oas_start_age = income.startAge;
+        acc[owner].oas_start_age = effectiveStartAge || income.startAge;
         acc[owner].oas_annual_at_start = annualAmount;
       } else if (type === 'pension') {
         // Add pension to list (preserve startAge for Python backend)
         console.log('🎯 Pension from DB:', {
           description: income.description,
           inflationIndexed_raw: income.inflationIndexed,
-          inflationIndexed_result: income.inflationIndexed
+          inflationIndexed_result: income.inflationIndexed,
+          startAge: effectiveStartAge || income.startAge,
+          endAge: effectiveEndAge || income.endAge,
         });
         acc[owner].pension_incomes.push({
           name: income.description || 'Pension',
           amount: annualAmount,
-          startAge: income.startAge || 65,
+          startAge: effectiveStartAge || income.startAge || 65,
+          endAge: effectiveEndAge || undefined,
           inflationIndexed: income.inflationIndexed,
         });
       } else if (type === 'rental') {
@@ -218,7 +261,8 @@ export async function GET(request: NextRequest) {
           type: 'rental',
           name: income.description || 'Rental Income',
           amount: annualAmount,
-          startAge: income.startAge || undefined,
+          startAge: effectiveStartAge || income.startAge || undefined,
+          endAge: effectiveEndAge || undefined,
           inflationIndexed: income.inflationIndexed,
         });
       } else if (['employment', 'business', 'investment', 'other'].includes(type)) {
@@ -227,7 +271,8 @@ export async function GET(request: NextRequest) {
           type,
           name: income.description || type.charAt(0).toUpperCase() + type.slice(1),
           amount: annualAmount,
-          startAge: income.startAge || undefined,
+          startAge: effectiveStartAge || income.startAge || undefined,
+          endAge: effectiveEndAge || undefined,
           inflationIndexed: income.inflationIndexed,
         });
       }
@@ -238,8 +283,8 @@ export async function GET(request: NextRequest) {
       cpp_annual_at_start: number | null;
       oas_start_age: number | null;
       oas_annual_at_start: number | null;
-      pension_incomes: Array<{name: string; amount: number; startAge: number; inflationIndexed: boolean}>;
-      other_incomes: Array<{type: string; name: string; amount: number; startAge?: number; inflationIndexed: boolean}>;
+      pension_incomes: Array<{name: string; amount: number; startAge: number; endAge?: number; inflationIndexed: boolean}>;
+      other_incomes: Array<{type: string; name: string; amount: number; startAge?: number; endAge?: number; inflationIndexed: boolean}>;
     }>);
 
     // Add rental income from real estate properties

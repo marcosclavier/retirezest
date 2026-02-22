@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Edit2, Trash2, Save, X, Calendar, DollarSign } from 'lucide-react';
 
 interface IncomeSource {
   id?: string;
@@ -10,80 +11,86 @@ interface IncomeSource {
   frequency: string;
   startAge?: number;
   endAge?: number;
+  startMonth?: number;
+  startYear?: number;
+  endMonth?: number;
+  endYear?: number;
   owner?: string;
   notes?: string;
   inflationIndexed?: boolean;
 }
 
-export default function IncomePage() {
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+export default function EnhancedIncomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingData, setEditingData] = useState<IncomeSource | null>(null);
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [includePartner, setIncludePartner] = useState(false);
   const [userProvince, setUserProvince] = useState<string>('ON');
-  const [showImportBanner, setShowImportBanner] = useState(false);
-  const [availableCalculations, setAvailableCalculations] = useState<{
-    cpp?: any;
-    oas?: any;
-  }>({});
-  const [selectedImports, setSelectedImports] = useState<{
-    cpp: boolean;
-    oas: boolean;
-  }>({ cpp: false, oas: false });
+  const [retirementYear, setRetirementYear] = useState<number>(new Date().getFullYear() + 1);
+  const [planEndYear, setPlanEndYear] = useState<number>(new Date().getFullYear() + 30);
+
   const [formData, setFormData] = useState<IncomeSource>({
     type: 'employment',
     amount: 0,
     frequency: 'annual',
     startAge: undefined,
     endAge: undefined,
+    startMonth: undefined,
+    startYear: retirementYear,
+    endMonth: undefined,
+    endYear: planEndYear,
     owner: 'person1',
     notes: '',
-    inflationIndexed: true, // Default to true for pensions
+    inflationIndexed: true,
   });
 
-  // Helper to get correct pension label based on province
+  // Helper functions
   const getPensionLabel = () => userProvince === 'QC' ? 'QPP' : 'CPP';
-  const getPensionFullName = () => {
-    console.log('Income page - userProvince:', userProvince);
-    return userProvince === 'QC' ? 'Quebec Pension Plan (QPP)' : 'Canada Pension Plan (CPP)';
-  };
+  const getPensionFullName = () => userProvince === 'QC' ? 'Quebec Pension Plan (QPP)' : 'Canada Pension Plan (CPP)';
 
   useEffect(() => {
     fetchIncomeSources();
     fetchCsrfToken();
     fetchSettings();
-    checkForCalculatedBenefits();
+    // Get retirement settings to set default dates
+    fetchRetirementSettings();
   }, []);
 
-  const checkForCalculatedBenefits = () => {
-    const calculations: any = {};
+  const fetchRetirementSettings = async () => {
+    try {
+      const res = await fetch('/api/profile/settings');
+      if (res.ok) {
+        const data = await res.json();
+        const currentYear = new Date().getFullYear();
+        const userAge = data.dateOfBirth ?
+          currentYear - new Date(data.dateOfBirth).getFullYear() : 50;
+        const retirementAge = data.targetRetirementAge || 65;
+        const lifeExpectancy = data.lifeExpectancy || 95;
 
-    // Check for CPP calculation
-    const cppResult = localStorage.getItem('cpp_calculator_result');
-    if (cppResult) {
-      try {
-        calculations.cpp = JSON.parse(cppResult);
-      } catch (e) {
-        console.error('Error parsing CPP result:', e);
+        const calculatedRetirementYear = currentYear + (retirementAge - userAge);
+        const calculatedEndYear = currentYear + (lifeExpectancy - userAge);
+
+        setRetirementYear(calculatedRetirementYear);
+        setPlanEndYear(calculatedEndYear);
+
+        // Update form defaults
+        setFormData(prev => ({
+          ...prev,
+          startYear: calculatedRetirementYear,
+          endYear: calculatedEndYear
+        }));
       }
-    }
-
-    // Check for OAS calculation
-    const oasResult = localStorage.getItem('oas_calculator_result');
-    if (oasResult) {
-      try {
-        calculations.oas = JSON.parse(oasResult);
-      } catch (e) {
-        console.error('Error parsing OAS result:', e);
-      }
-    }
-
-    // Show banner if we have calculations and user doesn't already have CPP/OAS in their income sources
-    if (Object.keys(calculations).length > 0) {
-      setAvailableCalculations(calculations);
-      setShowImportBanner(true);
+    } catch (error) {
+      console.error('Error fetching retirement settings:', error);
     }
   };
 
@@ -105,9 +112,7 @@ export default function IncomePage() {
       if (res.ok) {
         const data = await res.json();
         setIncludePartner(data.includePartner || false);
-        // Set province from user profile, default to ON if not set
         setUserProvince(data.province || 'ON');
-        console.log('Fetched user province:', data.province || 'ON (default)');
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -119,22 +124,54 @@ export default function IncomePage() {
       const res = await fetch('/api/profile/income');
       if (res.ok) {
         const data = await res.json();
-        setIncomeSources(data.income || []);
+        setIncomeSources(Array.isArray(data) ? data : data.incomes || []);
       }
     } catch (error) {
       console.error('Error fetching income sources:', error);
     }
   };
 
+  const handleEdit = (income: IncomeSource) => {
+    setEditingId(income.id || null);
+    setEditingData({ ...income });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingData(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editingData) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/profile/income/${editingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify(editingData),
+      });
+
+      if (res.ok) {
+        await fetchIncomeSources();
+        setEditingId(null);
+        setEditingData(null);
+      } else {
+        alert('Failed to update income source');
+      }
+    } catch (error) {
+      console.error('Error updating income:', error);
+      alert('Failed to update income source');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Ensure we have a CSRF token before submitting
-    if (!csrfToken) {
-      alert('Security token not loaded. Please refresh the page and try again.');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -142,42 +179,31 @@ export default function IncomePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
+          'X-CSRF-Token': csrfToken,
         },
         body: JSON.stringify(formData),
       });
 
       if (res.ok) {
-        // Clear localStorage if CPP or OAS was added
-        if (formData.type === 'cpp') {
-          localStorage.removeItem('cpp_calculator_result');
-          setAvailableCalculations(prev => ({ ...prev, cpp: undefined }));
-        } else if (formData.type === 'oas') {
-          localStorage.removeItem('oas_calculator_result');
-          setAvailableCalculations(prev => ({ ...prev, oas: undefined }));
-        }
-
-        // Check if banner should be hidden (no more calculations available)
-        if ((!availableCalculations.cpp || formData.type === 'cpp') &&
-            (!availableCalculations.oas || formData.type === 'oas')) {
-          setShowImportBanner(false);
-        }
-
         await fetchIncomeSources();
         setShowForm(false);
+        // Reset form
         setFormData({
           type: 'employment',
           amount: 0,
           frequency: 'annual',
           startAge: undefined,
           endAge: undefined,
+          startMonth: undefined,
+          startYear: retirementYear,
+          endMonth: undefined,
+          endYear: planEndYear,
           owner: 'person1',
           notes: '',
           inflationIndexed: true,
         });
       } else {
-        const error = await res.json();
-        alert(error.error || 'Failed to add income source');
+        alert('Failed to add income source');
       }
     } catch (error) {
       console.error('Error adding income:', error);
@@ -190,11 +216,12 @@ export default function IncomePage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this income source?')) return;
 
+    setLoading(true);
     try {
-      const res = await fetch(`/api/profile/income?id=${id}`, {
+      const res = await fetch(`/api/profile/income/${id}`, {
         method: 'DELETE',
         headers: {
-          'x-csrf-token': csrfToken,
+          'X-CSRF-Token': csrfToken,
         },
       });
 
@@ -206,547 +233,517 @@ export default function IncomePage() {
     } catch (error) {
       console.error('Error deleting income:', error);
       alert('Failed to delete income source');
-    }
-  };
-
-  const handleImportSelected = async () => {
-    if (!selectedImports.cpp && !selectedImports.oas) {
-      return; // Nothing selected
-    }
-
-    setLoading(true);
-
-    try {
-      const promises = [];
-
-      if (selectedImports.cpp && availableCalculations.cpp) {
-        const cppData = {
-          type: 'cpp',
-          amount: availableCalculations.cpp.annualAmount,
-          frequency: 'annual',
-          startAge: availableCalculations.cpp.startAge,
-          owner: 'person1',
-          notes: `Imported from CPP Calculator on ${new Date(availableCalculations.cpp.calculatedAt).toLocaleDateString()}`,
-        };
-
-        promises.push(
-          fetch('/api/profile/income', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-csrf-token': csrfToken,
-            },
-            body: JSON.stringify(cppData),
-          })
-        );
-      }
-
-      if (selectedImports.oas && availableCalculations.oas) {
-        const oasData = {
-          type: 'oas',
-          amount: availableCalculations.oas.annualAmount,
-          frequency: 'annual',
-          startAge: 65, // OAS starts at 65
-          owner: 'person1',
-          notes: `Imported from OAS Calculator on ${new Date(availableCalculations.oas.calculatedAt).toLocaleDateString()}`,
-        };
-
-        promises.push(
-          fetch('/api/profile/income', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-csrf-token': csrfToken,
-            },
-            body: JSON.stringify(oasData),
-          })
-        );
-      }
-
-      await Promise.all(promises);
-
-      // Clear localStorage for imported items
-      if (selectedImports.cpp) {
-        localStorage.removeItem('cpp_calculator_result');
-      }
-      if (selectedImports.oas) {
-        localStorage.removeItem('oas_calculator_result');
-      }
-
-      await fetchIncomeSources();
-      setShowImportBanner(false);
-      setAvailableCalculations({});
-      setSelectedImports({ cpp: false, oas: false });
-      alert('Benefits imported successfully!');
-    } catch (error) {
-      console.error('Error importing calculations:', error);
-      alert('Failed to import benefits. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const formatDate = (month?: number, year?: number) => {
+    if (!month || !year) return '';
+    return `${MONTHS[month - 1]} ${year}`;
+  };
+
+  const calculateAnnualAmount = (income: IncomeSource) => {
+    const multipliers: { [key: string]: number } = {
+      'annual': 1,
+      'monthly': 12,
+      'biweekly': 26,
+      'weekly': 52
+    };
+    return income.amount * (multipliers[income.frequency] || 1);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.back()}
-            className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
-          >
-            ← Back
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">Income Sources</h1>
-          <p className="text-gray-600 mt-2">
-            Add your expected income sources including employment, pensions, {getPensionLabel()}, OAS, and other sources.
-            For {getPensionLabel()} and OAS, use RetireZest's calculators or CRA estimates for your planned retirement year.
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="border-b px-6 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Income Sources</h1>
+          <p className="text-gray-600 mt-1">
+            Manage your expected income sources including employment, pensions, CPP/QPP, OAS, and other sources.
           </p>
         </div>
 
-        {/* Import CPP/OAS Banner */}
-        {showImportBanner && (
-          <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6 shadow-md">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center">
-                <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Government Benefits Calculated!
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    We found calculated benefits from your recent calculator sessions. Would you like to add them as income sources?
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowImportBanner(false)}
-                className="text-gray-400 hover:text-gray-600"
-                aria-label="Dismiss"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {availableCalculations.cpp && (
-                <div className={`bg-white rounded-lg p-4 border-2 transition ${selectedImports.cpp ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="import-cpp"
-                      checked={selectedImports.cpp}
-                      onChange={(e) => setSelectedImports({ ...selectedImports, cpp: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="import-cpp" className="font-semibold text-gray-900 cursor-pointer">
-                          {getPensionFullName()}
-                        </label>
-                        <span className="text-xs text-gray-500">
-                          {new Date(availableCalculations.cpp.calculatedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
-                        ${availableCalculations.cpp.monthlyAmount.toLocaleString()}/month
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        ${availableCalculations.cpp.annualAmount.toLocaleString()}/year
-                      </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        Starting at age {availableCalculations.cpp.startAge}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {availableCalculations.oas && (
-                <div className={`bg-white rounded-lg p-4 border-2 transition ${selectedImports.oas ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="import-oas"
-                      checked={selectedImports.oas}
-                      onChange={(e) => setSelectedImports({ ...selectedImports, oas: e.target.checked })}
-                      className="mt-1 h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="import-oas" className="font-semibold text-gray-900 cursor-pointer">
-                          OAS (Old Age Security)
-                        </label>
-                        <span className="text-xs text-gray-500">
-                          {new Date(availableCalculations.oas.calculatedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-green-600 mb-1">
-                        ${availableCalculations.oas.monthlyAmount.toLocaleString()}/month
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        ${availableCalculations.oas.annualAmount.toLocaleString()}/year
-                      </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        {availableCalculations.oas.yearsInCanada} years in Canada
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
+        <div className="p-6">
+          {/* Add Income Button */}
+          {!showForm && (
             <button
-              onClick={handleImportSelected}
-              disabled={loading || (!selectedImports.cpp && !selectedImports.oas)}
-              className="w-full px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+              onClick={() => setShowForm(true)}
+              className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
             >
-              {loading ? 'Importing...' : `Import Selected (${(selectedImports.cpp ? 1 : 0) + (selectedImports.oas ? 1 : 0)})`}
+              <DollarSign className="w-5 h-5" />
+              Add Income Source
             </button>
-          </div>
-        )}
+          )}
 
-        {/* Add Income Button */}
-        {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
-          >
-            + Add Income Source
-          </button>
-        )}
-
-        {/* Income Form */}
-        {showForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Add Income Source</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Income Type *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  required
+          {/* Income Form */}
+          {showForm && (
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Add Income Source</h2>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  <option value="employment">Employment / Salary</option>
-                  <option value="cpp">{getPensionFullName()}</option>
-                  <option value="oas">Old Age Security (OAS)</option>
-                  <option value="pension">Private Pension</option>
-                  <option value="rental">Rental Income</option>
-                  <option value="business">Business Income</option>
-                  <option value="investment">Investment Income</option>
-                  <option value="other">Other</option>
-                </select>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {includePartner && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Owner *
-                  </label>
-                  <select
-                    value={formData.owner || 'person1'}
-                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    required
-                  >
-                    <option value="person1">Person 1 (You)</option>
-                    <option value="person2">Person 2 (Partner)</option>
-                  </select>
-                </div>
-              )}
-
-              {/* CPP/OAS Quick Import Helper */}
-              {((formData.type === 'cpp' && availableCalculations.cpp) ||
-                (formData.type === 'oas' && availableCalculations.oas)) && (
-                <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-blue-900 text-sm mb-1">
-                        {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} Calculation Available!
-                      </h4>
-                      <p className="text-sm text-blue-800 mb-2">
-                        We found a recent {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} calculation.
-                        Annual amount: ${formData.type === 'cpp'
-                          ? availableCalculations.cpp.annualAmount.toLocaleString()
-                          : availableCalculations.oas.annualAmount.toLocaleString()}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const calc = formData.type === 'cpp' ? availableCalculations.cpp : availableCalculations.oas;
-                          setFormData({
-                            ...formData,
-                            amount: calc.annualAmount,
-                            frequency: 'annual',
-                            startAge: formData.type === 'cpp' ? calc.startAge : 65,
-                            notes: `Imported from ${formData.type === 'cpp' ? getPensionLabel() : 'OAS'} Calculator on ${new Date(calc.calculatedAt).toLocaleDateString()}`
-                          });
-                        }}
-                        className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-medium"
-                      >
-                        Use Calculated Amount
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estimated Amount (CAD) *
-                </label>
-                <input
-                  type="number"
-                  value={formData.amount || ''}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  placeholder="e.g., 60000"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-                {(formData.type === 'cpp' || formData.type === 'oas') && (
-                  <p className="text-xs text-gray-600 mt-2 bg-blue-50 p-2 rounded border border-blue-200">
-                    <strong>Tip:</strong> Enter the annual {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} amount you expect to receive in your first year of retirement.
-                    RetireZest provides {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} calculators in the Tools section, or for the most accurate estimates,
-                    visit <a href={formData.type === 'cpp' ? 'https://www.canada.ca/en/services/benefits/publicpensions/cpp/retirement-income-calculator.html' : 'https://www.canada.ca/en/services/benefits/publicpensions/oas/oas-benefit-estimator.html'}
-                    target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                      CRA's official {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} estimator
-                    </a>.
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Frequency *
-                </label>
-                <select
-                  value={formData.frequency}
-                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  required
-                >
-                  <option value="annual">Annual</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="biweekly">Bi-weekly</option>
-                  <option value="weekly">Weekly</option>
-                </select>
-              </div>
-
-              {/* End Age field for employment, rental, business, and other income types */}
-              {(formData.type === 'employment' || formData.type === 'rental' || formData.type === 'business' || formData.type === 'other') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Age (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.endAge || ''}
-                    onChange={(e) => setFormData({ ...formData, endAge: parseInt(e.target.value) || undefined })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    placeholder="e.g., 70"
-                    min="1"
-                    max="100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.type === 'employment' && 'Age when employment income will stop (e.g., retirement age)'}
-                    {formData.type === 'rental' && 'Age when rental income will stop (e.g., when property is sold)'}
-                    {formData.type === 'business' && 'Age when business income will stop (e.g., when business is sold)'}
-                    {formData.type === 'other' && 'Age when this income will stop'}
-                  </p>
-                </div>
-              )}
-
-              {(formData.type === 'cpp' || formData.type === 'oas' || formData.type === 'pension') && (
-                <>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Start Age
+                      Income Type *
+                    </label>
+                    <select
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
+                      required
+                    >
+                      <option value="employment">Employment / Salary</option>
+                      <option value="cpp">{getPensionFullName()}</option>
+                      <option value="oas">Old Age Security (OAS)</option>
+                      <option value="pension">Private Pension</option>
+                      <option value="rental">Rental Income</option>
+                      <option value="business">Business Income</option>
+                      <option value="investment">Investment Income</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  {includePartner && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Owner *
+                      </label>
+                      <select
+                        value={formData.owner || 'person1'}
+                        onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
+                        required
+                      >
+                        <option value="person1">Person 1 (You)</option>
+                        <option value="person2">Person 2 (Partner)</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Amount (CAD) *
                     </label>
                     <input
                       type="number"
-                      value={formData.startAge || ''}
-                      onChange={(e) => setFormData({ ...formData, startAge: parseInt(e.target.value) || undefined })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                      placeholder={formData.type === 'cpp' ? '65 (or 60-70)' : formData.type === 'oas' ? '65 (or 65-70)' : 'e.g., 65'}
-                      min="1"
-                      max="100"
+                      value={formData.amount || ''}
+                      onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
+                      placeholder="e.g., 60000"
+                      min="0"
+                      step="0.01"
+                      required
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formData.type === 'cpp' && `${getPensionLabel()} can start between ages 60-70`}
-                      {formData.type === 'oas' && 'OAS can start between ages 65-70 (deferral increases benefits)'}
-                      {formData.type === 'pension' && 'Age when pension payments begin'}
-                    </p>
                   </div>
 
-                  {/* Inflation Indexing Checkbox */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Frequency *
+                    </label>
+                    <select
+                      value={formData.frequency}
+                      onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
+                      required
+                    >
+                      <option value="annual">Annual</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="biweekly">Bi-weekly</option>
+                      <option value="weekly">Weekly</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Start Date Fields */}
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Start Date
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Start Month
+                      </label>
+                      <select
+                        value={formData.startMonth || ''}
+                        onChange={(e) => setFormData({ ...formData, startMonth: parseInt(e.target.value) || undefined })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
+                      >
+                        <option value="" className="text-gray-600">Select Month</option>
+                        {MONTHS.map((month, idx) => (
+                          <option key={idx} value={idx + 1}>{month}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Start Year
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.startYear || ''}
+                        onChange={(e) => setFormData({ ...formData, startYear: parseInt(e.target.value) || undefined })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
+                        placeholder={`e.g., ${retirementYear}`}
+                        min={new Date().getFullYear()}
+                        max={new Date().getFullYear() + 50}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* End Date Fields (conditional based on income type) */}
+                {(formData.type === 'employment' || formData.type === 'rental' ||
+                  formData.type === 'business' || formData.type === 'other') && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      End Date (Optional)
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">
+                          End Month
+                        </label>
+                        <select
+                          value={formData.endMonth || ''}
+                          onChange={(e) => setFormData({ ...formData, endMonth: parseInt(e.target.value) || undefined })}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
+                        >
+                          <option value="" className="text-gray-600">Select Month</option>
+                          {MONTHS.map((month, idx) => (
+                            <option key={idx} value={idx + 1}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">
+                          End Year
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.endYear || ''}
+                          onChange={(e) => setFormData({ ...formData, endYear: parseInt(e.target.value) || undefined })}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
+                          placeholder={`e.g., ${planEndYear}`}
+                          min={new Date().getFullYear()}
+                          max={new Date().getFullYear() + 50}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Inflation Indexing for Pensions */}
+                {(formData.type === 'cpp' || formData.type === 'oas' || formData.type === 'pension') && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.inflationIndexed !== false}
                         onChange={(e) => setFormData({ ...formData, inflationIndexed: e.target.checked })}
-                        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="mt-1 rounded text-blue-600"
                       />
-                      <div className="flex-1">
-                        <span className="block text-sm font-medium text-gray-900">
-                          Inflation Indexed
-                        </span>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {formData.type === 'cpp' && `${getPensionLabel()} is automatically indexed to inflation each year`}
-                          {formData.type === 'oas' && 'OAS is automatically indexed to inflation each year'}
-                          {formData.type === 'pension' && 'Check this if your pension increases with inflation each year (most Canadian DB pensions are indexed)'}
+                      <div>
+                        <span className="font-medium text-gray-900">Inflation Indexed</span>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {formData.type === 'cpp' && `${getPensionLabel()} benefits are indexed to inflation`}
+                          {formData.type === 'oas' && 'OAS benefits are indexed to inflation'}
+                          {formData.type === 'pension' && 'Check if this pension increases with inflation'}
                         </p>
                       </div>
                     </label>
                   </div>
-                </>
-              )}
+                )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  placeholder="Add any additional details..."
-                  rows={3}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={formData.notes || ''}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
+                    rows={2}
+                    placeholder="Add any additional notes..."
+                  />
+                </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Adding...' : 'Add Income'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setFormData({
-                      type: 'employment',
-                      amount: 0,
-                      frequency: 'annual',
-                      startAge: undefined,
-                      endAge: undefined,
-                      owner: 'person1',
-                      notes: '',
-                      inflationIndexed: true,
-                    });
-                  }}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Income Sources List */}
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Income Sources</h2>
-
-            {incomeSources.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                No income sources added yet. Click "Add Income Source" to get started.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {incomeSources.map((income) => (
-                  <div
-                    key={income.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center gap-2"
                   >
+                    <Save className="w-4 h-4" />
+                    {loading ? 'Saving...' : 'Save Income Source'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Income Sources List */}
+          {incomeSources.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-700 font-medium">No income sources added yet.</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Click "Add Income Source" to get started.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Income Sources</h3>
+              {incomeSources.map((income) => (
+                <div key={income.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  {editingId === income.id ? (
+                    // Edit Mode
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Amount
+                          </label>
+                          <input
+                            type="number"
+                            value={editingData?.amount || ''}
+                            onChange={(e) => setEditingData({
+                              ...editingData!,
+                              amount: parseFloat(e.target.value) || 0
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Frequency
+                          </label>
+                          <select
+                            value={editingData?.frequency || 'annual'}
+                            onChange={(e) => setEditingData({
+                              ...editingData!,
+                              frequency: e.target.value
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                          >
+                            <option value="annual">Annual</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="biweekly">Bi-weekly</option>
+                            <option value="weekly">Weekly</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Start Month</label>
+                          <select
+                            value={editingData?.startMonth || ''}
+                            onChange={(e) => setEditingData({
+                              ...editingData!,
+                              startMonth: parseInt(e.target.value) || undefined
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-2 py-1 text-sm"
+                          >
+                            <option value="">-</option>
+                            {MONTHS.map((month, idx) => (
+                              <option key={idx} value={idx + 1}>{month.slice(0, 3)}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Start Year</label>
+                          <input
+                            type="number"
+                            value={editingData?.startYear || ''}
+                            onChange={(e) => setEditingData({
+                              ...editingData!,
+                              startYear: parseInt(e.target.value) || undefined
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-2 py-1 text-sm"
+                            min={new Date().getFullYear()}
+                            max={new Date().getFullYear() + 50}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">End Month</label>
+                          <select
+                            value={editingData?.endMonth || ''}
+                            onChange={(e) => setEditingData({
+                              ...editingData!,
+                              endMonth: parseInt(e.target.value) || undefined
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-2 py-1 text-sm"
+                          >
+                            <option value="">-</option>
+                            {MONTHS.map((month, idx) => (
+                              <option key={idx} value={idx + 1}>{month.slice(0, 3)}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">End Year</label>
+                          <input
+                            type="number"
+                            value={editingData?.endYear || ''}
+                            onChange={(e) => setEditingData({
+                              ...editingData!,
+                              endYear: parseInt(e.target.value) || undefined
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-2 py-1 text-sm"
+                            min={new Date().getFullYear()}
+                            max={new Date().getFullYear() + 50}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={loading}
+                          className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium flex items-center gap-1"
+                        >
+                          <Save className="w-4 h-4" />
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-300 text-sm font-medium flex items-center gap-1"
+                        >
+                          <X className="w-4 h-4" />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Display Mode
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900 capitalize">
-                            {income.type.replace('_', ' ')}
-                          </h3>
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          <h4 className="font-semibold text-gray-900">
+                            {income.type === 'cpp' ? getPensionLabel() :
+                             income.type === 'oas' ? 'OAS' :
+                             income.type.charAt(0).toUpperCase() + income.type.slice(1)}
+                          </h4>
+                          <span className="text-sm text-gray-700 bg-gray-100 px-2 py-1 rounded">
                             {income.frequency}
                           </span>
-                          {income.type === 'pension' && (
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              income.inflationIndexed === false
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {income.inflationIndexed === false ? 'Fixed' : 'Inflation Indexed'}
+                          {includePartner && income.owner && (
+                            <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                              {income.owner === 'person1' ? 'Person 1' : 'Person 2'}
                             </span>
                           )}
-                          {includePartner && income.owner && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded capitalize">
-                              {income.owner === 'person1' ? 'Person 1' :
-                               income.owner === 'person2' ? 'Person 2' :
-                               'Joint'}
+                          {income.inflationIndexed && (
+                            <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
+                              Indexed
                             </span>
                           )}
                         </div>
-                        <p className="text-2xl font-bold text-green-600">
-                          ${income.amount.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                        {(income.startAge || income.endAge) && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            {income.startAge && `Starts at age ${income.startAge}`}
-                            {income.startAge && income.endAge && ' • '}
-                            {income.endAge && `Ends at age ${income.endAge}`}
-                          </p>
-                        )}
-                        {income.notes && (
-                          <p className="text-sm text-gray-600 mt-2">{income.notes}</p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => income.id && handleDelete(income.id)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Total Annual Income */}
-        {incomeSources.length > 0 && (
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-medium text-gray-900">Total Estimated Annual Income:</span>
-              <span className="text-3xl font-bold text-blue-600">
-                ${incomeSources.reduce((sum, income) => {
-                  const annualAmount = income.frequency === 'monthly' ? income.amount * 12 :
-                                      income.frequency === 'biweekly' ? income.amount * 26 :
-                                      income.frequency === 'weekly' ? income.amount * 52 :
-                                      income.amount;
-                  return sum + annualAmount;
-                }, 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
+                        <p className="text-2xl font-bold text-green-600 mb-2">
+                          ${income.amount.toLocaleString('en-CA', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                          <span className="text-sm text-gray-700 font-normal ml-2">
+                            (${calculateAnnualAmount(income).toLocaleString('en-CA', {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0
+                            })}/year)
+                          </span>
+                        </p>
+
+                        <div className="text-sm text-gray-800 space-y-1">
+                          {(income.startMonth && income.startYear) && (
+                            <p>
+                              <span className="font-medium">Starts:</span> {formatDate(income.startMonth, income.startYear)}
+                            </p>
+                          )}
+                          {(income.endMonth && income.endYear) && (
+                            <p>
+                              <span className="font-medium">Ends:</span> {formatDate(income.endMonth, income.endYear)}
+                            </p>
+                          )}
+                          {income.startAge && !income.startYear && (
+                            <p>
+                              <span className="font-medium">Starts at age:</span> {income.startAge}
+                            </p>
+                          )}
+                          {income.endAge && !income.endYear && (
+                            <p>
+                              <span className="font-medium">Ends at age:</span> {income.endAge}
+                            </p>
+                          )}
+                          {income.notes && (
+                            <p className="italic text-gray-700">{income.notes}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={() => handleEdit(income)}
+                          className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => income.id && handleDelete(income.id)}
+                          className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Total Annual Income */}
+          {incomeSources.length > 0 && (
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium text-gray-900">
+                  Total Estimated Annual Income:
+                </span>
+                <span className="text-3xl font-bold text-blue-600">
+                  ${incomeSources.reduce((sum, income) => sum + calculateAnnualAmount(income), 0)
+                    .toLocaleString('en-CA', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
