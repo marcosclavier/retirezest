@@ -654,7 +654,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
 
                                 <div className="flex justify-between items-center gap-1 min-w-0">
                                   <span className="truncate" style={{ color: '#111827' }}>
-                                    TFSA Contrib {!isSinglePerson && year.tfsa_contribution_p1 > 0 && year.tfsa_contribution_p2 > 0 ? '($7K each)' : ''}
+                                    TFSA Contrib {!isSinglePerson && (year.tfsa_contribution_p1 ?? 0) > 0 && (year.tfsa_contribution_p2 ?? 0) > 0 ? '($7K each)' : ''}
                                   </span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#8B5CF6' }}>
                                     {formatCurrency(tfsaContributions)}
