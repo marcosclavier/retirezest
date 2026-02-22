@@ -1,0 +1,2 @@
+-- This migration was already applied manually to the database
+-- It represents the baseline schema from when migrations were initialized

@@ -1807,7 +1807,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             withdrawals[k] += custom_withdraws[k]
 
     # --- freeze start-of-year corporate balance (used for availability this year) ---
-    corporate_balance_start = float(person.corporate_balance)
+    # Include both simple corporate_balance AND bucketed amounts
+    corporate_balance_start = float(person.corporate_balance) + \
+                            float(person.corp_cash_bucket) + \
+                            float(person.corp_gic_bucket) + \
+                            float(person.corp_invest_bucket)
 
     # HARD CLAMP: cannot withdraw more than start of year corp balance
     if withdrawals["corp"] > corporate_balance_start:
@@ -1968,13 +1972,21 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
     # (retirement + death), taking into account GIS/OAS clawback, TFSA strategic placement, etc.
     order = _get_strategy_order(strategy_name)  # Default fallback
 
-    # For rrif-frontload strategy, preserve the specific order designed for tax efficiency
-    # The rrif-frontload strategy has a specific order: Corp first (eligible dividends),
-    # then NonReg, then TFSA. Don't let TaxOptimizer override this.
-    if "rrif-frontload" in strategy_name.lower():
-        # Keep the strategy-specific order for rrif-frontload
+    # For certain strategies, preserve the specific order designed for tax efficiency
+    # Don't let TaxOptimizer override these carefully designed orders
+    preserve_order_strategies = [
+        "rrif-frontload",
+        "corporate-optimized",
+        "Corporate Optimized"
+    ]
+
+    should_preserve_order = any(s in strategy_name for s in preserve_order_strategies) or \
+                           "corporate" in strategy_name.lower() and "optimized" in strategy_name.lower()
+
+    if should_preserve_order:
+        # Keep the strategy-specific order
         if shortfall > 1e-6:
-            print(f"  Using rrif-frontload specific order: {order}", file=sys.stderr)
+            print(f"  Using {strategy_name} specific order: {order}", file=sys.stderr)
     elif tax_optimizer is not None:
         try:
             optimizer_plan = tax_optimizer.optimize_withdrawals(

@@ -1,0 +1,56 @@
+--- a/modules/simulation.py
++++ b/modules/simulation.py
+@@ -1743,8 +1743,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
+
+         # Calculate frontload target (percentage of RRIF balance)
+         rrif_frontload_target = person.rrif_balance * frontload_pct
+
+-        # Ensure frontload meets minimum withdrawal requirement
+-        rrif_frontload_target = max(rrif_frontload_target, rrif_min)
++        # IMPORTANT FIX: For RRIF-Frontload, use the GREATER of frontload % OR mandatory minimum
++        # But NEVER exceed the frontload percentage just to meet spending needs
++        # The frontload percentage is a HARD LIMIT for tax optimization
++        mandatory_min = rrif_min  # CRA mandatory minimum
++        rrif_frontload_target = max(rrif_frontload_target, mandatory_min)
+
+         # SIMPLIFIED APPROACH: The frontload strategy should ALWAYS withdraw the percentage amount
+         # regardless of whether it's needed for spending. The whole point is to reduce RRIF early
+@@ -2041,6 +2044,13 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
+     for k in order:
+         if shortfall <= 1e-6:
+             print(f"   ✅ Shortfall covered! Breaking loop.", file=sys.stderr)
+             break
++
++        # CRITICAL FIX: For RRIF-Frontload strategy, ensure RRIF is NEVER in the withdrawal order
++        # This prevents any additional RRIF withdrawals beyond the frontload percentage
++        if ("rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name) and k == "rrif":
++            print(f"   ⚠️ SKIPPING RRIF in gap-filling (RRIF-Frontload strategy enforces fixed %)", file=sys.stderr)
++            continue
+
+         print(f"\n   💰 Processing account: {k.upper()}", file=sys.stderr)
+         print(f"      Remaining shortfall: ${shortfall:,.0f}", file=sys.stderr)
+@@ -2242,6 +2252,13 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
+     # -----  Enforce deferred RRIF minimum for Balanced strategy -----
+     # If using Balanced strategy, enforce the CRA RRIF minimum as last resort
+     if rrif_min_deferred > 1e-9:
++        # CRITICAL FIX: Skip this for RRIF-Frontload strategy
++        # The frontload already includes the mandatory minimum
++        if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
++            print(f"   ℹ️ Skipping deferred RRIF minimum enforcement (RRIF-Frontload)", file=sys.stderr)
++        else:
+             rrif_total_so_far = withdrawals["rrif"]
+             if rrif_total_so_far < rrif_min_deferred:
+                 rrif_shortfall = rrif_min_deferred - rrif_total_so_far
+@@ -2262,7 +2279,11 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
+     # But it should be enforced AFTER the strategy order is applied,
+     # not before, so that strategies like NonReg->RRIF work correctly
+     # EXCEPTION: RRIF-Frontload strategy already enforces the minimum as part of its frontload target
+-    if "rrif-frontload" not in strategy_name.lower():
++    # ENHANCED CHECK: More robust detection of RRIF-Frontload strategy
++    is_rrif_frontload = ("rrif-frontload" in strategy_name.lower() or
++                         "RRIF-Frontload" in strategy_name or
++                         "RRIFFrontload" in strategy_name)
++    if not is_rrif_frontload:
+         if withdrawals["rrif"] < rrif_min and person.rrif_balance > 0:
+             rrif_shortfall_to_min = min(rrif_min - withdrawals["rrif"], person.rrif_balance)
+             withdrawals["rrif"] += rrif_shortfall_to_min
