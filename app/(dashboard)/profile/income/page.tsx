@@ -279,7 +279,7 @@ export default function EnhancedIncomePage() {
           {showForm && (
             <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Add Income Source</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Add Income Source</h2>
                 <button
                   onClick={() => setShowForm(false)}
                   className="text-gray-500 hover:text-gray-700"
@@ -338,7 +338,7 @@ export default function EnhancedIncomePage() {
                       type="number"
                       value={formData.amount || ''}
                       onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder:text-gray-600"
                       placeholder="e.g., 60000"
                       min="0"
                       step="0.01"
@@ -366,13 +366,13 @@ export default function EnhancedIncomePage() {
 
                 {/* Start Date Fields */}
                 <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     Start Date
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-gray-600 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Start Month
                       </label>
                       <select
@@ -388,15 +388,15 @@ export default function EnhancedIncomePage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm text-gray-600 mb-1">
-                        Start Year
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Year (Default: Retirement Year)
                       </label>
                       <input
                         type="number"
-                        value={formData.startYear || ''}
+                        value={formData.startYear || retirementYear}
                         onChange={(e) => setFormData({ ...formData, startYear: parseInt(e.target.value) || undefined })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
-                        placeholder={`e.g., ${retirementYear}`}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder:text-gray-600"
+                        placeholder={`Default: ${retirementYear}`}
                         min={new Date().getFullYear()}
                         max={new Date().getFullYear() + 50}
                       />
@@ -408,13 +408,13 @@ export default function EnhancedIncomePage() {
                 {(formData.type === 'employment' || formData.type === 'rental' ||
                   formData.type === 'business' || formData.type === 'other') && (
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       End Date (Optional)
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           End Month
                         </label>
                         <select
@@ -430,15 +430,15 @@ export default function EnhancedIncomePage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm text-gray-600 mb-1">
-                          End Year
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          End Year (Default: End of Plan)
                         </label>
                         <input
                           type="number"
-                          value={formData.endYear || ''}
+                          value={formData.endYear || planEndYear}
                           onChange={(e) => setFormData({ ...formData, endYear: parseInt(e.target.value) || undefined })}
-                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
-                          placeholder={`e.g., ${planEndYear}`}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder:text-gray-600"
+                          placeholder={`Default: ${planEndYear}`}
                           min={new Date().getFullYear()}
                           max={new Date().getFullYear() + 50}
                         />
