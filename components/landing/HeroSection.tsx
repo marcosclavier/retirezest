@@ -24,11 +24,11 @@ export default function HeroSection() {
                 <span className="text-blue-600">Confidence</span>
               </h1>
 
-              {/* Beta Notice */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                <span className="text-amber-600 font-semibold">BETA</span>
-                <span className="text-sm text-amber-700">
-                  This application is currently in beta testing. Calculations are being validated for accuracy.
+              {/* Early Access Notice */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-blue-600 font-semibold">EARLY ACCESS</span>
+                <span className="text-sm text-blue-700">
+                  Get exclusive early access to Canada's most comprehensive retirement planning platform.
                 </span>
               </div>
 

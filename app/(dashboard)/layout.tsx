@@ -48,9 +48,9 @@ export default async function DashboardLayout({
                   priority
                 />
               </Link>
-              {/* Beta Badge */}
-              <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                BETA
+              {/* Early Access Badge */}
+              <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm">
+                EARLY ACCESS
               </span>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">

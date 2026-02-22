@@ -33,9 +33,9 @@ export default function LandingNav() {
                 priority
               />
             </Link>
-            {/* Beta Badge */}
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-              BETA
+            {/* Early Access Badge */}
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm">
+              EARLY ACCESS
             </span>
           </div>
 
