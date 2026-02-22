@@ -48,7 +48,7 @@ export default function HeroSection() {
                 </div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
                   <span className="text-blue-600">🍁</span>
-                  <span className="text-sm font-medium text-blue-700">All Provinces Supported</span>
+                  <span className="text-sm font-medium text-blue-700">Quebec QPP Support</span>
                 </div>
               </div>
             </div>

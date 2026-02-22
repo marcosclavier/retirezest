@@ -45,8 +45,8 @@ export default function FeaturesShowcase() {
       color: 'from-pink-500 to-pink-600',
     },
     {
-      title: 'Provincial Tax Support',
-      description: 'Accurate tax calculations for all provinces including Quebec QPP and provincial benefits.',
+      title: 'Provincial Tax Calculations',
+      description: 'Accurate tax calculations for Ontario, Quebec, Alberta, and BC. Other provinces automatically use compatible tax rates.',
       icon: '🍁',
       color: 'from-red-500 to-red-600',
     },
