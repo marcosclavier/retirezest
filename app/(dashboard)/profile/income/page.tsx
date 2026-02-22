@@ -71,21 +71,29 @@ export default function EnhancedIncomePage() {
       if (res.ok) {
         const data = await res.json();
         const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
         const userAge = data.dateOfBirth ?
           currentYear - new Date(data.dateOfBirth).getFullYear() : 50;
         const retirementAge = data.targetRetirementAge || 65;
         const lifeExpectancy = data.lifeExpectancy || 95;
 
-        const calculatedRetirementYear = currentYear + (retirementAge - userAge);
+        // Calculate retirement year (if already at or past retirement age, use current year)
+        const calculatedRetirementYear = userAge >= retirementAge ?
+          currentYear :
+          currentYear + (retirementAge - userAge);
+
+        // Calculate plan end year
         const calculatedEndYear = currentYear + (lifeExpectancy - userAge);
 
         setRetirementYear(calculatedRetirementYear);
         setPlanEndYear(calculatedEndYear);
 
-        // Update form defaults
+        // Update form defaults with calculated years
         setFormData(prev => ({
           ...prev,
+          startMonth: currentMonth,
           startYear: calculatedRetirementYear,
+          endMonth: 12,
           endYear: calculatedEndYear
         }));
       }
@@ -187,16 +195,16 @@ export default function EnhancedIncomePage() {
       if (res.ok) {
         await fetchIncomeSources();
         setShowForm(false);
-        // Reset form
+        // Reset form with proper defaults
         setFormData({
           type: 'employment',
           amount: 0,
           frequency: 'annual',
           startAge: undefined,
           endAge: undefined,
-          startMonth: undefined,
+          startMonth: new Date().getMonth() + 1,
           startYear: retirementYear,
-          endMonth: undefined,
+          endMonth: 12,
           endYear: planEndYear,
           owner: 'person1',
           notes: '',
@@ -267,7 +275,24 @@ export default function EnhancedIncomePage() {
           {/* Add Income Button */}
           {!showForm && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                // Reset form with proper defaults when showing
+                setFormData({
+                  type: 'employment',
+                  amount: 0,
+                  frequency: 'annual',
+                  startAge: undefined,
+                  endAge: undefined,
+                  startMonth: new Date().getMonth() + 1,
+                  startYear: retirementYear,
+                  endMonth: 12,
+                  endYear: planEndYear,
+                  owner: 'person1',
+                  notes: '',
+                  inflationIndexed: true,
+                });
+                setShowForm(true);
+              }}
               className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
             >
               <DollarSign className="w-5 h-5" />
