@@ -30,6 +30,7 @@ export async function GET() {
         companyLogo: true,
         emailVerified: true,
         email: true,
+        province: true,  // Add province for QPP/CPP distinction
       },
     });
 

@@ -94,11 +94,12 @@ class PlanReliabilityAnalyzer:
 
     def _calculate_summary_metrics(self) -> Dict:
         """Calculate overall plan summary metrics."""
-        # Overall success rate
-        success_rate = float((self.df["underfunded_after_tax"] <= self.hh.gap_tolerance).mean()) * 100
-
         # Years where net worth stays positive
         years_funded = len(self.df[self.df['net_worth_end'] > 0])
+
+        # Overall success rate - percentage of planned years that are funded
+        # This gives a more intuitive success rate (e.g., 17/31 years = 54.8% success rate)
+        success_rate = (years_funded / self.planned_years * 100) if self.planned_years > 0 else 0
 
         # When does portfolio actually deplete?
         depleted_year = None

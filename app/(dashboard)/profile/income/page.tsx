@@ -22,6 +22,7 @@ export default function IncomePage() {
   const [showForm, setShowForm] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
   const [includePartner, setIncludePartner] = useState(false);
+  const [userProvince, setUserProvince] = useState<string>('ON');
   const [showImportBanner, setShowImportBanner] = useState(false);
   const [availableCalculations, setAvailableCalculations] = useState<{
     cpp?: any;
@@ -41,6 +42,13 @@ export default function IncomePage() {
     notes: '',
     inflationIndexed: true, // Default to true for pensions
   });
+
+  // Helper to get correct pension label based on province
+  const getPensionLabel = () => userProvince === 'QC' ? 'QPP' : 'CPP';
+  const getPensionFullName = () => {
+    console.log('Income page - userProvince:', userProvince);
+    return userProvince === 'QC' ? 'Quebec Pension Plan (QPP)' : 'Canada Pension Plan (CPP)';
+  };
 
   useEffect(() => {
     fetchIncomeSources();
@@ -97,6 +105,9 @@ export default function IncomePage() {
       if (res.ok) {
         const data = await res.json();
         setIncludePartner(data.includePartner || false);
+        // Set province from user profile, default to ON if not set
+        setUserProvince(data.province || 'ON');
+        console.log('Fetched user province:', data.province || 'ON (default)');
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -288,8 +299,8 @@ export default function IncomePage() {
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Income Sources</h1>
           <p className="text-gray-600 mt-2">
-            Add your expected income sources including employment, pensions, CPP, OAS, and other sources.
-            For CPP and OAS, use RetireZest's calculators or CRA estimates for your planned retirement year.
+            Add your expected income sources including employment, pensions, {getPensionLabel()}, OAS, and other sources.
+            For {getPensionLabel()} and OAS, use RetireZest's calculators or CRA estimates for your planned retirement year.
           </p>
         </div>
 
@@ -335,7 +346,7 @@ export default function IncomePage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <label htmlFor="import-cpp" className="font-semibold text-gray-900 cursor-pointer">
-                          CPP (Canada Pension Plan)
+                          {getPensionFullName()}
                         </label>
                         <span className="text-xs text-gray-500">
                           {new Date(availableCalculations.cpp.calculatedAt).toLocaleDateString()}
@@ -425,7 +436,7 @@ export default function IncomePage() {
                   required
                 >
                   <option value="employment">Employment / Salary</option>
-                  <option value="cpp">Canada Pension Plan (CPP)</option>
+                  <option value="cpp">{getPensionFullName()}</option>
                   <option value="oas">Old Age Security (OAS)</option>
                   <option value="pension">Private Pension</option>
                   <option value="rental">Rental Income</option>
@@ -462,10 +473,10 @@ export default function IncomePage() {
                     </svg>
                     <div className="flex-1">
                       <h4 className="font-semibold text-blue-900 text-sm mb-1">
-                        {formData.type === 'cpp' ? 'CPP' : 'OAS'} Calculation Available!
+                        {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} Calculation Available!
                       </h4>
                       <p className="text-sm text-blue-800 mb-2">
-                        We found a recent {formData.type === 'cpp' ? 'CPP' : 'OAS'} calculation.
+                        We found a recent {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} calculation.
                         Annual amount: ${formData.type === 'cpp'
                           ? availableCalculations.cpp.annualAmount.toLocaleString()
                           : availableCalculations.oas.annualAmount.toLocaleString()}
@@ -479,7 +490,7 @@ export default function IncomePage() {
                             amount: calc.annualAmount,
                             frequency: 'annual',
                             startAge: formData.type === 'cpp' ? calc.startAge : 65,
-                            notes: `Imported from ${formData.type === 'cpp' ? 'CPP' : 'OAS'} Calculator on ${new Date(calc.calculatedAt).toLocaleDateString()}`
+                            notes: `Imported from ${formData.type === 'cpp' ? getPensionLabel() : 'OAS'} Calculator on ${new Date(calc.calculatedAt).toLocaleDateString()}`
                           });
                         }}
                         className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-medium"
@@ -507,11 +518,11 @@ export default function IncomePage() {
                 />
                 {(formData.type === 'cpp' || formData.type === 'oas') && (
                   <p className="text-xs text-gray-600 mt-2 bg-blue-50 p-2 rounded border border-blue-200">
-                    <strong>Tip:</strong> Enter the annual {formData.type === 'cpp' ? 'CPP' : 'OAS'} amount you expect to receive in your first year of retirement.
-                    RetireZest provides {formData.type === 'cpp' ? 'CPP' : 'OAS'} calculators in the Tools section, or for the most accurate estimates,
+                    <strong>Tip:</strong> Enter the annual {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} amount you expect to receive in your first year of retirement.
+                    RetireZest provides {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} calculators in the Tools section, or for the most accurate estimates,
                     visit <a href={formData.type === 'cpp' ? 'https://www.canada.ca/en/services/benefits/publicpensions/cpp/retirement-income-calculator.html' : 'https://www.canada.ca/en/services/benefits/publicpensions/oas/oas-benefit-estimator.html'}
                     target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                      CRA's official {formData.type === 'cpp' ? 'CPP' : 'OAS'} estimator
+                      CRA's official {formData.type === 'cpp' ? getPensionLabel() : 'OAS'} estimator
                     </a>.
                   </p>
                 )}
@@ -574,7 +585,7 @@ export default function IncomePage() {
                       max="100"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      {formData.type === 'cpp' && 'CPP can start between ages 60-70'}
+                      {formData.type === 'cpp' && `${getPensionLabel()} can start between ages 60-70`}
                       {formData.type === 'oas' && 'OAS can start between ages 65-70 (deferral increases benefits)'}
                       {formData.type === 'pension' && 'Age when pension payments begin'}
                     </p>
@@ -594,7 +605,7 @@ export default function IncomePage() {
                           Inflation Indexed
                         </span>
                         <p className="text-xs text-gray-600 mt-1">
-                          {formData.type === 'cpp' && 'CPP is automatically indexed to inflation each year'}
+                          {formData.type === 'cpp' && `${getPensionLabel()} is automatically indexed to inflation each year`}
                           {formData.type === 'oas' && 'OAS is automatically indexed to inflation each year'}
                           {formData.type === 'pension' && 'Check this if your pension increases with inflation each year (most Canadian DB pensions are indexed)'}
                         </p>

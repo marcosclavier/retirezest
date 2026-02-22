@@ -3,8 +3,14 @@
 ## Overview
 RetireZest is a comprehensive Canadian retirement planning platform that helps seniors optimize their retirement income, calculate government benefits (CPP, OAS, GIS), and project retirement scenarios with advanced tax-optimized withdrawal strategies.
 
-**Production Status:** Live with 67+ active users
-**Latest Update:** February 18, 2026
+**Production Status:** Live at retirezest.com
+**Latest Update:** February 19, 2026
+**Version:** 1.2.0
+
+## ⚠️ Critical Known Limitations
+- **Monte Carlo Simulation:** Currently **NON-FUNCTIONAL** - Returns hardcoded placeholder values (85% success rate). See [MONTE_CARLO_VALIDATION_REPORT.md](MONTE_CARLO_VALIDATION_REPORT.md) for details.
+- **Risk Analysis:** Limited to single scenario projections without probabilistic analysis
+- **Market Volatility:** Not modeled - uses fixed returns only
 
 ## Architecture
 
@@ -65,6 +71,48 @@ webapp/
 ```
 
 ## Key Features & Recent Updates
+
+### February 19, 2026 Updates
+
+#### ✅ Implemented: Enhanced Balanced Strategy (85% OAS Threshold)
+- **Enhancement:** Balanced strategy now triggers TFSA use at 85% of OAS clawback threshold
+- **Previous:** Only considered at 70% threshold (less effective)
+- **Benefit:** Better OAS clawback avoidance, preserving $5,000-$10,000 in lifetime benefits
+- **Impact:** TFSA strategically deployed when income approaches $77,347 (85% of $90,997)
+- **Files Changed:**
+  - `/python-api/modules/tax_optimizer.py` (line 549: threshold changed from 0.70 to 0.85)
+  - `/python-api/modules/simulation.py` (lines 2068-2091: TFSA guard check modification)
+
+#### ✅ Fixed: Single Person Simulation Bug
+- **Problem:** Single person simulations running for 86 years instead of correct duration
+- **Root Cause:** Attempting to access p2.start_age when p2 was None
+- **Solution:** Proper null checking before accessing p2 attributes
+- **Files Changed:**
+  - `/python-api/modules/simulation.py` (line 2497: fixed p2 access with proper null checks)
+
+#### ✅ Fixed: Pension Income in Tax Calculations
+- **Problem:** Pension income not being considered in tax optimizer
+- **Root Cause:** Missing pension_incomes field in taxable income estimation
+- **Solution:** Added pension income calculation to _estimate_taxable_income
+- **Files Changed:**
+  - `/python-api/modules/tax_optimizer.py` (lines 441-481: added pension income calculation)
+
+#### ❌ Discovered: Monte Carlo Simulation Non-Functional
+- **Critical Finding:** Monte Carlo endpoint returns hardcoded fake data
+- **Impact:** No actual probabilistic analysis available despite being advertised
+- **Evidence:** `/python-api/api/routes/monte_carlo.py` returns fixed 85% success rate
+- **Documentation:** Created comprehensive validation report
+- **New Files:**
+  - `MONTE_CARLO_VALIDATION_REPORT.md` - Full analysis and recommendations
+  - `FEATURE_MAP_UPDATE_SUMMARY.md` - Documents the discovery and impact
+
+#### 📚 Created: Comprehensive Feature Documentation
+- **Purpose:** Map Canadian retirement planning best practices vs RetireZest implementation
+- **Coverage:** All major retirement planning features with implementation status
+- **New Files:**
+  - `RETIREMENT_PLANNING_FEATURE_MAP.md` - Detailed feature inventory with ✅/❌/🔶 status
+  - `RETIREMENT_PLANNING_VISUAL_MAP.md` - Visual relationship diagrams and percentages
+- **Key Finding:** RetireZest at ~65% feature parity with industry standards
 
 ### February 18, 2026 Updates
 
@@ -301,6 +349,12 @@ if surplus > 0:
 
 ## Recent Bug Fixes Summary
 
+### February 19, 2026
+1. **Enhanced Balanced Strategy:** Implemented 85% OAS threshold for strategic TFSA deployment
+2. **Single Person Simulation Fix:** Fixed critical bug causing 86-year simulations for single individuals
+3. **Pension Income Tax Fix:** Added pension income to tax optimizer calculations
+4. **Monte Carlo Discovery:** Documented non-functional status and created implementation plan
+
 ### February 18, 2026
 1. **Corporate Withdrawal Fix:** RRIF-frontload strategy now correctly uses Corporate before Non-Registered accounts
 2. **CPP/OAS Age Fix:** Benefits now start at user-configured ages (e.g., 70) instead of defaulting to 65
@@ -345,6 +399,11 @@ if surplus > 0:
 - API documentation in `API-README.md`
 - Changelog in `CHANGELOG.md`
 - Test reports in `TESTING_REPORT.md`
+- Feature analysis:
+  - `RETIREMENT_PLANNING_FEATURE_MAP.md` - Comprehensive feature inventory
+  - `RETIREMENT_PLANNING_VISUAL_MAP.md` - Visual relationship diagrams
+  - `MONTE_CARLO_VALIDATION_REPORT.md` - Monte Carlo implementation analysis
+  - `FEATURE_MAP_UPDATE_SUMMARY.md` - Feature map update documentation
 - Recent fixes documented in:
   - `PENSION-INCOME-FIX.md`
   - `TFSA_SURPLUS_ALLOCATION_FIX.md`
@@ -374,7 +433,8 @@ if surplus > 0:
 
 ---
 
-*Last Updated: February 18, 2026*
-*Version: 1.1.1*
+*Last Updated: February 19, 2026*
+*Version: 1.2.0*
 *Active Users: 67+*
-*Recent Major Fixes: Corporate withdrawals, CPP/OAS age validation, Prefill race condition, GIS eligibility*
+*Recent Major Enhancements: Enhanced Balanced Strategy (85% OAS threshold), Single person simulation fix*
+*Critical Known Issue: Monte Carlo simulation returns fake data - see MONTE_CARLO_VALIDATION_REPORT.md*

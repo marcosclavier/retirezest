@@ -281,6 +281,18 @@ def dataframe_to_year_results(df: pd.DataFrame) -> list[YearResult]:
                 corporate_withdrawal_p1=float(row.get('withdraw_corp_p1', row.get('corporate_withdrawal_p1', 0))),
                 corporate_withdrawal_p2=float(row.get('withdraw_corp_p2', row.get('corporate_withdrawal_p2', 0))),
 
+                # Total withdrawals - use the value from the DataFrame or calculate from components
+                total_withdrawals=float(row.get('total_withdrawals',
+                    float(row.get('withdraw_tfsa_p1', row.get('tfsa_withdrawal_p1', 0))) +
+                    float(row.get('withdraw_tfsa_p2', row.get('tfsa_withdrawal_p2', 0))) +
+                    float(row.get('withdraw_rrif_p1', row.get('rrif_withdrawal_p1', 0))) +
+                    float(row.get('withdraw_rrif_p2', row.get('rrif_withdrawal_p2', 0))) +
+                    float(row.get('withdraw_nonreg_p1', row.get('nonreg_withdrawal_p1', 0))) +
+                    float(row.get('withdraw_nonreg_p2', row.get('nonreg_withdrawal_p2', 0))) +
+                    float(row.get('withdraw_corp_p1', row.get('corporate_withdrawal_p1', 0))) +
+                    float(row.get('withdraw_corp_p2', row.get('corporate_withdrawal_p2', 0)))
+                )),
+
                 # Non-registered distributions (passive income)
                 nonreg_distributions=float(
                     row.get('nr_interest_p1', 0) + row.get('nr_interest_p2', 0) +
@@ -401,7 +413,8 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
         years_funded = len(df[df['net_worth_end'] > 0])
     else:
         years_funded = years_simulated
-    success_rate = years_funded / years_simulated if years_simulated > 0 else 0.0
+    # Calculate success rate as a percentage (0-100) not a decimal (0-1)
+    success_rate = (years_funded / years_simulated * 100) if years_simulated > 0 else 0.0
 
     # === Government Benefits Totals ===
     total_cpp = 0.0
@@ -538,15 +551,21 @@ def calculate_simulation_summary(df: pd.DataFrame) -> SimulationSummary:
     else:
         first_failure_year = None
 
-    # Underfunding
+    # Underfunding - ignore microscopic rounding errors (< $1)
+    ROUNDING_THRESHOLD = 1.0  # Ignore gaps less than $1
+
     if 'spending_gap' in df.columns:
-        total_underfunded_years = len(df[df['spending_gap'] > 0])
-        total_underfunding = df['spending_gap'].sum()
+        # Only count years with meaningful gaps (> $1)
+        total_underfunded_years = len(df[df['spending_gap'] > ROUNDING_THRESHOLD])
+        # Only sum meaningful gaps
+        total_underfunding = df[df['spending_gap'] > ROUNDING_THRESHOLD]['spending_gap'].sum()
     else:
         # Try underfunded_after_tax column
         if 'underfunded_after_tax' in df.columns:
-            total_underfunded_years = len(df[df['underfunded_after_tax'] > 0])
-            total_underfunding = df['underfunded_after_tax'].sum()
+            # Only count years with meaningful gaps (> $1)
+            total_underfunded_years = len(df[df['underfunded_after_tax'] > ROUNDING_THRESHOLD])
+            # Only sum meaningful gaps
+            total_underfunding = df[df['underfunded_after_tax'] > ROUNDING_THRESHOLD]['underfunded_after_tax'].sum()
         else:
             total_underfunded_years = 0
             total_underfunding = 0
@@ -653,20 +672,22 @@ def calculate_health_score(
 
     # Criterion 1: Full period funded (graduated scoring based on success_rate)
     # Use bool() to convert numpy.bool_ to Python bool for JSON serialization
-    full_period_funded = bool(success_rate >= 1.0)
+    # NOTE: success_rate is now a percentage (0-100), not a decimal (0-1)
+    full_period_funded = bool(success_rate >= 100)
 
     # Graduated scoring: penalize based on how short the plan falls
-    if success_rate >= 1.0:
+    # success_rate is a percentage (0-100)
+    if success_rate >= 100:
         points_earned = 20  # Perfect
-    elif success_rate >= 0.95:
+    elif success_rate >= 95:
         points_earned = 18  # 1-2 years short
-    elif success_rate >= 0.90:
+    elif success_rate >= 90:
         points_earned = 15  # 2-3 years short
-    elif success_rate >= 0.85:
+    elif success_rate >= 85:
         points_earned = 12  # 3-5 years short
-    elif success_rate >= 0.80:
+    elif success_rate >= 80:
         points_earned = 8   # 5-7 years short
-    elif success_rate >= 0.70:
+    elif success_rate >= 70:
         points_earned = 4   # 7-10 years short
     else:
         points_earned = 0   # >10 years short
@@ -675,7 +696,7 @@ def calculate_health_score(
         'score': points_earned,
         'max_score': 20,
         'status': get_status(full_period_funded, points_earned),
-        'description': f'Plan funds {success_rate*100:.0f}% of years ({years_funded}/{years_simulated})',
+        'description': f'Plan funds {success_rate:.0f}% of years ({years_funded}/{years_simulated})',
         # Legacy fields for backwards compatibility
         'met': full_period_funded,
         'points': points_earned,
@@ -683,18 +704,20 @@ def calculate_health_score(
     score += points_earned
 
     # Criterion 2: Adequate funding reserve (80%+ of period) - graduated scoring
-    adequate_reserve = bool(success_rate >= 0.80)
+    # success_rate is a percentage (0-100)
+    adequate_reserve = bool(success_rate >= 80)
 
     # Graduated scoring for reserve adequacy
-    if success_rate >= 0.95:
+    # success_rate is a percentage (0-100)
+    if success_rate >= 95:
         points_earned = 20  # Excellent reserve
-    elif success_rate >= 0.90:
+    elif success_rate >= 90:
         points_earned = 17  # Good reserve
-    elif success_rate >= 0.85:
+    elif success_rate >= 85:
         points_earned = 14  # Fair reserve
-    elif success_rate >= 0.80:
+    elif success_rate >= 80:
         points_earned = 10  # Minimal acceptable reserve
-    elif success_rate >= 0.70:
+    elif success_rate >= 70:
         points_earned = 5   # Insufficient reserve
     else:
         points_earned = 0   # Critically low
@@ -703,7 +726,7 @@ def calculate_health_score(
         'score': points_earned,
         'max_score': 20,
         'status': get_status(adequate_reserve, points_earned),
-        'description': f'Funding reserve: {success_rate*100:.0f}% (target: 80%+)',
+        'description': f'Funding reserve: {success_rate:.0f}% (target: 80%+)',
         # Legacy fields for backwards compatibility
         'met': adequate_reserve,
         'points': points_earned,
@@ -1047,8 +1070,8 @@ def calculate_spending_analysis(df: pd.DataFrame, summary: SimulationSummary) ->
     elif summary.first_failure_year:
         plan_status_text = f"Plan underfunded starting year {summary.first_failure_year}"
     else:
-        pct = summary.success_rate * 100
-        plan_status_text = f"Plan is {pct:.0f}% funded"
+        # success_rate is already a percentage (0-100)
+        plan_status_text = f"Plan is {summary.success_rate:.0f}% funded"
 
     return SpendingAnalysis(
         portfolio_withdrawals=portfolio_withdrawals,
@@ -1083,6 +1106,7 @@ def extract_key_assumptions(
         'corporate-optimized': 'Corporate Optimized',
         'minimize-income': 'Minimize Income',
         'rrif-splitting': 'RRIF Splitting',
+        'rrif-frontload': 'RRIF-Frontload',  # Added RRIF-Frontload strategy
         'capital-gains-optimized': 'Capital Gains Optimized',
         'tfsa-first': 'TFSA First',
         'balanced': 'Balanced',
@@ -1237,6 +1261,7 @@ def get_strategy_display_name(strategy_key: str) -> str:
         "corporate-optimized": "Corporate Optimized",
         "minimize-income": "Minimize Income",
         "rrif-splitting": "RRIF Splitting",
+        "rrif-frontload": "RRIF-Frontload",  # Added RRIF-Frontload strategy
         "capital-gains-optimized": "Capital Gains Optimized",
         "tfsa-first": "TFSA First",
         "balanced": "Balanced",

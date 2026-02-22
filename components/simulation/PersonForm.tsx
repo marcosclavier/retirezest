@@ -33,9 +33,13 @@ interface PersonFormProps {
   personNumber: 'p1' | 'p2';
   onChange: (field: keyof PersonInput, value: any) => void;
   isPrefilled?: boolean;
+  province?: string;
 }
 
-export function PersonForm({ person, personLabel, personNumber, onChange, isPrefilled = false }: PersonFormProps) {
+export function PersonForm({ person, personLabel, personNumber, onChange, isPrefilled = false, province = 'ON' }: PersonFormProps) {
+  // Determine if Quebec resident for QPP vs CPP
+  const isQuebec = province === 'QC';
+  const pensionLabel = isQuebec ? 'QPP' : 'CPP';
   // Helper functions to determine section completion
   const isAccountBalancesComplete = (): boolean => {
     return (person.tfsa_balance ?? 0) > 0 ||
@@ -239,7 +243,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
         {/* Government Benefits */}
         <Collapsible
           title="Government Benefits"
-          description="CPP and OAS start ages and annual amounts"
+          description={`${pensionLabel} and OAS start ages and annual amounts`}
           defaultOpen={false}
           isComplete={isGovernmentBenefitsComplete()}
         >
@@ -249,7 +253,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 htmlFor={`${personNumber}-cpp-start`}
                 tooltip={simulationTooltips.person.cppStartAge}
               >
-                CPP Start Age
+                {pensionLabel} Start Age
               </LabelWithTooltip>
               <Input
                 id={`${personNumber}-cpp-start`}
@@ -263,7 +267,7 @@ export function PersonForm({ person, personLabel, personNumber, onChange, isPref
                 htmlFor={`${personNumber}-cpp-amount`}
                 tooltip={simulationTooltips.person.cppAnnualAmount}
               >
-                CPP Annual Amount ($)
+                {pensionLabel} Annual Amount ($)
               </LabelWithTooltip>
               <CurrencyInput
                 id={`${personNumber}-cpp-amount`}

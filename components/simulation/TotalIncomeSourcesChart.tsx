@@ -18,14 +18,18 @@ interface TotalIncomeSourcesChartProps {
   isSinglePerson?: boolean;
   personOneName?: string;
   personTwoName?: string;
+  province?: string;
 }
 
 export function TotalIncomeSourcesChart({
   chartData,
   isSinglePerson = false,
   personOneName = 'Person 1',
-  personTwoName = 'Person 2'
+  personTwoName = 'Person 2',
+  province = 'ON'
 }: TotalIncomeSourcesChartProps) {
+  // Determine pension label based on province
+  const pensionLabel = province === 'QC' ? 'QPP' : 'CPP';
   // Debug: Log first data point to check if pension data exists
   if (chartData.length > 0) {
     console.log('TotalIncomeSourcesChart - First data point:', {
@@ -45,7 +49,7 @@ export function TotalIncomeSourcesChart({
       year: point.year,
       age: point.age_p1,
       // Government benefits (pension income) - ensure we're getting the values
-      CPP: point.cpp_total || 0,
+      [pensionLabel]: point.cpp_total || 0,
       OAS: point.oas_total || 0,
       GIS: point.gis_total || 0,
       // Employer pension
@@ -202,7 +206,7 @@ export function TotalIncomeSourcesChart({
             {/* Government Benefits - Bottom of stack (green shades) */}
             <Area
               type="monotone"
-              dataKey="CPP"
+              dataKey={pensionLabel}
               stackId="1"
               stroke="#10b981"
               fill="#10b981"
@@ -275,7 +279,7 @@ export function TotalIncomeSourcesChart({
         <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-green-600 mb-1">🍁💼 Pension Income</p>
-            <p className="text-xs text-gray-600">Government benefits (CPP, OAS, GIS) and employer pension</p>
+            <p className="text-xs text-gray-600">Government benefits ({pensionLabel}, OAS, GIS) and employer pension</p>
           </div>
           <div>
             <p className="text-sm font-medium text-blue-600 mb-1">💰 Account Withdrawals</p>

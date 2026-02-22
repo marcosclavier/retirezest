@@ -8,11 +8,18 @@ export interface PersonInput {
   name: string;
   start_age: number;
 
-  // Government benefits
+  // Government benefits (CPP/QPP)
   cpp_start_age: number;
   cpp_annual_at_start: number;
   oas_start_age: number;
   oas_annual_at_start: number;
+
+  // Quebec-specific QPP fields (when province is QC)
+  qpp_start_age?: number;
+  qpp_annual_at_start?: number;
+  qpp_contributions?: number;  // Total QPP contributions made
+  qpp_years_contributed?: number;  // Number of years contributed to QPP
+  qpp_pensionable_earnings?: number;  // Average pensionable earnings for QPP
 
   // Pension and other income lists (with startAge support)
   pension_incomes: Array<{name: string; amount: number; startAge: number; inflationIndexed: boolean}>;
@@ -92,9 +99,22 @@ export interface PersonInput {
   downsize_year?: number | null;
   downsize_new_home_cost?: number;
   downsize_is_principal_residence?: boolean;
+
+  // Quebec-specific benefits (when province is QC)
+  quebecBenefits?: QuebecBenefits;
 }
 
 export type Province = 'AB' | 'BC' | 'ON' | 'QC';
+
+// Quebec-specific benefits interface
+export interface QuebecBenefits {
+  solidarityCredit?: number;  // Quebec solidarity tax credit
+  workPremium?: number;  // Quebec work premium for low-income workers
+  seniorAssistance?: number;  // Additional assistance for Quebec seniors
+  homeSupportCredit?: number;  // Home support tax credit for seniors
+  qppRetirementSupplement?: number;  // Additional QPP supplement for low-income
+  drugInsurancePremium?: number;  // Annual premium for Quebec drug insurance
+}
 
 export type WithdrawalStrategy =
   | 'corporate-optimized'

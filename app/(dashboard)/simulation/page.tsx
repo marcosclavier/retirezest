@@ -95,7 +95,7 @@ export default function SimulationPage() {
   const [isQuickStart, setIsQuickStart] = useState(false);
   const [quickStartAttempted, setQuickStartAttempted] = useState(false);
   const [showSmartStart, setShowSmartStart] = useState(true);
-  const [, setShowDetailedInputs] = useState(false);
+  const [showDetailedInputs, setShowDetailedInputs] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'csv' | 'pdf' | 'export' | 'early-retirement' | 'general'>('general');
@@ -1165,7 +1165,7 @@ export default function SimulationPage() {
         )}
 
         {/* Hero CTA - Prominent call-to-action when user has data but no results */}
-        {!result && !prefillLoading && prefillAvailable && (
+        {showSmartStart && !result && !prefillLoading && prefillAvailable && (
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-8 text-white shadow-lg">
             <h2 className="text-2xl font-bold mb-3">Ready to See Your Retirement Plan?</h2>
             <p className="text-blue-100 mb-6">
@@ -1207,8 +1207,12 @@ export default function SimulationPage() {
                 size="lg"
                 variant="outline"
                 onClick={() => {
+                  console.log('🔘 Customize Settings First button clicked');
+                  console.log('Before: showSmartStart =', showSmartStart, 'showDetailedInputs =', showDetailedInputs);
                   setShowSmartStart(false);
                   setShowDetailedInputs(true);
+                  setActiveTab('input');  // Ensure we stay on the input tab
+                  console.log('State updated: showSmartStart -> false, showDetailedInputs -> true, activeTab -> input');
                 }}
                 disabled={isLoading}
                 className="bg-white/10 hover:bg-white/20 text-white border-white/30"
@@ -1372,8 +1376,8 @@ export default function SimulationPage() {
         })()}
       </div>
 
-      {/* Review Auto-Populated Values */}
-      {prefillAvailable && !prefillLoading && (
+      {/* Review Auto-Populated Values - Hide when user wants to customize */}
+      {prefillAvailable && !prefillLoading && showSmartStart && (
         <Collapsible
           title="Review Auto-Populated Values"
           description="Verify the data loaded from your profile before running the simulation"
@@ -1386,11 +1390,11 @@ export default function SimulationPage() {
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Province:</span>
-                  <span>{household.province}</span>
+                  <span className="text-gray-900 font-medium">{household.province}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Planning Type:</span>
-                  <span>{includePartner ? 'Couple' : 'Individual'}</span>
+                  <span className="text-gray-900 font-medium">{includePartner ? 'Couple' : 'Individual'}</span>
                 </div>
               </div>
             </div>
@@ -1405,14 +1409,26 @@ export default function SimulationPage() {
                 <div className="text-sm">
                   {includePartner && <p className="font-medium text-gray-700 mb-2">{household.p1.name || 'You'}</p>}
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{includePartner ? 'Age:' : 'Name:'}</span>
-                    <span>{includePartner ? (household.p1.start_age || '—') : (household.p1.name || '—')}</span>
+                    <span className="text-gray-600">{includePartner ? 'Current Age:' : 'Name:'}</span>
+                    <span className="text-gray-900 font-medium">{includePartner ? (userCurrentAge || '—') : (household.p1.name || '—')}</span>
                   </div>
-                  {!includePartner && (
+                  {includePartner && (
                     <div className="flex justify-between mt-1">
-                      <span className="text-gray-600">Age:</span>
-                      <span>{household.p1.start_age || '—'}</span>
+                      <span className="text-gray-600">Retirement Age:</span>
+                      <span className="text-gray-900 font-medium">{household.p1.start_age || '—'}</span>
                     </div>
+                  )}
+                  {!includePartner && (
+                    <>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-gray-600">Current Age:</span>
+                        <span className="text-gray-900 font-medium">{userCurrentAge || '—'}</span>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-gray-600">Retirement Age:</span>
+                        <span className="text-gray-900 font-medium">{household.p1.start_age || '—'}</span>
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1421,8 +1437,12 @@ export default function SimulationPage() {
                   <div className="text-sm">
                     <p className="font-medium text-gray-700 mb-2">{household.p2.name}</p>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Age:</span>
-                      <span>{household.p2.start_age || '—'}</span>
+                      <span className="text-gray-600">Current Age:</span>
+                      <span className="text-gray-900 font-medium">{partnerCurrentAge || '—'}</span>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-gray-600">Retirement Age:</span>
+                      <span className="text-gray-900 font-medium">{household.p2.start_age || '—'}</span>
                     </div>
                   </div>
                 )}
@@ -1440,27 +1460,27 @@ export default function SimulationPage() {
                   {includePartner && <p className="font-medium text-gray-700 mb-2">{household.p1.name || 'You'}</p>}
                   <div className="flex justify-between">
                     <span className="text-gray-600">TFSA:</span>
-                    <span>${(household.p1.tfsa_balance || 0).toLocaleString()}</span>
+                    <span className="text-gray-900 font-medium">${(household.p1.tfsa_balance || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">RRSP:</span>
-                    <span>${(household.p1.rrsp_balance || 0).toLocaleString()}</span>
+                    <span className="text-gray-900 font-medium">${(household.p1.rrsp_balance || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">RRIF:</span>
-                    <span>${(household.p1.rrif_balance || 0).toLocaleString()}</span>
+                    <span className="text-gray-900 font-medium">${(household.p1.rrif_balance || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Non-Registered:</span>
-                    <span>${((household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0)).toLocaleString()}</span>
+                    <span className="text-gray-900 font-medium">${((household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0)).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Corporate:</span>
-                    <span>${((household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
+                    <span className="text-gray-900 font-medium">${((household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between border-t pt-1 mt-1 font-medium">
                     <span className="text-gray-700">Total:</span>
-                    <span>${((household.p1.tfsa_balance || 0) + (household.p1.rrsp_balance || 0) + (household.p1.rrif_balance || 0) + (household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0) + (household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
+                    <span className="text-gray-900 font-medium">${((household.p1.tfsa_balance || 0) + (household.p1.rrsp_balance || 0) + (household.p1.rrif_balance || 0) + (household.p1.nr_cash || 0) + (household.p1.nr_gic || 0) + (household.p1.nr_invest || 0) + (household.p1.corp_cash_bucket || 0) + (household.p1.corp_gic_bucket || 0) + (household.p1.corp_invest_bucket || 0)).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -1470,27 +1490,27 @@ export default function SimulationPage() {
                     <p className="font-medium text-gray-700 mb-2">{household.p2.name}</p>
                     <div className="flex justify-between">
                       <span className="text-gray-600">TFSA:</span>
-                      <span>${(household.p2.tfsa_balance || 0).toLocaleString()}</span>
+                      <span className="text-gray-900 font-medium">${(household.p2.tfsa_balance || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">RRSP:</span>
-                      <span>${(household.p2.rrsp_balance || 0).toLocaleString()}</span>
+                      <span className="text-gray-900 font-medium">${(household.p2.rrsp_balance || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">RRIF:</span>
-                      <span>${(household.p2.rrif_balance || 0).toLocaleString()}</span>
+                      <span className="text-gray-900 font-medium">${(household.p2.rrif_balance || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Non-Registered:</span>
-                      <span>${((household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0)).toLocaleString()}</span>
+                      <span className="text-gray-900 font-medium">${((household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0)).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Corporate:</span>
-                      <span>${((household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}</span>
+                      <span className="text-gray-900 font-medium">${((household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between border-t pt-1 mt-1 font-medium">
                       <span className="text-gray-700">Total:</span>
-                      <span>${((household.p2.tfsa_balance || 0) + (household.p2.rrsp_balance || 0) + (household.p2.rrif_balance || 0) + (household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0) + (household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}</span>
+                      <span className="text-gray-900 font-medium">${((household.p2.tfsa_balance || 0) + (household.p2.rrsp_balance || 0) + (household.p2.rrif_balance || 0) + (household.p2.nr_cash || 0) + (household.p2.nr_gic || 0) + (household.p2.nr_invest || 0) + (household.p2.corp_cash_bucket || 0) + (household.p2.corp_gic_bucket || 0) + (household.p2.corp_invest_bucket || 0)).toLocaleString()}</span>
                     </div>
                   </div>
                 )}
@@ -1626,7 +1646,20 @@ export default function SimulationPage() {
 
         {/* Input Tab - Desktop: Tab content, Mobile: Always visible */}
         <TabsContent value="input" className="md:space-y-6 space-y-6 md:data-[state=inactive]:hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Show forms when: banner is hidden OR user clicked customize OR no prefill data OR Input tab is active */}
+          {(() => {
+            const shouldShow = !showSmartStart || showDetailedInputs || !prefillAvailable || activeTab === 'input';
+            console.log('🎯 Form visibility:', {
+              showSmartStart,
+              showDetailedInputs,
+              prefillAvailable,
+              shouldShow,
+              activeTab,
+              formula: `!${showSmartStart} || ${showDetailedInputs} || !${prefillAvailable} || ${activeTab === 'input'} = ${shouldShow}`
+            });
+            return shouldShow;
+          })() ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Form Area */}
             <div className="lg:col-span-2 space-y-6">
               {/* Person 1 Form */}
@@ -1636,6 +1669,7 @@ export default function SimulationPage() {
                 personNumber="p1"
                 onChange={(field, value) => updatePerson('p1', field, value)}
                 isPrefilled={prefillAvailable}
+                province={household.province}
               />
 
               {/* Add/Remove Partner Button */}
@@ -1660,6 +1694,7 @@ export default function SimulationPage() {
                       personNumber="p2"
                       onChange={(field, value) => updatePerson('p2', field, value)}
                       isPrefilled={prefillAvailable}
+                      province={household.province}
                     />
                     <Button
                       variant="ghost"
@@ -1694,6 +1729,7 @@ export default function SimulationPage() {
               />
             </div>
           </div>
+          ) : null}
         </TabsContent>
 
         {/* Results Tab - Desktop: Tab content, Mobile: Always visible below input */}
@@ -1835,6 +1871,7 @@ export default function SimulationPage() {
                         isSinglePerson={!result.household_input?.include_partner}
                         personOneName={result.household_input?.p1?.name || 'Person 1'}
                         personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                        province={result.household_input?.province || 'ON'}
                       />
 
                       {/* Detailed Government Benefits and Withdrawals - Stack on mobile */}
@@ -1845,6 +1882,7 @@ export default function SimulationPage() {
                           isSinglePerson={!result.household_input?.include_partner}
                           personOneName={result.household_input?.p1?.name || 'Person 1'}
                           personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                          province={result.household_input?.province || 'ON'}
                         />
                         <WithdrawalsBySourceChart
                           chartData={result.chart_data.data_points}
@@ -1872,6 +1910,7 @@ export default function SimulationPage() {
                     isSinglePerson={!result.household_input?.include_partner}
                     personOneName={result.household_input?.p1?.name || 'Person 1'}
                     personTwoName={result.household_input?.p2?.name || 'Person 2'}
+                    province={result.household_input?.province || 'ON'}
                   />
                 </div>
               )}

@@ -30,9 +30,12 @@ interface YearByYearTableProps {
   isSinglePerson?: boolean;
   personOneName?: string;
   personTwoName?: string;
+  province?: string;
 }
 
-export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true, isPremium = false, onUpgradeClick, isSinglePerson = false, personOneName = 'Person 1', personTwoName = 'Person 2' }: YearByYearTableProps) {
+export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNonregDist = true, isPremium = false, onUpgradeClick, isSinglePerson = false, personOneName = 'Person 1', personTwoName = 'Person 2', province = 'ON' }: YearByYearTableProps) {
+  // Determine pension label based on province
+  const pensionLabel = province === 'QC' ? 'QPP' : 'CPP';
   const [showAll, setShowAll] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof YearResult>('year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -105,7 +108,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
     const headers = isSinglePerson ? [
       'Year',
       `Age ${p1Name}`,
-      `CPP ${p1Name}`,
+      `${pensionLabel} ${p1Name}`,
       `OAS ${p1Name}`,
       `GIS ${p1Name}`,
       `RRSP/RRIF WD ${p1Name}`,
@@ -130,8 +133,8 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
       'Year',
       `Age ${p1Name}`,
       `Age ${p2Name}`,
-      `CPP ${p1Name}`,
-      `CPP ${p2Name}`,
+      `${pensionLabel} ${p1Name}`,
+      `${pensionLabel} ${p2Name}`,
       `OAS ${p1Name}`,
       `OAS ${p2Name}`,
       `GIS ${p1Name}`,
@@ -325,6 +328,8 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                 const tfsaContributions = (year.tfsa_contribution_p1 || 0) + (year.tfsa_contribution_p2 || 0);
                 const totalInflows = totalBenefits + totalEmployerPension + totalWithdrawals + nonregDistributions;
                 const hasGap = year.spending_gap > 0;
+                // Include both regular contributions AND reinvestments from surplus
+                const totalTfsaContributions = tfsaContributions + ((year as any).tfsa_reinvest_p1 || 0) + ((year as any).tfsa_reinvest_p2 || 0);
 
                 return (
                   <Fragment key={year.year}>
@@ -357,7 +362,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                         {formatCurrency(totalWithdrawals)}
                       </TableCell>
                       <TableCell className="text-right" style={{ color: '#8B5CF6' }}>
-                        {formatCurrency(tfsaContributions)}
+                        {formatCurrency(totalTfsaContributions)}
                       </TableCell>
                       <TableCell className="text-right" style={{ color: '#10B981' }}>
                         {formatCurrency(nonregDistributions)}
@@ -393,7 +398,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                               <div className="space-y-0.5 sm:space-y-2 text-[10px] sm:text-sm">
                                 <div className="font-semibold text-[9px] sm:text-xs" style={{ color: '#6B7280' }}>PERSON 1</div>
                                 <div className="flex justify-between items-center gap-1 min-w-0">
-                                  <span className="truncate" style={{ color: '#111827' }}>CPP</span>
+                                  <span className="truncate" style={{ color: '#111827' }}>{pensionLabel}</span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
                                     {formatCurrency(year.cpp_p1)}
                                   </span>
@@ -433,7 +438,7 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                   <>
                                     <div className="font-semibold text-xs pt-2 sm:pt-3" style={{ color: '#6B7280' }}>PERSON 2</div>
                                     <div className="flex justify-between items-center gap-1 min-w-0">
-                                      <span className="truncate" style={{ color: '#111827' }}>CPP</span>
+                                      <span className="truncate" style={{ color: '#111827' }}>{pensionLabel}</span>
                                       <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#111827' }}>
                                         {formatCurrency(year.cpp_p2)}
                                       </span>

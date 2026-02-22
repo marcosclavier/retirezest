@@ -3,6 +3,27 @@
  * Provides contextual help and examples for users
  */
 
+// Helper to get pension plan name based on province
+export const getPensionName = (province?: string) => {
+  return province === 'QC' ? 'QPP' : 'CPP';
+};
+
+export const getPensionFullName = (province?: string) => {
+  return province === 'QC' ? 'Quebec Pension Plan' : 'Canada Pension Plan';
+};
+
+// Dynamic tooltip generator for pension-related fields
+export const getPensionTooltips = (province?: string) => {
+  const pensionName = getPensionName(province);
+  const pensionFullName = getPensionFullName(province);
+
+  return {
+    cppStartAge: `Age when you'll start receiving ${pensionFullName} benefits. Can start between 60-70. Earlier = lower payments (36% reduction at 60), later = higher payments (42% increase at 70). Starting at 65 is standard. Example: 65`,
+
+    cppAnnualAmount: `Annual ${pensionName} benefit amount at the age you start. Maximum is about $17,500 (2025). Average is $10,000-$12,000. Calculate your estimate at canada.ca/${pensionName.toLowerCase()}. Example: $15,000`,
+  };
+};
+
 export const simulationTooltips = {
   // Person Fields
   person: {
@@ -24,9 +45,9 @@ export const simulationTooltips = {
 
     nonregACB: "Adjusted Cost Base - the original purchase price of your non-registered investments. Used to calculate capital gains. Typically 70-90% of current balance. Example: $120,000 for a $150,000 balance",
 
-    cppStartAge: "Age when you'll start receiving Canada Pension Plan benefits. Can start between 60-70. Earlier = lower payments (36% reduction at 60), later = higher payments (42% increase at 70). Starting at 65 is standard. Example: 65",
+    cppStartAge: "Age when you'll start receiving pension plan benefits (CPP/QPP). Can start between 60-70. Earlier = lower payments (36% reduction at 60), later = higher payments (42% increase at 70). Starting at 65 is standard. Example: 65",
 
-    cppAnnualAmount: "Annual CPP benefit amount at the age you start. Maximum is about $17,500 (2025). Average is $10,000-$12,000. Calculate your estimate at canada.ca/cpp. Example: $15,000",
+    cppAnnualAmount: "Annual pension plan benefit amount (CPP/QPP) at the age you start. Maximum is about $17,500 (2025). Average is $10,000-$12,000. Calculate your estimate at canada.ca. Example: $15,000",
 
     oasStartAge: "Age when you'll start receiving Old Age Security benefits. OAS starts at 65 minimum. Deferring to age 70 increases payments by 36% (0.6% per month). High-income retirees ($93,000+ in 2026) may face OAS clawback. Example: 65",
 
@@ -75,7 +96,7 @@ export const simulationTooltips = {
 
     spendingInflation: "Annual inflation rate applied to your spending amounts. Bank of Canada target is 2%. Historical average: 2-3%. Example: 2.0%",
 
-    generalInflation: "General inflation rate applied to CPP, OAS, and other indexed amounts. Typically same as spending inflation. Example: 2.0%",
+    generalInflation: "General inflation rate applied to pension benefits (CPP/QPP), OAS, and other indexed amounts. Typically same as spending inflation. Example: 2.0%",
 
     strategy: {
       label: "Tax-Efficient Withdrawal Strategy",

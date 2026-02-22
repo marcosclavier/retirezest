@@ -36,6 +36,9 @@ class YearResult(BaseModel):
     corporate_withdrawal_p1: float
     corporate_withdrawal_p2: float
 
+    # Total withdrawals for the year (all sources, both people)
+    total_withdrawals: float = Field(default=0.0, description="Total withdrawals from all accounts")
+
     # Non-registered distributions (passive income)
     nonreg_distributions: float = Field(default=0.0, description="Total household non-reg distributions")
 

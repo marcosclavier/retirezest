@@ -100,8 +100,8 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
       funding_coverage: {
         title: percentage >= 80 ? "Full Period Funded ✅" : "Full Period Funded - Action Needed",
         content: percentage >= 80
-          ? `Excellent! Your plan funds ${summary.years_funded}/${summary.years_simulated} years (${(summary.success_rate * 100).toFixed(0)}%). You have sufficient funds for your entire retirement.`
-          : `Your plan only funds ${summary.years_funded}/${summary.years_simulated} years (${(summary.success_rate * 100).toFixed(0)}%). You need to fund at least 80% of retirement years for a secure plan.`,
+          ? `Excellent! Your plan funds ${summary.years_funded}/${summary.years_simulated} years (${(summary.success_rate || 0).toFixed(0)}%). You have sufficient funds for your entire retirement.`
+          : `Your plan only funds ${summary.years_funded}/${summary.years_simulated} years (${(summary.success_rate || 0).toFixed(0)}%). You need to fund at least 80% of retirement years for a secure plan.`,
         examples: percentage >= 80 ? [
           "✅ Your spending is sustainable",
           "✅ You have adequate savings",
@@ -386,12 +386,12 @@ export function HealthScoreCard({ summary }: HealthScoreCardProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className={getTextColorMuted(health_score)}>Success Rate</p>
-                <p className={`font-medium ${getTextColor(health_score)}`}>{(summary.success_rate * 100).toFixed(1)}%</p>
+                <p className={`font-medium ${getTextColor(health_score)}`}>{(summary.success_rate || 0).toFixed(1)}%</p>
                 {typeof summary.success_rate === 'number' && (
                   <p className={`text-xs ${getTextColorMuted(health_score)} mt-0.5`}>
-                    {summary.success_rate >= 0.9 ? 'Fully funded' :
-                     summary.success_rate >= 0.7 ? 'Strong funding' :
-                     summary.success_rate >= 0.5 ? 'Partial funding' :
+                    {summary.success_rate >= 90 ? 'Fully funded' :
+                     summary.success_rate >= 70 ? 'Strong funding' :
+                     summary.success_rate >= 50 ? 'Partial funding' :
                      'Limited funding'}
                   </p>
                 )}

@@ -132,11 +132,12 @@ export function WhatIfSliders({ result, onScenarioChange }: WhatIfSlidersProps) 
     return null;
   }
 
-  const baseHealthScore = Math.round((result.summary.success_rate || 0) * 100);
+  // Use health_score from API or fallback to success_rate (already in percentage)
+  const baseHealthScore = result.summary.health_score || Math.round(result.summary.success_rate || 0);
   const baseFinalEstate = result.summary.final_estate_after_tax;
 
   const whatIfHealthScore = whatIfResult?.summary
-    ? Math.round((whatIfResult.summary.success_rate || 0) * 100)
+    ? (whatIfResult.summary.health_score || Math.round(whatIfResult.summary.success_rate || 0))
     : null;
   const whatIfFinalEstate = whatIfResult?.summary?.final_estate_after_tax || null;
 

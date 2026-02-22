@@ -125,7 +125,11 @@ export function HouseholdForm({ household, onChange, isPrefilled = false, userPr
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-600 mt-1 min-h-[32px]">
-                Tax calculations currently supported for AB, BC, ON, and QC only
+                {household.province === 'QC' ? (
+                  <>Quebec residents: QPP benefits, Quebec tax rates with 16.5% federal abatement</>
+                ) : (
+                  <>Tax calculations currently supported for AB, BC, ON, and QC only</>
+                )}
               </p>
             </div>
             <div className="space-y-2">

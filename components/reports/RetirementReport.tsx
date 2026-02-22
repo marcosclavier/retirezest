@@ -102,13 +102,13 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
         <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg" style={{ pageBreakInside: 'avoid' }}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <MetricCard label="Plan Health Score" value={`${summary.health_score}/100`} valueClassName={getHealthScoreColor(summary.health_score)} subValue={summary.health_rating} />
-            <MetricCard label="Success Rate" value={`${((summary.success_rate || 0) * 100).toFixed(0)}%`} valueClassName={summary.success_rate === 1 ? 'text-green-600' : 'text-yellow-600'} subValue={`${summary.years_funded}/${summary.years_simulated} years`} />
+            <MetricCard label="Success Rate" value={`${(summary.success_rate || 0).toFixed(0)}%`} valueClassName={summary.success_rate >= 100 ? 'text-green-600' : 'text-yellow-600'} subValue={`${summary.years_funded}/${summary.years_simulated} years`} />
             <MetricCard label="Initial Net Worth" value={fmt(summary.initial_net_worth)} />
             <MetricCard label="Final Net Worth" value={fmt(summary.final_net_worth)} valueClassName={summary.final_net_worth > 0 ? 'text-green-600' : 'text-red-600'} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <MetricCard label="Total Government Benefits" value={fmt(summary.total_government_benefits)} subValue={`Avg: ${fmt(summary.avg_annual_benefits)}/year`} />
-            <MetricCard label="Total Taxes Paid" value={fmt(summary.total_tax_paid)} valueClassName="text-gray-900" subValue={`Avg rate: ${((summary.avg_effective_tax_rate || 0) * 100).toFixed(1)}%`} />
+            <MetricCard label="Total Taxes Paid" value={fmt(summary.total_tax_paid)} valueClassName="text-gray-900" subValue={`Avg rate: ${(summary.avg_effective_tax_rate || 0).toFixed(1)}%`} />
           </div>
         </div>
       </section>
@@ -141,7 +141,7 @@ export function RetirementReport({ result, companyName, companyLogo }: Retiremen
                 <strong>
                   {summary.years_funded} out of {summary.years_simulated} years
                 </strong>{' '}
-                ({((summary.success_rate || 0) * 100).toFixed(0)}% success rate).
+                ({(summary.success_rate || 0).toFixed(0)}% success rate).
                 {summary.first_failure_year && (
                   <span className="text-red-600">
                     {' '}

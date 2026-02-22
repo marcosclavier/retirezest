@@ -70,7 +70,7 @@ export function HealthMetricsSection({ summary, spendingAnalysis, grossAssetTota
                 {summary.years_funded}/{summary.years_simulated}
               </p>
               <p className="text-xs text-gray-600">
-                ({(summary.success_rate * 100).toFixed(0)}% Success Rate)
+                ({(summary.success_rate || 0).toFixed(0)}% Success Rate)
               </p>
             </div>
           </div>

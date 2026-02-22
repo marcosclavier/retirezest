@@ -1,0 +1,192 @@
+--- python-api/modules/tax_optimizer.py.original
++++ python-api/modules/tax_optimizer.py.enhanced
+@@ -82,6 +82,7 @@
+
+
+ class TaxOptimizer:
+     """
+     Intelligent tax optimizer for retirement withdrawals with strategic TFSA deployment.
++    Enhanced with tax bracket awareness and proactive OAS clawback management.
+
+     Determines optimal withdrawal sequencing based on:
+@@ -89,6 +90,8 @@
+     2. Projected death tax impact (estate phase)
+     3. GIS eligibility and preservation
+     4. OAS clawback thresholds and preservation
++    5. Tax bracket optimization (avoid jumping brackets)
++    6. Marginal rate-based decision making
+     5. Income-splitting opportunities (RRIF for couples 65+)
+     6. Strategic TFSA deployment for tax-free legacy to heirs
+
+@@ -115,6 +118,24 @@
+         self.tax_config = tax_config or {}
+         self.gis_config = gis_config or {}
+
++        # Ontario 2025 tax brackets (combined federal + provincial)
++        # These will be used for bracket-aware optimization
++        self.TAX_BRACKETS = [
++            (53359, 0.2005),   # First bracket
++            (106717, 0.2915),  # Second bracket
++            (165430, 0.3148),  # Third bracket
++            (235675, 0.3389),  # Fourth bracket
++            (float('inf'), 0.4641)  # Top bracket
++        ]
++
++        # OAS clawback thresholds - UPDATED for 2025
++        # Note: The code was using $90,997 but actual 2025 threshold is $81,761
++        self.OAS_CLAWBACK_THRESHOLD_2025 = 81761
++        self.OAS_CLAWBACK_RATE = 0.15
++
++        # Proactive threshold management (85% of actual threshold)
++        self.OAS_CLAWBACK_PROACTIVE_THRESHOLD = self.OAS_CLAWBACK_THRESHOLD_2025 * 0.85
++
+     def optimize_withdrawal(
+         self,
+         person,
+@@ -179,10 +200,12 @@
+         2. Use TFSA to preserve GIS eligibility (TFSA withdrawals don't trigger clawback)
+         3. Use TFSA early in retirement when tax rates are favorable
+         4. Preserve some TFSA for heirs (0% tax at death)
++        5. Use TFSA strategically to avoid tax bracket jumps
++        6. Deploy TFSA based on current marginal rate
+
+         AGE 71+ RRIF MINIMUM CONSIDERATION:
+         - If approaching age 71 and GIS-eligible: Consider strategic RRIF drawdown
+         - RRIF minimums at 71+ are mandatory and expensive (40-90% effective rate with GIS)
+         - Better to draw strategically now at 40% than be forced to later at 90%
+
+         WITHDRAWAL ORDER LOGIC:
+@@ -214,12 +237,36 @@
+         gis_eligible = self._is_gis_eligible(person, household, year)
+         oas_clawback_risk = self._has_oas_clawback_risk(person, household, year)
+
++        # NEW: Check for tax bracket optimization opportunities
++        current_income = self._estimate_taxable_income(person, household, year)
++        marginal_rate = self._get_marginal_tax_rate(person, household, year)
++        bracket_jump_risk = self._would_cross_tax_bracket(current_income, household)
++
+         # Separate TFSA from other accounts
+         tfsa_impact = None
+         other_impacts = []
+
+         for impact in impacts:
+             if impact.account_type == "tfsa":
+                 tfsa_impact = impact
+             else:
+                 other_impacts.append(impact)
+@@ -233,8 +280,16 @@
+             # Order: RRIF (strategic drawdown) → TFSA → other accounts
+             # This prevents being forced to take expensive minimums at 71+
+             order = ["rrif", "tfsa"]
+             order.extend([impact.account_type for impact in other_impacts if impact.account_type != "rrif"])
+-        elif gis_eligible or oas_clawback_risk:
++        elif gis_eligible:
++            # GIS-eligible: TFSA FIRST always (preserves 50% clawback)
++            order = ["tfsa"]
++            order.extend([impact.account_type for impact in other_impacts])
++        elif oas_clawback_risk or bracket_jump_risk:
++            # NEW: Enhanced logic for OAS and bracket management
++            # Use TFSA strategically to stay under thresholds
++            order = ["tfsa"]
++            order.extend([impact.account_type for impact in other_impacts])
++        elif marginal_rate > 0.35:
++            # NEW: High marginal rate - more aggressive TFSA use
+             # TFSA FIRST: Preserve government benefits (GIS or OAS)
+             # This is often more valuable than deferring TFSA for legacy
+             order = ["tfsa"]
+@@ -525,18 +580,82 @@
+         # False positive risk: may yield False for someone without benefits yet
+         return False
+
+     def _has_oas_clawback_risk(self, person, household, year) -> bool:
+         """
+         Check if person has OAS clawback risk (income above clawback threshold).
++        ENHANCED: Now proactive at 85% of threshold, not just when over.
+
+-        OAS clawback triggers at income threshold (~$90,997 in 2025).
++        OAS clawback triggers at income threshold ($81,761 in 2025).
+         For every $1 over threshold, OAS is clawed back by $0.15.
+-        Fully clawed back at income ~$146,000+.
++        Fully clawed back at income ~$136,000+.
+
+         TFSA withdrawals don't count as income, so using TFSA can preserve OAS.
+
+         Returns:
+             True if taxable income approaches or exceeds OAS clawback threshold
+         """
+         # Rough income estimate
+         income = self._estimate_taxable_income(person, household, year)
+
+-        # OAS clawback threshold (approximate 2025 value)
+-        oas_clawback_threshold = 90_997
++        # OAS clawback threshold (corrected 2025 value)
++        oas_clawback_threshold = self.OAS_CLAWBACK_THRESHOLD_2025
+
+-        # Consider it "at risk" if income is above 70% of threshold
+-        # (room for growth, RRIF withdrawals, etc.)
+-        return income > (oas_clawback_threshold * 0.7)
++        # ENHANCED: Be proactive at 85% of threshold (was 70%)
++        # This gives more buffer for unexpected income
++        return income > self.OAS_CLAWBACK_PROACTIVE_THRESHOLD
++
++    def _would_cross_tax_bracket(self, current_income: float, household) -> bool:
++        """
++        NEW METHOD: Check if additional withdrawals would push into next tax bracket.
++
++        Args:
++            current_income: Current taxable income
++            household: Household object with spending needs
++
++        Returns:
++            True if near or would cross into next bracket
++        """
++        # Find current bracket
++        for threshold, rate in self.TAX_BRACKETS:
++            if current_income <= threshold:
++                # Check if we're within $5000 of next bracket
++                if threshold - current_income < 5000:
++                    return True
++                break
++
++        return False
++
++    def _calculate_optimal_tfsa_amount(self, current_income: float, withdrawal_needed: float) -> float:
++        """
++        NEW METHOD: Calculate optimal TFSA withdrawal to avoid bracket jumps.
++
++        Args:
++            current_income: Current taxable income
++            withdrawal_needed: Total amount needed
++
++        Returns:
++            Optimal TFSA withdrawal amount
++        """
++        # Find next bracket threshold
++        next_threshold = None
++        for threshold, rate in self.TAX_BRACKETS:
++            if threshold > current_income:
++                next_threshold = threshold
++                break
++
++        if not next_threshold:
++            return 0  # Already in top bracket
++
++        # Room before hitting next bracket
++        room_in_bracket = next_threshold - current_income
++
++        if withdrawal_needed <= room_in_bracket:
++            # Can stay in current bracket without TFSA
++            return 0
++
++        # Use TFSA for amount that would push over
++        tfsa_needed = withdrawal_needed - room_in_bracket
++
++        # Also check OAS clawback
++        if current_income + room_in_bracket > self.OAS_CLAWBACK_PROACTIVE_THRESHOLD:
++            # Need TFSA to avoid OAS clawback too
++            tfsa_for_oas = (current_income + withdrawal_needed) - self.OAS_CLAWBACK_PROACTIVE_THRESHOLD
++            tfsa_needed = max(tfsa_needed, tfsa_for_oas)
++
++        return tfsa_needed
+
+     def _generate_rationale(self, order: List[str], split_amount: float) -> str:

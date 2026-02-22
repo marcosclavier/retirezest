@@ -34,8 +34,9 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
 
   const { summary } = result;
 
-  // Calculate health score (0-100)
-  const healthScore = Math.round((summary.success_rate || 0) * 100);
+  // Use the health_score from the API (already 0-100), don't calculate from success_rate
+  // success_rate is already a percentage (e.g., 22.58 for 22.58%)
+  const healthScore = summary.health_score || Math.round(summary.success_rate || 0);
 
   // Determine health level and styling
   const getHealthLevel = (score: number) => {
@@ -52,7 +53,8 @@ export function ResultsHeroSection({ result }: ResultsHeroSectionProps) {
   const insights: Array<{ type: 'success' | 'warning' | 'info'; text: string }> = [];
 
   // Insight 1: Asset longevity
-  if (summary.success_rate >= 1.0) {
+  // success_rate is a percentage (0-100), not a decimal (0-1)
+  if (summary.success_rate >= 100) {
     const endAge = result.household_input?.end_age || 95;
     insights.push({
       type: 'success',

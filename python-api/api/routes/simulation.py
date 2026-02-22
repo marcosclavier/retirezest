@@ -112,7 +112,15 @@ async def run_simulation(
 
         # Convert API model to internal Household
         logger.debug("Converting API input to internal models")
+        logger.info(f"🔧 INPUT strategy before conversion: '{household_input.strategy}'")
         household = api_household_to_internal(household_input, tax_cfg)
+        logger.info(f"🔧 INTERNAL strategy after conversion: '{household.strategy}'")
+
+        # DEBUG: Check if strategy is passed through correctly
+        if hasattr(household, 'strategy'):
+            logger.info(f"✅ Household has strategy attribute: '{household.strategy}'")
+        else:
+            logger.error(f"❌ Household MISSING strategy attribute!")
 
         # DEBUG: Check pension_incomes in internal Person object
         if hasattr(household.p1, 'pension_incomes'):

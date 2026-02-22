@@ -31,8 +31,11 @@ export function KeyInsightsCard({ result }: KeyInsightsCardProps) {
   const endAge = yearByYear.length > 0 ? yearByYear[yearByYear.length - 1].age_p1 : 95;
 
   // Insight 1: Success Rate Analysis
-  // Check for underfunded years FIRST - this takes priority over estate value
-  if (summary.total_underfunded_years > 0) {
+  // Check for underfunded years FIRST - but ignore microscopic rounding errors
+  const ROUNDING_THRESHOLD = 1; // Ignore underfunding less than $1
+  const meaningfulUnderfunding = (summary.total_underfunding || 0) > ROUNDING_THRESHOLD;
+
+  if (summary.total_underfunded_years > 0 && meaningfulUnderfunding) {
     const shortfall = summary.total_underfunding || 0;
     const yearText = summary.total_underfunded_years === 1 ? 'year' : 'years';
 

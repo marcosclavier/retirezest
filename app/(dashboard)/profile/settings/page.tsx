@@ -9,12 +9,14 @@ import { Switch } from '@/components/ui/switch';
 import DeleteAccountModal from '@/components/account/DeleteAccountModal';
 import ExportDataButton from '@/components/account/ExportDataButton';
 import { calculateAgeFromDOB, calculateRetirementDate } from '@/lib/utils/age';
+import { ProvinceSelector } from '@/components/ui/ProvinceSelector';
 
 interface ProfileSettings {
   includePartner: boolean;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
+  province: string;
   partnerFirstName: string;
   partnerLastName: string;
   partnerDateOfBirth: string;
@@ -34,6 +36,7 @@ export default function SettingsPage() {
     firstName: '',
     lastName: '',
     dateOfBirth: '',
+    province: 'ON',
     partnerFirstName: '',
     partnerLastName: '',
     partnerDateOfBirth: '',
@@ -77,6 +80,7 @@ export default function SettingsPage() {
           firstName: profileData.firstName || '',
           lastName: profileData.lastName || '',
           dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toISOString().split('T')[0] : '',
+          province: profileData.province || 'ON',
           partnerFirstName: settingsData.partnerFirstName || '',
           partnerLastName: settingsData.partnerLastName || '',
           partnerDateOfBirth: settingsData.partnerDateOfBirth ? new Date(settingsData.partnerDateOfBirth).toISOString().split('T')[0] : '',
@@ -112,6 +116,7 @@ export default function SettingsPage() {
             firstName: settings.firstName,
             lastName: settings.lastName,
             dateOfBirth: settings.dateOfBirth ? new Date(settings.dateOfBirth).toISOString() : null,
+            province: settings.province,
           }),
         }),
         fetch('/api/profile/settings', {
@@ -267,6 +272,17 @@ export default function SettingsPage() {
                 />
                 <p className="text-xs text-gray-600">
                   Your date of birth is used to calculate age-based benefits like CPP and OAS
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="province">Province of Residence</Label>
+                <ProvinceSelector
+                  value={settings.province}
+                  onChange={(province) => setSettings({ ...settings, province })}
+                />
+                <p className="text-xs text-gray-600">
+                  Your province determines tax rates and whether you receive CPP or QPP benefits
                 </p>
               </div>
             </div>

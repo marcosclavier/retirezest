@@ -67,9 +67,15 @@ const SelectTrigger = React.forwardRef<
 })
 SelectTrigger.displayName = "SelectTrigger"
 
-const SelectValue: React.FC<{ placeholder?: string }> = ({ placeholder }) => {
+const SelectValue: React.FC<{ placeholder?: string; children?: React.ReactNode }> = ({ placeholder, children }) => {
   const context = React.useContext(SelectContext)
   if (!context) throw new Error("SelectValue must be used within Select")
+
+  // If children are provided and there's a value, render children
+  // Otherwise show the value or placeholder
+  if (children && context.value) {
+    return <>{children}</>
+  }
 
   return <span>{context.value || placeholder}</span>
 }

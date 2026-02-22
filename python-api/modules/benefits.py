@@ -1,16 +1,113 @@
 """
-CPP and OAS benefit calculations for Canada Retirement & Tax Simulator.
+CPP/QPP and OAS benefit calculations for Canada Retirement & Tax Simulator.
 
 This module handles:
 - CPP (Canada Pension Plan) calculations with inflation adjustment
+- QPP (Quebec Pension Plan) calculations with inflation adjustment
 - OAS (Old Age Security) calculations with inflation adjustment
 - OAS clawback calculation
-- Combined CPP+OAS benefit for a year
+- Combined CPP/QPP+OAS benefit for a year
 
 These benefits are indexed to inflation annually after the start age.
 """
 
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional
+
+
+def pension_benefit(
+    pension_annual_at_start: float,
+    pension_start_age: int,
+    current_age: int,
+    inflation_rate: float = 0.02,
+    years_since_start: int = 0,
+    province: str = "ON",
+    is_qpp: bool = False
+) -> float:
+    """
+    Calculate CPP or QPP benefit based on province.
+
+    Routes to appropriate pension calculator based on province.
+    Quebec residents get QPP, all others get CPP.
+
+    Args:
+        pension_annual_at_start (float): Initial annual pension amount at start age
+        pension_start_age (int): Age when pension starts (typically 60-70)
+        current_age (int): Current age
+        inflation_rate (float): Annual inflation rate (default 2%)
+        years_since_start (int): Years since start of simulation (for inflation)
+        province (str): Province of residence ("QC" for Quebec, others for CPP)
+        is_qpp (bool): Override to force QPP calculation
+
+    Returns:
+        float: Annual pension benefit at current age, inflation-adjusted
+    """
+    # Determine if we should use QPP
+    use_qpp = is_qpp or province == "QC"
+
+    if use_qpp:
+        # QPP calculation (Quebec)
+        return qpp_benefit(
+            pension_annual_at_start,
+            pension_start_age,
+            current_age,
+            inflation_rate,
+            years_since_start
+        )
+    else:
+        # CPP calculation (rest of Canada)
+        return cpp_benefit(
+            pension_annual_at_start,
+            pension_start_age,
+            current_age,
+            inflation_rate,
+            years_since_start
+        )
+
+
+def qpp_benefit(
+    qpp_annual_at_start: float,
+    qpp_start_age: int,
+    current_age: int,
+    inflation_rate: float = 0.02,
+    years_since_start: int = 0,
+    include_supplement: bool = False,
+    total_income: float = 0
+) -> float:
+    """
+    Calculate QPP (Quebec Pension Plan) benefit for a given age with inflation adjustment.
+
+    QPP is similar to CPP but with Quebec-specific features including:
+    - Higher contribution rate (6.4% vs 5.95%)
+    - Retirement pension supplement for low-income recipients
+
+    Args:
+        qpp_annual_at_start (float): Initial annual QPP amount at qpp_start_age
+        qpp_start_age (int): Age when QPP starts (typically 60-70)
+        current_age (int): Current age
+        inflation_rate (float): Annual inflation rate (default 2%)
+        years_since_start (int): Years since start of simulation (for inflation)
+        include_supplement (bool): Whether to include low-income supplement
+        total_income (float): Total income for supplement calculation
+
+    Returns:
+        float: Annual QPP benefit at current age, inflation-adjusted
+    """
+    if current_age < qpp_start_age:
+        return 0.0
+
+    # Base QPP calculation (same as CPP)
+    years_since = max(0, current_age - qpp_start_age)
+    inflation_factor = (1.0 + inflation_rate) ** years_since
+    base_qpp = qpp_annual_at_start * inflation_factor
+
+    # Add Quebec-specific supplement if applicable
+    supplement = 0
+    if include_supplement and total_income < 21768:  # 2025 threshold
+        # Maximum supplement is $50/month = $600/year
+        supplement_rate = max(0, 1 - (total_income / 21768))
+        supplement = 600 * supplement_rate * inflation_factor
+
+    return base_qpp + supplement
 
 
 def cpp_benefit(

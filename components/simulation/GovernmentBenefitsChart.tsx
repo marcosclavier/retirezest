@@ -19,6 +19,7 @@ interface GovernmentBenefitsChartProps {
   isSinglePerson?: boolean;
   personOneName?: string;
   personTwoName?: string;
+  province?: string;
 }
 
 export function GovernmentBenefitsChart({
@@ -26,13 +27,17 @@ export function GovernmentBenefitsChart({
   reinvestNonregDist = true,
   isSinglePerson = false,
   personOneName = 'Person 1',
-  personTwoName = 'Person 2'
+  personTwoName = 'Person 2',
+  province = 'ON'
 }: GovernmentBenefitsChartProps) {
-  // Prepare data for chart - only show government benefits (CPP, OAS, GIS)
+  // Determine if Quebec for QPP vs CPP
+  const isQuebec = province === 'QC';
+  const pensionLabel = isQuebec ? 'QPP' : 'CPP';
+  // Prepare data for chart - only show government benefits (CPP/QPP, OAS, GIS)
   const data = chartData.map((point) => ({
     year: point.year,
     age: point.age_p1,
-    CPP: point.cpp_total || 0,
+    [pensionLabel]: point.cpp_total || 0,
     OAS: point.oas_total || 0,
     GIS: point.gis_total || 0,
     Total: point.government_benefits_total || 0,
@@ -79,7 +84,7 @@ export function GovernmentBenefitsChart({
           Government Benefits Over Time
         </CardTitle>
         <CardDescription style={{ color: '#111827' }}>
-          CPP, OAS, and GIS benefits throughout retirement
+          {pensionLabel}, OAS, and GIS benefits throughout retirement
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -110,7 +115,7 @@ export function GovernmentBenefitsChart({
             <Legend />
             <Area
               type="monotone"
-              dataKey="CPP"
+              dataKey={pensionLabel}
               stackId="1"
               stroke="#3b82f6"
               fill="#3b82f6"
