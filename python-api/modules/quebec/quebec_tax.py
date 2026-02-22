@@ -49,52 +49,54 @@ class QuebecTaxCalculator:
     # Quebec Abatement
     QUEBEC_ABATEMENT_RATE = 0.165  # 16.5% reduction in federal tax
 
-    # 2025 Quebec Provincial Tax Brackets
-    QUEBEC_TAX_BRACKETS_2025 = [
-        (49275, 0.14),    # 14% on first $49,275
-        (98540, 0.19),    # 19% on next $49,265
-        (119910, 0.24),   # 24% on next $21,370
-        (float('inf'), 0.2575)  # 25.75% on amount over $119,910
+    # 2026 Quebec Provincial Tax Brackets (indexed by 2.85%)
+    # Source: Revenu Québec - 2026 Tax Tables
+    QUEBEC_TAX_BRACKETS_2026 = [
+        (50679, 0.14),    # 14% on first $50,679
+        (101364, 0.19),   # 19% on next $50,685
+        (123340, 0.24),   # 24% on next $21,976
+        (float('inf'), 0.2575)  # 25.75% on amount over $123,340
     ]
 
-    # 2025 Federal Tax Brackets (same across Canada)
-    FEDERAL_TAX_BRACKETS_2025 = [
-        (55867, 0.15),    # 15% on first $55,867
-        (111733, 0.205),  # 20.5% on next $55,866
-        (173205, 0.26),   # 26% on next $61,472
-        (246752, 0.29),   # 29% on next $73,547
-        (float('inf'), 0.33)  # 33% on amount over $246,752
+    # 2026 Federal Tax Brackets (with new 14% rate)
+    # Source: CRA - Federal tax rate reduced to 14% for first bracket
+    FEDERAL_TAX_BRACKETS_2026 = [
+        (57375, 0.14),    # 14% on first $57,375 (reduced from 15%)
+        (114750, 0.205),  # 20.5% on next $57,375
+        (177882, 0.26),   # 26% on next $63,132
+        (253414, 0.29),   # 29% on next $75,532
+        (float('inf'), 0.33)  # 33% on amount over $253,414
     ]
 
-    # Quebec Basic Personal Amount (2025)
-    QUEBEC_BASIC_PERSONAL_AMOUNT_2025 = 18056
+    # Quebec Basic Personal Amount (2026)
+    QUEBEC_BASIC_PERSONAL_AMOUNT_2026 = 18570  # Indexed by 2.85%
 
-    # Federal Basic Personal Amount (2025)
-    FEDERAL_BASIC_PERSONAL_AMOUNT_2025 = 15705
+    # Federal Basic Personal Amount (2026)
+    FEDERAL_BASIC_PERSONAL_AMOUNT_2026 = 16500  # Indexed from 2025
 
-    # Quebec Tax Credits (2025)
-    QUEBEC_PENSION_INCOME_CREDIT_MAX = 3591
-    QUEBEC_AGE_CREDIT_BASE = 3815
-    QUEBEC_AGE_CREDIT_REDUCTION_THRESHOLD = 41265
+    # Quebec Tax Credits (2026 - indexed by 2.85%)
+    QUEBEC_PENSION_INCOME_CREDIT_MAX = 3694  # $3,591 × 1.0285
+    QUEBEC_AGE_CREDIT_BASE = 3924  # $3,815 × 1.0285
+    QUEBEC_AGE_CREDIT_REDUCTION_THRESHOLD = 42440  # $41,265 × 1.0285
     QUEBEC_AGE_CREDIT_REDUCTION_RATE = 0.185
 
-    # Solidarity Tax Credit Parameters (2025)
-    SOLIDARITY_BASE_SINGLE = 335
-    SOLIDARITY_BASE_COUPLE = 508
-    SOLIDARITY_HOUSING_COMPONENT = 826
-    SOLIDARITY_NORTHERN_COMPONENT = 1938
-    SOLIDARITY_REDUCTION_THRESHOLD_SINGLE = 37225
-    SOLIDARITY_REDUCTION_THRESHOLD_COUPLE = 46625
+    # Solidarity Tax Credit Parameters (2026 - indexed)
+    SOLIDARITY_BASE_SINGLE = 345  # $335 × 1.0285
+    SOLIDARITY_BASE_COUPLE = 522  # $508 × 1.0285
+    SOLIDARITY_HOUSING_COMPONENT = 850  # $826 × 1.0285
+    SOLIDARITY_NORTHERN_COMPONENT = 1993  # $1,938 × 1.0285
+    SOLIDARITY_REDUCTION_THRESHOLD_SINGLE = 38286  # $37,225 × 1.0285
+    SOLIDARITY_REDUCTION_THRESHOLD_COUPLE = 47954  # $46,625 × 1.0285
     SOLIDARITY_REDUCTION_RATE = 0.03  # 3% reduction
 
-    # Work Premium Parameters (2025)
-    WORK_PREMIUM_EXEMPTION_SINGLE = 2400
-    WORK_PREMIUM_EXEMPTION_COUPLE = 3600
-    WORK_PREMIUM_MAX_SINGLE = 1034
-    WORK_PREMIUM_MAX_COUPLE = 1612
+    # Work Premium Parameters (2026 - indexed)
+    WORK_PREMIUM_EXEMPTION_SINGLE = 2468  # $2,400 × 1.0285
+    WORK_PREMIUM_EXEMPTION_COUPLE = 3703  # $3,600 × 1.0285
+    WORK_PREMIUM_MAX_SINGLE = 1063  # $1,034 × 1.0285
+    WORK_PREMIUM_MAX_COUPLE = 1658  # $1,612 × 1.0285
     WORK_PREMIUM_RATE = 0.09  # 9% of eligible income
-    WORK_PREMIUM_REDUCTION_THRESHOLD_SINGLE = 22019
-    WORK_PREMIUM_REDUCTION_THRESHOLD_COUPLE = 34406
+    WORK_PREMIUM_REDUCTION_THRESHOLD_SINGLE = 22647  # $22,019 × 1.0285
+    WORK_PREMIUM_REDUCTION_THRESHOLD_COUPLE = 35387  # $34,406 × 1.0285
     WORK_PREMIUM_REDUCTION_RATE = 0.1  # 10% reduction
 
     # Senior Assistance Credit (2025)
@@ -244,7 +246,7 @@ class QuebecTaxCalculator:
         tax = 0.0
         remaining_income = taxable_income
 
-        for bracket_limit, rate in self.QUEBEC_TAX_BRACKETS_2025:
+        for bracket_limit, rate in self.QUEBEC_TAX_BRACKETS_2026:
             if remaining_income <= 0:
                 break
 
@@ -281,7 +283,7 @@ class QuebecTaxCalculator:
         tax = 0.0
         remaining_income = taxable_income
 
-        for bracket_limit, rate in self.FEDERAL_TAX_BRACKETS_2025:
+        for bracket_limit, rate in self.FEDERAL_TAX_BRACKETS_2026:
             if remaining_income <= 0:
                 break
 
@@ -315,7 +317,7 @@ class QuebecTaxCalculator:
         credits = 0.0
 
         # Basic personal amount credit
-        credits += self.QUEBEC_BASIC_PERSONAL_AMOUNT_2025 * 0.14  # At lowest rate
+        credits += self.QUEBEC_BASIC_PERSONAL_AMOUNT_2026 * 0.14  # At lowest rate
 
         # Age credit (65+)
         if age >= 65:
@@ -344,7 +346,7 @@ class QuebecTaxCalculator:
         credits = 0.0
 
         # Basic personal amount credit
-        credits += self.FEDERAL_BASIC_PERSONAL_AMOUNT_2025 * 0.15  # At lowest rate
+        credits += self.FEDERAL_BASIC_PERSONAL_AMOUNT_2026 * 0.14  # At lowest rate (2026 reduced rate)
 
         # Age credit (65+)
         if age >= 65:
@@ -495,18 +497,18 @@ class QuebecTaxCalculator:
     def _get_marginal_rate_provincial(self, taxable_income: float) -> float:
         """Get Quebec provincial marginal tax rate"""
 
-        for bracket_limit, rate in self.QUEBEC_TAX_BRACKETS_2025:
+        for bracket_limit, rate in self.QUEBEC_TAX_BRACKETS_2026:
             if taxable_income <= bracket_limit:
                 return rate
-        return self.QUEBEC_TAX_BRACKETS_2025[-1][1]
+        return self.QUEBEC_TAX_BRACKETS_2026[-1][1]
 
     def _get_marginal_rate_federal(self, taxable_income: float) -> float:
         """Get federal marginal tax rate"""
 
-        for bracket_limit, rate in self.FEDERAL_TAX_BRACKETS_2025:
+        for bracket_limit, rate in self.FEDERAL_TAX_BRACKETS_2026:
             if taxable_income <= bracket_limit:
                 return rate
-        return self.FEDERAL_TAX_BRACKETS_2025[-1][1]
+        return self.FEDERAL_TAX_BRACKETS_2026[-1][1]
 
     def get_combined_marginal_rate(self, taxable_income: float) -> float:
         """

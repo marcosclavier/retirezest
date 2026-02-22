@@ -1,0 +1,143 @@
+{
+  "federal": {
+    "brackets": [
+      { "threshold": 0, "rate": 0.14 },
+      { "threshold": 57375, "rate": 0.205 },
+      { "threshold": 114750, "rate": 0.26 },
+      { "threshold": 178220, "rate": 0.29 },
+      { "threshold": 254000, "rate": 0.33 }
+    ],
+    "bpa_amount": 16500,
+    "bpa_rate": 0.14,
+    "pension_credit_amount": 2000,
+    "pension_credit_rate": 0.14,
+    "age_amount": 8876,
+    "age_amount_phaseout_start": 44245,
+    "age_amount_phaseout_rate": 0.15,
+    "oas_clawback_threshold": 93500,
+    "oas_clawback_rate": 0.15,
+    "dividend_grossup_eligible": 0.38,
+    "dividend_grossup_noneligible": 0.15,
+    "dividend_credit_rate_eligible": 0.150198,
+    "dividend_credit_rate_noneligible": 0.090301
+  },
+  "taxable_proxy": {
+    "cap_gains_inclusion": 0.50,
+    "eligible_div_grossup": 1.38,
+    "noneligible_div_grossup": 1.15,
+    "implausible_threshold": 5000,
+    "fallback_effective_rate": 0.18
+  },
+  "provinces": {
+    "AB": {
+      "brackets": [
+        { "threshold": 0, "rate": 0.10 },
+        { "threshold": 152497, "rate": 0.12 },
+        { "threshold": 183076, "rate": 0.13 },
+        { "threshold": 244095, "rate": 0.14 },
+        { "threshold": 366133, "rate": 0.15 }
+      ],
+      "bpa_amount": 21602,
+      "bpa_rate": 0.10,
+      "pension_credit_amount": 2000,
+      "pension_credit_rate": 0.10,
+      "age_amount": 6171,
+      "age_amount_phaseout_start": 46282,
+      "age_amount_phaseout_rate": 0.15,
+      "dividend_credit_rate_eligible": 0.0955,
+      "dividend_credit_rate_noneligible": 0.0341
+    },
+    "ON": {
+      "brackets": [
+        { "threshold": 0, "rate": 0.0505 },
+        { "threshold": 52927, "rate": 0.0915 },
+        { "threshold": 105932, "rate": 0.1116 },
+        { "threshold": 154337, "rate": 0.1216 },
+        { "threshold": 226270, "rate": 0.1316 }
+      ],
+      "bpa_amount": 13154,
+      "bpa_rate": 0.0505,
+      "pension_credit_amount": 2000,
+      "pension_credit_rate": 0.0505,
+      "age_amount": 5143,
+      "age_amount_phaseout_start": 41140,
+      "age_amount_phaseout_rate": 0.15,
+      "dividend_credit_rate_eligible": 0.10,
+      "dividend_credit_rate_noneligible": 0.015
+    },
+    "BC": {
+      "brackets": [
+        { "threshold": 0, "rate": 0.0506 },
+        { "threshold": 49304, "rate": 0.077 },
+        { "threshold": 98612, "rate": 0.105 },
+        { "threshold": 113261, "rate": 0.1229 },
+        { "threshold": 137448, "rate": 0.147 },
+        { "threshold": 186384, "rate": 0.168 },
+        { "threshold": 259993, "rate": 0.205 }
+      ],
+      "bpa_amount": 12411,
+      "bpa_rate": 0.0506,
+      "pension_credit_amount": 2000,
+      "pension_credit_rate": 0.0506,
+      "age_amount": 5143,
+      "age_amount_phaseout_start": 41140,
+      "age_amount_phaseout_rate": 0.15,
+      "dividend_credit_rate_eligible": 0.1229,
+      "dividend_credit_rate_noneligible": 0.0443
+    },
+    "QC": {
+      "brackets": [
+        { "threshold": 0, "rate": 0.14 },
+        { "threshold": 50679, "rate": 0.19 },
+        { "threshold": 101364, "rate": 0.24 },
+        { "threshold": 123340, "rate": 0.2575 }
+      ],
+      "bpa_amount": 18570,
+      "bpa_rate": 0.14,
+      "pension_credit_amount": 2000,
+      "pension_credit_rate": 0.14,
+      "age_amount": 3086,
+      "age_amount_phaseout_start": 35998,
+      "age_amount_phaseout_rate": 0.15,
+      "dividend_credit_rate_eligible": 0.2007,
+      "dividend_credit_rate_noneligible": 0.1051,
+      "quebec_abatement": 0.165
+    }
+  },
+  "corporate": {
+    "passive_income_tax_rate": 0.5067,
+    "rdtoh_rate": 0.3067,
+    "cda_eligible": true
+  },
+  "capital_gains": {
+    "inclusion_rate_standard": 0.50,
+    "inclusion_rate_high": 0.6667,
+    "high_threshold": 250000
+  },
+  "cpp": {
+    "max_pensionable_earnings": 74600,
+    "basic_exemption": 3500,
+    "contribution_rate_employee": 0.0595,
+    "contribution_rate_employer": 0.0595,
+    "max_contribution": 4227.65
+  },
+  "ei": {
+    "max_insurable_earnings": 66300,
+    "contribution_rate_employee": 0.0166,
+    "max_contribution": 1100.58
+  },
+  "gis": {
+    "threshold_single": 22066,
+    "threshold_couple": 30234,
+    "threshold_couple_one_oas": 55324,
+    "threshold_couple_no_oas": 55324,
+    "max_benefit_single": 11963,
+    "max_benefit_couple": 7008,
+    "clawback_rate": 0.50,
+    "notes": "2026 CRA GIS limits indexed by 2.85%: Single $11,963/year (threshold $22,066); Couple $7,008/person (both OAS threshold $30,234); One spouse with OAS threshold $55,324. Income above threshold reduces GIS by 50%."
+  },
+  "surtax": {
+    "thresholds": [],
+    "rates": []
+  }
+}

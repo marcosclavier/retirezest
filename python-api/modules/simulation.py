@@ -58,15 +58,17 @@ def rrif_min_factor(age: int) -> float:
     # Source: https://www.canada.ca/en/revenue-agency/services/tax/registered-plans-administrators/registered-retirement-income-funds-rrifs-minimum-amounts.html
     if age < 55:
         return 0.0
+    # FIXED: Using official CRA RRIF minimum withdrawal rates
+    # Source: https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/completing-slips-summaries/t4rsp-t4rif-information-returns/payments/chart-prescribed-factors.html
     factors = {
         55: 0.0286, 56: 0.0292, 57: 0.0298, 58: 0.0305, 59: 0.0312,
         60: 0.0320, 61: 0.0329, 62: 0.0339, 63: 0.0349, 64: 0.0360,
         65: 0.0371, 66: 0.0382, 67: 0.0394, 68: 0.0406, 69: 0.0419,
-        70: 0.0433, 71: 0.0528, 72: 0.0748, 73: 0.0785, 74: 0.0826,
-        75: 0.0869, 76: 0.0914, 77: 0.0961, 78: 0.1011, 79: 0.1063,
-        80: 0.1118, 81: 0.1176, 82: 0.1237, 83: 0.1301, 84: 0.1369,
-        85: 0.1441, 86: 0.1517, 87: 0.1598, 88: 0.1684, 89: 0.1776,
-        90: 0.1875, 91: 0.1982, 92: 0.2098, 93: 0.2225, 94: 0.2365,
+        70: 0.0433, 71: 0.0528, 72: 0.0540, 73: 0.0553, 74: 0.0567,
+        75: 0.0582, 76: 0.0598, 77: 0.0617, 78: 0.0636, 79: 0.0658,
+        80: 0.0682, 81: 0.0708, 82: 0.0738, 83: 0.0771, 84: 0.0808,
+        85: 0.0851, 86: 0.0899, 87: 0.0955, 88: 0.1021, 89: 0.1099,
+        90: 0.1192, 91: 0.1306, 92: 0.1449, 93: 0.1634, 94: 0.1879,
     }
     return factors.get(age, 0.2000 if age >= 95 else 0.0)
 
@@ -2043,6 +2045,12 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
             print(f"   ✅ Shortfall covered! Breaking loop.", file=sys.stderr)
             break
 
+        # CRITICAL FIX: For RRIF-Frontload strategy, ensure RRIF is NEVER processed in gap-filling
+        # This prevents any additional RRIF withdrawals beyond the frontload percentage
+        if ("rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name) and k == "rrif":
+            print(f"   ⚠️ SKIPPING RRIF in gap-filling (RRIF-Frontload enforces fixed % only)", file=sys.stderr)
+            continue
+
         print(f"\n   💰 Processing account: {k.upper()}", file=sys.stderr)
         print(f"      Remaining shortfall: ${shortfall:,.0f}", file=sys.stderr)
 
@@ -2241,13 +2249,18 @@ def simulate_year(person: Person, age: int, after_tax_target: float,
 
     # -----  Enforce deferred RRIF minimum for Balanced strategy -----
     # If using Balanced strategy, enforce the CRA RRIF minimum as last resort
+    # CRITICAL FIX: Skip this for RRIF-Frontload strategy
     if rrif_min_deferred > 1e-9:
-        rrif_total_so_far = withdrawals["rrif"]
-        if rrif_total_so_far < rrif_min_deferred:
-            rrif_shortfall = rrif_min_deferred - rrif_total_so_far
-            rrif_available = max(person.rrif_balance - rrif_total_so_far, 0.0)
-            rrif_to_add = min(rrif_shortfall, rrif_available)
-            withdrawals["rrif"] += rrif_to_add
+        # Check if this is RRIF-Frontload strategy
+        if "rrif-frontload" in strategy_name.lower() or "RRIF-Frontload" in strategy_name:
+            print(f"   ℹ️ Skipping deferred RRIF minimum enforcement (RRIF-Frontload strategy)", file=sys.stderr)
+        else:
+            rrif_total_so_far = withdrawals["rrif"]
+            if rrif_total_so_far < rrif_min_deferred:
+                rrif_shortfall = rrif_min_deferred - rrif_total_so_far
+                rrif_available = max(person.rrif_balance - rrif_total_so_far, 0.0)
+                rrif_to_add = min(rrif_shortfall, rrif_available)
+                withdrawals["rrif"] += rrif_to_add
 
     # Final guard
     if withdrawals["corp"] > corporate_balance_start:

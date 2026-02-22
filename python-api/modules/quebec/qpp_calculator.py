@@ -40,24 +40,30 @@ class QPPCalculator:
     - Different disability calculation
     """
 
-    # 2025 QPP Constants
-    MAX_PENSIONABLE_EARNINGS_2025 = 71300
+    # 2026 QPP Constants
+    # Source: Retraite Québec - 2026 Contribution Table
+    MAX_PENSIONABLE_EARNINGS_2026 = 74600  # Base MPE for 2026
+    ADDITIONAL_MAX_PENSIONABLE_EARNINGS_2026 = 85000  # Second tier ceiling
     BASIC_EXEMPTION = 3500
-    MAX_MONTHLY_BENEFIT_AT_65 = 1364.60
-    CONTRIBUTION_RATE_EMPLOYEE = 0.064  # 6.4% for QPP vs 5.95% for CPP
-    CONTRIBUTION_RATE_SELF_EMPLOYED = 0.128  # 12.8% for QPP
+    MAX_MONTHLY_BENEFIT_AT_65 = 1425.00  # Estimated for 2026
 
-    # QPP Enhancement rates (post-2019)
-    FIRST_ADDITIONAL_CONTRIBUTION_RATE = 0.01  # 1% additional
-    SECOND_ADDITIONAL_CONTRIBUTION_RATE = 0.04  # 4% on earnings above YMPE
+    # 2026 QPP Contribution Rates (employee portion)
+    # Total rate = 10.8% (5.4% employee + 5.4% employer) + additional contributions
+    CONTRIBUTION_RATE_BASE_EMPLOYEE = 0.054  # 5.4% base rate
+    CONTRIBUTION_RATE_FIRST_ADDITIONAL = 0.01  # 1% first additional
+    CONTRIBUTION_RATE_SECOND_ADDITIONAL = 0.04  # 4% on earnings above base MPE
 
-    # Retirement pension supplement thresholds (2025)
-    SUPPLEMENT_SINGLE_THRESHOLD = 21768  # Income threshold for single
-    SUPPLEMENT_COUPLE_THRESHOLD = 34416  # Combined income for couple
-    MAX_SUPPLEMENT_SINGLE = 50.00  # Maximum monthly supplement
-    MAX_SUPPLEMENT_COUPLE = 50.00
+    # Combined rates for backwards compatibility
+    CONTRIBUTION_RATE_EMPLOYEE = 0.064  # 5.4% + 1% = 6.4% total on base earnings
+    CONTRIBUTION_RATE_SELF_EMPLOYED = 0.128  # 12.8% for self-employed (double)
 
-    def __init__(self, current_year: int = 2025):
+    # Retirement pension supplement thresholds (2026 - indexed by 2.85%)
+    SUPPLEMENT_SINGLE_THRESHOLD = 22388  # $21,768 × 1.0285
+    SUPPLEMENT_COUPLE_THRESHOLD = 35397  # $34,416 × 1.0285
+    MAX_SUPPLEMENT_SINGLE = 51.43  # $50.00 × 1.0285
+    MAX_SUPPLEMENT_COUPLE = 51.43
+
+    def __init__(self, current_year: int = 2026):
         self.current_year = current_year
         self.max_pensionable_earnings = self._get_max_pensionable_earnings(current_year)
 
@@ -203,13 +209,13 @@ class QPPCalculator:
         for earnings in recent_earnings:
             # First additional contribution on earnings up to YMPE
             capped_earnings = min(earnings, self.max_pensionable_earnings)
-            first_additional = capped_earnings * self.FIRST_ADDITIONAL_CONTRIBUTION_RATE * 0.25
+            first_additional = capped_earnings * self.CONTRIBUTION_RATE_FIRST_ADDITIONAL * 0.25
 
             # Second additional contribution on earnings above YMPE (up to 114% of YMPE)
             if earnings > self.max_pensionable_earnings:
                 excess = min(earnings - self.max_pensionable_earnings,
                            self.max_pensionable_earnings * 0.14)
-                second_additional = excess * self.SECOND_ADDITIONAL_CONTRIBUTION_RATE * 0.33
+                second_additional = excess * self.CONTRIBUTION_RATE_SECOND_ADDITIONAL * 0.33
             else:
                 second_additional = 0
 
@@ -296,9 +302,9 @@ class QPPCalculator:
 
         These are set annually by Retraite Québec.
         """
-        # Simplified: return 2025 value
+        # Simplified: return 2026 value
         # In production, this would lookup historical values
-        return self.MAX_PENSIONABLE_EARNINGS_2025
+        return self.MAX_PENSIONABLE_EARNINGS_2026
 
     def calculate_survivor_benefit(
         self,
