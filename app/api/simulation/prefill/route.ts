@@ -412,7 +412,8 @@ export async function GET(request: NextRequest) {
     const person1Input: PersonInput = {
       ...defaultPersonInput,
       name: user?.firstName || 'Me',
-      start_age: user?.targetRetirementAge || age, // Use targetRetirementAge from profile as primary source
+      // Use current age if already past target retirement age, otherwise use target
+      start_age: (user?.targetRetirementAge && user.targetRetirementAge > age) ? user.targetRetirementAge : age,
 
       // Government benefits with 3-tier priority: IncomeSource → Scenario → fallback
       // This fixes Bug #1: Users who configured CPP/OAS in Scenario but not IncomeSource now get correct values
@@ -504,7 +505,7 @@ export async function GET(request: NextRequest) {
       person2Input = {
         ...defaultPersonInput,
         name: user?.partnerFirstName || 'Partner',
-        start_age: user?.targetRetirementAge || partnerAge, // Use same targetRetirementAge for partner
+        start_age: partnerAge, // Use partner's actual age, not user's retirement age
 
         // Government benefits with 3-tier priority: IncomeSource → Scenario → fallback
         // Same fix as person1 for Bug #1
