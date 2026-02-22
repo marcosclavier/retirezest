@@ -3,14 +3,17 @@
 ## Overview
 RetireZest is a comprehensive Canadian retirement planning platform that helps seniors optimize their retirement income, calculate government benefits (CPP, OAS, GIS), and project retirement scenarios with advanced tax-optimized withdrawal strategies.
 
-**Production Status:** Live at retirezest.com
-**Latest Update:** February 19, 2026
-**Version:** 1.2.0
+**Production Status:** Live at retirezest.com (Early Access)
+**Latest Update:** February 21, 2026
+**Version:** 1.3.0
+**Active Users:** 131+
+**Platform Status:** Early Access (rebranded from Beta on Feb 21, 2026)
 
 ## ⚠️ Critical Known Limitations
 - **Monte Carlo Simulation:** Currently **NON-FUNCTIONAL** - Returns hardcoded placeholder values (85% success rate). See [MONTE_CARLO_VALIDATION_REPORT.md](MONTE_CARLO_VALIDATION_REPORT.md) for details.
 - **Risk Analysis:** Limited to single scenario projections without probabilistic analysis
 - **Market Volatility:** Not modeled - uses fixed returns only
+- **Provincial Coverage:** Only 4 provinces fully supported (ON, QC, AB, BC) - other provinces use compatible tax rates
 
 ## Architecture
 
@@ -71,6 +74,49 @@ webapp/
 ```
 
 ## Key Features & Recent Updates
+
+### February 21, 2026 Updates (v1.3.0)
+
+#### 🚀 Major Release: Quebec Support & Early Access Rebrand
+
+##### ✅ Implemented: Full Quebec Support (Phase 1)
+- **Quebec Pension Plan (QPP):** Complete QPP calculations replacing CPP for Quebec residents
+- **Provincial Tax System:** Accurate Quebec tax brackets, deductions, and credits
+- **Solidarity Tax Credit:** Quebec-specific benefit calculations
+- **Dynamic UI Updates:** All charts, tables, and forms show "QPP" instead of "CPP" for Quebec users
+- **Impact:** 16 Quebec users (12.2% of user base) now have accurate retirement projections
+- **Files Changed:**
+  - `/python-api/modules/quebec/` (new directory with quebec_tax.py, qpp_calculator.py, quebec_benefits.py)
+  - `/components/simulation/` (multiple components updated for QPP/CPP dynamic labeling)
+  - `/app/(dashboard)/profile/income/page.tsx` (dynamic pension plan dropdown)
+
+##### ✅ Rebranded: Beta → Early Access
+- **Rationale:** Position platform as exclusive early access rather than incomplete beta
+- **Visual Changes:** Premium blue gradient badges replacing amber warning colors
+- **Messaging:** "Get exclusive early access to Canada's most comprehensive retirement planning platform"
+- **Impact:** More positive user perception while maintaining appropriate expectations
+- **Files Changed:**
+  - `/components/landing/HeroSection.tsx` (Early Access notice)
+  - `/components/landing/LandingNav.tsx` (Early Access badge)
+  - `/app/(dashboard)/layout.tsx` (Dashboard Early Access badge)
+
+##### ✅ Enhanced: RRIF-Frontload Strategy
+- **Improvement:** Smart TFSA contributions with age and income-based logic
+- **Tax Optimization:** 15% RRIF withdrawals before OAS/CPP, 8% after
+- **TFSA Logic:** Contributes when income < 80% OAS threshold and age < 75
+- **Impact:** Better tax efficiency and OAS clawback avoidance
+- **Files Changed:**
+  - `/python-api/modules/simulation.py` (enhanced RRIF-frontload implementation)
+
+##### ✅ Marketing: Email Campaigns
+- **Quebec Announcement:** Sent to 14 verified Quebec users about QPP/Quebec tax support
+- **Province Reminder:** Sent to 10 users without province set to improve data completeness
+- **Impact:** Increased user engagement and profile completeness
+
+##### ✅ Homepage Updates
+- **Single/Couples Support:** Clear badges showing both planning modes supported
+- **Provincial Coverage:** Accurate messaging about ON, QC, AB, BC support
+- **Feature Showcase:** Added "Single & Couples Planning" as #1 feature
 
 ### February 19, 2026 Updates
 
@@ -433,8 +479,9 @@ if surplus > 0:
 
 ---
 
-*Last Updated: February 19, 2026*
-*Version: 1.2.0*
-*Active Users: 67+*
-*Recent Major Enhancements: Enhanced Balanced Strategy (85% OAS threshold), Single person simulation fix*
+*Last Updated: February 21, 2026*
+*Version: 1.3.0*
+*Active Users: 131*
+*Platform Status: Early Access (formerly Beta)*
+*Recent Major Enhancements: Full Quebec Support (QPP, provincial taxes), RRIF-Frontload Strategy, Early Access Rebrand*
 *Critical Known Issue: Monte Carlo simulation returns fake data - see MONTE_CARLO_VALIDATION_REPORT.md*
