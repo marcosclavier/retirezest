@@ -1435,6 +1435,10 @@ def _get_strategy_order(strategy_name: str) -> List[str]:
         # Better to deplete RRIF during life than leave it for death tax shock.
         # NonReg is placed THIRD because ACB protection means most of it is not taxable.
         return ["corp", "rrif", "nonreg", "tfsa"]  # RRIF second (after Corp), before NonReg, TFSA last
+    elif "corporate-optimized" in strategy_name.lower() or "Corporate Optimized" in strategy_name:
+        # Corporate-Optimized: Prioritize corporate withdrawals (eligible dividends get tax credits)
+        # Then RRIF (fully taxable, deplete early), then NonReg (capital gains), then TFSA (preserve)
+        return ["corp", "rrif", "nonreg", "tfsa"]
     else:
         return ["nonreg", "rrif", "corp", "tfsa"]
 

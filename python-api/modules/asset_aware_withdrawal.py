@@ -163,8 +163,10 @@ class AssetAwareWithdrawalMixin:
             )
 
         # Map asset-aware strategy to withdrawal order
+        # IMPORTANT: These orders are REVERSED (preserve first, withdraw last)
+        # The actual withdrawal order is the REVERSE of what's shown here
         strategy_orders = {
-            "corporate-optimized": ["tfsa", "corporate", "nonreg", "rrif"],
+            "corporate-optimized": ["tfsa", "nonreg", "rrif", "corporate"],  # Actual: Corp→RRIF→NonReg→TFSA
             "minimize-income": ["tfsa", "nonreg", "rrif", "corporate"],
             "capital-gains-optimized": ["tfsa", "nonreg", "corporate", "rrif"],
             "rrif-splitting": ["tfsa", "rrif", "nonreg", "corporate"],
