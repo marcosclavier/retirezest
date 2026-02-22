@@ -3,8 +3,14 @@
 export default function FeaturesShowcase() {
   const features = [
     {
-      title: 'CPP Optimizer',
-      description: 'Calculate your CPP based on earnings history. Find the optimal start age (60-70) with break-even analysis.',
+      title: 'Single & Couples Planning',
+      description: 'Plan for yourself or together with your partner. Optimize strategies for both individual and household retirement goals.',
+      icon: '👥',
+      color: 'from-indigo-500 to-indigo-600',
+    },
+    {
+      title: 'CPP/QPP Optimizer',
+      description: 'Calculate your CPP or QPP based on earnings history. Find the optimal start age (60-70) with break-even analysis.',
       icon: '📊',
       color: 'from-blue-500 to-blue-600',
     },
@@ -37,6 +43,12 @@ export default function FeaturesShowcase() {
       description: 'Generate PDF retirement reports with executive summaries. Share with financial advisors.',
       icon: '📄',
       color: 'from-pink-500 to-pink-600',
+    },
+    {
+      title: 'Provincial Tax Support',
+      description: 'Accurate tax calculations for all provinces including Quebec QPP and provincial benefits.',
+      icon: '🍁',
+      color: 'from-red-500 to-red-600',
     },
   ];
 

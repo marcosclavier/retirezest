@@ -35,6 +35,22 @@ export default function HeroSection() {
               <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
                 Calculate CPP, OAS, and project your retirement income in minutes—no spreadsheets required.
               </p>
+
+              {/* Single and Couples Support Badge */}
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                  <span className="text-green-600">👤</span>
+                  <span className="text-sm font-medium text-green-700">Single Planning</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                  <span className="text-green-600">👥</span>
+                  <span className="text-sm font-medium text-green-700">Couples Planning</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="text-blue-600">🍁</span>
+                  <span className="text-sm font-medium text-blue-700">All Provinces Supported</span>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">

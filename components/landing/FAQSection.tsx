@@ -9,6 +9,10 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
+    question: 'Can I plan for both myself and my spouse/partner?',
+    answer: 'Yes! RetireZest fully supports both single and couples retirement planning. You can enter information for both partners, and our system will optimize strategies considering both incomes, coordinating CPP/OAS timing, and maximizing tax efficiency for your household.',
+  },
+  {
     question: 'Is Retire Zest really free?',
     answer: 'Yes! Retire Zest is currently free to use with full access to all features. We may introduce premium features in the future, but core retirement planning will remain free.',
   },
