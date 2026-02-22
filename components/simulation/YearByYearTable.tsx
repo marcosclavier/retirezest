@@ -326,10 +326,11 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                   year.corporate_withdrawal_p1 + year.corporate_withdrawal_p2;
                 const nonregDistributions = year.nonreg_distributions || 0;
                 const tfsaContributions = (year.tfsa_contribution_p1 || 0) + (year.tfsa_contribution_p2 || 0);
+                const tfsaSurplusReinvest = ((year as any).tfsa_reinvest_p1 || 0) + ((year as any).tfsa_reinvest_p2 || 0);
                 const totalInflows = totalBenefits + totalEmployerPension + totalWithdrawals + nonregDistributions;
                 const hasGap = year.spending_gap > 0;
-                // Include both regular contributions AND reinvestments from surplus
-                const totalTfsaContributions = tfsaContributions + ((year as any).tfsa_reinvest_p1 || 0) + ((year as any).tfsa_reinvest_p2 || 0);
+                // Keep regular contributions separate from surplus reinvestment for clarity
+                const totalTfsaContributions = tfsaContributions;  // Only show regular contributions in main column
 
                 return (
                   <Fragment key={year.year}>
@@ -654,9 +655,18 @@ export function YearByYearTable({ yearByYear, initialRowsToShow = 10, reinvestNo
                                 <div className="flex justify-between items-center gap-1 min-w-0">
                                   <span className="truncate" style={{ color: '#111827' }}>TFSA Contrib</span>
                                   <span className="font-medium whitespace-nowrap flex-shrink-0" style={{ color: '#8B5CF6' }}>
-                                    {formatCurrency(tfsaContributions + ((year as any).tfsa_reinvest_p1 || 0) + ((year as any).tfsa_reinvest_p2 || 0))}
+                                    {formatCurrency(tfsaContributions)}
                                   </span>
                                 </div>
+
+                                {tfsaSurplusReinvest > 0 && (
+                                  <div className="flex justify-between items-center gap-1 min-w-0">
+                                    <span className="truncate text-xs" style={{ color: '#6B7280' }}>TFSA Surplus Reinvest</span>
+                                    <span className="font-medium whitespace-nowrap flex-shrink-0 text-xs" style={{ color: '#10B981' }}>
+                                      {formatCurrency(tfsaSurplusReinvest)}
+                                    </span>
+                                  </div>
+                                )}
 
                                 <div className="flex justify-between items-center gap-1 min-w-0">
                                   <span className="truncate" style={{ color: '#111827' }}>Taxes</span>
