@@ -2962,24 +2962,46 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
         # Track original targets for buffer update calculation later
         original_target_total = spend + mortgage_p1 + mortgage_p2  # Total household spending target including mortgage payments
 
-        # RRIF FRONT-LOAD STRATEGY: Include planned TFSA contributions in withdrawal target
+        # TFSA CONTRIBUTION PLANNING: Include planned TFSA contributions in withdrawal target
         # This ensures we withdraw enough to cover both spending AND TFSA contributions
         # Without this, TFSA contributions create a gap because they consume cash
+        # This applies to ALL strategies, not just specific ones
         planned_tfsa_p1 = 0.0
         planned_tfsa_p2 = 0.0
 
+        # Import TFSA validator for annual limit
+        from modules.tfsa_validator import TFSAValidator
+        annual_limit = TFSAValidator.get_annual_limit(year)
+
+        # Person 1 TFSA planning
+        # Check if there are sufficient total assets (not just RRIF) for TFSA contributions
+        total_assets_p1 = p1.rrif_balance + p1.corporate_balance + p1.nonreg_balance
+        if tfsa_room1 > 1000 and hh.tfsa_contribution_each > 0 and total_assets_p1 > 10000:
+            # Simple approach for all strategies: use configured contribution amount
+            planned_tfsa_p1 = min(hh.tfsa_contribution_each, tfsa_room1, annual_limit)
+            target_p1_adjusted += planned_tfsa_p1
+
+        # Person 2 TFSA planning (if applicable)
+        # Check if there are sufficient total assets (not just RRIF) for TFSA contributions
+        total_assets_p2 = (p2.rrif_balance + p2.corporate_balance + p2.nonreg_balance) if p2 else 0
+        if tfsa_room2 > 1000 and hh.tfsa_contribution_each > 0 and p2 and total_assets_p2 > 10000:
+            # Simple approach for all strategies: use configured contribution amount
+            planned_tfsa_p2 = min(hh.tfsa_contribution_each, tfsa_room2, annual_limit)
+            target_p2_adjusted += planned_tfsa_p2
+
+        # Strategy-specific adjustments for TFSA contributions
         if hh.strategy and "rrif-frontload" in hh.strategy.lower():
             # SMART TFSA CONTRIBUTION STRATEGY FOR RRIF-FRONTLOAD
             # Adjust contributions based on age and OAS/CPP status
-            from modules.tfsa_validator import TFSAValidator
-            annual_limit = TFSAValidator.get_annual_limit(year)
-
             # Determine contribution amounts based on age and benefit status
             # Before OAS/CPP (ages 65-69): Max contributions (lower tax environment)
             # After OAS/CPP (70+): Reduced or no contributions (higher tax, clawback risk)
 
-            # Person 1 TFSA planning
-            if tfsa_room1 > 1000 and hh.tfsa_contribution_each > 0 and p1.rrif_balance > 10000:
+            # Re-calculate Person 1 TFSA for RRIF-frontload strategy
+            if tfsa_room1 > 1000 and hh.tfsa_contribution_each > 0 and total_assets_p1 > 10000:
+                # First subtract the simple amount we already added
+                target_p1_adjusted -= planned_tfsa_p1
+
                 # Check if OAS has started (higher tax environment)
                 if age1 < p1.oas_start_age:
                     # Sweet spot: Before OAS, maximize TFSA contributions
@@ -2994,10 +3016,12 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
                 target_p1_adjusted += planned_tfsa_p1
 
-            # Person 2 TFSA planning (if applicable)
-            if tfsa_room2 > 1000 and hh.tfsa_contribution_each > 0 and p2 and p2.rrif_balance > 10000:
-                p2_age = age2
+            # Re-calculate Person 2 TFSA for RRIF-frontload strategy
+            if tfsa_room2 > 1000 and hh.tfsa_contribution_each > 0 and p2 and total_assets_p2 > 10000:
+                # First subtract the simple amount we already added
+                target_p2_adjusted -= planned_tfsa_p2
 
+                p2_age = age2
                 if p2_age < p2.oas_start_age:
                     # Sweet spot: Before OAS
                     planned_tfsa_p2 = min(hh.tfsa_contribution_each, tfsa_room2, annual_limit)
@@ -3010,13 +3034,14 @@ def simulate(hh: Household, tax_cfg: Dict, custom_df: Optional[pd.DataFrame] = N
 
                 target_p2_adjusted += planned_tfsa_p2
 
-            # Debug logging for TFSA planning
-            if year >= 2031 and year <= 2035 and (planned_tfsa_p1 > 0 or planned_tfsa_p2 > 0):
-                print(f"\n💡 RRIF FRONT-LOAD TFSA PLANNING Year {year}:", file=sys.stderr)
-                print(f"   Planned TFSA P1: ${planned_tfsa_p1:,.0f} (room: ${tfsa_room1:,.0f})", file=sys.stderr)
-                print(f"   Planned TFSA P2: ${planned_tfsa_p2:,.0f} (room: ${tfsa_room2:,.0f})", file=sys.stderr)
-                print(f"   Adjusted target P1: ${target_p1_adjusted:,.0f} (includes ${planned_tfsa_p1:,.0f} TFSA)", file=sys.stderr)
-                print(f"   Adjusted target P2: ${target_p2_adjusted:,.0f} (includes ${planned_tfsa_p2:,.0f} TFSA)", file=sys.stderr)
+        # Debug logging for TFSA planning
+        if year >= 2031 and year <= 2035 and (planned_tfsa_p1 > 0 or planned_tfsa_p2 > 0):
+            strategy_name = hh.strategy if hh.strategy else "default"
+            print(f"\n💡 TFSA PLANNING Year {year} [{strategy_name}]:", file=sys.stderr)
+            print(f"   Planned TFSA P1: ${planned_tfsa_p1:,.0f} (room: ${tfsa_room1:,.0f})", file=sys.stderr)
+            print(f"   Planned TFSA P2: ${planned_tfsa_p2:,.0f} (room: ${tfsa_room2:,.0f})", file=sys.stderr)
+            print(f"   Adjusted target P1: ${target_p1_adjusted:,.0f} (includes ${planned_tfsa_p1:,.0f} TFSA)", file=sys.stderr)
+            print(f"   Adjusted target P2: ${target_p2_adjusted:,.0f} (includes ${planned_tfsa_p2:,.0f} TFSA)", file=sys.stderr)
 
         # Debug: Check types before calling simulate_year
         print(f"DEBUG: Type of p1_pension_income: {type(p1_pension_income)}, value: {p1_pension_income}", file=sys.stderr)
